@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RaAI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+032225a300139bdc8c8161c7375f3caa11503a81")]
 [assembly: System.Reflection.AssemblyProductAttribute("RaAI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RaAI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
