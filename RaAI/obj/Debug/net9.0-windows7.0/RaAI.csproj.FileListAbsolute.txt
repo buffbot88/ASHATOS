@@ -1010,6 +1010,13 @@ C:\Users\buffb\OneDrive\Desktop\repos\RaAI\RaAI\obj\Debug\net9.0-windows7.0\refi
 C:\Users\buffb\OneDrive\Desktop\repos\RaAI\RaAI\obj\Debug\net9.0-windows7.0\RaAI.pdb
 C:\Users\buffb\OneDrive\Desktop\repos\RaAI\RaAI\obj\Debug\net9.0-windows7.0\RaAI.genruntimeconfig.cache
 C:\Users\buffb\OneDrive\Desktop\repos\RaAI\RaAI\obj\Debug\net9.0-windows7.0\ref\RaAI.dll
+C:\Users\buffb\OneDrive\Desktop\TheRaProject\RaAI\obj\Debug\net9.0-windows7.0\RaAI.csproj.IkvmFrameworkReference.cache
+C:\Users\buffb\OneDrive\Desktop\TheRaProject\RaAI\obj\Debug\net9.0-windows7.0\RaAI.csproj.AssemblyReference.cache
+C:\Users\buffb\OneDrive\Desktop\TheRaProject\RaAI\obj\Debug\net9.0-windows7.0\RaAI.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\buffb\OneDrive\Desktop\TheRaProject\RaAI\obj\Debug\net9.0-windows7.0\RaAI.AssemblyInfoInputs.cache
+C:\Users\buffb\OneDrive\Desktop\TheRaProject\RaAI\obj\Debug\net9.0-windows7.0\RaAI.AssemblyInfo.cs
+C:\Users\buffb\OneDrive\Desktop\TheRaProject\RaAI\obj\Debug\net9.0-windows7.0\RaAI.csproj.CoreCompileInputs.cache
+C:\Users\buffb\OneDrive\Desktop\TheRaProject\RaAI\obj\Debug\net9.0-windows7.0\RaAI.sourcelink.json
 C:\Users\buffb\OneDrive\Desktop\TheRaProject\RaAI\bin\Debug\net9.0-windows7.0\ikvm\win-x64\bin\awt.dll
 C:\Users\buffb\OneDrive\Desktop\TheRaProject\RaAI\bin\Debug\net9.0-windows7.0\ikvm\win-x64\bin\fontmanager.dll
 C:\Users\buffb\OneDrive\Desktop\TheRaProject\RaAI\bin\Debug\net9.0-windows7.0\ikvm\win-x64\bin\freetype.dll
@@ -2010,13 +2017,6 @@ C:\Users\buffb\OneDrive\Desktop\TheRaProject\RaAI\bin\Debug\net9.0-windows7.0\ru
 C:\Users\buffb\OneDrive\Desktop\TheRaProject\RaAI\bin\Debug\net9.0-windows7.0\runtimes\tvos\lib\net8.0\System.Data.Odbc.dll
 C:\Users\buffb\OneDrive\Desktop\TheRaProject\RaAI\bin\Debug\net9.0-windows7.0\runtimes\win\lib\net8.0\System.Data.Odbc.dll
 C:\Users\buffb\OneDrive\Desktop\TheRaProject\RaAI\bin\Debug\net9.0-windows7.0\runtimes\win\lib\net9.0\System.Speech.dll
-C:\Users\buffb\OneDrive\Desktop\TheRaProject\RaAI\obj\Debug\net9.0-windows7.0\RaAI.csproj.IkvmFrameworkReference.cache
-C:\Users\buffb\OneDrive\Desktop\TheRaProject\RaAI\obj\Debug\net9.0-windows7.0\RaAI.csproj.AssemblyReference.cache
-C:\Users\buffb\OneDrive\Desktop\TheRaProject\RaAI\obj\Debug\net9.0-windows7.0\RaAI.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\buffb\OneDrive\Desktop\TheRaProject\RaAI\obj\Debug\net9.0-windows7.0\RaAI.AssemblyInfoInputs.cache
-C:\Users\buffb\OneDrive\Desktop\TheRaProject\RaAI\obj\Debug\net9.0-windows7.0\RaAI.AssemblyInfo.cs
-C:\Users\buffb\OneDrive\Desktop\TheRaProject\RaAI\obj\Debug\net9.0-windows7.0\RaAI.csproj.CoreCompileInputs.cache
-C:\Users\buffb\OneDrive\Desktop\TheRaProject\RaAI\obj\Debug\net9.0-windows7.0\RaAI.sourcelink.json
 C:\Users\buffb\OneDrive\Desktop\TheRaProject\RaAI\obj\Debug\net9.0-windows7.0\RaAI.csproj.Up2Date
 C:\Users\buffb\OneDrive\Desktop\TheRaProject\RaAI\obj\Debug\net9.0-windows7.0\RaAI.dll
 C:\Users\buffb\OneDrive\Desktop\TheRaProject\RaAI\obj\Debug\net9.0-windows7.0\refint\RaAI.dll

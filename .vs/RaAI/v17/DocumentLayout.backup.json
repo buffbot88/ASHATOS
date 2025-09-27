@@ -1,12 +1,37 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "C:\\Users\\buffb\\OneDrive\\Desktop\\TheRaProject\\",
-  "Documents": [],
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{DE373CA3-888A-4D51-9B65-36076B5B86D7}|RaAI\\RaAI.csproj|c:\\users\\buffb\\onedrive\\desktop\\theraproject\\raai\\raaiform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DE373CA3-888A-4D51-9B65-36076B5B86D7}|RaAI\\RaAI.csproj|solutionrelative:raai\\raaiform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
       "VerticalTabListWidth": 256,
-      "DocumentGroups": []
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "RaAIForm.cs",
+              "DocumentMoniker": "C:\\Users\\buffb\\OneDrive\\Desktop\\TheRaProject\\RaAI\\RaAIForm.cs",
+              "RelativeDocumentMoniker": "RaAI\\RaAIForm.cs",
+              "ToolTip": "C:\\Users\\buffb\\OneDrive\\Desktop\\TheRaProject\\RaAI\\RaAIForm.cs",
+              "RelativeToolTip": "RaAI\\RaAIForm.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-27T02:58:38.48Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
     }
   ]
 }

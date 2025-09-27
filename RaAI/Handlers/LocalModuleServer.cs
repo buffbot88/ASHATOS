@@ -6,19 +6,33 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.IO;
 using RaAI.Modules;
+using RaAI.Handlers.Manager;
 
 namespace RaAI.Handlers
 {
-    public class LocalModuleServer(int port, string token, IModuleRegistry modules, Action<string, string> externalNotifyCallback)
+    /// <summary>
+    /// LocalModuleServer serves HTTP and WebSocket endpoints for module interaction.
+    /// Compatible with updated core modules and IModuleRegistry.
+    /// </summary>
+    public class LocalModuleServer
     {
-        private readonly int _port = port;
-        private readonly string _token = token;
-        private readonly IModuleRegistry _modules = modules;
-        private readonly Action<string, string> _externalNotifyCallback = externalNotifyCallback;
+        private readonly int _port;
+        private readonly string _token;
+        private readonly IModuleRegistry _modules;
+        private readonly Action<string, string> _externalNotifyCallback;
         private readonly CancellationTokenSource _cts = new();
-        private readonly List<WebSocket> _wsClients = [];
+        private readonly List<WebSocket> _wsClients = new();
         private HttpListener? _listener;
+
+        public LocalModuleServer(int port, string token, IModuleRegistry modules, Action<string, string> externalNotifyCallback)
+        {
+            _port = port;
+            _token = token;
+            _modules = modules;
+            _externalNotifyCallback = externalNotifyCallback;
+        }
 
         public void Start()
         {
@@ -54,7 +68,7 @@ namespace RaAI.Handlers
                 }
                 else
                 {
-                    await (_ = Task.Run(() => HandleHttp(ctx), token));
+                    await Task.Run(() => HandleHttp(ctx), token);
                 }
             }
         }

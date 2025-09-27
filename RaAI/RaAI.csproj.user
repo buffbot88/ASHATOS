@@ -4,7 +4,7 @@
     <Compile Update="Modules\DigitalFace\DigitalFaceControl.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Update="UI\RaAIForm.cs">
+    <Compile Update="RaAIForm.cs">
       <SubType>Form</SubType>
     </Compile>
   </ItemGroup>

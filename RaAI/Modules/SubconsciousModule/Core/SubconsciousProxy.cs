@@ -245,7 +245,7 @@ namespace RaAI.Modules.SubconsciousModule.Core
                         }
                         catch
                         {
-                            mi.Metadata = [];
+                            mi.Metadata = new Dictionary<string, string>();
                         }
                     }
 

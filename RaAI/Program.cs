@@ -1,7 +1,8 @@
-﻿using RaAI.Handlers;
-using RaAI.UI;
+﻿using RaAI.Handlers.Manager;
+using RaAI;
 using System;
 using System.Windows.Forms;
+using RaAI.Modules.DigitalFace;
 
 namespace RaAI
 {
@@ -12,9 +13,6 @@ namespace RaAI
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-
-            // Initialize theme
-            ThemeManager.Initialize();
 
             // Create and show main form
             using var form = new RaAIForm();
