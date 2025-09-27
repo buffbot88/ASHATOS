@@ -17,21 +17,26 @@ namespace LocalModuleServer.IntegrationTests
     public class LocalModuleServerTests : IClassFixture<ServerFixture>
     {
         private readonly ServerFixture _fixture;
-        private readonly HttpClient _httpClient;
         private readonly string _baseUrl;
 
         public LocalModuleServerTests(ServerFixture fixture)
         {
             _fixture = fixture;
             _baseUrl = $"http://localhost:{ServerFixture.TestPort}";
-            _httpClient = new HttpClient { BaseAddress = new Uri(_baseUrl) };
+        }
+
+        private HttpClient CreateHttpClient()
+        {
+            return new HttpClient { BaseAddress = new Uri(_baseUrl) };
         }
 
         [Fact]
         public async Task GetModules_ShouldReturnModuleNames()
         {
+            using var httpClient = CreateHttpClient();
+            
             // Act
-            var response = await _httpClient.GetAsync("/api/modules");
+            var response = await httpClient.GetAsync("/api/modules");
 
             // Assert
             response.IsSuccessStatusCode.Should().BeTrue();
@@ -47,15 +52,17 @@ namespace LocalModuleServer.IntegrationTests
         [Fact]
         public async Task PostCommand_WithoutAuth_ShouldReturn401()
         {
+            using var httpClient = CreateHttpClient();
+            
             // Arrange
-            var commandRequest = new { Module = "System", Command = "test" };
+            var commandRequest = new { Module = "InfoHandler", Command = "test" };
             var content = new StringContent(
                 JsonSerializer.Serialize(commandRequest),
                 Encoding.UTF8,
                 "application/json");
 
             // Act
-            var response = await _httpClient.PostAsync("/api/command", content);
+            var response = await httpClient.PostAsync("/api/command", content);
 
             // Assert
             response.StatusCode.Should().Be(System.Net.HttpStatusCode.Unauthorized);
@@ -67,18 +74,20 @@ namespace LocalModuleServer.IntegrationTests
         [Fact]
         public async Task PostCommand_WithValidAuth_ShouldProcessCommand()
         {
+            using var httpClient = CreateHttpClient();
+            
             // Arrange
-            var commandRequest = new { Module = "System", Command = "help" };
+            var commandRequest = new { Module = "InfoHandler", Command = "test command" };
             var content = new StringContent(
                 JsonSerializer.Serialize(commandRequest),
                 Encoding.UTF8,
                 "application/json");
 
-            _httpClient.DefaultRequestHeaders.Authorization = 
+            httpClient.DefaultRequestHeaders.Authorization = 
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", ServerFixture.TestToken);
 
             // Act
-            var response = await _httpClient.PostAsync("/api/command", content);
+            var response = await httpClient.PostAsync("/api/command", content);
 
             // Assert
             response.IsSuccessStatusCode.Should().BeTrue();
@@ -95,6 +104,8 @@ namespace LocalModuleServer.IntegrationTests
         [Fact]
         public async Task PostCommand_WithInvalidModule_ShouldReturn404()
         {
+            using var httpClient = CreateHttpClient();
+            
             // Arrange
             var commandRequest = new { Module = "NonExistentModule", Command = "test" };
             var content = new StringContent(
@@ -102,11 +113,11 @@ namespace LocalModuleServer.IntegrationTests
                 Encoding.UTF8,
                 "application/json");
 
-            _httpClient.DefaultRequestHeaders.Authorization = 
+            httpClient.DefaultRequestHeaders.Authorization = 
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", ServerFixture.TestToken);
 
             // Act
-            var response = await _httpClient.PostAsync("/api/command", content);
+            var response = await httpClient.PostAsync("/api/command", content);
 
             // Assert
             response.StatusCode.Should().Be(System.Net.HttpStatusCode.NotFound);
@@ -118,17 +129,19 @@ namespace LocalModuleServer.IntegrationTests
         [Fact]
         public async Task PostCommand_WithInvalidPayload_ShouldReturn400()
         {
+            using var httpClient = CreateHttpClient();
+            
             // Arrange
             var content = new StringContent(
                 "{ \"Invalid\": \"Payload\" }",
                 Encoding.UTF8,
                 "application/json");
 
-            _httpClient.DefaultRequestHeaders.Authorization = 
+            httpClient.DefaultRequestHeaders.Authorization = 
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", ServerFixture.TestToken);
 
             // Act
-            var response = await _httpClient.PostAsync("/api/command", content);
+            var response = await httpClient.PostAsync("/api/command", content);
 
             // Assert
             response.StatusCode.Should().Be(System.Net.HttpStatusCode.BadRequest);
@@ -157,23 +170,25 @@ namespace LocalModuleServer.IntegrationTests
         [Fact]
         public async Task WebSocketNotification_ShouldReceiveMessages()
         {
+            using var httpClient = CreateHttpClient();
+            
             // Arrange
             using var ws = new ClientWebSocket();
             var wsUri = new Uri($"ws://localhost:{ServerFixture.TestPort}/ws");
             await ws.ConnectAsync(wsUri, CancellationToken.None);
 
             // Act - Send a command via HTTP to trigger notification
-            var commandRequest = new { Module = "System", Command = "test notification" };
+            var commandRequest = new { Module = "InfoHandler", Command = "test notification" };
             var content = new StringContent(
                 JsonSerializer.Serialize(commandRequest),
                 Encoding.UTF8,
                 "application/json");
 
-            _httpClient.DefaultRequestHeaders.Authorization = 
+            httpClient.DefaultRequestHeaders.Authorization = 
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", ServerFixture.TestToken);
 
             // Send command (this should trigger a notification if modules are properly set up)
-            var httpResponse = await _httpClient.PostAsync("/api/command", content);
+            var httpResponse = await httpClient.PostAsync("/api/command", content);
 
             // Try to receive WebSocket message (with timeout)
             var buffer = new byte[4096];
@@ -189,7 +204,7 @@ namespace LocalModuleServer.IntegrationTests
                     var notification = JsonSerializer.Deserialize<JsonElement>(message);
                     
                     // Assert
-                    notification.GetProperty("module").GetString().Should().Be("System");
+                    notification.GetProperty("module").GetString().Should().Be("InfoHandler");
                     notification.GetProperty("command").GetString().Should().Be("test notification");
                     notification.GetProperty("response").GetString().Should().NotBeNull();
                     notification.GetProperty("timestamp").GetDateTime().Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromMinutes(1));
@@ -208,8 +223,10 @@ namespace LocalModuleServer.IntegrationTests
         [Fact]
         public async Task GetInvalidEndpoint_ShouldReturn404()
         {
+            using var httpClient = CreateHttpClient();
+            
             // Act
-            var response = await _httpClient.GetAsync("/api/invalid");
+            var response = await httpClient.GetAsync("/api/invalid");
 
             // Assert
             response.StatusCode.Should().Be(System.Net.HttpStatusCode.NotFound);

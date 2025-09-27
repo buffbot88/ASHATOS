@@ -24,9 +24,8 @@ namespace LocalModuleServer.IntegrationTests
             // Create real ModuleManager
             ModuleManager = new ModuleManager();
             
-            // Load built-in modules and any discovered modules
-            ModuleManager.LoadBuiltInModules();
-            ModuleManager.DiscoverAndLoadModules();
+            // Load all available modules (built-in and discovered)
+            ModuleManager.LoadModules();
             
             // Create registry wrapper
             Registry = new ModuleManagerRegistry(ModuleManager);
