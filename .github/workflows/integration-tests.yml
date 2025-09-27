@@ -1,0 +1,34 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  integration-tests:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+    
+    - name: Add URL ACL for HttpListener
+      run: |
+        netsh http add urlacl url=http://localhost:5090/ user=Everyone
+      continue-on-error: true
+      shell: cmd
+    
+    - name: Run integration tests
+      run: dotnet test tests/LocalModuleServer.IntegrationTests/LocalModuleServer.IntegrationTests.csproj --no-build --configuration Release --verbosity normal
