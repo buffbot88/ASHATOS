@@ -2,19 +2,12 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Text.Json;
-using System.Threading;
 using RaAI.Handlers.Manager;
 
 namespace RaAI.Modules
 {
-    // Drop-in test module that enumerates project features and module capabilities.
-    // Commands:
-    //   features           - human-readable summary
-    //   features full      - includes per-module help text and status
-    //   features json      - machine-readable JSON
-    //   features help      - show this help
+    // [RaModule("FeatureExplorer")]
     public sealed class FeatureExplorerModule : ModuleBase, IDisposable
     {
         public override string Name => "FeatureExplorer";
@@ -67,7 +60,6 @@ namespace RaAI.Modules
                 return Format(features, json, sw.ElapsedMilliseconds);
             }
 
-            // Collect module inventory and capabilities
             foreach (var w in _manager.Modules)
             {
                 var inst = w.Instance;
@@ -79,23 +71,20 @@ namespace RaAI.Modules
                     Type = inst.GetType().FullName ?? inst.GetType().Name
                 };
 
-                // Try to fetch canonical help for commands
-                mi.Help = SafeCall(inst.Name, "help") ?? SafeCall(inst.Name, $"{inst.Name.ToLowerInvariant()} help");
-
-                // Try to fetch a status/summary
+                // Prefer status first (safer than help for some modules like Planner/NLU)
                 mi.Status = GetStatusForModule(inst.Name);
 
-                // Try to fetch quick stats for well-known modules
+                // Get help text only for modules that are known to support it safely
+                mi.Help = GetHelpForModule(inst.Name);
+
                 if (IsMemory(inst.Name))
                     mi.Stats = SafeCall(inst.Name, "stats");
 
-                // Extract command list from help text (heuristic)
                 mi.Commands = ExtractCommands(mi.Help);
 
                 features.Modules.Add(mi);
             }
 
-            // Attempt to detect presence of non-IRaModule components (e.g., DigitalFace control)
             features.OtherComponents = DetectOtherComponents();
 
             sw.Stop();
@@ -104,7 +93,6 @@ namespace RaAI.Modules
             return Format(features, json, sw.ElapsedMilliseconds);
         }
 
-        // Replace GetStatusForModule with:
         private string? GetStatusForModule(string name)
         {
             try
@@ -116,8 +104,35 @@ namespace RaAI.Modules
             catch { return null; }
         }
 
-        private static bool IsMemory(string name) => name.Equals("Memory", StringComparison.OrdinalIgnoreCase) || name.Equals("MemoryModule", StringComparison.OrdinalIgnoreCase);
-        private static bool IsSubconscious(string name) => name.Equals("Subconscious", StringComparison.OrdinalIgnoreCase) || name.Equals("SubconsciousModule", StringComparison.OrdinalIgnoreCase);
+        private string? GetHelpForModule(string name)
+        {
+            try
+            {
+                // Avoid sending "help" to modules that historically parse input as JSON
+                if (name.Equals("Planner", StringComparison.OrdinalIgnoreCase) ||
+                    name.Equals("NLU", StringComparison.OrdinalIgnoreCase) ||
+                    name.Equals("Nlu", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Provide a minimal inline help to avoid triggering exceptions
+                    return $"{name}: status | help | accepts JSON or natural language (see docs)";
+                }
+
+                var help = SafeCall(name, "help");
+                if (string.IsNullOrWhiteSpace(help))
+                    help = SafeCall(name, $"{name.ToLowerInvariant()} help");
+                return help;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static bool IsMemory(string name) =>
+            name.Equals("Memory", StringComparison.OrdinalIgnoreCase) || name.Equals("MemoryModule", StringComparison.OrdinalIgnoreCase);
+
+        private static bool IsSubconscious(string name) =>
+            name.Equals("Subconscious", StringComparison.OrdinalIgnoreCase) || name.Equals("SubconsciousModule", StringComparison.OrdinalIgnoreCase);
 
         private string? SafeCall(string preferredModuleName, string input)
         {
@@ -141,23 +156,20 @@ namespace RaAI.Modules
             var commands = new List<string>();
             if (string.IsNullOrWhiteSpace(helpText)) return commands;
 
-            // Very simple heuristic: take lines that look like "  verb ..." or "- verb ..."
             foreach (var line in helpText.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
             {
                 var trimmed = line.TrimStart();
                 if (trimmed.StartsWith("- ")) trimmed = trimmed.Substring(2).TrimStart();
-                if (char.IsLetterOrDigit(trimmed.FirstOrDefault()))
-                {
-                    // Cut at two spaces to derive the command key (best-effort)
-                    var idx = trimmed.IndexOf("  ", StringComparison.Ordinal);
-                    var cmd = idx > 0 ? trimmed.Substring(0, idx).Trim() : trimmed;
-                    // Skip headers
-                    if (cmd.IndexOf("help", StringComparison.OrdinalIgnoreCase) >= 0 && trimmed.IndexOf("help", StringComparison.OrdinalIgnoreCase) < 0) continue;
-                    // Avoid duplicates, keep short
-                    cmd = cmd.Length > 80 ? cmd.Substring(0, 80) + "..." : cmd;
-                    if (!commands.Contains(cmd, StringComparer.OrdinalIgnoreCase))
-                        commands.Add(cmd);
-                }
+                if (trimmed.Length == 0 || !char.IsLetterOrDigit(trimmed[0])) continue;
+
+                var idx = trimmed.IndexOf("  ", StringComparison.Ordinal);
+                var cmd = idx > 0 ? trimmed[..idx].Trim() : trimmed;
+                if (cmd.IndexOf("help", StringComparison.OrdinalIgnoreCase) >= 0 && trimmed.IndexOf("help", StringComparison.OrdinalIgnoreCase) < 0)
+                    continue;
+
+                if (cmd.Length > 80) cmd = cmd[..80] + "...";
+                if (!commands.Contains(cmd, StringComparer.OrdinalIgnoreCase))
+                    commands.Add(cmd);
             }
             return commands;
         }
@@ -178,11 +190,7 @@ namespace RaAI.Modules
                 foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
                 {
                     var t = asm.GetType(fullTypeName, throwOnError: false, ignoreCase: false);
-                    if (t != null)
-                    {
-                        list.Add(label);
-                        return;
-                    }
+                    if (t != null) { list.Add(label); return; }
                 }
             }
             catch { }
@@ -192,16 +200,17 @@ namespace RaAI.Modules
         {
             if (asJson)
             {
-                var json = JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true });
-                return json;
+                return JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true });
             }
 
-            var lines = new List<string>();
-            lines.Add($"Features report generated at {report.GeneratedAtUtc:yyyy-MM-dd HH:mm:ss} UTC in {report.GeneratedInMs} ms");
-            lines.Add($"Host: {report.HostInfo.Framework} on {report.HostInfo.OS}");
+            var lines = new List<string>
+            {
+                $"Features report generated at {report.GeneratedAtUtc:yyyy-MM-dd HH:mm:ss} UTC in {report.GeneratedInMs} ms",
+                $"Host: {report.HostInfo.Framework} on {report.HostInfo.OS}",
+                "",
+                "Modules:"
+            };
 
-            lines.Add("");
-            lines.Add("Modules:");
             foreach (var m in report.Modules.OrderBy(m => m.Name, StringComparer.OrdinalIgnoreCase))
             {
                 lines.Add($"- {m.Name} ({m.Type})");
@@ -240,7 +249,7 @@ namespace RaAI.Modules
         private static string OneLine(string s)
         {
             var one = s.Replace("\r", " ").Replace("\n", " ").Trim();
-            return one.Length > 200 ? one.Substring(0, 200) + "..." : one;
+            return one.Length > 200 ? one[..200] + "..." : one;
         }
 
         private static string Help()
@@ -260,7 +269,7 @@ namespace RaAI.Modules
             GC.SuppressFinalize(this);
         }
 
-        // DTOs for JSON/text report
+        // DTOs
         private sealed class FeatureReport
         {
             public DateTime GeneratedAtUtc { get; set; }

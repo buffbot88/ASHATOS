@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Drawing;
 
-namespace RaAI.Modules.DigitalFace.Rendering
+namespace RaAI.Modules.DigitalFace
 {
     public sealed class FaceInputs
     {
@@ -40,8 +40,8 @@ namespace RaAI.Modules.DigitalFace.Rendering
             var dy = GazeTarget.Value.Y - cy;
 
             // Normalize by half-dimensions so that edges are near +/-1
-            var nx = (surfaceSize.Width > 0) ? dx / Math.Max(1f, cx) : 0f;
-            var ny = (surfaceSize.Height > 0) ? dy / Math.Max(1f, cy) : 0f;
+            var nx = surfaceSize.Width > 0 ? dx / Math.Max(1f, cx) : 0f;
+            var ny = surfaceSize.Height > 0 ? dy / Math.Max(1f, cy) : 0f;
 
             GazeX = Math.Clamp(nx, -1f, 1f);
             GazeY = Math.Clamp(ny, -1f, 1f);

@@ -129,6 +129,10 @@ namespace RaAI.Modules.SpeechModule
                 RememberCompat("boot/speech/heartbeat", $"awake:{stamp}");
                 _ = _manager?.SafeInvokeModuleByName("Conscious", "status")
                  ?? _manager?.SafeInvokeModuleByName("ConsciousModule", "status");
+
+                // Auto-wake the Face bus on Speech wake
+                FaceCmd("face wake");
+
                 LogInfo("Speech warm-up complete (heartbeat stored).");
             }
             catch (Exception ex)
@@ -255,55 +259,91 @@ namespace RaAI.Modules.SpeechModule
             if (_manager == null)
                 return "(agent pipeline unavailable)";
 
-            // NLU
-            var intentJson = _manager.SafeInvokeModuleByName("NLU", utterance)
-                           ?? _manager.SafeInvokeModuleByName("NluModule", utterance);
-            if (string.IsNullOrWhiteSpace(intentJson))
-                return "(could not derive intent)";
+            // Face: focused/working posture while planning/executing
+            FaceCmd("face set mood Thinking");
+            FaceCmd("face set attention 0.80");
 
-            RememberCompat("agent/last/intent", intentJson);
-
-            // Plan
-            var planJson = _manager.SafeInvokeModuleByName("Planner", intentJson)
-                         ?? _manager.SafeInvokeModuleByName("PlannerModule", intentJson);
-            if (string.IsNullOrWhiteSpace(planJson))
-                return "(could not generate a plan)";
-
-            RememberCompat("agent/last/plan", planJson);
-
-            // Ethics (Wiccan creed: harm none)
-            var verdict = _manager.SafeInvokeModuleByName("EthicsGuard", planJson)
-                       ?? _manager.SafeInvokeModuleByName("EthicsGuardModule", planJson);
-            if (string.IsNullOrWhiteSpace(verdict))
-                return "(ethics guard unavailable)";
-
-            if (verdict.StartsWith("APPROVED:", StringComparison.OrdinalIgnoreCase))
+            try
             {
-                var approvedPlan = verdict.Substring("APPROVED:".Length).Trim();
-                var outcome = ExecutePlan(approvedPlan);
-                RememberCompat("agent/last/outcome", outcome);
-                return StyleOk(outcome);
-            }
-            if (verdict.StartsWith("CONFIRM:", StringComparison.OrdinalIgnoreCase))
-            {
-                // Format: "CONFIRM: <reason>\n<plan json>"
-                var reason = verdict;
-                var idx = verdict.IndexOf('\n');
-                var plan = planJson;
-                if (idx >= 0)
+                // NLU
+                var intentJson = _manager.SafeInvokeModuleByName("NLU", utterance)
+                               ?? _manager.SafeInvokeModuleByName("NluModule", utterance);
+                if (string.IsNullOrWhiteSpace(intentJson))
+                    return "(could not derive intent)";
+
+                RememberCompat("agent/last/intent", intentJson);
+
+                // Plan
+                var planJson = _manager.SafeInvokeModuleByName("Planner", intentJson)
+                             ?? _manager.SafeInvokeModuleByName("PlannerModule", intentJson);
+                if (string.IsNullOrWhiteSpace(planJson))
+                    return "(could not generate a plan)";
+
+                RememberCompat("agent/last/plan", planJson);
+
+                // Ethics (Wiccan creed: harm none)
+                var verdict = _manager.SafeInvokeModuleByName("EthicsGuard", planJson)
+                           ?? _manager.SafeInvokeModuleByName("EthicsGuardModule", planJson);
+                if (string.IsNullOrWhiteSpace(verdict))
+                    return "(ethics guard unavailable)";
+
+                if (verdict.StartsWith("APPROVED:", StringComparison.OrdinalIgnoreCase))
                 {
-                    reason = verdict.Substring(0, idx).Trim();
-                    plan = verdict[(idx + 1)..].Trim();
-                }
-                StartPendingConfirmation(plan, reason);
-                return StyleConfirm($"{reason}\nShall I proceed? (yes/no)");
-            }
-            if (verdict.StartsWith("BLOCKED:", StringComparison.OrdinalIgnoreCase))
-            {
-                return StyleBlocked(verdict);
-            }
+                    var approvedPlan = verdict.Substring("APPROVED:".Length).Trim();
 
-            return $"(unexpected ethics verdict) {verdict}";
+                    // Brief “acting” hint
+                    FaceCmd("face set attention 0.90");
+
+                    var outcome = ExecutePlan(approvedPlan);
+                    RememberCompat("agent/last/outcome", outcome);
+
+                    // Success flourish → relax
+                    FaceCmd("face set mood Happy");
+                    FaceCmd("face set attention 0.35");
+
+                    return StyleOk(outcome);
+                }
+                if (verdict.StartsWith("CONFIRM:", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Format: "CONFIRM: <reason>\n<plan json>"
+                    var reason = verdict;
+                    var idx = verdict.IndexOf('\n');
+                    var plan = planJson;
+                    if (idx >= 0)
+                    {
+                        reason = verdict.Substring(0, idx).Trim();
+                        plan = verdict[(idx + 1)..].Trim();
+                    }
+                    StartPendingConfirmation(plan, reason);
+
+                    // Maintain focused/caution posture while awaiting approval
+                    FaceCmd("face set mood Thinking");
+                    FaceCmd("face set attention 0.60");
+
+                    return StyleConfirm($"{reason}\nShall I proceed? (yes/no)");
+                }
+                if (verdict.StartsWith("BLOCKED:", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Show confusion on block
+                    FaceCmd("face set mood Confused");
+                    FaceCmd("face set attention 0.25");
+
+                    return StyleBlocked(verdict);
+                }
+
+                return $"(unexpected ethics verdict) {verdict}";
+            }
+            finally
+            {
+                // If we’re not pending confirmation, relax attention back a bit
+                bool pending;
+                lock (_pendingLock) { pending = _pendingPlanJson != null; }
+                if (!pending)
+                {
+                    FaceCmd("face set mood Neutral");
+                    FaceCmd("face set attention 0.30");
+                }
+            }
         }
 
         private async Task<string> HandleConfirmationAsync(bool approve, CancellationToken ct)
@@ -322,18 +362,36 @@ namespace RaAI.Modules.SpeechModule
             if (until.HasValue && DateTime.UtcNow > until.Value)
             {
                 ClearPending();
+
+                // Return to neutral on expiry
+                FaceCmd("face set mood Neutral");
+                FaceCmd("face set attention 0.30");
+
                 return "(request expired)";
             }
 
             if (!approve)
             {
                 ClearPending();
+
+                // Calm down after cancel
+                FaceCmd("face set mood Neutral");
+                FaceCmd("face set attention 0.30");
+
                 return "Understood. I have canceled the requested action.";
             }
+
+            // Acting
+            FaceCmd("face set attention 0.85");
 
             var outcome = ExecutePlan(plan!);
             RememberCompat("agent/last/outcome", outcome);
             ClearPending();
+
+            // Success flourish → relax
+            FaceCmd("face set mood Happy");
+            FaceCmd("face set attention 0.35");
+
             return StyleOk(outcome);
         }
 
@@ -433,20 +491,37 @@ namespace RaAI.Modules.SpeechModule
 
         private async Task<string> ThinkAsync(string content, CancellationToken ct)
         {
-            if (_manager != null)
-            {
-                var res = _manager.SafeInvokeModuleByName("Conscious", $"think {content}")
-                       ?? _manager.SafeInvokeModuleByName("ConsciousModule", $"think {content}");
-                if (!string.IsNullOrWhiteSpace(res))
-                    return res!;
-            }
+            // Face: thinking posture
+            FaceCmd("face set mood Thinking");
+            FaceCmd("face set attention 0.70");
 
-            await Task.Yield();
-            return $"Thought about: {content}";
+            try
+            {
+                if (_manager != null)
+                {
+                    var res = _manager.SafeInvokeModuleByName("Conscious", $"think {content}")
+                           ?? _manager?.SafeInvokeModuleByName("ConsciousModule", $"think {content}");
+                    if (!string.IsNullOrWhiteSpace(res))
+                        return res!;
+                }
+
+                await Task.Yield();
+                return $"Thought about: {content}";
+            }
+            finally
+            {
+                // Relax after thinking
+                FaceCmd("face set mood Neutral");
+                FaceCmd("face set attention 0.35");
+            }
         }
 
         private async Task<string> ProbeSubconsciousAsync(string content, CancellationToken ct)
         {
+            // Face: thinking posture
+            FaceCmd("face set mood Thinking");
+            FaceCmd("face set attention 0.60");
+
             try
             {
                 if (_sub != null)
@@ -462,6 +537,12 @@ namespace RaAI.Modules.SpeechModule
             {
                 LogError($"Subconscious probe failed: {ex.Message}");
                 return $"(probe error) {ex.Message}";
+            }
+            finally
+            {
+                // Relax posture
+                FaceCmd("face set mood Neutral");
+                FaceCmd("face set attention 0.35");
             }
 
             return "(subconscious unavailable)";
@@ -521,6 +602,11 @@ namespace RaAI.Modules.SpeechModule
         public string GenerateResponse(string input)
         {
             return GenerateResponseAsync(input, CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        private void FaceCmd(string cmd)
+        {
+            try { _manager?.SafeInvokeModuleByName("Face", cmd); } catch { }
         }
     }
 }

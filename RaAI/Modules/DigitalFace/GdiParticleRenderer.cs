@@ -3,7 +3,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using RaAI.Modules.SubconsciousModule.Core;
 
-namespace RaAI.Modules.DigitalFace.Rendering
+namespace RaAI.Modules.DigitalFace
 {
     public sealed class GdiParticleRenderer : IDigitalFaceRenderer, IDisposable
     {
@@ -66,7 +66,7 @@ namespace RaAI.Modules.DigitalFace.Rendering
             int particles = 64;
             for (int i = 0; i < particles; i++)
             {
-                float t = (i / (float)particles) * (float)(Math.PI * 2.0);
+                float t = i / (float)particles * (float)(Math.PI * 2.0);
                 float jitter = (float)(_rnd.NextDouble() * 0.12 - 0.06); // slight angular jitter
                 float a = t + _time * (0.2f + audio * 0.8f) + jitter;
 

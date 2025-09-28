@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 using System.ComponentModel; // added
-using RaAI.Modules.DigitalFace.Rendering;
 
 namespace RaAI.Modules.DigitalFace
 {

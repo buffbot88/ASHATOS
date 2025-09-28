@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Drawing;
-using RaAI.Modules.DigitalFace.Rendering;
 
 namespace RaAI.Modules.DigitalFace
 {
