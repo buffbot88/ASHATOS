@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using RaAI.Handlers.Manager;
+using System.Reflection;
 
 namespace RaAI.Modules.MemoryModule
 {
@@ -16,6 +19,10 @@ namespace RaAI.Modules.MemoryModule
         private readonly Dictionary<Guid, MemoryItem> _memory = new();
         private readonly Dictionary<Guid, Candidate> _candidates = new();
         private readonly Dictionary<Guid, ConsciousEntry> _consciousIndex = new();
+
+        // Boot/wake orchestration
+        private ModuleManager? _manager;
+        private int _bootStarted; // 0 = not started, 1 = started (Interlocked)
 
         public override string Name => "Memory";
 
@@ -40,7 +47,12 @@ namespace RaAI.Modules.MemoryModule
         public override void Initialize(ModuleManager manager)
         {
             base.Initialize(manager);
-            // Nothing extra required right now; data already loaded in ctor.
+            _manager = manager;
+
+            // Kick off boot/wake orchestration after manager finishes loading others.
+            // We defer slightly to allow a single-phase loader to add other modules,
+            // but this remains idempotent even if called multiple times (reloads).
+            _ = TryStartBootSequenceAsync();
         }
 
         // Provide a simple command interface so ModuleManager.SafeInvokeModuleByName can call Process(string)
@@ -53,6 +65,7 @@ namespace RaAI.Modules.MemoryModule
         //  - list [top N]
         //  - query <text>
         //  - stats
+        //  - boot (manual trigger for wake sequence)
         public override string Process(string input)
         {
             if (string.IsNullOrWhiteSpace(input))
@@ -65,6 +78,12 @@ namespace RaAI.Modules.MemoryModule
             {
                 if (lower == "memory help" || lower == "help" || lower.StartsWith("memory:help"))
                     return HelpText();
+
+                if (lower == "boot" || lower == "memory boot")
+                {
+                    _ = TryStartBootSequenceAsync(force: true);
+                    return "Boot/wake sequence requested.";
+                }
 
                 if (lower.StartsWith("remember "))
                 {
@@ -433,8 +452,261 @@ namespace RaAI.Modules.MemoryModule
                 "  remove id <guid>            - remove an entry by identifier",
                 "  list [N]                    - list most recent N (default 50)",
                 "  query <text>                - search key/value contains text",
-                "  stats                       - show memory counters"
+                "  stats                       - show memory counters",
+                "  boot                        - trigger the boot/wake sequence (manual)"
             });
+        }
+
+        // -------------------- Boot/Wake Orchestration (Memory-led) --------------------
+
+        // If ModuleManager has an event bus (RaiseSystemEvent), we'll use it.
+        // Otherwise we will reflectively invoke hooks on specific modules in sequence.
+        private async Task TryStartBootSequenceAsync(bool force = false)
+        {
+            if (!force)
+            {
+                if (Interlocked.CompareExchange(ref _bootStarted, 1, 0) != 0)
+                    return; // already started
+            }
+            else
+            {
+                // forced trigger skips the "already started" guard
+                Interlocked.Exchange(ref _bootStarted, 1);
+            }
+
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            LogInfo("Boot sequence starting...");
+
+            // Light touch delay to allow single-phase loaders to finish adding modules.
+            await Task.Delay(50);
+
+            // Wait briefly for required modules to appear (best-effort).
+            var targets = new[] { "Subconscious", "Conscious", "Speech", "DigitalFace" };
+            await WaitForModulesAsync(targets, TimeSpan.FromSeconds(2));
+
+            // 0) Optional broadcast: SystemBoot (if manager supports it)
+            TryRaiseSystemEvent("SystemBoot", null);
+
+            // 1) Memory is ready -> announce to others
+            AnnounceMemoryReady();
+
+            // 2) Wake in strict order
+            WakeModuleByName("Subconscious");
+            WakeModuleByName("Conscious");
+            WakeModuleByName("Speech");
+            WakeModuleByName("DigitalFace");
+
+            // 3) Optional broadcast warmup
+            TryRaiseSystemEvent("Warmup", null);
+
+            sw.Stop();
+            LogInfo($"Boot sequence complete in {sw.ElapsedMilliseconds} ms.");
+        }
+
+        private async Task WaitForModulesAsync(IEnumerable<string> preferredNames, TimeSpan timeout)
+        {
+            if (_manager == null) return;
+
+            var names = preferredNames?.ToArray() ?? Array.Empty<string>();
+            if (names.Length == 0) return;
+
+            var end = DateTime.UtcNow + timeout;
+            while (DateTime.UtcNow < end)
+            {
+                if (names.All(n => FindModuleInstanceByName(n) != null))
+                    break;
+
+                await Task.Delay(50);
+            }
+        }
+
+        private void AnnounceMemoryReady()
+        {
+            // Prefer manager's event bus if available
+            if (TryRaiseSystemEvent("MemoryReady", this))
+                return;
+
+            // Otherwise, notify each target directly
+            NotifyModuleMemoryReady("Subconscious");
+            NotifyModuleMemoryReady("Conscious");
+            NotifyModuleMemoryReady("Speech");
+            NotifyModuleMemoryReady("DigitalFace");
+        }
+
+        private void NotifyModuleMemoryReady(string name)
+        {
+            var target = FindModuleInstanceByName(name);
+            if (target == null) return;
+
+            // Try OnMemoryReady(MemoryModule or compatible)
+            if (!TryInvokeTyped(target, "OnMemoryReady", this))
+            {
+                // Fall back to generic event
+                TryInvokeEvent(target, "OnSystemEvent", "MemoryReady", this);
+            }
+        }
+
+        private void WakeModuleByName(string name)
+        {
+            var target = FindModuleInstanceByName(name);
+            if (target == null) return;
+
+            // Try OnWake()
+            if (!TryInvokeNoArg(target, "OnWake"))
+            {
+                // Fall back to generic event name
+                TryInvokeEvent(target, "OnSystemEvent", "Wake", null);
+            }
+        }
+
+        private IRaModule? FindModuleInstanceByName(string preferred)
+        {
+            if (_manager == null || string.IsNullOrWhiteSpace(preferred)) return null;
+
+            // Prefer declared Name match
+            var inst = _manager.GetModuleInstanceByName(preferred);
+            if (inst != null) return inst;
+
+            // Fallbacks: try suffix "Module"
+            inst = _manager.GetModuleInstanceByName(preferred + "Module");
+            if (inst != null) return inst;
+
+            // Last resort: exact type name scan
+            return _manager.Modules
+                           .Select(w => w.Instance)
+                           .FirstOrDefault(i => string.Equals(i?.GetType().Name, preferred, StringComparison.OrdinalIgnoreCase));
+        }
+
+        // --------------- Reflection helpers ---------------
+
+        private bool TryRaiseSystemEvent(string name, object? payload)
+        {
+            if (_manager == null) return false;
+
+            try
+            {
+                var mi = _manager.GetType().GetMethod("RaiseSystemEvent", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                if (mi != null)
+                {
+                    var pars = mi.GetParameters();
+                    if (pars.Length == 2)
+                        mi.Invoke(_manager, new[] { name, payload });
+                    else if (pars.Length == 1)
+                        mi.Invoke(_manager, new object[] { name });
+                    else
+                        mi.Invoke(_manager, null);
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                LogWarn($"RaiseSystemEvent failed: {ex.Message}");
+            }
+            return false;
+        }
+
+        private static bool TryInvokeTyped(object target, string methodName, object? payload)
+        {
+            if (target == null || payload == null) return false;
+            var t = target.GetType();
+
+            try
+            {
+                var m = t.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                         .FirstOrDefault(mth =>
+                         {
+                             if (!string.Equals(mth.Name, methodName, StringComparison.Ordinal)) return false;
+                             var ps = mth.GetParameters();
+                             return ps.Length == 1 && ps[0].ParameterType.IsInstanceOfType(payload);
+                         });
+
+                if (m != null)
+                {
+                    m.Invoke(target, new[] { payload });
+                    return true;
+                }
+
+                // Allow assignable parameter (e.g., interface/base class)
+                m = t.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                     .FirstOrDefault(mth =>
+                     {
+                         if (!string.Equals(mth.Name, methodName, StringComparison.Ordinal)) return false;
+                         var ps = mth.GetParameters();
+                         return ps.Length == 1 && ps[0].ParameterType.IsAssignableFrom(payload.GetType());
+                     });
+
+                if (m != null)
+                {
+                    m.Invoke(target, new[] { payload });
+                    return true;
+                }
+            }
+            catch
+            {
+                // swallow
+            }
+            return false;
+        }
+
+        private static bool TryInvokeNoArg(object target, string methodName)
+        {
+            if (target == null) return false;
+            var t = target.GetType();
+
+            try
+            {
+                var m = t.GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Type.EmptyTypes, null);
+                if (m != null)
+                {
+                    m.Invoke(target, null);
+                    return true;
+                }
+            }
+            catch
+            {
+                // swallow
+            }
+            return false;
+        }
+
+        private static bool TryInvokeEvent(object target, string methodName, string name, object? payload)
+        {
+            if (target == null) return false;
+            var t = target.GetType();
+
+            try
+            {
+                // Prefer (string, object) signature
+                var m2 = t.GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { typeof(string), typeof(object) }, null);
+                if (m2 != null)
+                {
+                    m2.Invoke(target, new[] { name, payload! });
+                    return true;
+                }
+
+                // Fallback: (string) only
+                var m1 = t.GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { typeof(string) }, null);
+                if (m1 != null)
+                {
+                    m1.Invoke(target, new object[] { name });
+                    return true;
+                }
+            }
+            catch
+            {
+                // swallow
+            }
+            return false;
+        }
+
+        // Optional: receive a SystemBoot broadcast from ModuleManager (if available)
+        // to trigger the same memory-led sequence (idempotent).
+        private void OnSystemEvent(string name, object? payload)
+        {
+            if (string.Equals(name, "SystemBoot", StringComparison.OrdinalIgnoreCase))
+            {
+                _ = TryStartBootSequenceAsync();
+            }
         }
     }
 

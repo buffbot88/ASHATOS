@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,7 +9,6 @@ using RaAI.Modules.SubconsciousModule;
 
 namespace RaAI.Modules.SpeechModule
 {
-    // If you use attribute-based discovery, you can enable this:
     // [RaModule("Speech")]
     public class SpeechModule : ModuleBase, ISpeechModule
     {
@@ -18,6 +18,31 @@ namespace RaAI.Modules.SpeechModule
         private ModuleManager? _manager;
         private object? _memoryInst;        // IMemory or MemoryModule (or compatible)
         private ISubconscious? _sub;        // optional
+
+        // Wake/boot state (ordered boot: Memory -> Subconscious -> Conscious -> Speech -> DigitalFace)
+        private int _awakeFlag;             // 0 = not awake, 1 = awake
+        private DateTime? _awakeAtUtc;
+
+        // Confirmation state for EthicsGuard (Ultron capability, Wiccan creed gate)
+        private readonly object _pendingLock = new();
+        private string? _pendingPlanJson;
+        private string? _pendingReason;
+        private DateTime? _pendingUntilUtc;
+
+        // Precompiled lightweight routes
+        private static readonly Regex RxStart = new(@"^\s*start(?:\s.*)?$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex RxFeatures = new(@"^\s*features(?:\s.*)?$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex RxRecall = new(@"^(?:recall|get)\s+(.+)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex RxThink = new(@"^(?:think(?:\s+about)?|ponder)\s+(.+)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex RxProbe = new(@"^(?:ask\s+subconscious|probe|ask)\s+(.+)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex RxRememberExplicit = new(@"^remember\s+(.+?)\s*(?:is|=)\s*(.+)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex RxRememberImplicit = new(@"^(.+?)\s*=\s*(.+)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex RxStatusOrHelp = new(@"^\s*(status|help)\s*$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        // Agentic routes
+        private static readonly Regex RxDo = new(@"^(?:do|please|execute)\s+(.+)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex RxYes = new(@"^\s*(yes|approve|confirm)\s*$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex RxNo = new(@"^\s*(no|deny|cancel)\s*$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         // Parameterless ctor required for ModuleManager discovery
         public SpeechModule() { }
@@ -35,7 +60,7 @@ namespace RaAI.Modules.SpeechModule
             base.Initialize(manager);
             _manager = manager;
 
-            // Resolve memory by name or type
+            // Resolve memory by name or type (binding will also be updated by OnMemoryReady)
             _memoryInst = manager.GetModuleInstanceByName("Memory")
                          ?? manager.GetModuleInstanceByName("MemoryModule");
 
@@ -53,6 +78,65 @@ namespace RaAI.Modules.SpeechModule
             LogInfo("Speech module initialized.");
         }
 
+        // -------------- Ordered wake handlers (raised by Memory/ModuleManager) --------------
+
+        private void OnMemoryReady(MemoryModule.MemoryModule memory)
+        {
+            _memoryInst = memory;
+            LogInfo("OnMemoryReady: bound to MemoryModule.");
+        }
+
+        private void OnMemoryReady(IMemory memory)
+        {
+            _memoryInst = memory;
+            LogInfo("OnMemoryReady: bound to IMemory.");
+        }
+
+        private void OnWarmup()
+        {
+            try
+            {
+                _ = _manager?.SafeInvokeModuleByName("Conscious", "status")
+                 ?? _manager?.SafeInvokeModuleByName("ConsciousModule", "status");
+            }
+            catch { }
+        }
+
+        private void OnSystemEvent(string name, object? payload)
+        {
+            if (string.Equals(name, "MemoryReady", StringComparison.OrdinalIgnoreCase))
+            {
+                if (payload is MemoryModule.MemoryModule mm) OnMemoryReady(mm);
+                else if (payload is IMemory mem) OnMemoryReady(mem);
+                else LogWarn($"MemoryReady payload type not recognized: {payload?.GetType().FullName ?? "null"}");
+            }
+            else if (string.Equals(name, "Wake", StringComparison.OrdinalIgnoreCase))
+            {
+                OnWake();
+            }
+        }
+
+        private void OnWake()
+        {
+            if (Interlocked.CompareExchange(ref _awakeFlag, 1, 0) != 0)
+                return; // already awake
+
+            _awakeAtUtc = DateTime.UtcNow;
+
+            try
+            {
+                var stamp = _awakeAtUtc.Value.ToString("yyyy-MM-dd HH:mm:ss 'UTC'");
+                RememberCompat("boot/speech/heartbeat", $"awake:{stamp}");
+                _ = _manager?.SafeInvokeModuleByName("Conscious", "status")
+                 ?? _manager?.SafeInvokeModuleByName("ConsciousModule", "status");
+                LogInfo("Speech warm-up complete (heartbeat stored).");
+            }
+            catch (Exception ex)
+            {
+                LogWarn($"Speech warm-up issue: {ex.Message}");
+            }
+        }
+
         // -------------- Primary async entry --------------
 
         public async Task<string> GenerateResponseAsync(string input, CancellationToken cancellationToken = default)
@@ -62,17 +146,37 @@ namespace RaAI.Modules.SpeechModule
 
             var text = input.Trim();
 
-            // remember: "X is Y" or "remember X is Y" or "remember X=Y"
-            var match = Regex.Match(text, @"^(?:remember\s+)?(.+?)\s*(?:is|=)\s*(.+)$", RegexOptions.IgnoreCase);
-            if (match.Success)
+            // quick routes: TestRunner (forward all args, e.g., fast/json/verify/seed ...)
+            if (RxStart.IsMatch(text))
             {
-                var key = NormalizeKey(match.Groups[1].Value);
-                var value = match.Groups[2].Value.Trim();
-                return RememberCompat(key, value);
+                var r = CallModule("TestRunner", text);
+                if (!string.IsNullOrWhiteSpace(r)) return r!;
             }
 
-            // recall: "recall key"
-            match = Regex.Match(text, @"^(?:recall|get)\s+(.+)$", RegexOptions.IgnoreCase);
+            // quick routes: FeatureExplorer (forward all args)
+            if (RxFeatures.IsMatch(text))
+            {
+                var r = CallModule("FeatureExplorer", text);
+                if (!string.IsNullOrWhiteSpace(r)) return r!;
+            }
+
+            // Agentic pipeline (NLU -> Planner -> EthicsGuard -> (confirm?) -> Executor)
+            var mDo = RxDo.Match(text);
+            if (mDo.Success)
+            {
+                var utterance = mDo.Groups[1].Value.Trim();
+                return await HandleAgenticCommandAsync(utterance, cancellationToken);
+            }
+
+            // Confirmation handling for pending plans
+            if (RxYes.IsMatch(text))
+                return await HandleConfirmationAsync(approve: true, cancellationToken);
+
+            if (RxNo.IsMatch(text))
+                return await HandleConfirmationAsync(approve: false, cancellationToken);
+
+            // recall: "recall key" or "get key"
+            var match = RxRecall.Match(text);
             if (match.Success)
             {
                 var key = NormalizeKey(match.Groups[1].Value.Trim());
@@ -81,7 +185,7 @@ namespace RaAI.Modules.SpeechModule
             }
 
             // think: "think about X" or "think X" or "ponder X"
-            match = Regex.Match(text, @"^(?:think(?: about)?|ponder)\s+(.+)$", RegexOptions.IgnoreCase);
+            match = RxThink.Match(text);
             if (match.Success)
             {
                 var content = match.Groups[1].Value.Trim();
@@ -89,15 +193,38 @@ namespace RaAI.Modules.SpeechModule
             }
 
             // probe subconscious: "ask subconscious X", "probe X", "ask X"
-            match = Regex.Match(text, @"^(?:ask\s+subconscious|probe|ask)\s+(.+)$", RegexOptions.IgnoreCase);
+            match = RxProbe.Match(text);
             if (match.Success)
             {
                 var content = match.Groups[1].Value.Trim();
                 return await ProbeSubconsciousAsync(content, cancellationToken);
             }
 
+            // remember (explicit or '=' implicit)
+            match = RxRememberExplicit.Match(text);
+            if (!match.Success) match = RxRememberImplicit.Match(text);
+
+            if (match.Success)
+            {
+                var key = NormalizeKey(match.Groups[1].Value);
+                var value = match.Groups[2].Value.Trim();
+                return RememberCompat(key, value);
+            }
+
+            // Pass-through convenience for new modules (optional)
+            if (text.StartsWith("skills", StringComparison.OrdinalIgnoreCase))
+            {
+                var r = CallModule("Skills", text);
+                if (!string.IsNullOrWhiteSpace(r)) return r!;
+            }
+            if (text.StartsWith("consent", StringComparison.OrdinalIgnoreCase))
+            {
+                var r = CallModule("Consent", text);
+                if (!string.IsNullOrWhiteSpace(r)) return r!;
+            }
+
             // status/help
-            if (Regex.IsMatch(text, @"^\s*(status|help)\s*$", RegexOptions.IgnoreCase))
+            if (RxStatusOrHelp.IsMatch(text))
             {
                 return GetHelpOrStatus(text);
             }
@@ -112,8 +239,7 @@ namespace RaAI.Modules.SpeechModule
         {
             try
             {
-                // Reuse the async pipeline synchronously for ModuleManager.SafeInvokeModuleByName
-                return GenerateResponseAsync(input, CancellationToken.None).GetAwaiter().GetResult();
+                return GenerateResponseAsync(input, CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();
             }
             catch (Exception ex)
             {
@@ -121,6 +247,136 @@ namespace RaAI.Modules.SpeechModule
                 return $"(error) {ex.Message}";
             }
         }
+
+        // -------------- Agentic pipeline (JARVIS + Ultron capability, Wiccan creed guard) --------------
+
+        private async Task<string> HandleAgenticCommandAsync(string utterance, CancellationToken ct)
+        {
+            if (_manager == null)
+                return "(agent pipeline unavailable)";
+
+            // NLU
+            var intentJson = _manager.SafeInvokeModuleByName("NLU", utterance)
+                           ?? _manager.SafeInvokeModuleByName("NluModule", utterance);
+            if (string.IsNullOrWhiteSpace(intentJson))
+                return "(could not derive intent)";
+
+            RememberCompat("agent/last/intent", intentJson);
+
+            // Plan
+            var planJson = _manager.SafeInvokeModuleByName("Planner", intentJson)
+                         ?? _manager.SafeInvokeModuleByName("PlannerModule", intentJson);
+            if (string.IsNullOrWhiteSpace(planJson))
+                return "(could not generate a plan)";
+
+            RememberCompat("agent/last/plan", planJson);
+
+            // Ethics (Wiccan creed: harm none)
+            var verdict = _manager.SafeInvokeModuleByName("EthicsGuard", planJson)
+                       ?? _manager.SafeInvokeModuleByName("EthicsGuardModule", planJson);
+            if (string.IsNullOrWhiteSpace(verdict))
+                return "(ethics guard unavailable)";
+
+            if (verdict.StartsWith("APPROVED:", StringComparison.OrdinalIgnoreCase))
+            {
+                var approvedPlan = verdict.Substring("APPROVED:".Length).Trim();
+                var outcome = ExecutePlan(approvedPlan);
+                RememberCompat("agent/last/outcome", outcome);
+                return StyleOk(outcome);
+            }
+            if (verdict.StartsWith("CONFIRM:", StringComparison.OrdinalIgnoreCase))
+            {
+                // Format: "CONFIRM: <reason>\n<plan json>"
+                var reason = verdict;
+                var idx = verdict.IndexOf('\n');
+                var plan = planJson;
+                if (idx >= 0)
+                {
+                    reason = verdict.Substring(0, idx).Trim();
+                    plan = verdict[(idx + 1)..].Trim();
+                }
+                StartPendingConfirmation(plan, reason);
+                return StyleConfirm($"{reason}\nShall I proceed? (yes/no)");
+            }
+            if (verdict.StartsWith("BLOCKED:", StringComparison.OrdinalIgnoreCase))
+            {
+                return StyleBlocked(verdict);
+            }
+
+            return $"(unexpected ethics verdict) {verdict}";
+        }
+
+        private async Task<string> HandleConfirmationAsync(bool approve, CancellationToken ct)
+        {
+            string? plan; string? reason; DateTime? until;
+            lock (_pendingLock)
+            {
+                plan = _pendingPlanJson;
+                reason = _pendingReason;
+                until = _pendingUntilUtc;
+            }
+
+            if (string.IsNullOrWhiteSpace(plan))
+                return "(nothing pending confirmation)";
+
+            if (until.HasValue && DateTime.UtcNow > until.Value)
+            {
+                ClearPending();
+                return "(request expired)";
+            }
+
+            if (!approve)
+            {
+                ClearPending();
+                return "Understood. I have canceled the requested action.";
+            }
+
+            var outcome = ExecutePlan(plan!);
+            RememberCompat("agent/last/outcome", outcome);
+            ClearPending();
+            return StyleOk(outcome);
+        }
+
+        private string ExecutePlan(string planJson)
+        {
+            try
+            {
+                var outText = _manager?.SafeInvokeModuleByName("Executor", planJson)
+                           ?? _manager?.SafeInvokeModuleByName("ExecutorModule", planJson);
+                return string.IsNullOrWhiteSpace(outText) ? "(executor produced no output)" : outText!;
+            }
+            catch (Exception ex)
+            {
+                return $"(execution error) {ex.Message}";
+            }
+        }
+
+        private void StartPendingConfirmation(string planJson, string reason)
+        {
+            lock (_pendingLock)
+            {
+                _pendingPlanJson = planJson;
+                _pendingReason = reason;
+                _pendingUntilUtc = DateTime.UtcNow.AddMinutes(2);
+            }
+            RememberCompat("agent/pending/plan", planJson);
+            RememberCompat("agent/pending/reason", reason);
+        }
+
+        private void ClearPending()
+        {
+            lock (_pendingLock)
+            {
+                _pendingPlanJson = null;
+                _pendingReason = null;
+                _pendingUntilUtc = null;
+            }
+        }
+
+        // Persona-aware phrasing (lightweight)
+        private static string StyleOk(string s) => $"By your leave. {s}";
+        private static string StyleConfirm(string s) => $"Caution, in keeping with 'harm none': {s}";
+        private static string StyleBlocked(string s) => $"I won’t do that. It would violate 'harm none'. Detail: {s}";
 
         // -------------- Command handlers --------------
 
@@ -177,17 +433,14 @@ namespace RaAI.Modules.SpeechModule
 
         private async Task<string> ThinkAsync(string content, CancellationToken ct)
         {
-            // Prefer delegating to Conscious if available via ModuleManager
             if (_manager != null)
             {
-                // Try both names
                 var res = _manager.SafeInvokeModuleByName("Conscious", $"think {content}")
                        ?? _manager.SafeInvokeModuleByName("ConsciousModule", $"think {content}");
                 if (!string.IsNullOrWhiteSpace(res))
-                    return res;
+                    return res!;
             }
 
-            // Fallback simple response
             await Task.Yield();
             return $"Thought about: {content}";
         }
@@ -198,7 +451,10 @@ namespace RaAI.Modules.SpeechModule
             {
                 if (_sub != null)
                 {
-                    var response = await _sub.Probe(content, ct);
+                    var probeTask = _sub.Probe(content, ct);
+                    var completed = await Task.WhenAny(probeTask, Task.Delay(TimeSpan.FromSeconds(2), ct)) == probeTask;
+                    if (!completed) return "(probe timeout)";
+                    var response = await probeTask;
                     return $"Subconscious response: {response}";
                 }
             }
@@ -221,6 +477,12 @@ namespace RaAI.Modules.SpeechModule
                 - recall key                Retrieve a memory entry
                 - think <text>              Process input (delegates to Conscious if available)
                 - probe <text>              Query Subconscious if available
+                - do <request>              Agentic action (NLU → Plan → EthicsGuard → Execute)
+                - yes | no                  Approve/deny a pending action
+                - start [options]           Run TestRunner (fast, json, verify, seed <n>, ...)
+                - features [options]        Explore loaded features/capabilities (full, json, ...)
+                - skills ...                Skill registry (list/describe)
+                - consent ...               Consent registry (grant/revoke/list)
                 - status                    Show availability
                 - help                      This help text".Trim();
             }
@@ -229,8 +491,28 @@ namespace RaAI.Modules.SpeechModule
             var hasSub = _sub != null;
             var hasCon = _manager?.GetModuleInstanceByName("Conscious") != null
                       || _manager?.GetModuleInstanceByName("ConsciousModule") != null;
+            var awake = _awakeFlag == 1 ? "yes" : "no";
+            var when = _awakeAtUtc?.ToString("yyyy-MM-dd HH:mm:ss 'UTC'") ?? "-";
 
-            return $"Speech status: memory={(hasMem ? "yes" : "no")}, subconscious={(hasSub ? "yes" : "no")}, conscious={(hasCon ? "yes" : "no")}";
+            // Pending info
+            string pendingInfo;
+            lock (_pendingLock)
+            {
+                pendingInfo = _pendingPlanJson != null
+                    ? $"yes (expires {(_pendingUntilUtc?.ToString("yyyy-MM-dd HH:mm:ss 'UTC'") ?? "-")})"
+                    : "no";
+            }
+
+            var sb = new StringBuilder();
+            sb.Append($"Speech status: memory={(hasMem ? "yes" : "no")}, subconscious={(hasSub ? "yes" : "no")}, conscious={(hasCon ? "yes" : "no")}, awake={awake}, awakeAt={when}");
+            sb.Append($", pendingAction={pendingInfo}");
+            return sb.ToString();
+        }
+
+        private string? CallModule(string name, string command)
+        {
+            return _manager?.SafeInvokeModuleByName(name, command)
+                ?? _manager?.SafeInvokeModuleByName(name + "Module", command);
         }
 
         private static string NormalizeKey(string s) =>
@@ -238,7 +520,7 @@ namespace RaAI.Modules.SpeechModule
 
         public string GenerateResponse(string input)
         {
-            return GenerateResponseAsync(input, CancellationToken.None).GetAwaiter().GetResult();
+            return GenerateResponseAsync(input, CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();
         }
     }
 }

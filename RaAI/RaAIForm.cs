@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
@@ -178,7 +179,7 @@ namespace RaAI
             {
                 ForeColor = FgColor,
                 BackColor = BgColor,
-                BorderStyle = BorderStyle.FixedSingle,
+                BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle,
                 Left = moduleSelect.Right + 8,
                 Top = 8,
                 Width = 500,
@@ -238,7 +239,51 @@ namespace RaAI
             {
                 if (moduleManager != null)
                 {
-                    await ReloadAndShowModulesAsync();
+                    if (moduleManager.Modules.Count == 0)
+                    {
+                        // Nothing preloaded (fallback to existing reload behavior)
+                        await ReloadAndShowModulesAsync();
+                    }
+                    else
+                    {
+                        // Already loaded at startup: just update UI and list modules
+                        ClearConsoles();
+
+                        // Booting message in right console
+                        RouteModuleMessage("System", "Startup", "Booting up...");
+
+                        // Time the warm-up for a nice confirmation message
+                        var sw = Stopwatch.StartNew();
+
+                        PopulateModuleSelector();
+
+                        RouteLeft("Load", $"Loaded {moduleManager.Modules.Count} module(s) at startup.");
+                        foreach (var w in moduleManager.Modules)
+                        {
+                            try
+                            {
+                                var inst = w.Instance;
+                                var name = inst?.Name ?? inst?.GetType().Name ?? "UnknownModule";
+                                var typeName = inst?.GetType().FullName ?? "(unknown type)";
+                                var asm = inst?.GetType().Assembly.GetName();
+                                var asmName = asm?.Name ?? "(unknown asm)";
+                                var asmVer = asm?.Version?.ToString() ?? "?";
+
+                                RouteLeft($"loaded {name}",
+                                    $"type: {typeName}{Environment.NewLine}asm:  {asmName} v{asmVer}");
+                            }
+                            catch (Exception ex)
+                            {
+                                RouteLeft("describe module error", ex.Message, isError: true);
+                            }
+                        }
+
+                        // Wake up Speech (and any other desired modules) so first user input isn't needed
+                        await WarmupModulesAsync();
+
+                        sw.Stop();
+                        RouteModuleMessage("System", "Startup", $"AI Booted in {sw.ElapsedMilliseconds} ms.");
+                    }
                 }
                 else
                 {
@@ -254,7 +299,7 @@ namespace RaAI
         {
             moduleManager = mgr ?? throw new ArgumentNullException(nameof(mgr));
             moduleManager.ModuleNamespacePrefix = "RaAI.Modules";
-            _ = ReloadAndShowModulesAsync();
+            // Do not reload here; Program preloaded modules. Shown handler will refresh the UI and warm up.
         }
 
         private async Task ReloadAndShowModulesAsync()
@@ -266,6 +311,10 @@ namespace RaAI
             }
 
             ClearConsoles();
+
+            // Booting message in right console at start of reload
+            RouteModuleMessage("System", "Startup", "Booting up...");
+            var sw = Stopwatch.StartNew();
 
             RouteLeft("Scan", "Scanning for modules...");
             try
@@ -331,7 +380,11 @@ namespace RaAI
                 RouteLeft("Reload failed", ex.Message, isError: true);
             }
 
-            await Task.CompletedTask;
+            // After reload, warm up Speech so it's ready immediately
+            await WarmupModulesAsync();
+
+            sw.Stop();
+            RouteModuleMessage("System", "Startup", $"AI Booted in {sw.ElapsedMilliseconds} ms.");
         }
 
         private void PopulateModuleSelector()
@@ -355,10 +408,42 @@ namespace RaAI
             moduleSelect.SelectedItem = selected;
         }
 
-        // Right console: Info handler data from modules (unchanged)
-        // Format:
-        // [HH:mm:ss] [ModuleName] > input  (header, accent)
-        // response                          (body, severity-colored)
+        // Warm-up modules so they are ready before first user input
+        private async Task WarmupModulesAsync()
+        {
+            if (moduleManager == null) return;
+
+            // Speech: "status" is supported and exercises dependency resolution
+            TryWarmup("Speech", "status");
+
+            // Optionally warm other modules too
+            // TryWarmup("Conscious", "think wake up");
+            // TryWarmup("Memory", "memory help");
+
+            await Task.CompletedTask;
+        }
+
+        private void TryWarmup(string moduleName, string command)
+        {
+            try
+            {
+                var response =
+                    moduleManager!.SafeInvokeModuleByName(moduleName, command) ??
+                    moduleManager!.SafeInvokeModuleByName(moduleName + "Module", command);
+
+                // Show the warm-up interaction in the right console (optional)
+                if (!string.IsNullOrWhiteSpace(response))
+                    RouteModuleMessage(moduleName, command, response);
+                else
+                    RouteLeft($"warmup {moduleName}", "(no response)");
+            }
+            catch (Exception ex)
+            {
+                RouteLeft($"warmup {moduleName}", ex.Message, isError: true);
+            }
+        }
+
+        // Right console: Info handler data from modules
         public void RouteModuleMessage(string moduleName, string input, string response)
         {
             var ts = DateTime.Now.ToString("HH:mm:ss");

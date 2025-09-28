@@ -1,9 +1,4 @@
-﻿using RaAI.Modules.SubconsciousModule;
-using RaAI.Modules.ConsciousModule;
-using RaAI.Modules.MemoryModule;
-using RaAI.Modules.SpeechModule;
-using RaAI.Modules.DigitalFace;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -12,14 +7,8 @@ using System.Reflection;
 
 namespace RaAI.Handlers.Manager
 {
-    /// <summary>
-    /// ModuleManager discovers, instantiates, manages, and invokes modules in RaAI.
-    /// Compatible with updated core modules including DigitalFace, Speech, Conscious, Subconscious, and Memory.
-    /// Now supports recursive scanning of module DLLs under configured search paths (e.g., ./Modules/**).
-    /// </summary>
     public class ModuleManager : IDisposable
     {
-        // Helper DTO (put anywhere public in RaAI.Handlers)
         public class ModuleSetting
         {
             public string Name { get; set; } = string.Empty;
@@ -32,26 +21,17 @@ namespace RaAI.Handlers.Manager
         private readonly List<string> assemblySearchRoots = new();
         private bool resolverAttached = false;
 
-        // Public read-only snapshot
         public IReadOnlyList<ModuleWrapper> Modules => modules.AsReadOnly();
 
-        // Configuration: what namespace to treat as "in-project" modules
         public string ModuleNamespacePrefix { get; set; } = "RaAI.Modules";
 
-        /// <summary>
-        /// Where to search for modules (recursively). Initialized with:
-        /// - AppContext.BaseDirectory
-        /// - Path.Combine(AppContext.BaseDirectory, "Modules")
-        /// </summary>
         public IReadOnlyList<string> ModuleSearchPaths => assemblySearchRoots.AsReadOnly();
 
         public ModuleManager()
         {
-            // Default search roots
             TryAddSearchPath(AppContext.BaseDirectory);
             TryAddSearchPath(Path.Combine(AppContext.BaseDirectory, "Modules"));
 
-            // Track already loaded simple names
             foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
             {
                 var name = asm.GetName().Name;
@@ -60,9 +40,6 @@ namespace RaAI.Handlers.Manager
             }
         }
 
-        /// <summary>
-        /// Add a directory to recursively search for module DLLs.
-        /// </summary>
         public void AddSearchPath(string path)
         {
             if (string.IsNullOrWhiteSpace(path)) return;
@@ -79,21 +56,15 @@ namespace RaAI.Handlers.Manager
                     assemblySearchRoots.Add(full);
                 }
             }
-            catch { /* ignore */ }
+            catch { }
         }
 
-        /// <summary>
-        /// Discover, instantiate and initialize modules from currently-loaded assemblies.
-        /// Also recursively loads assemblies from ModuleSearchPaths before discovery.
-        /// </summary>
         public ModuleLoadResult LoadModules(bool requireAttributeOrNamespace = true)
         {
             var result = new ModuleLoadResult();
 
-            // Ensure likely module assemblies are loaded into the AppDomain before scanning
             LoadExternalModuleAssembliesRecursive();
 
-            // Gather candidate types from all loaded assemblies
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
             var candidateTypes = new List<Type>();
 
@@ -119,7 +90,6 @@ namespace RaAI.Handlers.Manager
                 candidateTypes.AddRange(types);
             }
 
-            // Filter candidate types to module types
             var moduleTypes = candidateTypes
                 .Where(t =>
                     t.IsClass &&
@@ -135,53 +105,68 @@ namespace RaAI.Handlers.Manager
                 .Distinct()
                 .ToList();
 
+            // Phase 1: instantiate all first
+            var newWrappers = new List<ModuleWrapper>();
             foreach (var t in moduleTypes)
             {
                 try
                 {
-                    // instantiate
                     var inst = (IRaModule)Activator.CreateInstance(t)!;
                     var wrapper = new ModuleWrapper(inst);
-                    // initialize (passes manager for compatibility)
+                    newWrappers.Add(wrapper);
+                }
+                catch (Exception ex)
+                {
+                    result.Errors.Add($"Failed to instantiate module {t.FullName}: {ex.GetType().Name}: {ex.Message}");
+                }
+            }
+
+            // Add to manager before initializing so cross-lookups work
+            modules.AddRange(newWrappers);
+
+            // Phase 2: initialize after all are present
+            foreach (var wrapper in newWrappers)
+            {
+                try
+                {
                     wrapper.Initialize(this);
-                    modules.Add(wrapper);
                     result.Loaded.Add(new ModuleWrapperView(wrapper));
                 }
                 catch (Exception ex)
                 {
-                    result.Errors.Add($"Failed to instantiate/initialize module {t.FullName}: {ex.GetType().Name}: {ex.Message}");
+                    var t = wrapper.Instance?.GetType();
+                    var name = t?.FullName ?? "(unknown)";
+                    result.Errors.Add($"Failed to initialize module {name}: {ex.GetType().Name}: {ex.Message}");
                 }
+            }
+
+            // Announce system boot so providers (Memory) can orchestrate readiness
+            try
+            {
+                RaiseSystemEvent("SystemBoot");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"SystemBoot event error: {ex.Message}");
             }
 
             return result;
         }
 
-        /// <summary>
-        /// Dispose/Remove all loaded modules and clear list.
-        /// </summary>
         public void UnloadAllModules()
         {
             foreach (var w in modules.ToList())
             {
-                try
-                {
-                    w.Dispose();
-                }
-                catch { }
+                try { w.Dispose(); } catch { }
             }
             modules.Clear();
         }
 
-        /// <summary>
-        /// Convenience: reload everything (unload then load).
-        /// </summary>
         public ModuleLoadResult ReloadModules(bool requireAttributeOrNamespace = true)
         {
             UnloadAllModules();
             return LoadModules(requireAttributeOrNamespace);
         }
-
-        // Lookups
 
         public IRaModule? GetModuleByName(string name)
         {
@@ -193,32 +178,23 @@ namespace RaAI.Handlers.Manager
             return modules.FirstOrDefault(w => string.Equals(w.Instance.Name, name, StringComparison.OrdinalIgnoreCase));
         }
 
-        // --- NEW: Find underlying instance by name (best-effort) ---
         public IRaModule? GetModuleInstanceByName(string name)
         {
             if (string.IsNullOrWhiteSpace(name)) return null;
-            // exact match on declared Name
             var inst = modules.Select(m => m.Instance).FirstOrDefault(i => string.Equals(i.Name, name, StringComparison.OrdinalIgnoreCase));
             if (inst != null) return inst;
-            // match on type name
             return modules.Select(m => m.Instance).FirstOrDefault(i => string.Equals(i.GetType().Name, name, StringComparison.OrdinalIgnoreCase));
         }
 
-        /// <summary>
-        /// Safe invoke: attempt to invoke a module's Process(string) (or wrapper-level Process/Invoke) and return string.
-        /// Returns null if module not found or no meaningful response.
-        /// </summary>
         public string? SafeInvokeModuleByName(string name, string input)
         {
             if (string.IsNullOrWhiteSpace(name)) return null;
 
-            // find wrapper first
             ModuleWrapper? wrapper = modules.FirstOrDefault(w =>
                 string.Equals(w.Instance?.Name, name, StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(w.GetType().Name, name, StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(w.Instance?.GetType().Name, name, StringComparison.OrdinalIgnoreCase));
 
-            // If wrapper not found, try to find instance by type name or declared Name
             object? targetInstance = wrapper?.Instance;
             if (targetInstance == null)
             {
@@ -232,7 +208,6 @@ namespace RaAI.Handlers.Manager
             {
                 var t = targetInstance.GetType();
 
-                // Preferred: a Process(string) method on the module instance
                 var proc = t.GetMethod("Process", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { typeof(string) }, null);
                 if (proc != null)
                 {
@@ -242,7 +217,6 @@ namespace RaAI.Handlers.Manager
                     return null;
                 }
 
-                // Next: wrapper-level methods (if we located wrapper)
                 if (wrapper != null)
                 {
                     var wtype = wrapper.GetType();
@@ -256,7 +230,6 @@ namespace RaAI.Handlers.Manager
                     }
                 }
 
-                // Last resort: try any parameterless ToString-like response or property named "LastResponse" (best-effort)
                 var lastProp = t.GetProperty("LastResponse", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 if (lastProp != null)
                 {
@@ -279,9 +252,6 @@ namespace RaAI.Handlers.Manager
             return null;
         }
 
-        /// <summary>
-        /// Try candidates in-order and return the first non-empty response (null if none responded).
-        /// </summary>
         public string? InvokeModuleProcessByNameFallback(IEnumerable<string> candidateNames, string input)
         {
             if (candidateNames == null) return null;
@@ -292,155 +262,76 @@ namespace RaAI.Handlers.Manager
                     var res = SafeInvokeModuleByName(cname, input);
                     if (!string.IsNullOrEmpty(res)) return res;
                 }
-                catch { /* swallow and try next */ }
+                catch { }
             }
             return null;
         }
 
-        // Overload: accept tuple form (backwards-compatible)
-        public void SaveModuleSettings(IEnumerable<(string Name, bool Enabled, int TimeoutMs)> settings)
-        {
-            if (settings == null) return;
-            var mapped = settings.Select(t => new ModuleSetting { Name = t.Name, Enabled = t.Enabled, TimeoutMs = t.TimeoutMs }).ToList();
-            SaveModuleSettings(mapped);
-        }
+        // -------- System event bus (reflection-based) --------
 
-        // Main implementation: operate on ModuleSetting DTO
-        public void SaveModuleSettings(IEnumerable<ModuleSetting> settings)
+        public void RaiseSystemEvent(string name, object? payload = null)
         {
-            if (settings == null) return;
-            var setList = settings.ToList();
-            if (setList.Count == 0) return;
-
             foreach (var w in modules)
             {
                 var inst = w.Instance;
-                var moduleName = inst?.Name ?? w.GetType().Name;
-                var s = setList.FirstOrDefault(x => string.Equals(x.Name, moduleName, StringComparison.OrdinalIgnoreCase));
-                if (s == null) continue;
+                if (inst == null) continue;
+                var t = inst.GetType();
 
-                // If ModuleWrapper type has a strongly-typed Enabled/TimeoutMs property, prefer setting directly
                 try
                 {
-                    var wrapperType = typeof(ModuleWrapper);
-                    var prop = wrapperType.GetProperty("Enabled", BindingFlags.Public | BindingFlags.Instance);
-                    if (prop != null && prop.CanWrite)
+                    // Typed hook: On<Name>(payloadType) e.g., OnMemoryReady(IMemory)
+                    if (payload != null)
                     {
-                        // find the specific wrapper instance in our modules list and set it
-                        var target = w;
-                        prop.SetValue(target, ConvertToPropertyType(s.Enabled, prop.PropertyType));
+                        var typedName = "On" + name;
+                        var mTyped = t.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                                      .FirstOrDefault(m =>
+                                      {
+                                          if (!string.Equals(m.Name, typedName, StringComparison.Ordinal)) return false;
+                                          var ps = m.GetParameters();
+                                          return ps.Length == 1 && ps[0].ParameterType.IsInstanceOfType(payload);
+                                      });
+                        if (mTyped != null)
+                        {
+                            mTyped.Invoke(inst, new[] { payload });
+                            continue;
+                        }
+                    }
+
+                    // Special-case zero-arg warmup: OnWarmup()
+                    if (string.Equals(name, "Warmup", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var onWarmup = t.GetMethod("OnWarmup", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Type.EmptyTypes, null);
+                        if (onWarmup != null)
+                        {
+                            onWarmup.Invoke(inst, null);
+                            continue;
+                        }
+                    }
+
+                    // Generic hook: OnSystemEvent(string, object?) or (string)
+                    var onEvt2 = t.GetMethod("OnSystemEvent", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { typeof(string), typeof(object) }, null)
+
+                    ?? t.GetMethod("OnSystemEvent", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { typeof(string), typeof(object) }, null);
+                    if (onEvt2 != null)
+                    {
+                        onEvt2.Invoke(inst, new[] { name, payload! });
+                        continue;
+                    }
+
+                    var onEvt1 = t.GetMethod("OnSystemEvent", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { typeof(string) }, null);
+                    if (onEvt1 != null)
+                    {
+                        onEvt1.Invoke(inst, new object[] { name });
+                        continue;
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // ignore and fall back to reflection based per-instance below
-                }
-
-                // Try to set on ModuleWrapper (if it exposes Enabled/TimeoutMs)
-                var wt = w.GetType();
-                var wpEnabled = wt.GetProperty("Enabled", BindingFlags.Public | BindingFlags.Instance);
-                if (wpEnabled != null && wpEnabled.CanWrite)
-                    SetPropertySafely(w, wpEnabled, s.Enabled);
-
-                var wpTimeout = wt.GetProperty("TimeoutMs", BindingFlags.Public | BindingFlags.Instance);
-                if (wpTimeout != null && wpTimeout.CanWrite)
-                    SetPropertySafely(w, wpTimeout, s.TimeoutMs);
-
-                // Try to set on the underlying IRaModule instance as well (if it exposes the properties)
-                if (inst != null)
-                {
-                    var it = inst.GetType();
-                    var ipEnabled = it.GetProperty("Enabled", BindingFlags.Public | BindingFlags.Instance);
-                    if (ipEnabled != null && ipEnabled.CanWrite)
-                        SetPropertySafely(inst, ipEnabled, s.Enabled);
-
-                    var ipTimeout = it.GetType().GetProperty("TimeoutMs", BindingFlags.Public | BindingFlags.Instance);
-                    if (ipTimeout != null && ipTimeout.CanWrite)
-                        SetPropertySafely(inst, ipTimeout, s.TimeoutMs);
+                    Debug.WriteLine($"System event '{name}' handler error in {t.FullName}: {ex.Message}");
                 }
             }
         }
 
-        // Safe setter/conversion helpers
-        private static object? ConvertToPropertyType(object? value, Type propertyType)
-        {
-            if (value == null) return null;
-
-            var targetType = Nullable.GetUnderlyingType(propertyType) ?? propertyType;
-
-            try
-            {
-                if (targetType.IsInstanceOfType(value)) return value;
-                if (targetType.IsEnum)
-                {
-                    if (value is string s) return Enum.Parse(targetType, s, true);
-                    return Enum.ToObject(targetType, value);
-                }
-                if (targetType == typeof(bool))
-                {
-                    if (value is bool b) return b;
-                    if (value is int i) return i != 0;
-                    if (value is long l) return l != 0L;
-                    if (value is string ss && bool.TryParse(ss, out var bb)) return bb;
-                    if (value is string ss2 && int.TryParse(ss2, out var bi)) return bi != 0;
-                }
-                if (targetType == typeof(int))
-                {
-                    if (value is int) return value;
-                    if (value is bool bb) return bb ? 1 : 0;
-                    if (value is long ll) return (int)ll;
-                    if (value is string ss && int.TryParse(ss, out var ii)) return ii;
-                    return Convert.ChangeType(value, targetType);
-                }
-                if (targetType == typeof(long))
-                {
-                    if (value is long) return value;
-                    if (value is int ii) return (long)ii;
-                    if (value is bool bb) return bb ? 1L : 0L;
-                    if (value is string ss && long.TryParse(ss, out var ll)) return ll;
-                    return Convert.ChangeType(value, targetType);
-                }
-                if (targetType.IsPrimitive || targetType == typeof(string) || targetType == typeof(decimal))
-                    return Convert.ChangeType(value, targetType);
-            }
-            catch
-            {
-                // ignore conversion errors
-            }
-
-            return null;
-        }
-
-        private static void SetPropertySafely(object target, PropertyInfo prop, object? value)
-        {
-            if (prop == null) return;
-
-            var converted = ConvertToPropertyType(value, prop.PropertyType);
-
-            if (converted == null)
-            {
-                if (value != null && prop.PropertyType.IsInstanceOfType(value))
-                    converted = value;
-                else
-                {
-                    Debug.WriteLine($"Skipping assignment: {target.GetType().FullName}.{prop.Name} expects {prop.PropertyType.FullName} but provided value type {value?.GetType().FullName ?? "null"}");
-                    return;
-                }
-            }
-
-            if (converted == null && prop.PropertyType.IsValueType && Nullable.GetUnderlyingType(prop.PropertyType) == null)
-            {
-                Debug.WriteLine($"Cannot assign null to non-nullable {prop.PropertyType.FullName} for {target.GetType().FullName}.{prop.Name}");
-                return;
-            }
-
-            prop.SetValue(target, converted);
-        }
-
-        /// <summary>
-        /// Recursively loads assemblies from ModuleSearchPaths so reflection can find module types.
-        /// Also installs an AssemblyResolve handler to resolve dependencies from those paths.
-        /// </summary>
         private void LoadExternalModuleAssembliesRecursive()
         {
             AttachAssemblyResolverOnce();
@@ -450,18 +341,11 @@ namespace RaAI.Handlers.Manager
                 if (!Directory.Exists(root)) continue;
 
                 IEnumerable<string> dlls;
-                try
-                {
-                    dlls = Directory.EnumerateFiles(root, "*.dll", SearchOption.AllDirectories);
-                }
-                catch
-                {
-                    continue;
-                }
+                try { dlls = Directory.EnumerateFiles(root, "*.dll", SearchOption.AllDirectories); }
+                catch { continue; }
 
                 foreach (var path in dlls)
                 {
-                    // Heuristic: prioritize assemblies that look like modules, but allow all .dlls under Modules
                     var fileName = Path.GetFileName(path);
                     var looksLikeModule =
                         path.IndexOf($"{Path.DirectorySeparatorChar}Modules{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase) >= 0 ||
@@ -480,10 +364,7 @@ namespace RaAI.Handlers.Manager
                         Assembly.LoadFrom(path);
                         loadedAssemblySimpleNames.Add(simple);
                     }
-                    catch
-                    {
-                        // best-effort; ignore load failures here
-                    }
+                    catch { }
                 }
             }
         }
@@ -495,9 +376,6 @@ namespace RaAI.Handlers.Manager
             resolverAttached = true;
         }
 
-        /// <summary>
-        /// Resolve dependent assemblies from the configured ModuleSearchPaths (recursively).
-        /// </summary>
         private Assembly? ResolveFromSearchRoots(object? sender, ResolveEventArgs args)
         {
             try
@@ -511,25 +389,14 @@ namespace RaAI.Handlers.Manager
                     var match = Directory.EnumerateFiles(root, targetName, SearchOption.AllDirectories).FirstOrDefault();
                     if (match != null)
                     {
-                        try
-                        {
-                            return Assembly.LoadFrom(match);
-                        }
-                        catch
-                        {
-                            // try next root
-                        }
+                        try { return Assembly.LoadFrom(match); } catch { }
                     }
                 }
             }
-            catch
-            {
-                // ignore
-            }
+            catch { }
             return null;
         }
 
-        // Dispose pattern to clean up modules
         public void Dispose()
         {
             UnloadAllModules();

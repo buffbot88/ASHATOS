@@ -2,21 +2,30 @@
 using RaAI;
 using System;
 using System.Windows.Forms;
-using RaAI.Modules.DigitalFace;
+using RaAI.Modules;
 
 namespace RaAI
 {
-    static class Program
+    internal static class Program
     {
         [STAThread]
-        static void Main()
+        private static void Main()
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            // Create and show main form
+            // Initialize module manager and eagerly load modules before showing the form
+            var manager = new ModuleManager();
+
+            // Optional: add additional search paths for external modules (keeps defaults too)
+            // manager.AddSearchPath(Path.Combine(AppContext.BaseDirectory, "Modules"));
+
+            var loadResult = manager.LoadModules(requireAttributeOrNamespace: true);
+            foreach (var err in loadResult.Errors)
+                Console.WriteLine($"[ModuleLoader] {err}");
+
             using var form = new RaAIForm();
-            form.SetModuleManager(new ModuleManager()); // Initialize your module manager
+            form.SetModuleManager(manager);
             Application.Run(form);
         }
     }

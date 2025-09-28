@@ -15,8 +15,15 @@ namespace RaAI.Modules.SubconsciousModule
     public class SubconsciousModule : ModuleBase, ISubconscious, IDisposable
     {
         private const string AutonomousPrefix = "Autonomous/";
-        private object? _memoryInst; // IMemory or MemoryModule or other
+
+        // Resolved memory instance (IMemory or MemoryModule or other compatible)
+        private object? _memoryInst;
         private readonly object _sync = new();
+
+        // Boot/wake state
+        private ModuleManager? _manager;
+        private int _awakeFlag; // 0 = not awake, 1 = awake (Interlocked)
+        private DateTime? _awakeAtUtc;
 
         public override string Name => "Subconscious";
 
@@ -31,13 +38,71 @@ namespace RaAI.Modules.SubconsciousModule
         public override void Initialize(ModuleManager manager)
         {
             base.Initialize(manager);
+            _manager = manager;
+
+            // Best-effort resolve at init time (final binding will be via OnMemoryReady)
             _memoryInst = manager.GetModuleInstanceByName("Memory")
                         ?? manager.GetModuleInstanceByName("MemoryModule");
+
             if (_memoryInst == null)
                 LogWarn("Memory module not found. Subconscious will operate in reduced mode until Memory is available.");
             else
                 LogInfo($"Linked to Memory instance: {_memoryInst.GetType().FullName}");
         }
+
+        // ------------------ Ordered Wake Handlers (invoked by ModuleManager/Memory) ------------------
+
+        // Preferred typed hook when MemoryReady is raised with MemoryModule payload
+        private void OnMemoryReady(MemoryModule.MemoryModule memory)
+        {
+            lock (_sync) { _memoryInst = memory; }
+            LogInfo("OnMemoryReady: bound to MemoryModule.");
+        }
+
+        // Alternate typed hook when MemoryReady is raised with IMemory payload
+        private void OnMemoryReady(IMemory memory)
+        {
+            lock (_sync) { _memoryInst = memory; }
+            LogInfo("OnMemoryReady: bound to IMemory.");
+        }
+
+        // Fallback generic event hook
+        private void OnSystemEvent(string name, object? payload)
+        {
+            if (string.Equals(name, "MemoryReady", StringComparison.OrdinalIgnoreCase))
+            {
+                if (payload is MemoryModule.MemoryModule mm) OnMemoryReady(mm);
+                else if (payload is IMemory mem) OnMemoryReady(mem);
+                else LogWarn($"MemoryReady payload type not recognized: {payload?.GetType().FullName ?? "null"}");
+            }
+            else if (string.Equals(name, "Wake", StringComparison.OrdinalIgnoreCase))
+            {
+                OnWake();
+            }
+        }
+
+        // Wake is called after Memory in the ordered sequence
+        private void OnWake()
+        {
+            if (Interlocked.CompareExchange(ref _awakeFlag, 1, 0) != 0)
+                return; // already awake
+
+            _awakeAtUtc = DateTime.UtcNow;
+
+            // Perform lightweight warm-up: write a heartbeat marker into memory if available
+            try
+            {
+                var stamp = _awakeAtUtc.Value.ToString("yyyy-MM-dd HH:mm:ss 'UTC'");
+                RememberCompat($"{AutonomousPrefix}boot/subconscious", $"awake:{stamp}");
+                LogInfo("Subconscious warm-up complete (heartbeat stored).");
+            }
+            catch (Exception ex)
+            {
+                LogWarn($"Warm-up encountered an issue: {ex.Message}");
+            }
+        }
+
+        // ------------------ Public ISubconscious API ------------------
 
         public Guid AddAutonomousMemory(string key, string value, Dictionary<string, string>? metadata = null)
         {
@@ -105,6 +170,8 @@ namespace RaAI.Modules.SubconsciousModule
 
         public string GetResponse() => string.Empty;
 
+        // ------------------ Console/Process entry ------------------
+
         public override string Process(string input)
         {
             if (string.IsNullOrWhiteSpace(input)) return HelpText();
@@ -116,6 +183,14 @@ namespace RaAI.Modules.SubconsciousModule
             {
                 if (lower == "sub help" || lower == "subconscious help" || lower == "help" || lower.StartsWith("sub:help"))
                     return HelpText();
+
+                if (lower == "status" || lower == "sub status" || lower == "subconscious status")
+                {
+                    var memBound = _memoryInst != null ? "yes" : "no";
+                    var awake = _awakeFlag == 1 ? "yes" : "no";
+                    var when = _awakeAtUtc?.ToString("yyyy-MM-dd HH:mm:ss 'UTC'") ?? "-";
+                    return $"Subconscious status: memory={memBound}, awake={awake}, awakeAt={when}";
+                }
 
                 if (lower.StartsWith("sub add ") || lower.StartsWith("subconscious add "))
                 {
@@ -129,7 +204,7 @@ namespace RaAI.Modules.SubconsciousModule
                         meta = ParseMetadata(metaPart);
 
                     var id = AddAutonomousMemory(key, value, meta);
-                    return $"OK: stored Autonomous/{key}:{id}";
+                    return $"OK: stored {AutonomousPrefix}{key}:{id}";
                 }
 
                 if (lower.StartsWith("sub recall ") || lower.StartsWith("subconscious recall "))
@@ -173,7 +248,7 @@ namespace RaAI.Modules.SubconsciousModule
             }
         }
 
-        // ---- Compatibility helpers (handle both Guid-returning and void-returning Remember) ----
+        // ------------------ Compatibility helpers ------------------
 
         private void RememberCompat(string key, string value)
         {
@@ -188,8 +263,7 @@ namespace RaAI.Modules.SubconsciousModule
                         break;
 
                     case IMemory mem:
-                        // IMemory may return void in your codebase; just invoke it.
-                        mem.Remember(key, value);
+                        mem.Remember(key, value);    // may return void; ignore
                         break;
 
                     default:
@@ -325,6 +399,7 @@ namespace RaAI.Modules.SubconsciousModule
             {
                 "Subconscious Module Commands:",
                 "  sub help",
+                "  sub status",
                 "  sub add key=value [meta k1=v1;k2=v2]",
                 "  sub recall <key>",
                 "  sub query <prefix>",
@@ -337,6 +412,7 @@ namespace RaAI.Modules.SubconsciousModule
         {
             GC.SuppressFinalize(this);
         }
+
         private void EnsureMemoryOrThrow()
         {
             if (_memoryInst != null) return;

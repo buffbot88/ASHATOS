@@ -22,6 +22,8 @@ namespace RaAI.Modules.ConsciousModule
         private ModuleManager? _manager;
         private object? _memoryInst;                 // IMemory or MemoryModule (or compatible)
         private ISubconscious? _sub;                 // optional
+
+        // Public so tests can seed deterministically via reflection or direct access
         public readonly ConsciousThoughtProcessor _processor = new(ConsciousConfig.FeatureVectorSize, ConsciousConfig.LearningRate);
 
         private readonly ConcurrentQueue<Thought> _thoughtHistory = new();
@@ -29,6 +31,10 @@ namespace RaAI.Modules.ConsciousModule
 
         // Keep mood local to avoid a hard dependency on DigitalFace types
         private Mood _currentMood = Mood.Neutral;
+
+        // Wake state (ordered boot: Memory -> Subconscious -> Conscious -> Speech -> DigitalFace)
+        private int _awakeFlag; // 0 = not awake, 1 = awake
+        private DateTime? _awakeAtUtc;
 
         public override void Initialize(ModuleManager manager)
         {
@@ -56,6 +62,62 @@ namespace RaAI.Modules.ConsciousModule
             LogInfo("Conscious module initialized successfully.");
         }
 
+        // ------------------ Ordered Wake Handlers (invoked by ModuleManager/Memory) ------------------
+
+        // Preferred typed hook when MemoryReady is raised with MemoryModule payload
+        private void OnMemoryReady(MemoryModule.MemoryModule memory)
+        {
+            _memoryInst = memory;
+            LogInfo("OnMemoryReady: bound to MemoryModule.");
+        }
+
+        // Alternate typed hook when MemoryReady is raised with IMemory payload
+        private void OnMemoryReady(IMemory memory)
+        {
+            _memoryInst = memory;
+            LogInfo("OnMemoryReady: bound to IMemory.");
+        }
+
+        // Fallback generic event hook
+        private void OnSystemEvent(string name, object? payload)
+        {
+            if (string.Equals(name, "MemoryReady", StringComparison.OrdinalIgnoreCase))
+            {
+                if (payload is MemoryModule.MemoryModule mm) OnMemoryReady(mm);
+                else if (payload is IMemory mem) OnMemoryReady(mem);
+                else LogWarn($"MemoryReady payload type not recognized: {payload?.GetType().FullName ?? "null"}");
+            }
+            else if (string.Equals(name, "Wake", StringComparison.OrdinalIgnoreCase))
+            {
+                OnWake();
+            }
+        }
+
+        // Wake is called after Subconscious in the ordered sequence
+        private void OnWake()
+        {
+            if (Interlocked.CompareExchange(ref _awakeFlag, 1, 0) != 0)
+                return; // already awake
+
+            _awakeAtUtc = DateTime.UtcNow;
+            _currentMood = Mood.Thinking;
+
+            // Lightweight warm-up: store a heartbeat marker and precompute a tiny context
+            try
+            {
+                var stamp = _awakeAtUtc.Value.ToString("yyyy-MM-dd HH:mm:ss 'UTC'");
+                RememberCompat("boot/conscious/heartbeat", $"awake:{stamp}");
+
+                // Touch memory snapshot path to ensure compatibility
+                _ = GetMemorySnapshot(-1);
+                LogInfo("Conscious warm-up complete (heartbeat stored).");
+            }
+            catch (Exception ex)
+            {
+                LogWarn($"Warm-up encountered an issue: {ex.Message}");
+            }
+        }
+
         // Public convenience API
         public string Think(string input) => ProcessInput("think", input);
         public string Remember(string key, string value) => ProcessInput("remember", $"{key}={value}");
@@ -74,16 +136,16 @@ namespace RaAI.Modules.ConsciousModule
 
             var result = verb switch
             {
-                "help"     => GetHelpText(),
-                "think"    => CommandThink(args),
+                "help" => GetHelpText(),
+                "think" => CommandThink(args),
                 "remember" => CommandRemember(args),
-                "recall"   => CommandRecall(args),
-                "status"   => CommandStatus(),
-                "history"  => CommandHistory(args),
-                "reset"    => CommandReset(),
-                "train"    => CommandTrain(args),
+                "recall" => CommandRecall(args),
+                "status" => CommandStatus(),
+                "history" => CommandHistory(args),
+                "reset" => CommandReset(),
+                "train" => CommandTrain(args),
                 "probesub" => CommandProbeSub(args),
-                "probe"    => CommandProbeSub(args),
+                "probe" => CommandProbeSub(args),
                 _ when Regex.IsMatch(trimmed, @"\w+\s*=\s*.+") => CommandRemember(trimmed), // key=value
                 _ => CommandThink(trimmed)
             };
@@ -175,10 +237,11 @@ Conscious Module Commands:
 
             try
             {
-                // Synchronously get probe result
-                var probeTask = _sub.Probe(content, CancellationToken.None);
-                probeTask.Wait();
-                var text = probeTask.Result ?? string.Empty;
+                // Try to get a quick subconscious echo with a short timeout to avoid blocking
+                using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(300));
+                var probeTask = _sub.Probe(content, cts.Token);
+                var completed = probeTask.Wait(TimeSpan.FromMilliseconds(350));
+                var text = completed ? (probeTask.Result ?? string.Empty) : string.Empty;
                 return string.IsNullOrWhiteSpace(text) ? Array.Empty<string>() : new[] { text };
             }
             catch
@@ -214,11 +277,15 @@ Conscious Module Commands:
 
         private string CommandHistory(string args)
         {
+            // Show most recent first
+            var items = _thoughtHistory.ToArray();
+            Array.Reverse(items);
+
             if (string.IsNullOrWhiteSpace(args))
-                return string.Join(Environment.NewLine, _thoughtHistory.Select(t => $"{t.Id}: {t.Content}"));
+                return string.Join(Environment.NewLine, items.Select(t => $"{t.Id}: {t.Content}"));
 
             if (int.TryParse(args, out var count) && count > 0)
-                return string.Join(Environment.NewLine, _thoughtHistory.Take(count).Select(t => $"{t.Id}: {t.Content}"));
+                return string.Join(Environment.NewLine, items.Take(count).Select(t => $"{t.Id}: {t.Content}"));
 
             return "Invalid history count. Please provide a number.";
         }
@@ -255,8 +322,12 @@ Conscious Module Commands:
             status.AppendLine("Conscious Module Status:");
             status.AppendLine($"- Current Mood: {_currentMood}");
             status.AppendLine($"- Thoughts in History: {_thoughtHistory.Count}");
+            status.AppendLine($"- Memory Bound: {(_memoryInst != null ? "yes" : "no")}");
             status.AppendLine($"- Memory Entries: {CountCompat()}");
-            status.AppendLine($"- Subconscious Available: {_sub != null}");
+            status.AppendLine($"- Subconscious Available: {(_sub != null ? "yes" : "no")}");
+            var awake = _awakeFlag == 1 ? "yes" : "no";
+            var when = _awakeAtUtc?.ToString("yyyy-MM-dd HH:mm:ss 'UTC'") ?? "-";
+            status.AppendLine($"- Awake: {awake} (at {when})");
             return status.ToString();
         }
 
@@ -265,6 +336,8 @@ Conscious Module Commands:
             lock (_historyLock) _thoughtHistory.Clear();
             ClearCompat();
             _currentMood = Mood.Neutral;
+            Interlocked.Exchange(ref _awakeFlag, 0);
+            _awakeAtUtc = null;
             return "Conscious module state has been reset.";
         }
 
@@ -291,8 +364,10 @@ Conscious Module Commands:
 
             try
             {
-                var task = _sub.Probe(args, CancellationToken.None);
-                task.Wait();
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+                var task = _sub.Probe(args, cts.Token);
+                var completed = task.Wait(TimeSpan.FromSeconds(2.2));
+                if (!completed) return "(probe timeout)";
                 return task.Result ?? string.Empty;
             }
             catch (Exception ex)
@@ -444,21 +519,31 @@ Conscious Module Commands:
         public static int ThoughtHistoryLimit { get; set; } = 200;
     }
 
-    // Change the accessibility of ConsciousThoughtProcessor from internal to public
+    // Public so other modules/tests can seed deterministically or inspect state.
     public sealed class ConsciousThoughtProcessor
     {
         private readonly int _vectorSize;
         private readonly double _learningRate;
-        private readonly Random _rnd = new();
+
         private readonly ConcurrentDictionary<int, double> _weights = new();
+
+        private readonly object _rngLock = new();
+        private Random _rnd = new();
+
         private int _thoughtCounter = 0;
 
+        // Optional hook to persist training/thought events (e.g., into Memory)
         public Func<string, string, Guid?>? RememberHook { get; set; }
 
         public ConsciousThoughtProcessor(int featureVectorSize, double learningRate)
         {
             _vectorSize = Math.Max(8, featureVectorSize);
             _learningRate = Math.Max(0.0, learningRate);
+        }
+
+        public void SetRandomSeed(int seed)
+        {
+            lock (_rngLock) { _rnd = new Random(seed); }
         }
 
         public int GenerateThoughtId() => Interlocked.Increment(ref _thoughtCounter);
@@ -481,11 +566,21 @@ Conscious Module Commands:
             var adjectives = new[] { "bright", "distant", "warm", "strange", "familiar", "urgent", "calm", "noisy", "quiet" };
 
             var picks = new List<string>();
-            for (int i = 0; i < Math.Min(associationLimit, Math.Max(1, tokens.Length)); i++)
+            if (tokens.Length > 0)
             {
-                var token = tokens[_rnd.Next(tokens.Length)];
-                var adj = adjectives[_rnd.Next(adjectives.Length)];
-                picks.Add($"{token}-{adj}");
+                var limit = Math.Min(associationLimit, Math.Max(1, tokens.Length));
+                for (int i = 0; i < limit; i++)
+                {
+                    int ti, ai;
+                    lock (_rngLock)
+                    {
+                        ti = _rnd.Next(tokens.Length);
+                        ai = _rnd.Next(adjectives.Length);
+                    }
+                    var token = tokens[ti];
+                    var adj = adjectives[ai];
+                    picks.Add($"{token}-{adj}");
+                }
             }
 
             var sb = new StringBuilder();
