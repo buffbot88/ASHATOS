@@ -1,13 +1,12 @@
-﻿using RaAI.Handlers.Manager;
+using Ra.Core.Engine.Manager;
 using System;
 
-namespace RaAI.Modules
+namespace Ra.Core.Modules;
+
+public class InfoHandlerModule : IRaModule
 {
-    public class InfoHandlerModule : IRaModule
-    {
-        public string Name => "InfoHandler";
-        public void Initialize(ModuleManager manager) { }
-        public string Process(string input) => input; // Just echoes the info
-        public void Dispose() { }
-    }
+    public string Name => "InfoHandler";
+    public void Initialize(ModuleManager manager) { }
+    public string Process(string input) => input; // Just echoes the info
+    public void Dispose() { }
 }

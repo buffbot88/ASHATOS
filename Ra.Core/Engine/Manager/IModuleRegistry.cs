@@ -1,19 +1,18 @@
-﻿namespace RaAI.Handlers.Manager
+namespace Ra.Core.Engine.Manager;
+
+/// <summary>
+/// Contract for querying available RaAI modules by name.
+/// Used by LocalModuleServer and other infrastructure.
+/// </summary>
+public interface IModuleRegistry
 {
     /// <summary>
-    /// Contract for querying available RaAI modules by name.
-    /// Used by LocalModuleServer and other infrastructure.
+    /// Returns an array of all available module names.
     /// </summary>
-    public interface IModuleRegistry
-    {
-        /// <summary>
-        /// Returns an array of all available module names.
-        /// </summary>
-        string[] GetModuleNames();
+    string[] GetModuleNames();
 
-        /// <summary>
-        /// Gets a module instance by name, or null if not found.
-        /// </summary>
-        IRaModule? GetModuleByName(string name);
-    }
+    /// <summary>
+    /// Gets a module instance by name, or null if not found.
+    /// </summary>
+    IRaModule? GetModuleByName(string name);
 }

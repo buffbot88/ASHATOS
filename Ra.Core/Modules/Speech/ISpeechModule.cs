@@ -1,16 +1,15 @@
-﻿using System.Threading;
+using System.Threading;
 using System.Threading.Tasks;
 
-namespace RaAI.Modules.SpeechModule
+namespace Ra.Core.Modules.Speech;
+
+/// <summary>
+/// Interface for AI speech modules capable of generating responses from input.
+/// </summary>
+public interface ISpeechModule
 {
     /// <summary>
-    /// Interface for AI speech modules capable of generating responses from input.
+    /// Generates a natural language response to the specified input.
     /// </summary>
-    public interface ISpeechModule
-    {
-        /// <summary>
-        /// Generates a natural language response to the specified input.
-        /// </summary>
-        Task<string> GenerateResponseAsync(string input, CancellationToken cancellationToken = default);
-    }
+    Task<string> GenerateResponseAsync(string input, CancellationToken cancellationToken = default);
 }
