@@ -1,0 +1,588 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Ra Headless Host</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- React (used by dashboard helpers) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- SignalR for the inline particle screen -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --bg: #0f1220;
+            --panel: #111827;
+            --panel-2: #0b0f1a;
+            --border: #1f2937;
+            --text: #e5e7eb;
+            --muted: #9ca3af;
+            --accent: #2563eb;
+            --link: #93c5fd;
+        }
+        /* Base */
+        body {
+            font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        header {
+            padding: 10px 16px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        a {
+            color: var(--link);
+        }
+
+        /* Two-column layout: left = Screen, right = dashboard cards */
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(360px, 32vw) 1fr;
+            gap: 16px;
+            padding: 16px;
+            align-items: start;
+        }
+
+        .left-col {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Face HUD stays in header */
+        .face-hud {
+            font-size: 12px;
+            opacity: .85;
+            color: #cfe8ff;
+        }
+
+        /* Scrollable log above the Screen */
+        .face-log {
+            height: 100px;
+            background: var(--panel-2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px;
+            overflow: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 12px;
+            line-height: 1.25;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+            .face-log .entry {
+                padding: 2px 0;
+                border-bottom: 1px dashed rgba(148,163,184,0.15);
+            }
+
+        /* The Screen (particle canvas) */
+        .face-canvas-wrap {
+            background: #0b1120;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        #faceCanvas {
+            display: block;
+            width: 100%;
+            height: 420px;
+            background: #05080f;
+        }
+
+        /* Dashboard cards on the right */
+        main {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+            .card h2 {
+                margin: 0 0 8px 0;
+                font-size: 16px;
+                color: #93c5fd;
+            }
+
+        .row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        input[type="text"], textarea {
+            flex: 1;
+            min-width: 160px;
+            padding: 8px;
+            border: 1px solid #374151;
+            border-radius: 6px;
+            background: var(--panel-2);
+            color: var(--text);
+        }
+
+        button {
+            padding: 8px 12px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+            button.secondary {
+                background: #374151;
+            }
+
+        pre {
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-size: 12px;
+            background: var(--panel-2);
+            border: 1px solid var(--border);
+            padding: 8px;
+            border-radius: 6px;
+        }
+
+        small {
+            color: var(--muted);
+        }
+
+        /* Responsive: collapse to single column if narrow */
+        @media (max-width: 980px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            #faceCanvas {
+                height: 360px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Ra Headless Host</h1>
+        <div class="face-hud">Mood: <span id="mood">(loading)</span> · Attention: <span id="att">--</span> · Audio: <span id="aud">--</span> · Particles: <span id="pc">--</span></div>
+    </header>
+
+    <div class="layout">
+        <!-- LEFT: Log window (top) + Screen (bottom) -->
+        <aside class="left-col">
+            <div id="faceLog" class="face-log" aria-label="Screen log (newest first)"></div>
+            <div class="face-canvas-wrap">
+                <canvas id="faceCanvas"></canvas>
+            </div>
+        </aside>
+
+        <!-- RIGHT: Dashboard cards -->
+        <main>
+            <section class="card">
+                <h2>Health</h2>
+                <div class="row">
+                    <button onclick="fetchJson('/api/health')">Ping</button>
+                    <button class="secondary" onclick="fetchText('/api/modules')">List Modules</button>
+                    <button class="secondary" onclick="fetchText('/api/features/text')">Features (text)</button>
+                    <button class="secondary" onclick="fetchJson('/api/features')">Features (json)</button>
+                </div>
+                <pre id="out-health"></pre>
+            </section>
+
+            <section class="card">
+                <h2>Speech</h2>
+                <div class="row">
+                    <input id="speechInput" type="text" placeholder="e.g., remember project=RaAI or think test" />
+                    <button onclick="sendSpeech()">Send</button>
+                </div>
+                <div class="row">
+                    <input id="doInput" type="text" placeholder="do open https://example.com or turn on lights" />
+                    <button onclick="sendDo()">Do</button>
+                    <button class="secondary" onclick="approve()">yes</button>
+                    <button class="secondary" onclick="deny()">no</button>
+                </div>
+                <pre id="out-speech"></pre>
+            </section>
+
+            <section class="card">
+                <h2>Pending Action</h2>
+                <div class="row">
+                    <button onclick="fetchJson('/api/agent/pending', 'out-pending')">Refresh</button>
+                    <button class="secondary" onclick="approve()">Approve</button>
+                    <button class="secondary" onclick="deny()">Deny</button>
+                </div>
+                <pre id="out-pending"></pre>
+            </section>
+
+            <section class="card">
+                <h2>Memory</h2>
+                <div class="row">
+                    <button onclick="fetchText('/api/memory/stats', 'out-memory')">Stats</button>
+                    <input id="recallKey" type="text" placeholder="key to recall" />
+                    <button class="secondary" onclick="recall()">Recall</button>
+                </div>
+                <div class="row">
+                    <input id="rememberKey" type="text" placeholder="key" />
+                    <input id="rememberVal" type="text" placeholder="value" />
+                    <button onclick="remember()">Remember</button>
+                </div>
+                <div class="row">
+                    <input id="queryText" type="text" placeholder="query text" />
+                    <button class="secondary" onclick="query()">Query</button>
+                    <input id="listN" type="text" placeholder="list N (default 50)" />
+                    <button class="secondary" onclick="listN()">List</button>
+                </div>
+                <div class="row">
+                    <input id="delKey" type="text" placeholder="delete by key" />
+                    <button class="secondary" onclick="delByKey()">Delete Key</button>
+                    <input id="delId" type="text" placeholder="delete by id (guid)" />
+                    <button class="secondary" onclick="delById()">Delete Id</button>
+                </div>
+                <pre id="out-memory"></pre>
+            </section>
+
+            <section class="card">
+                <h2>Skills & Consent</h2>
+                <div class="row">
+                    <button onclick="fetchText('/api/skills', 'out-skills')">Skills List</button>
+                    <input id="skillName" type="text" placeholder="Skill name for describe" />
+                    <button class="secondary" onclick="describeSkill()">Describe</button>
+                </div>
+                <div class="row">
+                    <input id="consentCmd" type="text" placeholder="consent grant Device.Control" />
+                    <button onclick="sendConsent()">Send Consent Cmd</button>
+                </div>
+                <pre id="out-skills"></pre>
+            </section>
+
+            <!-- Face commands card (unchanged commands, now target the inline Screen) -->
+            <section class="card">
+                <h2>Face</h2>
+                <div class="row">
+                    <button onclick="faceCmd('face wake')">Wake</button>
+                    <button class="secondary" onclick="faceCmd('face set mood Thinking')">Thinking</button>
+                    <button class="secondary" onclick="faceCmd('face set mood Happy')">Happy</button>
+                    <button class="secondary" onclick="faceCmd('face set mood Neutral')">Neutral</button>
+                    <button class="secondary" onclick="faceCmd('face blink')">Blink</button>
+                    <button class="secondary" onclick="sendFaceText()">Text: RA</button>
+                </div>
+                <small>Particle Screen is on the left.</small>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Dashboard helpers
+        function setOut(id, txt) { document.getElementById(id || 'out-health').textContent = typeof txt === 'string' ? txt : JSON.stringify(txt, null, 2); }
+        async function fetchJson(url, outId = 'out-health') { try { const r = await fetch(url); const t = await r.text(); try { setOut(outId, JSON.parse(t)); } catch { setOut(outId, t || '(no data)'); } } catch (e) { setOut(outId, 'Request failed: ' + (e?.message || e)); } }
+        async function fetchText(url, outId = 'out-health') { try { const r = await fetch(url); setOut(outId, await r.text()); } catch (e) { setOut(outId, 'Request failed: ' + (e?.message || e)); } }
+        async function sendSpeech() { const text = document.getElementById('speechInput').value; const r = await fetch('/api/speech', { method: 'POST', body: text }); setOut('out-speech', await r.text()); }
+        async function sendDo() { const text = document.getElementById('doInput').value.replace(/^do\s+/i, ''); const r = await fetch('/api/agent/do', { method: 'POST', body: text }); setOut('out-speech', await r.text()); fetchJson('/api/agent/pending', 'out-pending'); }
+        async function approve() { const r = await fetch('/api/agent/confirm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ approve: true }) }); setOut('out-speech', await r.text()); fetchJson('/api/agent/pending', 'out-pending'); }
+        async function deny() { const r = await fetch('/api/agent/confirm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ approve: false }) }); setOut('out-speech', await r.text()); fetchJson('/api/agent/pending', 'out-pending'); }
+        async function recall() { const key = encodeURIComponent(document.getElementById('recallKey').value); fetchText('/api/memory/recall/' + key, 'out-memory'); }
+        async function remember() { const key = document.getElementById('rememberKey').value; const value = document.getElementById('rememberVal').value; const r = await fetch('/api/memory/remember', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key, value }) }); setOut('out-memory', await r.text()); }
+        async function query() { const q = encodeURIComponent(document.getElementById('queryText').value); fetchText('/api/memory/query?q=' + q, 'out-memory'); }
+        async function listN() { const n = encodeURIComponent(document.getElementById('listN').value || ''); fetchText('/api/memory/list' + (n ? ('?n=' + n) : ''), 'out-memory'); }
+        async function delByKey() { const key = encodeURIComponent(document.getElementById('delKey').value); const r = await fetch('/api/memory/remove/key/' + key, { method: 'DELETE' }); setOut('out-memory', await r.text()); }
+        async function delById() { const id = encodeURIComponent(document.getElementById('delId').value); const r = await fetch('/api/memory/remove/id/' + id, { method: 'DELETE' }); setOut('out-memory', await r.text()); }
+        async function describeSkill() { const name = encodeURIComponent(document.getElementById('skillName').value); fetchText('/api/skills/' + name, 'out-skills'); }
+        async function sendConsent() { const cmd = document.getElementById('consentCmd').value; const r = await fetch('/api/consent', { method: 'POST', body: cmd }); setOut('out-skills', await r.text()); }
+
+        // Face API helpers (card)
+        async function faceCmd(text) {
+            const r = await fetch('/api/face/cmd', { method: 'POST', body: text });
+            const resp = await r.text();
+            setOut('out-health', resp);
+            logFace('cmd: ' + text + ' -> ' + resp);
+        }
+        async function sendFaceText() {
+            const body = { text: "RA", font: "800 200px Segoe UI", x: 0.5, y: 0.5, align: "center", density: 1.0, sample: "edge" };
+            const r = await fetch('/api/face/text', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+            const resp = await r.text();
+            setOut('out-health', resp);
+            logFace('text anchors sent: "RA" -> ' + resp);
+        }
+
+        // Inline Particle Screen logic (left column)
+        (function () {
+            const moodEl = document.getElementById('mood');
+            const attEl = document.getElementById('att');
+            const audEl = document.getElementById('aud');
+            const pcEl = document.getElementById('pc');
+            const faceLogEl = document.getElementById('faceLog');
+
+            function logFace(msg) {
+                const time = new Date().toISOString();
+                const div = document.createElement('div');
+                div.className = 'entry';
+                div.textContent = `${time} ${msg}`;
+                // Newest on top
+                faceLogEl.prepend(div);
+                // Keep scroll at top so newest is visible
+                faceLogEl.scrollTop = 0;
+            }
+
+            const canvas = document.getElementById('faceCanvas');
+            const ctx = canvas.getContext('2d');
+            let W = 0, H = 0, DPR = window.devicePixelRatio || 1;
+
+            function resize() {
+                // Use the canvas client width/height from CSS to compute pixel buffer
+                const rect = canvas.getBoundingClientRect();
+                W = Math.max(1, Math.floor(rect.width * DPR));
+                H = Math.max(1, Math.floor(rect.height * DPR));
+                canvas.width = W; canvas.height = H;
+                recomputeTargets();
+            }
+            window.addEventListener('resize', resize);
+
+            // State
+            let mood = 'Neutral', attention = 0.35, audio = 0.0, blinkT = 0;
+            function setHUD() { moodEl.textContent = mood; attEl.textContent = attention.toFixed(2); audEl.textContent = audio.toFixed(2); pcEl.textContent = N.toString(); }
+
+            // Particles
+            const BLUE = '#4da3ff';
+            let N = 6000;
+            let x = new Float32Array(N), y = new Float32Array(N), vx = new Float32Array(N), vy = new Float32Array(N);
+            let tx = new Float32Array(N), ty = new Float32Array(N), jitter = new Float32Array(N);
+
+            function ensureCapacity(n) {
+                if (n === N) return;
+                N = n;
+                x = new Float32Array(N); y = new Float32Array(N);
+                vx = new Float32Array(N); vy = new Float32Array(N);
+                tx = new Float32Array(N); ty = new Float32Array(N);
+                jitter = new Float32Array(N);
+                spawnCloud(); recomputeTargets(); setHUD();
+                logFace(`particle capacity set to ${N}`);
+            }
+            function randf(a, b) { return a + Math.random() * (b - a); }
+            function spawnCloud() {
+                const cx = W * 0.5, cy = H * 0.5, r = Math.min(W, H) * 0.45;
+                for (let i = 0; i < N; i++) {
+                    const a = Math.random() * Math.PI * 2;
+                    const rr = Math.sqrt(Math.random()) * r;
+                    x[i] = cx + Math.cos(a) * rr;
+                    y[i] = cy + Math.sin(a) * rr;
+                    vx[i] = randf(-20, 20); vy[i] = randf(-20, 20);
+                    jitter[i] = Math.random() * 1000;
+                    tx[i] = x[i]; ty[i] = y[i];
+                }
+            }
+
+            // Anchor sketch (server-driven)
+            let sketch = {
+                id: "default", particleCount: null, shapes: [
+                    { type: "ring", cx: 0.38, cy: 0.42, r: 0.07, width: 0.01, weight: 1 },
+                    { type: "ring", cx: 0.62, cy: 0.42, r: 0.07, width: 0.01, weight: 1 },
+                    { type: "arc", x1: 0.35, x2: 0.65, y: 0.62, open: 0.07, bend: -0.5, weight: 1.2 }
+                ]
+            };
+
+            function recomputeTargets() {
+                const pts = [];
+                const toPxX = v => v * W;
+                const toPxY = v => v * H;
+                function push(px, py) { pts.push(px, py); }
+                function sampleRing(cx, cy, r, width, count) {
+                    const two = Math.PI * 2;
+                    for (let i = 0; i < count; i++) {
+                        const t = i / count * two;
+                        const rr = r + (Math.random() - 0.5) * width;
+                        push(cx + Math.cos(t) * rr, cy + Math.sin(t) * rr);
+                    }
+                }
+                function sampleArc(x1, x2, y, open, bend, count) {
+                    for (let i = 0; i < count; i++) {
+                        const t = i / (count - 1);
+                        const mx = x1 + t * (x2 - x1);
+                        const base = Math.sin(t * Math.PI);
+                        const my = y + base * open * (1 + bend);
+                        const off = (Math.random() - 0.5) * (open * 0.4);
+                        push(mx, my + off);
+                    }
+                }
+                function sampleLine(x1, y1, x2, y2, count) {
+                    for (let i = 0; i < count; i++) { const t = i / (count - 1); push(x1 + t * (x2 - x1), y1 + t * (y2 - y1)); }
+                }
+                function sampleRect(x1, y1, w, h, edge, count) {
+                    if (edge) {
+                        const per = 2 * (w + h), step = per / count; let acc = 0;
+                        while (acc <= per) {
+                            let t = acc;
+                            if (t < w) push(x1 + t, y1);
+                            else if (t < w + h) push(x1 + w, y1 + (t - w));
+                            else if (t < 2 * w + h) push(x1 + (2 * w + h - t), y1 + h);
+                            else push(x1, y1 + (per - t));
+                            acc += step;
+                        }
+                    } else {
+                        const nx = Math.max(2, Math.floor(Math.sqrt(count) * w / (w + h)));
+                        const ny = Math.max(2, Math.floor(Math.sqrt(count) * h / (h + w)));
+                        for (let iy = 0; iy < ny; iy++) for (let ix = 0; ix < nx; ix++) { const u = (ix + Math.random()) / nx, v = (iy + Math.random()) / ny; push(x1 + u * w, y1 + v * h); }
+                    }
+                }
+                function sampleText(text, font, x, y, align, sample, density) {
+                    const off = document.createElement('canvas');
+                    off.width = Math.max(256, Math.floor(W));
+                    off.height = Math.max(256, Math.floor(H));
+                    const octx = off.getContext('2d');
+                    octx.clearRect(0, 0, off.width, off.height);
+                    octx.fillStyle = '#fff'; octx.font = font || '700 160px Segoe UI';
+                    octx.textAlign = align || 'center'; octx.textBaseline = 'middle';
+                    octx.fillText(text, toPxX(x), toPxY(y));
+                    const img = octx.getImageData(0, 0, off.width, off.height).data;
+                    const stride = Math.max(2, Math.floor(6 / Math.max(0.2, density)));
+                    for (let yy = 0; yy < off.height; yy += stride) {
+                        for (let xx = 0; xx < off.width; xx += stride) {
+                            const a = img[(yy * off.width + xx) * 4 + 3];
+                            if (a > 128) {
+                                if (sample === 'edge') {
+                                    const n = (yy > 0 ? img[((yy - 1) * off.width + xx) * 4 + 3] : 0)
+                                        + (yy < off.height - 1 ? img[((yy + 1) * off.width + xx) * 4 + 3] : 0)
+                                        + (xx > 0 ? img[(yy * off.width + (xx - 1)) * 4 + 3] : 0)
+                                        + (xx < off.width - 1 ? img[(yy * off.width + (xx + 1)) * 4 + 3] : 0);
+                                    if (n < 4 * 200) push(xx, yy);
+                                } else {
+                                    push(xx, yy);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                const totalWeight = sketch.shapes?.reduce((a, s) => a + (s.weight ?? 1), 0) || 1;
+                const desired = (sketch.particleCount && sketch.particleCount > 0) ? sketch.particleCount : N;
+
+                for (const s of (sketch.shapes || [])) {
+                    const w = (s.weight ?? 1) / totalWeight;
+                    const count = Math.max(10, Math.floor(desired * w));
+                    if (s.type === 'ring') {
+                        sampleRing(toPxX(s.cx), toPxY(s.cy), Math.min(W, H) * (s.r ?? 0.06), Math.min(W, H) * (s.width ?? 0.01), count);
+                    } else if (s.type === 'arc') {
+                        sampleArc(toPxX(s.x1), toPxX(s.x2), toPxY(s.y), Math.min(W, H) * (s.open ?? 0.06), s.bend ?? -0.3, count);
+                    } else if (s.type === 'line') {
+                        sampleLine(toPxX(s.x1), toPxY(s.y1), toPxX(s.x2), toPxY(s.y2), count);
+                    } else if (s.type === 'rect') {
+                        sampleRect(toPxX(s.x), toPxY(s.y), s.w * W, s.h * H, s.sample === 'edge', count);
+                    } else if (s.type === 'polygon' && Array.isArray(s.points)) {
+                        const m = s.points.length; for (let i = 0; i < m; i++) { const a = s.points[i], b = s.points[(i + 1) % m]; sampleLine(toPxX(a[0]), toPxY(a[1]), toPxX(b[0]), toPxY(b[1]), Math.max(4, Math.floor(count / m))); }
+                    } else if (s.type === 'text') {
+                        sampleText(s.text || 'RA', s.font || '700 160px Segoe UI', s.x ?? 0.5, s.y ?? 0.5, s.align || 'center', s.sample || 'edge', s.density ?? 1.0);
+                    }
+                }
+
+                const need = Math.max(0, N - Math.floor(pts.length / 2));
+                if (need > 0) {
+                    const cx = W * 0.5, cy = H * 0.5, r = Math.min(W, H) * 0.35, width = Math.min(W, H) * 0.08;
+                    sampleRing(cx, cy, r, width, need);
+                }
+
+                if (pts.length < 2) return;
+                for (let i = 0; i < N; i++) { const j = (i * 2) % pts.length; tx[i] = pts[j]; ty[i] = pts[j + 1]; }
+            }
+
+            function step() {
+                const dt = 1 / 60;
+                const k = 1.2 + attention * 3.0;
+                const damping = 0.86 - attention * 0.15;
+                const jAmp = 10 + attention * 20;
+                for (let i = 0; i < N; i++) {
+                    const ax = (tx[i] - x[i]) * k;
+                    const ay = (ty[i] - y[i]) * k;
+                    const z = (jitter[i] += 0.012 + attention * 0.02);
+                    const jx = Math.sin(z * 1.7) * jAmp;
+                    const jy = Math.cos(z * 1.3) * jAmp;
+                    vx[i] = (vx[i] + (ax + jx) * dt) * damping;
+                    vy[i] = (vy[i] + (ay + jy) * dt) * damping;
+                    x[i] += vx[i] * dt * 60;
+                    y[i] += vy[i] * dt * 60;
+                }
+                if (blinkT > 0) { blinkT--; if (blinkT === 0) recomputeTargets(); }
+            }
+            function draw() {
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.fillStyle = 'rgba(5,8,15,0.25)';
+                ctx.fillRect(0, 0, W, H);
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.fillStyle = BLUE;
+                const r = Math.max(1, Math.floor(1.0 * DPR));
+                for (let i = 0; i < N; i++) { ctx.fillRect(x[i], y[i], r, r); }
+                ctx.globalCompositeOperation = 'source-over';
+            }
+            function loop() { step(); draw(); requestAnimationFrame(loop); }
+
+            // SignalR hookup
+            const connection = new signalR.HubConnectionBuilder().withUrl('/faceHub').withAutomaticReconnect().build();
+            connection.on('face.wake', _ => logFace('wake'));
+            connection.on('face.mood', p => { const prev = mood; mood = p.mood || 'Neutral'; setHUD(); if (mood !== prev) { recomputeTargets(); } logFace('mood ' + mood); });
+            connection.on('face.attention', p => { attention = clamp01(p.level ?? p.attention ?? 0.35); setHUD(); logFace('attention ' + attention.toFixed(2)); });
+            connection.on('face.audio', p => { audio = clamp01(p.rms ?? p.level ?? 0); setHUD(); /* recomputeTargets() if shapes depend on audio */ });
+            connection.on('face.blink', _ => { blinkT = 12; recomputeTargets(); logFace('blink'); });
+            connection.on('face.anchors', payload => {
+                try {
+                    const raw = payload?.anchors; const json = (typeof raw === 'string') ? JSON.parse(raw) : raw;
+                    if (!json) return;
+                    sketch = json;
+                    if (json.particleCount && Number.isFinite(json.particleCount)) {
+                        const next = Math.max(1000, Math.min(40000, json.particleCount));
+                        ensureCapacity(next);
+                    }
+                    recomputeTargets();
+                    logFace('anchors applied: ' + (json.id || '(no id)'));
+                } catch (e) { logFace('anchors parse error ' + e); }
+            });
+
+            function clamp01(v) { return Math.max(0, Math.min(1, +v || 0)); }
+
+            (async function start() {
+                resize();
+                spawnCloud();
+                setHUD();
+                recomputeTargets();
+                loop();
+                try {
+                    await connection.start();
+                    logFace('connected');
+                    const r = await fetch('/api/face/state');
+                    const s = await r.json();
+                    if (s.mood) mood = s.mood;
+                    if (typeof s.attention === 'number') attention = s.attention;
+                    if (typeof s.audioLevel === 'number') audio = s.audioLevel;
+                    setHUD(); recomputeTargets();
+                    logFace('state synced');
+                } catch (e) {
+                    logFace('connect/state error ' + e);
+                }
+                // auto wake once
+                try { await fetch('/api/face/cmd', { method: 'POST', body: 'face wake' }); } catch { }
+            })();
+        })();
+
+        // Initial data on load
+        fetchJson('/api/health');
+        fetchText('/api/modules');
+        fetchJson('/api/agent/pending', 'out-pending');
+    </script>
+</body>
+</html>

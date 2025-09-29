@@ -1,0 +1,416 @@
+﻿<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Web Particle Face</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js" crossorigin="anonymous"></script>
+    <style>
+        html, body {
+            margin: 0;
+            height: 100%;
+            background: #05080f;
+            color: #cfe8ff;
+            font-family: system-ui,Segoe UI,Roboto,Arial,sans-serif;
+        }
+
+        header {
+            padding: 10px 16px;
+            background: #0b1220;
+            border-bottom: 1px solid #0e1a2c;
+        }
+
+        #hud {
+            font-size: 12px;
+            opacity: .85
+        }
+
+        #c {
+            display: block;
+            width: 100vw;
+            height: calc(100vh - 48px);
+        }
+
+        .log {
+            position: fixed;
+            left: 8px;
+            bottom: 8px;
+            width: 42vw;
+            max-width: 680px;
+            max-height: 42vh;
+            overflow: auto;
+            background: #0b1220aa;
+            border: 1px solid #0e1a2c;
+            border-radius: 8px;
+            padding: 6px;
+            font-size: 11px;
+        }
+
+        .controls {
+            position: fixed;
+            right: 8px;
+            bottom: 8px;
+            background: #0b1220aa;
+            border: 1px solid #0e1a2c;
+            border-radius: 8px;
+            padding: 8px;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: #1e68ff;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 10px;
+            cursor: pointer;
+        }
+
+            button.secondary {
+                background: #18263d;
+            }
+    </style>
+</head>
+<body>
+    <header>
+        <div id="hud">Mood: <span id="mood">(loading)</span> · Attention: <span id="att">--</span> · Audio: <span id="aud">--</span> · Particles: <span id="pc">--</span></div>
+    </header>
+    <canvas id="c"></canvas>
+    <pre id="log" class="log"></pre>
+    <div class="controls">
+        <button onclick="cmd('face wake')">Wake</button>
+        <button class="secondary" onclick="cmd('face set mood Thinking')">Thinking</button>
+        <button class="secondary" onclick="cmd('face set mood Happy')">Happy</button>
+        <button class="secondary" onclick="cmd('face set mood Neutral')">Neutral</button>
+        <button class="secondary" onclick="cmd('face blink')">Blink</button>
+        <button class="secondary" onclick="sendText()">Text: RA</button>
+    </div>
+
+    <script>
+        const logEl = document.getElementById('log');
+        const moodEl = document.getElementById('mood');
+        const attEl = document.getElementById('att');
+        const audEl = document.getElementById('aud');
+        const pcEl = document.getElementById('pc');
+        function log(msg) { const t = new Date().toISOString(); logEl.textContent = `${t} ${msg}\n` + logEl.textContent; }
+
+        // Canvas and sizes
+        const canvas = document.getElementById('c');
+        const ctx = canvas.getContext('2d');
+        let W = 0, H = 0, DPR = window.devicePixelRatio || 1;
+        function resize() {
+            W = Math.floor(window.innerWidth * DPR);
+            H = Math.floor((window.innerHeight - 48) * DPR);
+            canvas.width = W; canvas.height = H;
+            canvas.style.width = (W / DPR) + 'px';
+            canvas.style.height = (H / DPR) + 'px';
+            recomputeTargets(); // keep shape fitting on resize
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // AI-driven state
+        let mood = 'Neutral';    // affects expressions
+        let attention = 0.35;    // affects stiffness/speed
+        let audio = 0.0;         // affects mouth openness if text-based faces aren't used
+        let blinkT = 0;
+        function setHUD() { moodEl.textContent = mood; attEl.textContent = attention.toFixed(2); audEl.textContent = audio.toFixed(2); pcEl.textContent = N.toString(); }
+
+        // Particles
+        const BLUE = '#4da3ff';
+        let N = 6000; // default, can be overridden by anchors payload
+        let x = new Float32Array(N), y = new Float32Array(N), vx = new Float32Array(N), vy = new Float32Array(N);
+        let tx = new Float32Array(N), ty = new Float32Array(N), jitter = new Float32Array(N);
+
+        function ensureCapacity(n) {
+            if (n === N) return;
+            N = n;
+            x = new Float32Array(N); y = new Float32Array(N);
+            vx = new Float32Array(N); vy = new Float32Array(N);
+            tx = new Float32Array(N); ty = new Float32Array(N);
+            jitter = new Float32Array(N);
+            spawnCloud();
+            recomputeTargets();
+            setHUD();
+        }
+
+        function randf(a, b) { return a + Math.random() * (b - a); }
+
+        function spawnCloud() {
+            const cx = W * 0.5, cy = H * 0.5, r = Math.min(W, H) * 0.45;
+            for (let i = 0; i < N; i++) {
+                const a = Math.random() * Math.PI * 2;
+                const rr = Math.sqrt(Math.random()) * r;
+                x[i] = cx + Math.cos(a) * rr;
+                y[i] = cy + Math.sin(a) * rr;
+                vx[i] = randf(-20, 20); vy[i] = randf(-20, 20);
+                jitter[i] = Math.random() * 1000;
+                tx[i] = x[i]; ty[i] = y[i];
+            }
+        }
+        spawnCloud();
+
+        // Current anchor sketch (server-driven). Normalized coordinates 0..1 expected.
+        let sketch = {
+            id: "default", particleCount: null, shapes: [
+                { type: "ring", cx: 0.38, cy: 0.42, r: 0.07, width: 0.01 },
+                { type: "ring", cx: 0.62, cy: 0.42, r: 0.07, width: 0.01 },
+                { type: "arc", x1: 0.35, x2: 0.65, y: 0.62, open: 0.07, bend: -0.5 }
+            ]
+        };
+
+        setHUD();
+
+        // Recompute targets tx/ty based on sketch and canvas size
+        function recomputeTargets() {
+            const pts = [];
+            const s = Math.min(W, H);
+            const toPxX = v => v * W;
+            const toPxY = v => v * H;
+
+            function pushPoint(px, py) { pts.push(px, py); }
+
+            function sampleRing(cx, cy, r, width, count) {
+                const twoPi = Math.PI * 2;
+                for (let i = 0; i < count; i++) {
+                    const t = i / count * twoPi;
+                    const rr = r + (Math.random() - 0.5) * width;
+                    pushPoint(cx + Math.cos(t) * rr, cy + Math.sin(t) * rr);
+                }
+            }
+            function sampleArc(x1, x2, y, open, bend, count) {
+                for (let i = 0; i < count; i++) {
+                    const t = i / (count - 1);
+                    const mx = x1 + t * (x2 - x1);
+                    const base = Math.sin(t * Math.PI);
+                    const my = y + base * open * (1 + bend);
+                    const off = (Math.random() - 0.5) * (open * 0.4);
+                    pushPoint(mx, my + off);
+                }
+            }
+            function sampleLine(x1, y1, x2, y2, count) {
+                for (let i = 0; i < count; i++) {
+                    const t = i / (count - 1);
+                    pushPoint(x1 + t * (x2 - x1), y1 + t * (y2 - y1));
+                }
+            }
+            function sampleRect(x1, y1, w, h, edge, count) {
+                if (edge) {
+                    const per = 2 * (w + h);
+                    const step = per / count;
+                    let acc = 0;
+                    while (acc <= per) {
+                        let t = acc;
+                        if (t < w) pushPoint(x1 + t, y1);
+                        else if (t < w + h) pushPoint(x1 + w, y1 + (t - w));
+                        else if (t < 2 * w + h) pushPoint(x1 + (2 * w + h - t), y1 + h);
+                        else pushPoint(x1, y1 + (per - t));
+                        acc += step;
+                    }
+                } else {
+                    const nx = Math.max(2, Math.floor(Math.sqrt(count) * w / (w + h)));
+                    const ny = Math.max(2, Math.floor(Math.sqrt(count) * h / (w + h)));
+                    for (let iy = 0; iy < ny; iy++) {
+                        for (let ix = 0; ix < nx; ix++) {
+                            const u = (ix + Math.random()) / nx;
+                            const v = (iy + Math.random()) / ny;
+                            pushPoint(x1 + u * w, y1 + v * h);
+                        }
+                    }
+                }
+            }
+            // Text sampling via offscreen raster; sample edge or fill based on stride (density)
+            function sampleText(text, font, x, y, align, sample, density) {
+                const off = document.createElement('canvas');
+                const scale = DPR; // improve edge detection on HiDPI
+                off.width = Math.max(256, Math.floor(W));
+                off.height = Math.max(256, Math.floor(H));
+                const octx = off.getContext('2d');
+                octx.clearRect(0, 0, off.width, off.height);
+                octx.fillStyle = '#ffffff';
+                octx.font = font || '700 160px Segoe UI';
+                octx.textAlign = align || 'center';
+                octx.textBaseline = 'middle';
+                const px = toPxX(x), py = toPxY(y);
+                octx.fillText(text, px, py);
+
+                const img = octx.getImageData(0, 0, off.width, off.height).data;
+                const stride = Math.max(2, Math.floor(6 / Math.max(0.2, density)));
+                for (let yy = 0; yy < off.height; yy += stride) {
+                    for (let xx = 0; xx < off.width; xx += stride) {
+                        const idx = (yy * off.width + xx) * 4;
+                        const a = img[idx + 3];
+                        if (a > 128) {
+                            if (sample === 'edge') {
+                                // check if neighbor is background (edge detection)
+                                const n = (yy > 0 ? img[(yy - 1) * off.width * 4 + xx * 4 + 3] : 0)
+                                    + (yy < off.height - 1 ? img[(yy + 1) * off.width * 4 + xx * 4 + 3] : 0)
+                                    + (xx > 0 ? img[yy * off.width * 4 + (xx - 1) * 4 + 3] : 0)
+                                    + (xx < off.width - 1 ? img[yy * off.width * 4 + (xx + 1) * 4 + 3] : 0);
+                                if (n < 4 * 200) pushPoint(xx, yy);
+                            } else {
+                                pushPoint(xx, yy);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Allocate counts per shape
+            const totalWeight = sketch.shapes?.reduce((acc, s) => acc + (s.weight ?? 1), 0) || 1;
+            const desired = sketch.particleCount && sketch.particleCount > 0 ? sketch.particleCount : N;
+            let allocated = 0;
+
+            for (const sdef of (sketch.shapes || [])) {
+                const w = (sdef.weight ?? 1) / totalWeight;
+                let count = Math.max(10, Math.floor(desired * w));
+                if (sdef.type === 'ring') {
+                    const cx = toPxX(sdef.cx), cy = toPxY(sdef.cy);
+                    const r = Math.min(W, H) * (sdef.r ?? 0.06);
+                    const width = Math.min(W, H) * (sdef.width ?? 0.01);
+                    // Circumference-based count refinement
+                    count = Math.max(count, Math.floor((2 * Math.PI * r) / 4));
+                    sampleRing(cx, cy, r, width, count);
+                }
+                else if (sdef.type === 'arc') {
+                    const x1 = toPxX(sdef.x1), x2 = toPxX(sdef.x2), yy = toPxY(sdef.y);
+                    const open = Math.min(W, H) * (sdef.open ?? 0.06);
+                    const bend = sdef.bend ?? -0.3;
+                    sampleArc(x1, x2, yy, open, bend, count);
+                }
+                else if (sdef.type === 'line') {
+                    sampleLine(toPxX(sdef.x1), toPxY(sdef.y1), toPxX(sdef.x2), toPxY(sdef.y2), count);
+                }
+                else if (sdef.type === 'rect') {
+                    const edge = sdef.sample === 'edge';
+                    sampleRect(toPxX(sdef.x), toPxY(sdef.y), sdef.w * W, sdef.h * H, edge, count);
+                }
+                else if (sdef.type === 'polygon' && Array.isArray(sdef.points)) {
+                    const ptsN = sdef.points.length;
+                    for (let i = 0; i < ptsN; i++) {
+                        const a = sdef.points[i], b = sdef.points[(i + 1) % ptsN];
+                        const segCount = Math.max(4, Math.floor(count / ptsN));
+                        sampleLine(toPxX(a[0]), toPxY(a[1]), toPxX(b[0]), toPxY(b[1]), segCount);
+                    }
+                }
+                else if (sdef.type === 'text') {
+                    sampleText(sdef.text || 'RA', sdef.font || '700 160px Segoe UI', sdef.x ?? 0.5, sdef.y ?? 0.5, sdef.align || 'center', sdef.sample || 'edge', sdef.density ?? 1.0);
+                }
+                allocated += count;
+            }
+
+            // If not enough points to fill N, add a subtle halo ring background to prevent collapse
+            const need = Math.max(0, N - Math.floor(pts.length / 2));
+            if (need > 0) {
+                const cx = W * 0.5, cy = H * 0.5, r = Math.min(W, H) * 0.35, width = Math.min(W, H) * 0.08;
+                sampleRing(cx, cy, r, width, need);
+            }
+
+            // Assign targets by cycling through computed points
+            if (pts.length < 2) return;
+            for (let i = 0; i < N; i++) {
+                const j = (i * 2) % pts.length;
+                tx[i] = pts[j];
+                ty[i] = pts[j + 1];
+            }
+        }
+
+        // Physics loop: spring to target + jitter swirl
+        function step() {
+            const dt = 1 / 60;
+            const k = 1.2 + attention * 3.0;
+            const damping = 0.86 - attention * 0.15;
+            const jAmp = 10 + attention * 20;
+
+            for (let i = 0; i < N; i++) {
+                const ax = (tx[i] - x[i]) * k;
+                const ay = (ty[i] - y[i]) * k;
+                const z = (jitter[i] += 0.012 + attention * 0.02);
+                const jx = Math.sin(z * 1.7) * jAmp;
+                const jy = Math.cos(z * 1.3) * jAmp;
+
+                vx[i] = (vx[i] + (ax + jx) * dt) * damping;
+                vy[i] = (vy[i] + (ay + jy) * dt) * damping;
+
+                x[i] += vx[i] * dt * 60;
+                y[i] += vy[i] * dt * 60;
+
+                if (x[i] < -50) { x[i] = -50; vx[i] *= -0.2; }
+                if (x[i] > W + 50) { x[i] = W + 50; vx[i] *= -0.2; }
+                if (y[i] < -50) { y[i] = -50; vy[i] *= -0.2; }
+                if (y[i] > H + 50) { y[i] = H + 50; vy[i] *= -0.2; }
+            }
+            if (blinkT > 0) { blinkT--; if (blinkT === 0) recomputeTargets(); }
+        }
+
+        function draw() {
+            // trail
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.fillStyle = 'rgba(5,8,15,0.25)';
+            ctx.fillRect(0, 0, W, H);
+
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.fillStyle = BLUE;
+            const r = Math.max(1, Math.floor(1.0 * DPR));
+            for (let i = 0; i < N; i++) {
+                ctx.fillRect(x[i], y[i], r, r);
+            }
+            ctx.globalCompositeOperation = 'source-over';
+        }
+
+        function loop() { step(); draw(); requestAnimationFrame(loop); }
+        loop();
+
+        // SignalR hookup
+        const connection = new signalR.HubConnectionBuilder().withUrl('/faceHub').withAutomaticReconnect().build();
+
+        connection.on('face.wake', _ => log('wake'));
+        connection.on('face.mood', p => { const prev = mood; mood = p.mood || 'Neutral'; setHUD(); log('mood ' + mood); if (mood !== prev) recomputeTargets(); });
+        connection.on('face.attention', p => { attention = clamp01(p.level ?? p.attention ?? 0.35); setHUD(); });
+        connection.on('face.audio', p => { audio = clamp01(p.rms ?? p.level ?? 0); setHUD(); /* if used in shapes, call recomputeTargets() */ });
+        connection.on('face.blink', _ => { blinkT = 12; recomputeTargets(); log('blink'); });
+
+        // NEW: receive anchors sketch and rebuild targets
+        connection.on('face.anchors', payload => {
+            try {
+                const raw = payload?.anchors;
+                const json = (typeof raw === 'string') ? JSON.parse(raw) : raw;
+                if (!json) return;
+                sketch = json;
+                if (json.particleCount && Number.isFinite(json.particleCount))
+                    ensureCapacity(Math.max(1000, Math.min(40000, json.particleCount)));
+                recomputeTargets();
+                log('anchors applied: ' + (json.id || '(no id)'));
+            } catch (e) { log('anchors parse error ' + e); }
+        });
+
+        connection.start().then(async () => {
+            log('connected');
+            // Initial state sync
+            try {
+                const r = await fetch('/api/face/state'); const s = await r.json();
+                if (s.mood) mood = s.mood;
+                if (typeof s.attention === 'number') attention = s.attention;
+                if (typeof s.audioLevel === 'number') audio = s.audioLevel;
+                setHUD(); recomputeTargets();
+            } catch (e) { log('state error ' + e); }
+        }).catch(e => log('connect error ' + e));
+
+        async function cmd(text) {
+            const r = await fetch('/api/face/cmd', { method: 'POST', body: text });
+            log(await r.text());
+        }
+        async function sendText() {
+            const body = { text: "RA", font: "800 200px Segoe UI", x: 0.5, y: 0.5, align: "center", density: 1.0, sample: "edge" };
+            const r = await fetch('/api/face/text', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+            log(await r.text());
+        }
+        function clamp01(v) { return Math.max(0, Math.min(1, +v || 0)); }
+
+        // Auto wake
+        setTimeout(() => cmd('face wake'), 800);
+    </script>
+</body>
+</html>
