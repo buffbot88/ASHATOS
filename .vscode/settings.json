@@ -1,0 +1,10 @@
+{
+  "omnisharp.useModernNet": true,
+  "omnisharp.loggingLevel": "Information",
+  "dotnet.defaultSolution": "",
+  "files.exclude": {
+    "**/bin": true,
+    "**/obj": true
+  },
+  "editor.formatOnSave": true
+}
