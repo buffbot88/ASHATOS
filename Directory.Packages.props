@@ -1,11 +1,15 @@
-<Project ToolsVersion="15.0">
-  <!--
-    To update the version of Uno, you should instead update the Sdk version in the global.json file.
-
-    See https://aka.platform.uno/using-uno-sdk for more information.
-    See https://aka.platform.uno/using-uno-sdk#implicit-packages for more information regarding the Implicit Packages.
-  -->
+<Project>
   <ItemGroup>
-    <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    <PackageVersion Include="Uno.WinUI" Version="6.2.58" />
+    <PackageVersion Include="Uno.WinUI.Toolkit" Version="4.11.18" />
+    <PackageVersion Include="Uno.Extensions.Logging" Version="4.11.18" />
+    <PackageVersion Include="Uno.Extensions.Configuration" Version="6.2.3" />
+    <PackageVersion Include="Uno.Extensions.Navigation" Version="6.2.3" />
+    <PackageVersion Include="Uno.Extensions.Hosting" Version="6.2.3" />
+    <PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.8.250916003" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.9" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="9.0.9" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="9.0.9" />
+    <!-- Any other packages -->
   </ItemGroup>
 </Project>
