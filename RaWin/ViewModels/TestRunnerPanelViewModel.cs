@@ -1,13 +1,11 @@
 using System.Windows.Input;
 using RaCore.Engine.Manager;
-using RaWin;
-using RaWin;
 
 namespace RaWin.ViewModels
 {
     public class TestRunnerPanelViewModel : ObservableObject
     {
-        private readonly IRaModule _testRunner;
+        private readonly IRaModule? _testRunner;
 
         public string TestResult { get; private set; }
         public ICommand RunIntegrationSuiteCommand { get; }

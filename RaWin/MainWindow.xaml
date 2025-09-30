@@ -1,43 +1,67 @@
 ﻿<Window x:Class="RaWin.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="RaWin" Height="800" Width="1200">
+        xmlns:local="clr-namespace:RaWin"
+        Title="RaWin" Height="600" Width="1200">
+    <Window.Resources>
+        <local:MessageTypeToBrushConverter x:Key="MessageTypeToBrushConverter"/>
+        <!-- Converter for bool-to-visibility for panel switching -->
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+    </Window.Resources>
     <Grid>
         <TabControl>
+            <!-- Dashboard Tab -->
+            <TabItem Header="Dashboard">
+                <!-- ... unchanged ... -->
+            </TabItem>
+
+            <!-- Modules Tab -->
             <TabItem Header="Modules">
-                <TabControl ItemsSource="{Binding CoreModules}">
+                <!-- ... unchanged ... -->
+            </TabItem>
+
+            <!-- Monitoring Tab -->
+            <TabItem Header="Monitoring">
+                <TabControl ItemsSource="{Binding MonitorCategories}">
                     <TabControl.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding Module.Name}" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
                         </DataTemplate>
                     </TabControl.ItemTemplate>
                     <TabControl.ContentTemplate>
                         <DataTemplate>
                             <ScrollViewer>
                                 <StackPanel Margin="16">
-                                    <TextBlock Text="{Binding Module.Name}" FontSize="20" FontWeight="Bold"/>
-                                    <TextBlock Text="Status:" FontWeight="Bold" Margin="0,8,0,2"/>
-                                    <TextBlock Text="{Binding Status}" FontSize="14"/>
-                                    <TextBlock Text="Help:" FontWeight="Bold" Margin="0,8,0,2"/>
-                                    <TextBlock Text="{Binding Help}" FontSize="13" TextWrapping="Wrap"/>
-                                    <TextBlock Text="Logs:" FontWeight="Bold" Margin="0,8,0,2"/>
-                                    <ItemsControl ItemsSource="{Binding Logs}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <TextBlock Text="{Binding}" FontSize="12" Foreground="Gray"/>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                    <TextBlock Text="Command:" FontWeight="Bold" Margin="0,12,0,2"/>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBox Width="400"
-                                                 Text="{Binding CommandInput, UpdateSourceTrigger=PropertyChanged}"
-                                                 KeyDown="TextBox_KeyDown"/>
-                                        <Button Content="Run"
-                                                Command="{Binding RunCommand}"
-                                                Margin="8,0,0,0"/>
+                                    <!-- Status Panel -->
+                                    <StackPanel DataContext="{Binding StatusPanel}" Visibility="{Binding IsStatusPanel, Converter={StaticResource BoolToVisibilityConverter}}">
+                                        <TextBlock Text="RaCore Status" FontSize="20" FontWeight="Bold"/>
+                                        <TextBox Text="{Binding Status}" FontSize="14" IsReadOnly="True" BorderThickness="0" Background="Transparent"/>
+                                        <TextBlock Text="Uptime:" FontWeight="Bold" Margin="0,8,0,2"/>
+                                        <TextBox Text="{Binding Uptime}" FontSize="13" IsReadOnly="True" BorderThickness="0" Background="Transparent"/>
                                     </StackPanel>
-                                    <TextBlock Text="{Binding CommandResult}" Margin="0,12,0,0" TextWrapping="Wrap" FontSize="14" Foreground="DarkGreen"/>
+                                    <!-- Metrics Panel (unchanged) -->
+                                    <StackPanel DataContext="{Binding MetricsPanel}" Visibility="{Binding IsMetricsPanel, Converter={StaticResource BoolToVisibilityConverter}}">
+                                        <!-- ... unchanged ... -->
+                                    </StackPanel>
+                                    <!-- Logs Panel (ERROR/INFO) -->
+                                    <StackPanel DataContext="{Binding LogsPanel}" Visibility="{Binding IsLogsPanel, Converter={StaticResource BoolToVisibilityConverter}}">
+                                        <TextBlock Text="Error/Info Logs" FontSize="20" FontWeight="Bold" Margin="0,16,0,4"/>
+                                        <TextBox Text="{Binding LogSearchInput, UpdateSourceTrigger=PropertyChanged}" Width="400" Margin="0,0,0,8" 
+                                                 ToolTip="Filter logs by keyword"/>
+                                        <ItemsControl ItemsSource="{Binding FilteredLogs}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBox Text="{Binding}" FontSize="12"
+                                                             Foreground="{Binding Converter={StaticResource MessageTypeToBrushConverter}}"
+                                                             IsReadOnly="True" BorderThickness="0" Background="Transparent"/>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                    <!-- Commands Panel (unchanged) -->
+                                    <StackPanel DataContext="{Binding CommandsPanel}" Visibility="{Binding IsCommandsPanel, Converter={StaticResource BoolToVisibilityConverter}}">
+                                        <!-- ... unchanged ... -->
+                                    </StackPanel>
                                 </StackPanel>
                             </ScrollViewer>
                         </DataTemplate>
