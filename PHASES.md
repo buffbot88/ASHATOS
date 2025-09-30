@@ -5,20 +5,20 @@
 
 ---
 
-## Phase 1: Core UI Foundation (*Current Phase*)
+## Phase 1: Core UI Foundation
 - [x] Clean project structure & remove legacy/unneeded files
 - [x] Ensure .csproj files do not manually include sources/pages (use SDK defaults)
 - [x] Set up main app manifest/assets/config/global usings
 - [x] Dynamic Modules menu (populated from Ra.Core.ModuleManager)
 - [x] Docked properties panel on left (shows only one module at a time)
 - [x] Main console/log output area
-- [ ] Initial testing and UI polish
+- [x] Initial testing and UI polish
 
 ---
 
-## Phase 2: Advanced Features
-- [ ] Module property panels: show commands, status, help, etc. per module
-- [ ] Command execution UI (send input to modules, show output)
+## Phase 2: Advanced Features (*Current Phase*)
+- [x] Module property panels: show commands, status, help, etc. per module
+- [x] Command execution UI (send input to modules, show output)
 - [ ] Localization and multi-language UI
 - [ ] Theme customization (dark/light mode, etc.)
 - [ ] User/configurable settings panel
@@ -27,7 +27,10 @@
 
 ---
 
-## Phase 3: Integrations & Extensions
+## Phase 3: AI Game Server Mainframe & Extensions
+- [ ] **RaCore module improvements** (core system upgrades, APIs, new features)
+- [ ] **Game "screen" drawing panel** (UI for 2D/3D output, rendering, and visual debugging)
+- [ ] Begin work on **AI Game Server Mainframe/Client Birther** for generating 3D MMORPG games
 - [ ] Add support for external APIs (weather, etc.) as plugins
 - [ ] Add skill/module store/discovery UI
 - [ ] Export/import module settings and user data
