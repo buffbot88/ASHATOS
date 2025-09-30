@@ -7,7 +7,7 @@ using RaCore.Engine.Manager;
 
 namespace RaCore.Modules.FeatureExplorer;
 
-// [RaModule("FeatureExplorer")]
+[RaModule(Category = "core")]
 public sealed class FeatureExplorerModule : ModuleBase, IDisposable
 {
     public override string Name => "FeatureExplorer";

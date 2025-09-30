@@ -11,6 +11,7 @@ using RaCore.Engine.Manager;
 
 namespace RaCore.Modules.TestRunner;
 
+[RaModule(Category = "core")]
 public sealed class TestRunnerModule : ModuleBase, IDisposable
 {
     public override string Name => "TestRunner";

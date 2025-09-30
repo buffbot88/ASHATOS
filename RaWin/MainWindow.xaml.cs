@@ -1,24 +1,37 @@
 using System.Windows;
+using System.Windows.Input;
 using RaCore.Engine.Manager;
+using RaWin.ViewModels;
 
 namespace RaWin
 {
     public partial class MainWindow : Window
     {
-        private ModuleManager _moduleManager;
-        private MainWindowViewModel _viewModel;
+        public MainWindowViewModel ViewModel { get; }
 
         public MainWindow()
         {
             InitializeComponent();
 
-            // Initialize RaCore modules
-            _moduleManager = new ModuleManager();
-            _moduleManager.LoadModules();
+            var manager = new ModuleManager();
+            manager.LoadModules();
 
-            // Populate ViewModel
-            _viewModel = new MainWindowViewModel(_moduleManager);
-            DataContext = _viewModel;
+            ViewModel = new MainWindowViewModel(manager);
+            DataContext = ViewModel;
+        }
+
+        // Optional: allow Enter key to trigger command execution in the TextBox
+        private void TextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                var textBox = sender as System.Windows.Controls.TextBox;
+                var vm = textBox?.DataContext as RaWin.ViewModels.ModulePanelViewModel;
+                if (vm != null && vm.RunCommand.CanExecute(null))
+                {
+                    vm.RunCommand.Execute(null);
+                }
+            }
         }
     }
 }
