@@ -142,4 +142,17 @@ public class ModuleWrapper : IDisposable
             return Task.FromException<string>(ex);
         }
     }
+
+    // Card-style category property for filtering and UI
+    public string Category
+    {
+        get
+        {
+            var attr = Instance.GetType()
+                .GetCustomAttributes(typeof(RaModuleAttribute), true)
+                .OfType<RaModuleAttribute>()
+                .FirstOrDefault();
+            return attr?.Category ?? string.Empty;
+        }
+    }
 }

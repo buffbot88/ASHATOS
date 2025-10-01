@@ -1,4 +1,3 @@
-// url: (your local path or repo location, if available)
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -28,9 +27,10 @@ public class ModuleManager : IDisposable
 
     public IReadOnlyList<string> ModuleSearchPaths => assemblySearchRoots.AsReadOnly();
 
-    // ADD: Filtered property for core modules only.
+    // Card-style: Filtered property for core modules only, using Category property on ModuleWrapper.
     public IReadOnlyList<ModuleWrapper> CoreModules => modules
         .Where(m => m.Instance != null &&
+                    m.Category.Equals("core", StringComparison.OrdinalIgnoreCase) &&
                     m.Instance.GetType().Namespace != null &&
                     (m.Instance.GetType().Namespace == "RaCore.Modules" ||
                      m.Instance.GetType().Namespace.StartsWith("RaCore.Modules.")))

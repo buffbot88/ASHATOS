@@ -2,31 +2,62 @@
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:local="clr-namespace:RaWin"
+      xmlns:conv="clr-namespace:RaWin.Converters"
       Title="Dashboard">
 
     <Page.Resources>
-        <local:MessageTypeToBrushConverter x:Key="MessageTypeToBrushConverter"/>
+        <conv:MessageTypeToBrushConverter x:Key="MessageTypeToBrushConverter"/>
+        <!-- Terminal-style TextBox for input/output/chat/log -->
+        <Style x:Key="TerminalBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="Black"/>
+            <Setter Property="Foreground" Value="Lime"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#3E9"/>
+            <Setter Property="Padding" Value="4"/>
+        </Style>
+        <!-- Card style for log/output panels -->
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#CCC"/>
+            <Setter Property="Background" Value="#FAFAFA"/>
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="Margin" Value="8"/>
+        </Style>
+        <!-- Sky blue gradient background (cloud-like) -->
+        <LinearGradientBrush x:Key="SkyGradient" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#87CEEB" Offset="0"/>
+            <GradientStop Color="#B0E0E6" Offset="0.5"/>
+            <GradientStop Color="#F0FFFF" Offset="1"/>
+        </LinearGradientBrush>
     </Page.Resources>
 
-    <Grid>
-        <!-- Notification/alert bar at top -->
-        <Border Height="100"
-                Background="Black"
-                CornerRadius="8"
-                Margin="0,0,0,12"
-                Padding="16"
-                VerticalAlignment="Top">
-            <TextBlock Text="{Binding DashboardMessage}"
-                       FontSize="20"
-                       VerticalAlignment="Center"
-                       TextWrapping="Wrap"
-                       Foreground="{Binding DashboardMessageType, Converter={StaticResource MessageTypeToBrushConverter}}"/>
+    <Grid Background="{StaticResource SkyGradient}">
+        <!-- Top Log Bar -->
+        <Border Style="{StaticResource CardStyle}" Height="80" VerticalAlignment="Top" HorizontalAlignment="Stretch" Margin="8">
+            <TextBox Style="{StaticResource TerminalBoxStyle}"
+                     Text="{Binding LogOutput}"
+                     IsReadOnly="True"
+                     TextWrapping="Wrap"/>
         </Border>
 
-        <!-- Dashboard main content below (add as needed) -->
-        <StackPanel Margin="0,112,0,0">
-            <!-- Example content: -->
-            <TextBlock Text="Dashboard Main Content Here" FontSize="24" Foreground="Gray" HorizontalAlignment="Center"/>
-        </StackPanel>
+        <!-- Left Output Chat Box -->
+        <Border Style="{StaticResource CardStyle}" VerticalAlignment="Stretch" HorizontalAlignment="Left" Margin="8,100,0,8" Width="260">
+            <TextBox Style="{StaticResource TerminalBoxStyle}"
+                     Text="{Binding ChatOutput}"
+                     IsReadOnly="True"
+                     TextWrapping="Wrap" AcceptsReturn="True"/>
+        </Border>
+
+        <!-- Main DigitalScreen (AI) Card -->
+        <Border Background="DarkBlue" CornerRadius="16" BorderBrush="#222" BorderThickness="2"
+                VerticalAlignment="Stretch" HorizontalAlignment="Center" Margin="280,100,8,8">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="DigitalScreen (AI)" Foreground="White" FontSize="28" FontWeight="Bold" Margin="0,0,0,16"/>
+                <!-- Placeholder for future AI visualization -->
+            </StackPanel>
+        </Border>
     </Grid>
 </Page>

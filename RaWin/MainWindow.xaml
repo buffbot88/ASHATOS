@@ -2,71 +2,234 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:RaWin"
-        Title="RaWin" Height="600" Width="1200">
+        xmlns:conv="clr-namespace:RaWin.Converters"
+        Title="RaWin" Height="600" Width="1200" WindowStartupLocation="CenterScreen">
     <Window.Resources>
-        <local:MessageTypeToBrushConverter x:Key="MessageTypeToBrushConverter"/>
-        <!-- Converter for bool-to-visibility for panel switching -->
-        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <conv:MessageTypeToBrushConverter x:Key="MessageTypeToBrushConverter"/>
+        <conv:StatusVisibilityConverter x:Key="StatusVisibilityConverter"/>
+        <conv:MetricsVisibilityConverter x:Key="MetricsVisibilityConverter"/>
+        <conv:LogsVisibilityConverter x:Key="LogsVisibilityConverter"/>
+        <conv:CommandsVisibilityConverter x:Key="CommandsVisibilityConverter"/>
+        <!-- Sky blue card background brush -->
+        <LinearGradientBrush x:Key="SkyCardGradient" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#87CEEB" Offset="0"/>
+            <GradientStop Color="#B0E0E6" Offset="0.5"/>
+            <GradientStop Color="#F0FFFF" Offset="1"/>
+        </LinearGradientBrush>
+        <!-- Card Style for consistent sky blue card look -->
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="BorderBrush" Value="#3EC0F0"/>
+            <Setter Property="Background" Value="{StaticResource SkyCardGradient}"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="Margin" Value="12"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="#3399FF" BlurRadius="12" Opacity="0.18"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <!-- Card Style for DigitalScreen with thicker padding -->
+        <Style x:Key="DigitalScreenCardStyle" TargetType="Border" BasedOn="{StaticResource CardStyle}">
+            <Setter Property="Padding" Value="32"/>
+        </Style>
+        <!-- Terminal-style TextBox for input/output/chat/log -->
+        <Style x:Key="TerminalBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="Black"/>
+            <Setter Property="Foreground" Value="Lime"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#3E9"/>
+            <Setter Property="Padding" Value="4"/>
+        </Style>
+        <!-- Sky blue gradient background (cloud-like) -->
+        <LinearGradientBrush x:Key="SkyGradient" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#87CEEB" Offset="0"/>
+            <GradientStop Color="#B0E0E6" Offset="0.5"/>
+            <GradientStop Color="#F0FFFF" Offset="1"/>
+        </LinearGradientBrush>
     </Window.Resources>
-    <Grid>
+    <Grid Background="{StaticResource SkyGradient}">
         <TabControl>
             <!-- Dashboard Tab -->
             <TabItem Header="Dashboard">
-                <!-- ... unchanged ... -->
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="80"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="390"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Top Log Bar -->
+                    <Border Grid.Row="0" Grid.ColumnSpan="2" Style="{StaticResource CardStyle}" Margin="8">
+                        <TextBox Style="{StaticResource TerminalBoxStyle}"
+                                 Text="{Binding LogOutput}"
+                                 IsReadOnly="True"
+                                 TextWrapping="Wrap"/>
+                    </Border>
+
+                    <!-- Left Card: System Chat + Input -->
+                    <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource CardStyle}" Margin="8,0,6,8" VerticalAlignment="Stretch">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="2*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <!-- Chat Output Box -->
+                            <TextBlock Text="System Chat" FontSize="16" FontWeight="Bold" Foreground="#3399FF" Margin="0,0,0,4"/>
+                            <TextBox Grid.Row="0"
+                                     Style="{StaticResource TerminalBoxStyle}"
+                                     Text="{Binding ChatOutput}"
+                                     IsReadOnly="True"
+                                     TextWrapping="Wrap"
+                                     AcceptsReturn="True"
+                                     Height="180"
+                                     VerticalScrollBarVisibility="Auto"
+                                     Margin="0,22,0,8"/>
+                            <!-- Input Box & Button -->
+                            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,4,0,0" VerticalAlignment="Bottom">
+                                <TextBox Style="{StaticResource TerminalBoxStyle}"
+                                         Text="{Binding UserInput, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                         Width="190"
+                                         Height="32"
+                                         VerticalAlignment="Center"
+                                         Margin="0,0,8,0"/>
+                                <Button Content="Send"
+                                        Width="60"
+                                        Height="32"
+                                        Command="{Binding SendUserInputCommand}" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Right Card: DigitalScreen -->
+                    <Border Grid.Row="1" Grid.Column="1"
+                            Style="{StaticResource DigitalScreenCardStyle}"
+                            Background="{StaticResource SkyCardGradient}"
+                            CornerRadius="16"
+                            BorderBrush="#48E6FF"
+                            BorderThickness="2"
+                            Margin="6,0,8,8"
+                            VerticalAlignment="Stretch"
+                            HorizontalAlignment="Stretch">
+                        <Border.Effect>
+                            <DropShadowEffect Color="#3399FF" BlurRadius="18" Opacity="0.23"/>
+                        </Border.Effect>
+                        <Grid>
+                            <TextBlock Text="{Binding DigitalScreenOutput}"
+                                       Foreground="#13527A"
+                                       FontSize="40"
+                                       FontWeight="Bold"
+                                       TextWrapping="Wrap"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,0,0"/>
+                        </Grid>
+                    </Border>
+                </Grid>
             </TabItem>
 
-            <!-- Modules Tab -->
-            <TabItem Header="Modules">
-                <!-- ... unchanged ... -->
-            </TabItem>
-
-            <!-- Monitoring Tab -->
-            <TabItem Header="Monitoring">
-                <TabControl ItemsSource="{Binding MonitorCategories}">
-                    <TabControl.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
-                        </DataTemplate>
-                    </TabControl.ItemTemplate>
-                    <TabControl.ContentTemplate>
-                        <DataTemplate>
-                            <ScrollViewer>
-                                <StackPanel Margin="16">
-                                    <!-- Status Panel -->
-                                    <StackPanel DataContext="{Binding StatusPanel}" Visibility="{Binding IsStatusPanel, Converter={StaticResource BoolToVisibilityConverter}}">
-                                        <TextBlock Text="RaCore Status" FontSize="20" FontWeight="Bold"/>
-                                        <TextBox Text="{Binding Status}" FontSize="14" IsReadOnly="True" BorderThickness="0" Background="Transparent"/>
-                                        <TextBlock Text="Uptime:" FontWeight="Bold" Margin="0,8,0,2"/>
-                                        <TextBox Text="{Binding Uptime}" FontSize="13" IsReadOnly="True" BorderThickness="0" Background="Transparent"/>
-                                    </StackPanel>
-                                    <!-- Metrics Panel (unchanged) -->
-                                    <StackPanel DataContext="{Binding MetricsPanel}" Visibility="{Binding IsMetricsPanel, Converter={StaticResource BoolToVisibilityConverter}}">
-                                        <!-- ... unchanged ... -->
-                                    </StackPanel>
-                                    <!-- Logs Panel (ERROR/INFO) -->
-                                    <StackPanel DataContext="{Binding LogsPanel}" Visibility="{Binding IsLogsPanel, Converter={StaticResource BoolToVisibilityConverter}}">
-                                        <TextBlock Text="Error/Info Logs" FontSize="20" FontWeight="Bold" Margin="0,16,0,4"/>
-                                        <TextBox Text="{Binding LogSearchInput, UpdateSourceTrigger=PropertyChanged}" Width="400" Margin="0,0,0,8" 
-                                                 ToolTip="Filter logs by keyword"/>
-                                        <ItemsControl ItemsSource="{Binding FilteredLogs}">
+            <!-- Modules Tab (Cards) -->
+            <TabItem Header="Modules" Visibility="Visible">
+                <ScrollViewer>
+                    <ItemsControl ItemsSource="{Binding CoreModules}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel IsItemsHost="True"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource CardStyle}">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Module.Name}" FontSize="20" FontWeight="Bold" Margin="0,0,0,8"/>
+                                        <TextBlock Text="Status:" FontWeight="Bold"/>
+                                        <TextBlock Text="{Binding Status}" Foreground="DarkGreen" Margin="0,0,0,8"/>
+                                        <TextBlock Text="Help:" FontWeight="Bold"/>
+                                        <TextBlock Text="{Binding Help}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                                        <TextBlock Text="Logs:" FontWeight="Bold"/>
+                                        <ItemsControl ItemsSource="{Binding Logs}">
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
-                                                    <TextBox Text="{Binding}" FontSize="12"
-                                                             Foreground="{Binding Converter={StaticResource MessageTypeToBrushConverter}}"
-                                                             IsReadOnly="True" BorderThickness="0" Background="Transparent"/>
+                                                    <TextBlock Text="{Binding}" FontSize="12" Foreground="Gray"/>
                                                 </DataTemplate>
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
+                                        <!-- Command input and result -->
+                                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                            <TextBox Width="180" Text="{Binding CommandInput, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" KeyDown="TextBox_KeyDown"/>
+                                            <Button Content="Run" Command="{Binding RunCommand}" Margin="8,0,0,0"/>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding CommandResult}" Foreground="DarkBlue" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                                        <TextBlock Text="{Binding ErrorMessage}" Foreground="Red" Margin="0,2,0,0"/>
                                     </StackPanel>
-                                    <!-- Commands Panel (unchanged) -->
-                                    <StackPanel DataContext="{Binding CommandsPanel}" Visibility="{Binding IsCommandsPanel, Converter={StaticResource BoolToVisibilityConverter}}">
-                                        <!-- ... unchanged ... -->
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </TabItem>
+            <!-- Monitoring Tab (Cards) -->
+            <TabItem Header="Monitoring" Visibility="Visible">
+                <ScrollViewer>
+                    <ItemsControl ItemsSource="{Binding MonitorTab.MonitorCategories}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel IsItemsHost="True"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource CardStyle}">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Name}" FontSize="20" FontWeight="Bold" Margin="0,0,0,8"/>
+                                        <!-- Status Panel -->
+                                        <StackPanel DataContext="{Binding StatusPanel}" Visibility="{Binding Name, Converter={StaticResource StatusVisibilityConverter}}">
+                                            <TextBlock Text="Status:" FontWeight="Bold"/>
+                                            <TextBlock Text="{Binding Status}" Foreground="DarkGreen"/>
+                                            <TextBlock Text="Uptime:" FontWeight="Bold"/>
+                                            <TextBlock Text="{Binding Uptime}"/>
+                                        </StackPanel>
+                                        <!-- Metrics Panel -->
+                                        <StackPanel DataContext="{Binding MetricsPanel}" Visibility="{Binding Name, Converter={StaticResource MetricsVisibilityConverter}}">
+                                            <TextBlock Text="CPU Usage:" FontWeight="Bold"/>
+                                            <ProgressBar Value="{Binding CpuUsage}" Maximum="100" Width="100"/>
+                                            <TextBlock Text="RAM Usage:" FontWeight="Bold"/>
+                                            <ProgressBar Value="{Binding RamUsage}" Maximum="100" Width="100"/>
+                                            <TextBlock Text="Threads:" FontWeight="Bold"/>
+                                            <TextBlock Text="{Binding ThreadCount}"/>
+                                            <TextBlock Text="Active Modules:" FontWeight="Bold"/>
+                                            <TextBlock Text="{Binding ActiveModuleCount}"/>
+                                        </StackPanel>
+                                        <!-- Logs Panel -->
+                                        <StackPanel DataContext="{Binding LogsPanel}" Visibility="{Binding Name, Converter={StaticResource LogsVisibilityConverter}}">
+                                            <TextBlock Text="Logs:" FontWeight="Bold"/>
+                                            <ItemsControl ItemsSource="{Binding FilteredLogs}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding Message}" FontSize="12" Foreground="Gray"/>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                        <!-- Commands Panel -->
+                                        <StackPanel DataContext="{Binding CommandsPanel}" Orientation="Horizontal" Visibility="{Binding Name, Converter={StaticResource CommandsVisibilityConverter}}">
+                                            <TextBox Width="150" Text="{Binding CommandInput, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
+                                            <Button Content="Send" Command="{Binding SendCommand}" Margin="8,0,0,0"/>
+                                            <TextBlock Text="{Binding CommandResult}" Foreground="DarkBlue" Margin="8,0,0,0" TextWrapping="Wrap"/>
+                                            <TextBlock Text="{Binding ErrorMessage}" Foreground="Red" Margin="8,2,0,0"/>
+                                        </StackPanel>
                                     </StackPanel>
-                                </StackPanel>
-                            </ScrollViewer>
-                        </DataTemplate>
-                    </TabControl.ContentTemplate>
-                </TabControl>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
             </TabItem>
         </TabControl>
     </Grid>

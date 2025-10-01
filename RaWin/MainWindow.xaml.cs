@@ -20,16 +20,25 @@ namespace RaWin
             DataContext = ViewModel;
         }
 
-        // Optional: allow Enter key to trigger command execution in the TextBox
+        // Allow Enter key to trigger command execution in a TextBox (Modules and Monitor tabs)
         private void TextBox_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
             {
                 var textBox = sender as System.Windows.Controls.TextBox;
-                var vm = textBox?.DataContext as RaWin.ViewModels.ModulePanelViewModel;
-                if (vm != null && vm.RunCommand.CanExecute(null))
+
+                // For Modules tab
+                if (textBox?.DataContext is ModulePanelViewModel moduleVm && moduleVm.RunCommand?.CanExecute(null) == true)
                 {
-                    vm.RunCommand.Execute(null);
+                    moduleVm.RunCommand.Execute(null);
+                    return;
+                }
+
+                // For Monitor tab (Commands panel)
+                if (textBox?.DataContext is CommandsPanelViewModel commandsVm && commandsVm.SendCommand?.CanExecute(null) == true)
+                {
+                    commandsVm.SendCommand.Execute(null);
+                    return;
                 }
             }
         }

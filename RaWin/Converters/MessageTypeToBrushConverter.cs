@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Windows.Data;
 using System.Windows.Media;
 
-namespace RaWin
+namespace RaWin.Converters
 {
     public class MessageTypeToBrushConverter : IValueConverter
     {
@@ -11,14 +11,12 @@ namespace RaWin
         {
             switch (value?.ToString()?.ToLowerInvariant())
             {
-                case "log":
-                    return Brushes.DeepSkyBlue;
-                case "error":
-                    return Brushes.Red;
-                case "success":
-                    return Brushes.LimeGreen;
-                default:
-                    return Brushes.White;
+                case "log": return Brushes.DeepSkyBlue;
+                case "error": return Brushes.OrangeRed;
+                case "success": return Brushes.LimeGreen;
+                case "warning": return Brushes.Gold;
+                case "info": return Brushes.LightGreen;
+                default: return Brushes.Gray;
             }
         }
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

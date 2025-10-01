@@ -5,6 +5,9 @@ using RaCore.Engine.Manager;
 
 namespace RaWin.ViewModels
 {
+    /// <summary>
+    /// ViewModel for a single module card (used in Modules tab).
+    /// </summary>
     public class ModulePanelViewModel : ObservableObject
     {
         public ModuleWrapperView Module { get; }
@@ -13,6 +16,11 @@ namespace RaWin.ViewModels
         public string Status { get; private set; }
         public string Help { get; private set; }
         public ObservableCollection<string> Logs { get; } = new();
+
+        public string Category => Module?.ModuleInstance?.GetType()
+            .GetCustomAttributes(typeof(RaModuleAttribute), true)
+            .OfType<RaModuleAttribute>()
+            .FirstOrDefault()?.Category ?? "";
 
         private string _commandInput = "";
         public string CommandInput
@@ -28,7 +36,6 @@ namespace RaWin.ViewModels
             set { _commandResult = value; OnPropertyChanged(); }
         }
 
-        // Error diagnostics property
         private string _errorMessage = "";
         public string ErrorMessage
         {
@@ -44,38 +51,65 @@ namespace RaWin.ViewModels
             _manager = manager;
 
             RunCommand = new RelayCommand(_ => RunCustomCommand());
-
             LoadProperties();
         }
 
         private void LoadProperties()
         {
-            try
+            var mod = Module?.ModuleInstance;
+            if (mod != null)
             {
-                var mod = Module.ModuleInstance;
-                Status = mod != null ? mod.Process("status") : "";
-                Help = mod != null ? mod.Process("help") : "";
-
-                var logsProp = mod?.GetType().GetProperty("Logs");
-                if (logsProp != null)
+                try
                 {
-                    var logList = logsProp.GetValue(mod) as IEnumerable<string>;
-                    if (logList != null)
+                    var result = mod.Process("status");
+                    Status = !string.IsNullOrWhiteSpace(result) ? result : "(no status provided)";
+                }
+                catch (Exception ex)
+                {
+                    Status = $"ERROR: status ({ex.GetType().Name}: {ex.Message})";
+                }
+
+                try
+                {
+                    var result = mod.Process("help");
+                    Help = !string.IsNullOrWhiteSpace(result) ? result : "(no help provided)";
+                }
+                catch (Exception ex)
+                {
+                    Help = $"ERROR: help ({ex.GetType().Name}: {ex.Message})";
+                }
+
+                try
+                {
+                    var logsProp = mod.GetType().GetProperty("Logs");
+                    if (logsProp != null)
                     {
-                        Logs.Clear();
-                        foreach (var log in logList)
-                            Logs.Add(log);
+                        var logList = logsProp.GetValue(mod) as IEnumerable<string>;
+                        if (logList != null)
+                        {
+                            Logs.Clear();
+                            foreach (var log in logList)
+                                Logs.Add(log);
+                        }
                     }
                 }
+                catch (Exception ex)
+                {
+                    Logs.Clear();
+                    Logs.Add($"ERROR loading logs: {ex.GetType().Name}: {ex.Message}");
+                }
+
                 ErrorMessage = "";
             }
-            catch (Exception ex)
+            else
             {
-                Status = "";
-                Help = "";
+                Status = "(module not loaded)";
+                Help = "(module not loaded)";
                 Logs.Clear();
-                ErrorMessage = $"Error loading module properties: {ex.GetType().Name}: {ex.Message}";
+                Logs.Add("(module not loaded)");
+                ErrorMessage = "Module instance is null (not loaded)";
             }
+
             OnPropertyChanged(nameof(Status));
             OnPropertyChanged(nameof(Help));
             OnPropertyChanged(nameof(Logs));

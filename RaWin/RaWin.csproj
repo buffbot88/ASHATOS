@@ -6,12 +6,6 @@
     <RootNamespace>RaWin</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Page Remove="MainWindow.xaml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="MainWindow.xaml" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\RaCore\RaCore.csproj" />
   </ItemGroup>
   <ItemGroup>
