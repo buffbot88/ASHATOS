@@ -11,10 +11,12 @@ The RaCore SuperAdmin Control Panel is a secure, permission-gated management int
 ### 🔐 Security & Access Control
 
 - **SuperAdmin-Only Access**: Restricted to users with SuperAdmin role (role = 2)
+- **License-Based Access Control**: Regular users require valid purchased licenses
 - **Token-Based Authentication**: Integrates with RaCore Authentication API
 - **Session Management**: Secure sessions with automatic timeout
 - **Audit Logging**: Comprehensive logging of all administrative actions
 - **IP Tracking**: All authentication events logged with IP addresses
+- **License Validation**: Enforced at login for non-SuperAdmin users
 
 ### 📊 System Dashboard
 
@@ -35,13 +37,16 @@ The Control Panel provides a comprehensive overview of your RaCore instance:
 
 ### 🔑 License Management
 
-The Control Panel includes a subscription-based licensing system:
+The Control Panel includes a comprehensive licensing system:
 
 - **License Key Generation**: Unique keys for each instance
 - **Instance Tracking**: Monitor multiple deployed instances
-- **Status Management**: Active/inactive license states
+- **Status Management**: Active/inactive/expired/revoked license states
+- **User License Assignment**: Link users to specific licenses
 - **User Limits**: Configure maximum users per license
 - **Expiration Tracking**: Monitor license expiration dates
+- **Access Enforcement**: Only SuperAdmin and licensed users can access Control Panel
+- **Audit Trail**: All license validation attempts logged
 
 ### 🏥 Server Health & Diagnostics
 

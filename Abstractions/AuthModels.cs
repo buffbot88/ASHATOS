@@ -73,7 +73,10 @@ public enum SecurityEventType
     SessionExpired,
     SessionInvalidated,
     UnauthorizedAccess,
-    PermissionDenied
+    PermissionDenied,
+    LicenseValidationFailure,
+    LicenseExpired,
+    LicenseRevoked
 }
 
 /// <summary>
@@ -105,4 +108,56 @@ public class AuthResponse
     public string? Token { get; set; }
     public User? User { get; set; }
     public DateTime? TokenExpiresAt { get; set; }
+}
+
+/// <summary>
+/// Represents a license in the RaCore system.
+/// </summary>
+public class License
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string LicenseKey { get; set; } = string.Empty;
+    public string InstanceName { get; set; } = string.Empty;
+    public LicenseStatus Status { get; set; } = LicenseStatus.Active;
+    public LicenseType Type { get; set; } = LicenseType.Standard;
+    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+    public DateTime? ExpiresAtUtc { get; set; }
+    public int MaxUsers { get; set; } = 1;
+    public Dictionary<string, string> Metadata { get; set; } = new();
+}
+
+/// <summary>
+/// License status types.
+/// </summary>
+public enum LicenseStatus
+{
+    Active,
+    Inactive,
+    Expired,
+    Revoked,
+    Suspended
+}
+
+/// <summary>
+/// License types for different tiers.
+/// </summary>
+public enum LicenseType
+{
+    Trial,
+    Standard,
+    Professional,
+    Enterprise,
+    Lifetime
+}
+
+/// <summary>
+/// Links a user to a license.
+/// </summary>
+public class UserLicense
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid UserId { get; set; }
+    public Guid LicenseId { get; set; }
+    public DateTime AssignedAtUtc { get; set; } = DateTime.UtcNow;
+    public bool IsActive { get; set; } = true;
 }

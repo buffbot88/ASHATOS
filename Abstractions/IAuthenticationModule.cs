@@ -36,6 +36,11 @@ public interface IAuthenticationModule : IDisposable
     bool HasPermission(User user, string moduleName, UserRole requiredRole = UserRole.User);
     
     /// <summary>
+    /// Check if user has both role permission AND valid license.
+    /// </summary>
+    bool HasLicensePermission(User user, string moduleName, UserRole requiredRole = UserRole.User);
+    
+    /// <summary>
     /// Get recent security events.
     /// </summary>
     Task<List<SecurityEvent>> GetSecurityEventsAsync(int limit = 100);
