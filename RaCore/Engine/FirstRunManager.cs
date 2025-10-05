@@ -52,13 +52,13 @@ public class FirstRunManager
     }
     
     /// <summary>
-    /// Performs first-run initialization: spawns SuperAdmin Control Panel and configures Apache
+    /// Performs first-run initialization: spawns Unified Control Panel and configures Apache
     /// </summary>
     public async Task<bool> InitializeAsync()
     {
         Console.WriteLine("========================================");
         Console.WriteLine("   RaCore First-Run Initialization");
-        Console.WriteLine("   SuperAdmin Control Panel Setup");
+        Console.WriteLine("   Unified Control Panel Setup");
         Console.WriteLine("========================================");
         Console.WriteLine();
         
@@ -78,10 +78,10 @@ public class FirstRunManager
                 return false;
             }
             
-            Console.WriteLine("[FirstRunManager] Step 1/3: Spawning SuperAdmin Control Panel...");
+            Console.WriteLine("[FirstRunManager] Step 1/3: Spawning Unified Control Panel...");
             Console.WriteLine();
             
-            // Spawn the SuperAdmin Control Panel
+            // Spawn the Unified Control Panel
             var result = cmsModule.Process("cms spawn control");
             Console.WriteLine(result);
             Console.WriteLine();
@@ -123,12 +123,16 @@ public class FirstRunManager
                 if (started)
                 {
                     Console.WriteLine();
-                    Console.WriteLine("✅ SuperAdmin Control Panel is now running!");
+                    Console.WriteLine("✅ Unified Control Panel is now running!");
                     Console.WriteLine($"   Access it at: http://localhost:8080");
-                    Console.WriteLine($"   Login: admin / admin123 (SuperAdmin only)");
+                    Console.WriteLine($"   Default login: admin / admin123");
                     Console.WriteLine();
-                    Console.WriteLine("⚠️  SECURITY: Only SuperAdmin accounts can access the Control Panel");
-                    Console.WriteLine("   Change the default password immediately!");
+                    Console.WriteLine("🎛️  ROLE-BASED ACCESS:");
+                    Console.WriteLine("   - SuperAdmin: Full control (license mgmt, server spawning)");
+                    Console.WriteLine("   - Admin: User management and audit logs");
+                    Console.WriteLine("   - User: Personal account information");
+                    Console.WriteLine();
+                    Console.WriteLine("⚠️  Change the default password immediately!");
                     Console.WriteLine();
                 }
                 else
