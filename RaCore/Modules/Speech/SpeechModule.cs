@@ -349,7 +349,7 @@ public partial class SpeechModule : ModuleBase, ISpeechModule
 
     private static string BuildChatPrompt(string userInput)
     {
-        // Use a template suitable for Llama-2-Chat, Vicuna, etc.
-        return $"[INST] <<SYS>>\nYou are a helpful assistant.\n<</SYS>>\n{userInput} [/INST]";
+        // Enhanced chat prompt for natural conversation
+        return $"[INST] <<SYS>>\nYou are Ra, a helpful and conversational AI assistant. Respond naturally to the user's message in a friendly, coherent manner. Keep responses concise but complete.\n<</SYS>>\n{userInput} [/INST]";
     }
 }
