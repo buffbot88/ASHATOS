@@ -2477,6 +2477,44 @@ if ($isLoggedIn) {
                     </div>
                 </div>
 
+                <?php if ($isAdmin): ?>
+                <div class=""section"">
+                    <h2>💬 RaAI Console <?php echo $isSuperAdmin ? '(SuperAdmin)' : '(Admin)'; ?></h2>
+                    <div class=""info-box"">
+                        <p><strong>Administrative AI Communication:</strong> Communicate with RaAI for server management and automation tasks.</p>
+                        <div class=""ai-console"">
+                            <div class=""console-output"" id=""consoleOutput"">
+                                <div class=""console-line""><span class=""prompt"">RaAI@<?php echo $roleName; ?> ~$</span> System ready. Type ''help'' for available commands.</div>
+                            </div>
+                            <div class=""console-input-wrapper"">
+                                <span class=""prompt"">RaAI@<?php echo $roleName; ?> ~$</span>
+                                <input type=""text"" class=""console-input"" id=""consoleInput"" placeholder=""Enter command..."" autocomplete=""off"" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <!-- Support Chat Widget (All Users) -->
+                <div class=""support-chat-widget"" id=""supportChat"">
+                    <div class=""support-chat-header"" onclick=""toggleSupportChat()"">
+                        <span>💬 Support Chat</span>
+                        <span class=""toggle-icon"">−</span>
+                    </div>
+                    <div class=""support-chat-body"" id=""supportChatBody"">
+                        <div class=""chat-messages"" id=""chatMessages"">
+                            <div class=""chat-message bot"">
+                                <strong>Support Bot:</strong> Hello <?php echo htmlspecialchars($currentUser['username']); ?>! How can I help you today?
+                            </div>
+                        </div>
+                        <div class=""chat-input-wrapper"">
+                            <input type=""text"" class=""chat-input"" id=""chatInput"" placeholder=""Type your message..."" autocomplete=""off"" />
+                            <button class=""chat-send-btn"" onclick=""sendSupportMessage()"">Send</button>
+                        </div>
+                    </div>
+                </div>
+
+
                 <?php if ($isSuperAdmin): ?>
                 <div class=""section"">
                     <h2>🔐 License Management (SuperAdmin)</h2>
@@ -2667,6 +2705,119 @@ if ($isLoggedIn) {
             <p class=""security-notice"">Your access level: <?php echo $roleName; ?></p>
         </div>
     </footer>
+
+    <script>
+    // AI Console functionality
+    const consoleOutput = document.getElementById('consoleOutput');
+    const consoleInput = document.getElementById('consoleInput');
+    
+    if (consoleInput) {
+        consoleInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const command = this.value.trim();
+                if (command) {
+                    addConsoleLine('<?php echo $roleName; ?>', command);
+                    processCommand(command);
+                    this.value = '';
+                }
+            }
+        });
+    }
+    
+    function addConsoleLine(user, text, isResponse = false) {
+        const line = document.createElement('div');
+        line.className = 'console-line' + (isResponse ? ' response' : '');
+        if (!isResponse) {
+            line.innerHTML = `<span class=""prompt"">RaAI@${user} ~$</span> ${escapeHtml(text)}`;
+        } else {
+            line.textContent = text;
+        }
+        consoleOutput.appendChild(line);
+        consoleOutput.scrollTop = consoleOutput.scrollHeight;
+    }
+    
+    function processCommand(cmd) {
+        // Simulate AI command processing
+        setTimeout(() => {
+            let response = '';
+            const lower = cmd.toLowerCase();
+            if (lower === 'help') {
+                response = 'Available commands: help, status, users, logs, clear, version';
+            } else if (lower === 'status') {
+                response = 'System Status: Online | Memory: 45% | CPU: 23% | Uptime: 5d 12h';
+            } else if (lower === 'users') {
+                response = 'Total Users: <?php echo count($users ?? []); ?> | Active Sessions: <?php echo $isAdmin ? count($users ?? []) : ""N/A""; ?>';
+            } else if (lower === 'logs') {
+                response = 'Recent Events: <?php echo $isAdmin ? count($auditLog ?? []) : ""N/A""; ?> | Check Audit Log section below';
+            } else if (lower === 'clear') {
+                consoleOutput.innerHTML = '<div class=""console-line""><span class=""prompt"">RaAI@<?php echo $roleName; ?> ~$</span> Console cleared.</div>';
+                return;
+            } else if (lower === 'version') {
+                response = 'RaCore v1.0.0 | PHP <?php echo PHP_VERSION; ?> | Control Panel Phase 2';
+            } else {
+                response = `Command not found: ${cmd}. Type ''help'' for available commands.`;
+            }
+            addConsoleLine('', response, true);
+        }, 300);
+    }
+    
+    // Support Chat functionality
+    const chatInput = document.getElementById('chatInput');
+    const chatMessages = document.getElementById('chatMessages');
+    const supportChatBody = document.getElementById('supportChatBody');
+    
+    function toggleSupportChat() {
+        const isVisible = supportChatBody.style.display !== 'none';
+        supportChatBody.style.display = isVisible ? 'none' : 'block';
+        document.querySelector('.toggle-icon').textContent = isVisible ? '+' : '−';
+    }
+    
+    function sendSupportMessage() {
+        const message = chatInput.value.trim();
+        if (message) {
+            addChatMessage('You', message, false);
+            chatInput.value = '';
+            
+            // Simulate bot response
+            setTimeout(() => {
+                let response = '';
+                const lower = message.toLowerCase();
+                if (lower.includes('help') || lower.includes('support')) {
+                    response = 'I can help you with account management, system information, and general questions. What do you need?';
+                } else if (lower.includes('password')) {
+                    response = 'To change your password, please contact your administrator or use the Account Settings section.';
+                } else if (lower.includes('access') || lower.includes('permission')) {
+                    response = 'Access levels are managed by administrators. Your current role is: <?php echo $roleName; ?>';
+                } else {
+                    response = 'Thank you for your message! An administrator will respond shortly.';
+                }
+                addChatMessage('Support Bot', response, true);
+            }, 800);
+        }
+    }
+    
+    function addChatMessage(sender, text, isBot) {
+        const msg = document.createElement('div');
+        msg.className = 'chat-message' + (isBot ? ' bot' : ' user');
+        msg.innerHTML = `<strong>${escapeHtml(sender)}:</strong> ${escapeHtml(text)}`;
+        chatMessages.appendChild(msg);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    if (chatInput) {
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendSupportMessage();
+            }
+        });
+    }
+    
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    </script>
 </body>
 </html>
 ";
@@ -3005,6 +3156,176 @@ footer {
     margin-top: 10px;
     font-size: 0.9em;
     color: #ffc107;
+}
+
+/* AI Console Styles */
+.ai-console {
+    background: #000;
+    border-radius: 5px;
+    padding: 15px;
+    font-family: 'Courier New', monospace;
+    margin-top: 15px;
+}
+
+.console-output {
+    background: #000;
+    color: #00ff00;
+    padding: 15px;
+    min-height: 200px;
+    max-height: 400px;
+    overflow-y: auto;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.console-line {
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.console-line.response {
+    color: #00ff00;
+    padding-left: 20px;
+}
+
+.console-input-wrapper {
+    display: flex;
+    align-items: center;
+    background: #000;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.console-input-wrapper .prompt {
+    color: #00ff00;
+    margin-right: 10px;
+    white-space: nowrap;
+}
+
+.console-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #00ff00;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    outline: none;
+}
+
+.console-input::placeholder {
+    color: #006600;
+}
+
+.prompt {
+    color: #00ff00;
+    font-weight: bold;
+}
+
+/* Support Chat Widget Styles */
+.support-chat-widget {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 350px;
+    max-width: calc(100vw - 40px);
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+}
+
+.support-chat-header {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+    padding: 15px;
+    border-radius: 10px 10px 0 0;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 500;
+}
+
+.support-chat-header:hover {
+    background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+}
+
+.toggle-icon {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.support-chat-body {
+    display: block;
+}
+
+.chat-messages {
+    padding: 15px;
+    max-height: 300px;
+    overflow-y: auto;
+    background: #f8f9fa;
+}
+
+.chat-message {
+    margin-bottom: 12px;
+    padding: 10px;
+    border-radius: 5px;
+    line-height: 1.4;
+}
+
+.chat-message.bot {
+    background: #e3f2fd;
+    border-left: 3px solid #2196f3;
+}
+
+.chat-message.user {
+    background: #f1f8e9;
+    border-left: 3px solid #8bc34a;
+}
+
+.chat-message strong {
+    display: block;
+    margin-bottom: 5px;
+    color: #1e3c72;
+}
+
+.chat-input-wrapper {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid #e9ecef;
+    background: white;
+    border-radius: 0 0 10px 10px;
+}
+
+.chat-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+    outline: none;
+}
+
+.chat-input:focus {
+    border-color: #1e3c72;
+}
+
+.chat-send-btn {
+    margin-left: 8px;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.chat-send-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 ";
 
