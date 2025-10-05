@@ -352,6 +352,17 @@ public sealed class CMSSpawnerModule : ModuleBase
                     LogInfo($"Created CMS directory: {_cmsRootPath}");
                 }
 
+                // Create Databases subdirectory for security
+                var databasesPath = Path.Combine(_cmsRootPath!, "Databases");
+                if (!Directory.Exists(databasesPath))
+                {
+                    Directory.CreateDirectory(databasesPath);
+                    LogInfo($"Created Databases directory: {databasesPath}");
+                }
+
+                // Generate .htaccess to protect databases folder
+                GenerateDatabasesHtaccess(databasesPath);
+
                 // Create control subdirectory
                 var controlPath = Path.Combine(_cmsRootPath!, "control");
                 if (!Directory.Exists(controlPath))
@@ -360,16 +371,14 @@ public sealed class CMSSpawnerModule : ModuleBase
                     LogInfo($"Created Control Panel directory: {controlPath}");
                 }
 
-                // Initialize main CMS database
-                var cmsDbPath = Path.Combine(_cmsRootPath!, "cms_database.sqlite");
+                // Initialize databases in Databases folder
+                var cmsDbPath = Path.Combine(databasesPath, "cms_database.sqlite");
                 InitializeSQLiteDatabase(cmsDbPath);
 
-                // Initialize Control Panel database
-                var controlDbPath = Path.Combine(controlPath, "control_panel.sqlite");
+                var controlDbPath = Path.Combine(databasesPath, "control_panel.sqlite");
                 InitializeControlPanelDatabase(controlDbPath);
 
-                // Initialize Forum database (Phase 3)
-                var forumDbPath = Path.Combine(_cmsRootPath!, "forum_database.sqlite");
+                var forumDbPath = Path.Combine(databasesPath, "forum_database.sqlite");
                 InitializeForumDatabase(forumDbPath);
 
                 // Generate main CMS files
@@ -380,8 +389,8 @@ public sealed class CMSSpawnerModule : ModuleBase
 
                 // Generate Control Panel files in /control subdirectory
                 GenerateControlPanelConfigFileAt(controlPath, controlDbPath);
-                GenerateControlPanelDatabaseFileAt(controlPath);
-                GenerateControlPanelIndexFileAt(controlPath);
+                GenerateControlPanelDatabaseFileAt(controlPath, databasesPath);
+                GenerateControlPanelIndexFileAt(controlPath, databasesPath);
                 GenerateControlPanelStylesFileAt(controlPath);
 
                 // Generate Phase 3 files - Forums & Profiles
@@ -395,21 +404,23 @@ public sealed class CMSSpawnerModule : ModuleBase
                     "✅ Integrated CMS + Control Panel + Community generated successfully!",
                     "",
                     $"📁 Location: {_cmsRootPath}",
-                    $"🗄️  CMS Database: {cmsDbPath}",
-                    $"🗄️  Control Database: {controlDbPath}",
-                    $"🗄️  Forum Database: {forumDbPath}",
+                    $"🗄️  Databases: {databasesPath}/",
+                    $"     - cms_database.sqlite",
+                    $"     - control_panel.sqlite",
+                    $"     - forum_database.sqlite",
                     $"🐘 PHP Version: {version}",
                     "",
                     "📝 Generated structure:",
                     "  /                   - CMS Homepage",
-                    "  /control/           - Control Panel (role-based)",
+                    "  /Databases/         - Protected SQLite databases",
+                    "  /control/           - Control Panel (role-based + SQL Editor)",
                     "  /community/         - vBulletin-style Forums",
                     "  /profile.php        - MySpace-style User Profiles",
                     "",
                     "🎛️ Access Control:",
                     "  - Homepage: Public access",
                     "  - Control Panel: Authenticated users only",
-                    "    • SuperAdmin: All panels (Super + Admin + User)",
+                    "    • SuperAdmin: All panels + SQL Editor",
                     "    • Admin: Admin panel + User panel + Forum Management",
                     "    • User: User panel + Profile customization",
                     "  - Community Forums: All authenticated users",
@@ -419,6 +430,11 @@ public sealed class CMSSpawnerModule : ModuleBase
                     "  - vBulletin v3-style Forum System",
                     "  - Forum Management in Admin Panel",
                     "  - MySpace-style Profiles with Custom CSS",
+                    "",
+                    "🔒 Security:",
+                    "  - All databases in protected Databases/ folder",
+                    "  - .htaccess prevents direct web access",
+                    "  - SQL Editor for SuperAdmin only",
                     "",
                     "🚀 To start the CMS:",
                     $"  cd {_cmsRootPath}",
@@ -437,6 +453,28 @@ public sealed class CMSSpawnerModule : ModuleBase
                 return $"❌ Error spawning Integrated CMS: {ex.Message}";
             }
         }
+    }
+
+    private void GenerateDatabasesHtaccess(string databasesPath)
+    {
+        var htaccessPath = Path.Combine(databasesPath, ".htaccess");
+        var htaccessContent = @"# Protect SQLite databases from direct web access
+Order Deny,Allow
+Deny from all
+
+# Prevent directory listing
+Options -Indexes
+
+# Protect specific file types
+<FilesMatch ""\.sqlite$"">
+    Deny from all
+</FilesMatch>
+<FilesMatch ""\.db$"">
+    Deny from all
+</FilesMatch>";
+
+        File.WriteAllText(htaccessPath, htaccessContent);
+        LogInfo($"Generated .htaccess for database protection: {htaccessPath}");
     }
 
     private void InitializeSQLiteDatabase(string dbPath)
@@ -2241,7 +2279,7 @@ function hasRole($userRole, $requiredRole) {{
         LogInfo("Generated control panel config.php in control directory");
     }
 
-    private void GenerateControlPanelDatabaseFileAt(string controlPath)
+    private void GenerateControlPanelDatabaseFileAt(string controlPath, string databasesPath)
     {
         var dbContent = @"<?php
 // Database layer for RaCore Control Panel
@@ -2321,7 +2359,7 @@ class Database {
         LogInfo("Generated control panel db.php in control directory");
     }
 
-    private void GenerateControlPanelIndexFileAt(string controlPath)
+    private void GenerateControlPanelIndexFileAt(string controlPath, string databasesPath)
     {
         // Use the same control panel index as before, just in the control subdirectory
         var indexContent = @"<?php
