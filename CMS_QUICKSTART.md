@@ -4,6 +4,9 @@
 
 The CMSSpawner module automatically generates a PHP 8+ CMS homepage with SQLite database integration, bridging .NET 10 and modern PHP technologies.
 
+**🆕 NEW: Automatic First-Run Initialization**  
+RaCore now automatically spawns the CMS homepage and starts the PHP server on first run! No manual commands needed.
+
 ## Prerequisites
 
 - **PHP 8.0+** with SQLite extension
@@ -27,6 +30,51 @@ brew install php
 Download from https://windows.php.net/download/
 
 ## Quick Start
+
+### Automatic First-Run Setup (Recommended) ⭐
+
+**Just run RaCore - that's it!**
+
+```bash
+cd RaCore
+dotnet run
+```
+
+On first run, RaCore will automatically:
+1. ✅ Detect PHP 8+ on your system
+2. ✅ Generate the CMS homepage with SQLite database
+3. ✅ Create Apache configuration files
+4. ✅ Start PHP built-in server on port 8080
+5. ✅ Open the CMS at http://localhost:8080
+
+**Console Output:**
+```
+========================================
+   RaCore First-Run Initialization
+========================================
+
+[FirstRunManager] Step 1/3: Spawning CMS Homepage...
+✅ CMS Homepage generated successfully!
+
+[FirstRunManager] Step 2/3: Configuring Apache...
+[ApacheManager] Apache configuration files created
+
+[FirstRunManager] Step 3/3: Starting web server...
+[ApacheManager] PHP server started successfully on http://localhost:8080
+
+✅ CMS Homepage is now running!
+   Access it at: http://localhost:8080
+   Admin panel: http://localhost:8080/admin.php
+   Default login: admin / admin123
+```
+
+Then just open your browser to **http://localhost:8080** and you're done! 🎉
+
+---
+
+### Manual Setup (Alternative)
+
+If you prefer manual control or need to regenerate the CMS:
 
 ### 1. Start RaCore
 
@@ -68,7 +116,9 @@ Console.WriteLine(cms.Process("cms spawn"));
 Console.WriteLine(cms.Process("cms status"));
 ```
 
-### 3. Start the PHP Server
+**Note:** If you run RaCore normally (not a test program), the CMS will be auto-spawned on first run.
+
+### 3. Start the PHP Server (if not auto-started)
 
 ```bash
 cd cms_homepage
@@ -100,7 +150,30 @@ cms_homepage/
 ├── config.php          # Site configuration
 ├── db.php              # SQLite database layer
 ├── styles.css          # CSS styling
-└── cms_database.sqlite # SQLite database
+├── .htaccess           # Apache configuration
+├── cms_database.sqlite # SQLite database
+└── apache_conf/
+    └── racore.conf     # Apache VirtualHost configuration
+```
+
+## First-Run Detection
+
+RaCore uses a `.racore_initialized` marker file to detect first runs:
+- **First run**: Marker doesn't exist → Auto-spawns CMS, creates marker
+- **Subsequent runs**: Marker exists → Skips initialization
+
+To **force re-initialization**, simply delete the marker:
+```bash
+rm .racore_initialized
+```
+
+The marker file contains:
+```json
+{
+  "InitializedAt": "2025-10-05T04:24:00Z",
+  "Version": "1.0",
+  "CmsPath": "/path/to/cms_homepage"
+}
 ```
 
 ## Database Schema
@@ -138,11 +211,13 @@ CREATE TABLE users (
 
 ## Features
 
+✅ **🆕 Auto-Spawn on First Run** - Zero configuration needed!  
 ✅ **Automatic PHP Detection** - Finds PHP 8+ on your system  
 ✅ **SQLite Database** - Lightweight, file-based database  
 ✅ **Admin Dashboard** - Content management interface  
 ✅ **Modern Design** - Beautiful purple gradient theme  
 ✅ **Secure** - Session-based authentication  
+✅ **Apache Configuration** - Auto-generated Apache config files  
 ✅ **Extensible** - Easy to add new features  
 
 ## Customization

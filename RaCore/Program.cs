@@ -22,6 +22,14 @@ moduleManager.RegisterBuiltInModule(memoryModule);
 // 3. Load other modules (plugins, etc.)
 moduleManager.LoadModules();
 
+// 4. Check for first run and auto-spawn CMS + Apache
+var firstRunManager = new RaCore.Engine.FirstRunManager(moduleManager);
+if (firstRunManager.IsFirstRun())
+{
+    Console.WriteLine("[RaCore] First run detected - initializing CMS homepage...");
+    await firstRunManager.InitializeAsync();
+}
+
 // Optionally pick up a SpeechModule if present
 ISpeechModule? speechModule = moduleManager.Modules
     .Select(m => m.Instance)
