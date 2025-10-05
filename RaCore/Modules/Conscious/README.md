@@ -87,3 +87,8 @@ Console.WriteLine(response.Text);
 ## Contributors
 
 Please document all new cognitive features, extension points, and diagnostics in this README.
+
+---
+
+**Last Updated:** 2025-01-05  
+**Version:** 1.0

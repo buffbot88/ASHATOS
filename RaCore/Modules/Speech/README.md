@@ -82,3 +82,8 @@ Console.WriteLine(response);
 ## Contributors
 
 Please document all new agentic commands, extension points, and diagnostics in this README.
+
+---
+
+**Last Updated:** 2025-01-05  
+**Version:** 1.0

@@ -57,3 +57,8 @@ Console.WriteLine(result.Text);
 ## Contributors
 
 Document new plan/step types, extension points, and diagnostics here.
+
+---
+
+**Last Updated:** 2025-01-05  
+**Version:** 1.0

@@ -44,3 +44,8 @@ Handlers/
 ## Contributors
 
 Document new handler modules and diagnostics in this README.
+
+---
+
+**Last Updated:** 2025-01-05  
+**Version:** 1.0
