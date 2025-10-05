@@ -1,8 +1,8 @@
-# RaCore First-Run Auto-Initialization
+# RaCore First-Run Auto-Initialization - SuperAdmin Control Panel
 
 ## Overview
 
-RaCore now features automatic first-run initialization that spawns a fully functional PHP 8+ CMS homepage with Apache configuration, requiring zero manual setup from users.
+RaCore now features automatic first-run initialization that spawns a fully functional SuperAdmin Control Panel with PHP 8+ and SQLite database, requiring zero manual setup from users. This Control Panel is restricted to SuperAdmin accounts only and serves as the central management hub for all CMS/server operations.
 
 ## What Happens on First Run?
 
@@ -11,10 +11,11 @@ When you run RaCore for the first time:
 ```
 ========================================
    RaCore First-Run Initialization
+   SuperAdmin Control Panel Setup
 ========================================
 
-[FirstRunManager] Step 1/3: Spawning CMS Homepage...
-✅ CMS Homepage generated successfully!
+[FirstRunManager] Step 1/3: Spawning SuperAdmin Control Panel...
+✅ SuperAdmin Control Panel generated successfully!
 
 [FirstRunManager] Step 2/3: Configuring Apache...
 [ApacheManager] Apache configuration files created
@@ -22,15 +23,54 @@ When you run RaCore for the first time:
 [FirstRunManager] Step 3/3: Starting web server...
 [ApacheManager] PHP server started successfully on http://localhost:8080
 
-✅ CMS Homepage is now running!
+✅ SuperAdmin Control Panel is now running!
    Access it at: http://localhost:8080
-   Admin panel: http://localhost:8080/admin.php
-   Default login: admin / admin123
+   Login: admin / admin123 (SuperAdmin only)
+
+⚠️  SECURITY: Only SuperAdmin accounts can access the Control Panel
+   Change the default password immediately!
 
 ========================================
    First-Run Initialization Complete
 ========================================
 ```
+
+## SuperAdmin Control Panel Features
+
+### Access Control
+- **SuperAdmin Role Required**: Only users with SuperAdmin role (role = 2) can access
+- **Secure Authentication**: Integrates with RaCore Authentication API
+- **Token-Based Sessions**: Secure session management with token validation
+- **Audit Logging**: All actions are logged for security compliance
+
+### Management Features
+1. **System Overview Dashboard**
+   - Total users count
+   - Active licenses
+   - System status monitoring
+   - Recent security events
+
+2. **License Management**
+   - Subscription-based licensing system
+   - License key generation
+   - Instance tracking
+   - Multi-tenant support
+
+3. **User Management**
+   - View all users and roles
+   - Track last login times
+   - Role-based access control
+
+4. **Server Health & Diagnostics**
+   - RaCore version information
+   - PHP version and configuration
+   - Database status
+   - Authentication API connectivity
+
+5. **Future Server Spawning**
+   - Placeholder for spawning additional instances
+   - Centralized instance management
+   - Update distribution from mainframe
 
 ## Architecture
 
@@ -39,12 +79,23 @@ When you run RaCore for the first time:
 #### 1. FirstRunManager (`RaCore/Engine/FirstRunManager.cs`)
 - **Purpose**: Manages first-run detection and orchestrates initialization
 - **Marker File**: `.racore_initialized` (JSON format)
+- **Control Panel Path**: `superadmin_control_panel/`
 - **Key Methods**:
   - `IsFirstRun()`: Checks for marker file existence
   - `InitializeAsync()`: Orchestrates the 3-step initialization process
   - `MarkAsInitialized()`: Creates marker file with metadata
 
-#### 2. ApacheManager (`RaCore/Engine/ApacheManager.cs`)
+#### 2. CMSSpawnerModule (`RaCore/Modules/Extensions/CMSSpawner/CMSSpawnerModule.cs`)
+- **Purpose**: Generates SuperAdmin Control Panel and optional CMS homepages
+- **Commands**:
+  - `cms spawn control`: Creates SuperAdmin Control Panel (used by first-run)
+  - `cms spawn`: Creates general CMS homepage (manual command)
+- **Key Methods**:
+  - `SpawnControlPanel()`: Generates SuperAdmin Control Panel
+  - `InitializeControlPanelDatabase()`: Creates control panel database schema
+  - Database tables: users, modules, permissions, server_health, licenses, audit_log
+
+#### 3. ApacheManager (`RaCore/Engine/ApacheManager.cs`)
 - **Purpose**: Manages Apache configuration and PHP server lifecycle
 - **Key Methods**:
   - `IsApacheAvailable()`: Detects Apache installation
@@ -53,7 +104,13 @@ When you run RaCore for the first time:
   - `StartPhpServer()`: Launches PHP built-in server as fallback
   - `ConfigureApache()`: Orchestrates Apache setup
 
-#### 3. Program.cs Integration
+#### 4. AuthenticationModule Integration
+- **Token Validation**: Control Panel validates tokens via `/api/auth/validate`
+- **Role Checking**: Only SuperAdmin (role = 2) can access Control Panel
+- **Session Management**: Secure token-based authentication
+- **Security Events**: All login attempts logged
+
+#### 5. Program.cs Integration
 - **Line Added**: First-run check after module loading
 - **Behavior**: Async initialization before server startup
 - **Non-blocking**: Server continues startup after initialization
@@ -63,15 +120,25 @@ When you run RaCore for the first time:
 ```
 RaCore Startup
     ↓
-Load Modules
+Load Modules (including AuthenticationModule)
     ↓
 FirstRunManager.IsFirstRun() ?
     ↓ Yes
-    ├─→ Step 1: CMSSpawner.Process("cms spawn")
+    ├─→ Step 1: CMSSpawner.Process("cms spawn control")
     │   ├─→ Detect PHP
-    │   ├─→ Create cms_homepage/
-    │   ├─→ Initialize SQLite database
-    │   └─→ Generate PHP files
+    │   ├─→ Create superadmin_control_panel/
+    │   ├─→ Initialize SQLite database with:
+    │   │   ├─→ users table
+    │   │   ├─→ modules table
+    │   │   ├─→ permissions table
+    │   │   ├─→ server_health table
+    │   │   ├─→ licenses table (with default license)
+    │   │   └─→ audit_log table
+    │   └─→ Generate PHP files:
+    │       ├─→ config.php (with Auth API integration)
+    │       ├─→ db.php (database layer)
+    │       ├─→ index.php (Control Panel UI)
+    │       └─→ styles.css (professional styling)
     ↓
     ├─→ Step 2: ApacheManager.ConfigureApache()
     │   ├─→ Create apache_conf/racore.conf
@@ -86,6 +153,10 @@ FirstRunManager.IsFirstRun() ?
         └─→ Create .racore_initialized marker
     ↓
 Continue Normal Startup
+    ↓
+Register Authentication API Endpoints
+    ↓
+Start RaCore Web Server (port 7077)
 ```
 
 ## Marker File Format
@@ -104,19 +175,71 @@ Continue Normal Startup
 ```
 <RaCore Output Directory>/
 ├── .racore_initialized          # Marker file (JSON)
-└── cms_homepage/                # CMS root directory
+└── superadmin_control_panel/    # SuperAdmin Control Panel root
     ├── apache_conf/
     │   └── racore.conf          # Apache VirtualHost config
     ├── .htaccess                # Apache directives
-    ├── index.php                # Public homepage
-    ├── admin.php                # Admin panel
-    ├── config.php               # PHP configuration
+    ├── index.php                # Control Panel UI (SuperAdmin only)
+    ├── config.php               # PHP configuration with Auth API
     ├── db.php                   # Database layer
-    ├── styles.css               # CSS styling
-    └── cms_database.sqlite      # SQLite database
+    ├── styles.css               # Professional dark theme styling
+    └── control_panel.sqlite     # SQLite database with:
+        ├── users table          # User tracking
+        ├── modules table        # Module management
+        ├── permissions table    # Permission controls
+        ├── server_health table  # Health monitoring
+        ├── licenses table       # License management
+        └── audit_log table      # Security audit log
 ```
 
-## Configuration
+## Database Schema
+
+### users table
+- `id` (TEXT PRIMARY KEY): User GUID
+- `username` (TEXT): Username
+- `role` (TEXT): User role (SuperAdmin, Admin, User)
+- `created_at` (TEXT): Creation timestamp
+- `last_login` (TEXT): Last login timestamp
+
+### modules table
+- `id` (INTEGER PRIMARY KEY): Auto-increment ID
+- `name` (TEXT): Module name
+- `category` (TEXT): Module category
+- `status` (TEXT): Module status
+- `created_at` (TEXT): Creation timestamp
+
+### permissions table
+- `id` (INTEGER PRIMARY KEY): Auto-increment ID
+- `user_id` (TEXT): Foreign key to users
+- `module_name` (TEXT): Module name
+- `can_access` (INTEGER): Access permission flag
+- `can_configure` (INTEGER): Configuration permission flag
+
+### server_health table
+- `id` (INTEGER PRIMARY KEY): Auto-increment ID
+- `timestamp` (TEXT): Measurement timestamp
+- `cpu_usage` (REAL): CPU usage percentage
+- `memory_usage` (REAL): Memory usage percentage
+- `status` (TEXT): Server status
+
+### licenses table
+- `id` (TEXT PRIMARY KEY): License GUID
+- `license_key` (TEXT): Unique license key
+- `instance_name` (TEXT): Instance name
+- `status` (TEXT): License status (active, inactive)
+- `created_at` (TEXT): Creation timestamp
+- `expires_at` (TEXT): Expiration timestamp
+- `max_users` (INTEGER): Maximum users allowed
+
+### audit_log table
+- `id` (INTEGER PRIMARY KEY): Auto-increment ID
+- `timestamp` (TEXT): Event timestamp
+- `user_id` (TEXT): User GUID
+- `action` (TEXT): Action performed
+- `details` (TEXT): Action details
+- `ip_address` (TEXT): Client IP address
+
+### Configuration
 
 ### Port Configuration
 Default: `8080`
@@ -126,12 +249,20 @@ To change:
 var apacheManager = new ApacheManager(_cmsPath, 8081); // Custom port
 ```
 
-### CMS Path Configuration
-Default: `<AppContext.BaseDirectory>/cms_homepage`
+### Control Panel Path Configuration
+Default: `<AppContext.BaseDirectory>/superadmin_control_panel`
 
 To change in FirstRunManager:
 ```csharp
 _cmsPath = Path.Combine(AppContext.BaseDirectory, "my_custom_path");
+```
+
+### Authentication API Configuration
+Default: `http://localhost:7077/api/auth`
+
+To change in generated config.php:
+```php
+define('RACORE_AUTH_API', 'http://your-server:port/api/auth');
 ```
 
 ## Force Re-initialization
@@ -142,8 +273,8 @@ To force re-initialization on next run:
 # Delete the marker file
 rm .racore_initialized
 
-# Optionally delete the CMS directory
-rm -rf cms_homepage
+# Optionally delete the Control Panel directory
+rm -rf superadmin_control_panel
 
 # Run RaCore again
 dotnet run
@@ -163,9 +294,15 @@ dotnet run
 
 ### CMSSpawner Module Missing
 - Logs warning
-- Skips CMS initialization
+- Skips Control Panel initialization
 - Marks as initialized to prevent retries
 - Continues with RaCore startup
+
+### Non-SuperAdmin Access Attempt
+- Control Panel denies access
+- Returns error message: "Access denied. SuperAdmin role required."
+- Logs failed authentication attempt
+- User must authenticate with SuperAdmin credentials
 
 ## Security Considerations
 
@@ -173,14 +310,26 @@ dotnet run
 - `.htaccess` protects sensitive files (`.sqlite`, `.db`, `.log`)
 - Session security headers configured
 - Default credentials (admin/admin123) - **MUST BE CHANGED**
+- SuperAdmin role enforcement via RaCore Auth API
 
 ### Production Recommendations
-1. Change default admin password immediately
+1. **Change default admin password immediately**
 2. Enable HTTPS with valid certificates
 3. Set proper file permissions (644 for files, 755 for directories)
-4. Disable error display in production
+4. Disable error display in production (`error_reporting` off)
 5. Implement rate limiting for login attempts
 6. Regular database backups
+7. Monitor audit log for suspicious activity
+8. Rotate license keys periodically
+9. Review and update permissions regularly
+10. Keep RaCore and dependencies updated
+
+### SuperAdmin Access Control
+- Only SuperAdmin accounts (role = 2) can access Control Panel
+- Token validation performed on every request
+- Session expiry after 1 hour (configurable)
+- Failed login attempts logged in audit log
+- IP address tracking for all authentication events
 
 ## Testing
 
@@ -228,12 +377,13 @@ See `RaCore/Tests/` (if test infrastructure exists) for:
 
 ## Troubleshooting
 
-### Issue: CMS Not Generated
-**Symptoms**: No `cms_homepage` directory created  
+### Issue: Control Panel Not Generated
+**Symptoms**: No `superadmin_control_panel` directory created  
 **Solution**: 
 1. Check PHP installation: `php --version`
 2. Check RaCore logs for errors
 3. Verify write permissions
+4. Ensure CMSSpawner module is loaded
 
 ### Issue: PHP Server Not Starting
 **Symptoms**: Server shows as started but not accessible  
@@ -241,6 +391,7 @@ See `RaCore/Tests/` (if test infrastructure exists) for:
 1. Check if port 8080 is available: `netstat -tuln | grep 8080`
 2. Try different port: Edit `FirstRunManager.cs`
 3. Check PHP error logs
+4. Verify firewall settings
 
 ### Issue: Repeated Initialization
 **Symptoms**: First-run runs on every startup  
@@ -248,6 +399,15 @@ See `RaCore/Tests/` (if test infrastructure exists) for:
 1. Check if `.racore_initialized` is being created
 2. Verify write permissions in output directory
 3. Check logs for marker creation errors
+
+### Issue: Access Denied to Control Panel
+**Symptoms**: "Access denied. SuperAdmin role required" error  
+**Solution**:
+1. Verify user has SuperAdmin role (role = 2)
+2. Check Authentication API is running on port 7077
+3. Verify token is valid: Test `/api/auth/validate` endpoint
+4. Check if session token is being sent correctly
+5. Review audit log for authentication failures
 
 ### Issue: Apache Config Not Working
 **Symptoms**: Apache config files created but not functional  
@@ -257,19 +417,37 @@ See `RaCore/Tests/` (if test infrastructure exists) for:
 3. Reload Apache: `sudo systemctl reload apache2`
 4. Check Apache error logs: `sudo tail -f /var/log/apache2/error.log`
 
+### Issue: Authentication API Not Responding
+**Symptoms**: Control Panel can't validate tokens  
+**Solution**:
+1. Ensure RaCore main server is running on port 7077
+2. Check RaCore logs for Auth API initialization
+3. Test API directly: `curl http://localhost:7077/api/auth/validate`
+4. Verify no firewall blocking port 7077
+
 ## Future Enhancements
 
 Potential improvements:
 - [ ] Configuration file for customization (port, path, etc.)
-- [ ] Interactive setup wizard
-- [ ] Database migration system
-- [ ] Multi-site support
+- [ ] Interactive setup wizard for initial configuration
+- [ ] Database migration system for schema updates
+- [ ] Multi-site spawning and management from Control Panel
 - [ ] Custom theme selection during first run
 - [ ] Automated Apache site enablement (with sudo)
 - [ ] Health check endpoint for PHP server
 - [ ] Automatic SSL certificate generation (Let's Encrypt)
-- [ ] Docker container support
-- [ ] Cloud deployment options (Azure, AWS)
+- [ ] Docker container support for easy deployment
+- [ ] Cloud deployment options (Azure, AWS, GCP)
+- [x] SuperAdmin-only Control Panel
+- [x] License management system
+- [x] Multi-tenant architecture support
+- [x] Audit logging for security compliance
+- [ ] Real-time server monitoring dashboard
+- [ ] Automated instance spawning from Control Panel
+- [ ] Remote server management capabilities
+- [ ] Update distribution system from mainframe
+- [ ] Two-factor authentication for SuperAdmin
+- [ ] Advanced permission management UI
 
 ## API Reference
 
@@ -316,6 +494,43 @@ Part of the RaCore project. See main repository for license information.
 
 ---
 
+## Authentication Flow
+
+### SuperAdmin Login Process
+1. User visits Control Panel at `http://localhost:8080`
+2. Control Panel presents login form
+3. User enters credentials (default: admin/admin123)
+4. Control Panel sends POST request to RaCore Auth API at `http://localhost:7077/api/auth/login`
+5. Auth API validates credentials and checks user role
+6. If role is SuperAdmin (role = 2):
+   - Auth API returns success with token
+   - Control Panel stores token in session
+   - User is granted access to Control Panel
+7. If role is not SuperAdmin:
+   - Auth API returns success but Control Panel denies access
+   - Error: "Access denied. SuperAdmin role required."
+
+### Token Validation on Each Request
+1. User makes request to Control Panel
+2. Control Panel checks for session token
+3. If token exists:
+   - Control Panel calls `checkSuperAdmin()` function
+   - Function sends POST to `/api/auth/validate` with token
+   - Auth API validates token and returns user info
+   - Control Panel verifies `user.Role === 2` (SuperAdmin)
+4. If validation fails:
+   - User is redirected to login page
+   - Session is destroyed
+
+### Security Features
+- **Token-Based Authentication**: Secure, stateless authentication
+- **Role Verification**: Double-check on both API and Control Panel
+- **Session Management**: Automatic timeout after 1 hour
+- **HTTPS Ready**: Configure certificates for production
+- **Audit Logging**: All authentication events logged
+
+---
+
 **Generated by RaCore Development Team**  
-**Version**: 1.0  
+**Version**: 2.0  
 **Last Updated**: 2025-10-05

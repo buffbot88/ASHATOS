@@ -17,7 +17,7 @@ public class FirstRunManager
     {
         _moduleManager = moduleManager;
         _firstRunMarkerPath = Path.Combine(AppContext.BaseDirectory, ".racore_initialized");
-        _cmsPath = Path.Combine(AppContext.BaseDirectory, "cms_homepage");
+        _cmsPath = Path.Combine(AppContext.BaseDirectory, "racore_cms");
     }
     
     /// <summary>
@@ -52,12 +52,13 @@ public class FirstRunManager
     }
     
     /// <summary>
-    /// Performs first-run initialization: spawns CMS and configures Apache
+    /// Performs first-run initialization: spawns CMS with integrated Control Panel and configures Apache
     /// </summary>
     public async Task<bool> InitializeAsync()
     {
         Console.WriteLine("========================================");
         Console.WriteLine("   RaCore First-Run Initialization");
+        Console.WriteLine("   CMS + Integrated Control Panel");
         Console.WriteLine("========================================");
         Console.WriteLine();
         
@@ -77,11 +78,11 @@ public class FirstRunManager
                 return false;
             }
             
-            Console.WriteLine("[FirstRunManager] Step 1/3: Spawning CMS Homepage...");
+            Console.WriteLine("[FirstRunManager] Step 1/3: Spawning CMS with Integrated Control Panel...");
             Console.WriteLine();
             
-            // Spawn the CMS
-            var result = cmsModule.Process("cms spawn");
+            // Spawn the CMS with integrated control panel
+            var result = cmsModule.Process("cms spawn integrated");
             Console.WriteLine(result);
             Console.WriteLine();
             
@@ -122,10 +123,17 @@ public class FirstRunManager
                 if (started)
                 {
                     Console.WriteLine();
-                    Console.WriteLine("✅ CMS Homepage is now running!");
-                    Console.WriteLine($"   Access it at: http://localhost:8080");
-                    Console.WriteLine($"   Admin panel: http://localhost:8080/admin.php");
+                    Console.WriteLine("✅ RaCore CMS is now running!");
+                    Console.WriteLine($"   Homepage: http://localhost:8080");
+                    Console.WriteLine($"   Control Panel: http://localhost:8080/control");
                     Console.WriteLine($"   Default login: admin / admin123");
+                    Console.WriteLine();
+                    Console.WriteLine("🎛️  ROLE-BASED ACCESS:");
+                    Console.WriteLine("   - SuperAdmin: Full control panel + user panel");
+                    Console.WriteLine("   - Admin: Admin control panel + user panel");
+                    Console.WriteLine("   - User: User panel only");
+                    Console.WriteLine();
+                    Console.WriteLine("⚠️  Change the default password immediately!");
                     Console.WriteLine();
                 }
                 else
