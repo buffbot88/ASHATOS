@@ -223,8 +223,18 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
         }
 
         string prompt = context;
-        if (intent == "chat" || intent == "think") // Wrap in agentic chat prompt
-            prompt = $"[INST] <<SYS>>\nYou are a helpful assistant.\n<</SYS>>\n{context} [/INST]";
+        
+        // Apply intent-specific prompting for better natural language responses
+        if (intent == "chat" || intent == "think" || intent == "status" || intent == "recall" || intent == "remember")
+        {
+            // The context already contains the formatted prompt from ThoughtProcessor or SpeechModule
+            prompt = context;
+        }
+        else
+        {
+            // For other intents, use the context directly
+            prompt = context;
+        }
 
         string output;
         try
