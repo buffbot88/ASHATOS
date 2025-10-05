@@ -368,6 +368,10 @@ public sealed class CMSSpawnerModule : ModuleBase
                 var controlDbPath = Path.Combine(controlPath, "control_panel.sqlite");
                 InitializeControlPanelDatabase(controlDbPath);
 
+                // Initialize Forum database (Phase 3)
+                var forumDbPath = Path.Combine(_cmsRootPath!, "forum_database.sqlite");
+                InitializeForumDatabase(forumDbPath);
+
                 // Generate main CMS files
                 GenerateConfigFile(cmsDbPath);
                 GenerateDatabaseFile();
@@ -380,32 +384,48 @@ public sealed class CMSSpawnerModule : ModuleBase
                 GenerateControlPanelIndexFileAt(controlPath);
                 GenerateControlPanelStylesFileAt(controlPath);
 
+                // Generate Phase 3 files - Forums & Profiles
+                GenerateForumIndexFile(forumDbPath);
+                GenerateForumStylesFile();
+                GenerateProfileSystemFiles(cmsDbPath);
+
                 var serverUrl = "http://localhost:8080";
                 
                 return string.Join(Environment.NewLine,
-                    "✅ Integrated CMS + Control Panel generated successfully!",
+                    "✅ Integrated CMS + Control Panel + Community generated successfully!",
                     "",
                     $"📁 Location: {_cmsRootPath}",
                     $"🗄️  CMS Database: {cmsDbPath}",
                     $"🗄️  Control Database: {controlDbPath}",
+                    $"🗄️  Forum Database: {forumDbPath}",
                     $"🐘 PHP Version: {version}",
                     "",
                     "📝 Generated structure:",
                     "  /                   - CMS Homepage",
                     "  /control/           - Control Panel (role-based)",
+                    "  /community/         - vBulletin-style Forums",
+                    "  /profile.php        - MySpace-style User Profiles",
                     "",
                     "🎛️ Access Control:",
                     "  - Homepage: Public access",
                     "  - Control Panel: Authenticated users only",
                     "    • SuperAdmin: All panels (Super + Admin + User)",
-                    "    • Admin: Admin panel + User panel",
-                    "    • User: User panel only",
+                    "    • Admin: Admin panel + User panel + Forum Management",
+                    "    • User: User panel + Profile customization",
+                    "  - Community Forums: All authenticated users",
+                    "  - User Profiles: Public viewing, owner can customize",
+                    "",
+                    "✨ Phase 3 Features:",
+                    "  - vBulletin v3-style Forum System",
+                    "  - Forum Management in Admin Panel",
+                    "  - MySpace-style Profiles with Custom CSS",
                     "",
                     "🚀 To start the CMS:",
                     $"  cd {_cmsRootPath}",
                     $"  php -S localhost:8080",
                     $"  Homepage: {serverUrl}",
                     $"  Control Panel: {serverUrl}/control",
+                    $"  Community: {serverUrl}/community",
                     "",
                     "🔑 Default SuperAdmin: admin / admin123",
                     "⚠️  CHANGE PASSWORD IMMEDIATELY!"
@@ -3331,6 +3351,1172 @@ footer {
 
         File.WriteAllText(Path.Combine(controlPath, "styles.css"), stylesContent);
         LogInfo("Generated control panel styles.css in control directory");
+    }
+
+    #endregion
+
+    #region Phase 3: Forums & Profiles
+
+    private void InitializeForumDatabase(string dbPath)
+    {
+        var connectionString = $"Data Source={dbPath}";
+        
+        using var conn = new SqliteConnection(connectionString);
+        conn.Open();
+
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = @"
+CREATE TABLE IF NOT EXISTS forum_categories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    description TEXT,
+    display_order INTEGER DEFAULT 0,
+    created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS forum_threads (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    category_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    author_username TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    views INTEGER DEFAULT 0,
+    is_locked INTEGER DEFAULT 0,
+    is_pinned INTEGER DEFAULT 0,
+    FOREIGN KEY (category_id) REFERENCES forum_categories(id)
+);
+
+CREATE TABLE IF NOT EXISTS forum_posts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    thread_id INTEGER NOT NULL,
+    author_username TEXT NOT NULL,
+    content TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    edited_at TEXT,
+    FOREIGN KEY (thread_id) REFERENCES forum_threads(id)
+);
+
+CREATE TABLE IF NOT EXISTS user_profiles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    display_name TEXT,
+    bio TEXT,
+    custom_css TEXT,
+    avatar_url TEXT,
+    created_at TEXT NOT NULL,
+    last_updated TEXT NOT NULL
+);
+
+INSERT INTO forum_categories (name, description, display_order, created_at) VALUES
+('General Discussion', 'General topics and announcements', 1, datetime('now')),
+('Support & Help', 'Get help from the community', 2, datetime('now')),
+('Off-Topic', 'Anything goes!', 3, datetime('now'));
+";
+        cmd.ExecuteNonQuery();
+        LogInfo($"Forum database initialized: {dbPath}");
+    }
+
+    private void GenerateForumIndexFile(string forumDbPath)
+    {
+        var communityDir = Path.Combine(_cmsRootPath!, "community");
+        if (!Directory.Exists(communityDir))
+        {
+            Directory.CreateDirectory(communityDir);
+        }
+
+        var forumContent = @"<?php
+// RaCore Community Forums - vBulletin v3 Style
+session_start();
+
+// Check if user is logged in (basic check)
+$isLoggedIn = isset($_SESSION['username']);
+$username = $isLoggedIn ? $_SESSION['username'] : 'Guest';
+
+// Database connection
+$dbPath = '../forum_database.sqlite';
+$db = new PDO('sqlite:' . $dbPath);
+$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+// Handle actions
+$action = $_GET['action'] ?? 'index';
+$categoryId = $_GET['category'] ?? null;
+$threadId = $_GET['thread'] ?? null;
+$message = '';
+
+if ($action === 'new_thread' && $_SERVER['REQUEST_METHOD'] === 'POST' && $isLoggedIn) {
+    $title = $_POST['title'] ?? '';
+    $content = $_POST['content'] ?? '';
+    $category = $_POST['category_id'] ?? '';
+    
+    if ($title && $content && $category) {
+        $stmt = $db->prepare('INSERT INTO forum_threads (category_id, title, author_username, created_at, updated_at) VALUES (?, ?, ?, datetime(""now""), datetime(""now""))');
+        $stmt->execute([$category, $title, $username]);
+        $threadId = $db->lastInsertId();
+        
+        $stmt = $db->prepare('INSERT INTO forum_posts (thread_id, author_username, content, created_at) VALUES (?, ?, ?, datetime(""now""))');
+        $stmt->execute([$threadId, $username, $content]);
+        
+        header('Location: index.php?action=thread&thread=' . $threadId);
+        exit;
+    }
+}
+
+if ($action === 'new_post' && $_SERVER['REQUEST_METHOD'] === 'POST' && $isLoggedIn) {
+    $content = $_POST['content'] ?? '';
+    $thread = $_POST['thread_id'] ?? '';
+    
+    if ($content && $thread) {
+        $stmt = $db->prepare('INSERT INTO forum_posts (thread_id, author_username, content, created_at) VALUES (?, ?, ?, datetime(""now""))');
+        $stmt->execute([$thread, $username, $content]);
+        
+        $stmt = $db->prepare('UPDATE forum_threads SET updated_at = datetime(""now"") WHERE id = ?');
+        $stmt->execute([$thread]);
+        
+        header('Location: index.php?action=thread&thread=' . $thread);
+        exit;
+    }
+}
+
+// Get categories
+$categories = $db->query('SELECT * FROM forum_categories ORDER BY display_order')->fetchAll(PDO::FETCH_ASSOC);
+
+// Get thread counts
+$threadCounts = [];
+foreach ($categories as $cat) {
+    $stmt = $db->prepare('SELECT COUNT(*) as count FROM forum_threads WHERE category_id = ?');
+    $stmt->execute([$cat['id']]);
+    $threadCounts[$cat['id']] = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+}
+?>
+<!DOCTYPE html>
+<html lang=""en"">
+<head>
+    <meta charset=""UTF-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>RaCore Community Forums</title>
+    <link rel=""stylesheet"" href=""forum_styles.css"">
+</head>
+<body>
+    <div class=""vb-header"">
+        <div class=""container"">
+            <h1>🗣️ RaCore Community</h1>
+            <div class=""vb-nav"">
+                <a href=""../index.php"">Home</a>
+                <a href=""index.php"">Forums</a>
+                <?php if ($isLoggedIn): ?>
+                    <a href=""../profile.php?user=<?php echo urlencode($username); ?>"">My Profile</a>
+                    <a href=""../control/index.php"">Control Panel</a>
+                    <span class=""username"">Welcome, <?php echo htmlspecialchars($username); ?></span>
+                <?php else: ?>
+                    <a href=""../control/index.php"">Login</a>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <div class=""container"">
+        <?php if ($action === 'index'): ?>
+            <!-- Forum Categories List -->
+            <div class=""forum-header"">
+                <h2>Forum Categories</h2>
+                <?php if ($isLoggedIn): ?>
+                    <button onclick=""showNewThreadForm()"" class=""btn-primary"">New Thread</button>
+                <?php endif; ?>
+            </div>
+
+            <div id=""new-thread-form"" style=""display: none;"" class=""form-container"">
+                <h3>Create New Thread</h3>
+                <form method=""POST"" action=""index.php?action=new_thread"">
+                    <select name=""category_id"" required class=""form-select"">
+                        <option value="""">Select Category...</option>
+                        <?php foreach ($categories as $cat): ?>
+                            <option value=""<?php echo $cat['id']; ?>""><?php echo htmlspecialchars($cat['name']); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <input type=""text"" name=""title"" placeholder=""Thread Title"" required class=""form-input"">
+                    <textarea name=""content"" placeholder=""Your message..."" required class=""form-textarea""></textarea>
+                    <button type=""submit"" class=""btn-primary"">Post Thread</button>
+                    <button type=""button"" onclick=""document.getElementById('new-thread-form').style.display='none'"" class=""btn-secondary"">Cancel</button>
+                </form>
+            </div>
+
+            <div class=""vb-categories"">
+                <?php foreach ($categories as $category): ?>
+                    <div class=""vb-category"">
+                        <div class=""category-icon"">📁</div>
+                        <div class=""category-info"">
+                            <h3><a href=""index.php?action=category&category=<?php echo $category['id']; ?>""><?php echo htmlspecialchars($category['name']); ?></a></h3>
+                            <p><?php echo htmlspecialchars($category['description']); ?></p>
+                        </div>
+                        <div class=""category-stats"">
+                            <span><?php echo $threadCounts[$category['id']]; ?> threads</span>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+
+        <?php elseif ($action === 'category' && $categoryId): ?>
+            <!-- Category Thread List -->
+            <?php
+            $category = $db->prepare('SELECT * FROM forum_categories WHERE id = ?');
+            $category->execute([$categoryId]);
+            $category = $category->fetch(PDO::FETCH_ASSOC);
+            
+            $threads = $db->prepare('SELECT * FROM forum_threads WHERE category_id = ? ORDER BY is_pinned DESC, updated_at DESC');
+            $threads->execute([$categoryId]);
+            $threads = $threads->fetchAll(PDO::FETCH_ASSOC);
+            ?>
+            
+            <div class=""forum-breadcrumb"">
+                <a href=""index.php"">Forums</a> &gt; <?php echo htmlspecialchars($category['name']); ?>
+            </div>
+
+            <div class=""forum-header"">
+                <h2><?php echo htmlspecialchars($category['name']); ?></h2>
+                <?php if ($isLoggedIn): ?>
+                    <button onclick=""showNewThreadForm()"" class=""btn-primary"">New Thread</button>
+                <?php endif; ?>
+            </div>
+
+            <div id=""new-thread-form"" style=""display: none;"" class=""form-container"">
+                <h3>Create New Thread</h3>
+                <form method=""POST"" action=""index.php?action=new_thread"">
+                    <input type=""hidden"" name=""category_id"" value=""<?php echo $categoryId; ?>"">
+                    <input type=""text"" name=""title"" placeholder=""Thread Title"" required class=""form-input"">
+                    <textarea name=""content"" placeholder=""Your message..."" required class=""form-textarea""></textarea>
+                    <button type=""submit"" class=""btn-primary"">Post Thread</button>
+                    <button type=""button"" onclick=""document.getElementById('new-thread-form').style.display='none'"" class=""btn-secondary"">Cancel</button>
+                </form>
+            </div>
+
+            <div class=""vb-threads"">
+                <?php if (empty($threads)): ?>
+                    <p class=""no-threads"">No threads yet. Be the first to post!</p>
+                <?php else: ?>
+                    <?php foreach ($threads as $thread): ?>
+                        <div class=""vb-thread <?php echo $thread['is_pinned'] ? 'pinned' : ''; ?>"">
+                            <div class=""thread-icon"">
+                                <?php echo $thread['is_pinned'] ? '📌' : '💬'; ?>
+                            </div>
+                            <div class=""thread-info"">
+                                <h4><a href=""index.php?action=thread&thread=<?php echo $thread['id']; ?>""><?php echo htmlspecialchars($thread['title']); ?></a></h4>
+                                <span class=""thread-meta"">Started by <?php echo htmlspecialchars($thread['author_username']); ?> on <?php echo date('M d, Y', strtotime($thread['created_at'])); ?></span>
+                            </div>
+                            <div class=""thread-stats"">
+                                <span>👁️ <?php echo $thread['views']; ?> views</span>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+
+        <?php elseif ($action === 'thread' && $threadId): ?>
+            <!-- Thread View with Posts -->
+            <?php
+            $thread = $db->prepare('SELECT t.*, c.name as category_name, c.id as category_id FROM forum_threads t JOIN forum_categories c ON t.category_id = c.id WHERE t.id = ?');
+            $thread->execute([$threadId]);
+            $thread = $thread->fetch(PDO::FETCH_ASSOC);
+            
+            if ($thread) {
+                // Increment views
+                $db->prepare('UPDATE forum_threads SET views = views + 1 WHERE id = ?')->execute([$threadId]);
+                
+                $posts = $db->prepare('SELECT * FROM forum_posts WHERE thread_id = ? ORDER BY created_at ASC');
+                $posts->execute([$threadId]);
+                $posts = $posts->fetchAll(PDO::FETCH_ASSOC);
+            }
+            ?>
+            
+            <?php if ($thread): ?>
+                <div class=""forum-breadcrumb"">
+                    <a href=""index.php"">Forums</a> &gt; 
+                    <a href=""index.php?action=category&category=<?php echo $thread['category_id']; ?>""><?php echo htmlspecialchars($thread['category_name']); ?></a> &gt; 
+                    <?php echo htmlspecialchars($thread['title']); ?>
+                </div>
+
+                <div class=""thread-title"">
+                    <h2><?php echo htmlspecialchars($thread['title']); ?></h2>
+                </div>
+
+                <div class=""vb-posts"">
+                    <?php foreach ($posts as $index => $post): ?>
+                        <div class=""vb-post <?php echo $index === 0 ? 'first-post' : ''; ?>"">
+                            <div class=""post-author"">
+                                <div class=""author-avatar"">👤</div>
+                                <strong><?php echo htmlspecialchars($post['author_username']); ?></strong>
+                                <span class=""post-date""><?php echo date('M d, Y g:i A', strtotime($post['created_at'])); ?></span>
+                            </div>
+                            <div class=""post-content"">
+                                <?php echo nl2br(htmlspecialchars($post['content'])); ?>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <?php if ($isLoggedIn && !$thread['is_locked']): ?>
+                    <div class=""reply-form form-container"">
+                        <h3>Post Reply</h3>
+                        <form method=""POST"" action=""index.php?action=new_post"">
+                            <input type=""hidden"" name=""thread_id"" value=""<?php echo $threadId; ?>"">
+                            <textarea name=""content"" placeholder=""Your reply..."" required class=""form-textarea""></textarea>
+                            <button type=""submit"" class=""btn-primary"">Post Reply</button>
+                        </form>
+                    </div>
+                <?php elseif ($thread['is_locked']): ?>
+                    <p class=""locked-message"">🔒 This thread is locked. No new replies can be posted.</p>
+                <?php else: ?>
+                    <p class=""login-message"">Please <a href=""../control/index.php"">login</a> to post a reply.</p>
+                <?php endif; ?>
+            <?php else: ?>
+                <p class=""error"">Thread not found.</p>
+            <?php endif; ?>
+        <?php endif; ?>
+    </div>
+
+    <script>
+    function showNewThreadForm() {
+        document.getElementById('new-thread-form').style.display = 'block';
+    }
+    </script>
+</body>
+</html>";
+
+        File.WriteAllText(Path.Combine(communityDir, "index.php"), forumContent);
+        LogInfo("Generated community/index.php (vBulletin-style forums)");
+    }
+
+    private void GenerateForumStylesFile()
+    {
+        var communityDir = Path.Combine(_cmsRootPath!, "community");
+        
+        var stylesContent = @"/* RaCore Community Forums - vBulletin v3 Style */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    background: #E4E7F5;
+    color: #000;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+/* vBulletin Header */
+.vb-header {
+    background: linear-gradient(to bottom, #4A6DA6 0%, #35547C 100%);
+    padding: 10px 0;
+    border-bottom: 1px solid #2A4365;
+    margin-bottom: 15px;
+}
+
+.vb-header h1 {
+    color: #fff;
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+
+.vb-nav {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.vb-nav a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 3px;
+}
+
+.vb-nav a:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.vb-nav .username {
+    color: #FFD700;
+    font-weight: bold;
+    margin-left: auto;
+}
+
+/* Forum Categories */
+.forum-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding: 12px;
+    background: #4A6DA6;
+    border: 1px solid #2A4365;
+    border-radius: 5px;
+}
+
+.forum-header h2 {
+    color: #fff;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.vb-categories {
+    background: #fff;
+    border: 1px solid #C2CFDF;
+}
+
+.vb-category {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid #E4E7F5;
+    transition: background 0.2s;
+}
+
+.vb-category:hover {
+    background: #F5F8FA;
+}
+
+.vb-category:last-child {
+    border-bottom: none;
+}
+
+.category-icon {
+    font-size: 32px;
+    margin-right: 15px;
+}
+
+.category-info {
+    flex: 1;
+}
+
+.category-info h3 {
+    font-size: 13px;
+    margin-bottom: 3px;
+}
+
+.category-info h3 a {
+    color: #22229C;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.category-info h3 a:hover {
+    color: #C00;
+    text-decoration: underline;
+}
+
+.category-info p {
+    color: #666;
+    font-size: 11px;
+}
+
+.category-stats {
+    text-align: right;
+    font-size: 11px;
+    color: #666;
+}
+
+/* Threads */
+.vb-threads {
+    background: #fff;
+    border: 1px solid #C2CFDF;
+}
+
+.vb-thread {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #E4E7F5;
+    transition: background 0.2s;
+}
+
+.vb-thread:hover {
+    background: #F5F8FA;
+}
+
+.vb-thread.pinned {
+    background: #FFF9E6;
+}
+
+.vb-thread.pinned:hover {
+    background: #FFF4CC;
+}
+
+.thread-icon {
+    font-size: 24px;
+    margin-right: 12px;
+}
+
+.thread-info {
+    flex: 1;
+}
+
+.thread-info h4 {
+    font-size: 12px;
+    margin-bottom: 3px;
+}
+
+.thread-info h4 a {
+    color: #22229C;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.thread-info h4 a:hover {
+    color: #C00;
+    text-decoration: underline;
+}
+
+.thread-meta {
+    font-size: 10px;
+    color: #666;
+}
+
+.thread-stats {
+    text-align: right;
+    font-size: 11px;
+    color: #666;
+}
+
+/* Posts */
+.thread-title {
+    background: #4A6DA6;
+    padding: 12px;
+    border: 1px solid #2A4365;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+.thread-title h2 {
+    color: #fff;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.vb-posts {
+    background: #fff;
+    border: 1px solid #C2CFDF;
+}
+
+.vb-post {
+    display: flex;
+    border-bottom: 1px solid #E4E7F5;
+}
+
+.vb-post.first-post {
+    background: #F5F8FA;
+}
+
+.post-author {
+    width: 180px;
+    padding: 15px;
+    background: #F2F6F8;
+    border-right: 1px solid #E4E7F5;
+    text-align: center;
+}
+
+.author-avatar {
+    font-size: 48px;
+    margin-bottom: 10px;
+}
+
+.post-author strong {
+    display: block;
+    font-size: 12px;
+    color: #22229C;
+    margin-bottom: 5px;
+}
+
+.post-date {
+    display: block;
+    font-size: 10px;
+    color: #666;
+}
+
+.post-content {
+    flex: 1;
+    padding: 15px;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+/* Forms */
+.form-container {
+    background: #fff;
+    border: 1px solid #C2CFDF;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+}
+
+.form-container h3 {
+    font-size: 14px;
+    margin-bottom: 15px;
+    color: #22229C;
+}
+
+.form-input, .form-textarea, .form-select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #C2CFDF;
+    border-radius: 3px;
+    font-family: Verdana, Arial, sans-serif;
+    font-size: 12px;
+}
+
+.form-textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 6px 15px;
+    border: none;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-right: 8px;
+}
+
+.btn-primary {
+    background: #4A6DA6;
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background: #35547C;
+}
+
+.btn-secondary {
+    background: #ccc;
+    color: #333;
+}
+
+.btn-secondary:hover {
+    background: #bbb;
+}
+
+/* Breadcrumb */
+.forum-breadcrumb {
+    padding: 10px;
+    margin-bottom: 15px;
+    font-size: 11px;
+}
+
+.forum-breadcrumb a {
+    color: #22229C;
+    text-decoration: none;
+}
+
+.forum-breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+/* Messages */
+.no-threads, .locked-message, .login-message, .error {
+    padding: 20px;
+    text-align: center;
+    background: #fff;
+    border: 1px solid #C2CFDF;
+    border-radius: 5px;
+    margin-top: 15px;
+}
+
+.locked-message {
+    background: #FFF9E6;
+}
+
+.error {
+    background: #FFE6E6;
+    color: #C00;
+}
+
+/* Reply Form */
+.reply-form {
+    margin-top: 15px;
+}
+";
+
+        File.WriteAllText(Path.Combine(communityDir, "forum_styles.css"), stylesContent);
+        LogInfo("Generated community/forum_styles.css");
+    }
+
+    private void GenerateProfileSystemFiles(string cmsDbPath)
+    {
+        // Generate profile.php in root
+        var profileContent = @"<?php
+// RaCore User Profiles - MySpace Style
+session_start();
+
+$dbPath = 'cms_database.sqlite';
+$forumDbPath = 'forum_database.sqlite';
+
+$db = new PDO('sqlite:' . $dbPath);
+$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+$forumDb = new PDO('sqlite:' . $forumDbPath);
+$forumDb->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+$viewingUser = $_GET['user'] ?? '';
+$isOwner = isset($_SESSION['username']) && $_SESSION['username'] === $viewingUser;
+$isLoggedIn = isset($_SESSION['username']);
+
+// Handle profile updates
+if ($isOwner && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $displayName = $_POST['display_name'] ?? '';
+    $bio = $_POST['bio'] ?? '';
+    $customCss = $_POST['custom_css'] ?? '';
+    
+    $stmt = $forumDb->prepare('INSERT OR REPLACE INTO user_profiles (username, display_name, bio, custom_css, created_at, last_updated) VALUES (?, ?, ?, ?, datetime(""now""), datetime(""now""))');
+    $stmt->execute([$viewingUser, $displayName, $bio, $customCss]);
+    
+    header('Location: profile.php?user=' . urlencode($viewingUser));
+    exit;
+}
+
+// Get profile data
+$stmt = $forumDb->prepare('SELECT * FROM user_profiles WHERE username = ?');
+$stmt->execute([$viewingUser]);
+$profile = $stmt->fetch(PDO::FETCH_ASSOC);
+
+$displayName = $profile['display_name'] ?? $viewingUser;
+$bio = $profile['bio'] ?? '';
+$customCss = $profile['custom_css'] ?? '';
+
+// Get recent forum posts
+$stmt = $forumDb->prepare('SELECT p.*, t.title as thread_title FROM forum_posts p JOIN forum_threads t ON p.thread_id = t.id WHERE p.author_username = ? ORDER BY p.created_at DESC LIMIT 10');
+$stmt->execute([$viewingUser]);
+$recentPosts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+?>
+<!DOCTYPE html>
+<html lang=""en"">
+<head>
+    <meta charset=""UTF-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title><?php echo htmlspecialchars($displayName); ?>'s Profile - RaCore</title>
+    <link rel=""stylesheet"" href=""profile_styles.css"">
+    <?php if ($customCss): ?>
+        <style>
+        /* User Custom CSS */
+        <?php echo $customCss; ?>
+        </style>
+    <?php endif; ?>
+</head>
+<body>
+    <div class=""myspace-header"">
+        <div class=""container"">
+            <h1>MySpace-Style Profile</h1>
+            <div class=""header-nav"">
+                <a href=""index.php"">Home</a>
+                <a href=""community/index.php"">Community</a>
+                <?php if ($isLoggedIn): ?>
+                    <a href=""profile.php?user=<?php echo urlencode($_SESSION['username']); ?>"">My Profile</a>
+                    <a href=""control/index.php"">Control Panel</a>
+                <?php else: ?>
+                    <a href=""control/index.php"">Login</a>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <div class=""container"">
+        <div class=""profile-layout"">
+            <!-- Profile Header -->
+            <div class=""profile-header"">
+                <div class=""profile-avatar"">
+                    <div class=""avatar-placeholder"">👤</div>
+                </div>
+                <div class=""profile-info"">
+                    <h2><?php echo htmlspecialchars($displayName); ?></h2>
+                    <p class=""username"">@<?php echo htmlspecialchars($viewingUser); ?></p>
+                    <?php if ($bio): ?>
+                        <p class=""bio""><?php echo nl2br(htmlspecialchars($bio)); ?></p>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <div class=""profile-content"">
+                <!-- Left Column -->
+                <div class=""profile-sidebar"">
+                    <div class=""profile-section"">
+                        <h3>About Me</h3>
+                        <div class=""about-content"">
+                            <?php if ($bio): ?>
+                                <?php echo nl2br(htmlspecialchars($bio)); ?>
+                            <?php else: ?>
+                                <p class=""no-content"">No information provided yet.</p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <?php if ($isOwner): ?>
+                        <div class=""profile-section edit-section"">
+                            <h3>🎨 Customize Your Profile</h3>
+                            <form method=""POST"" class=""edit-form"">
+                                <label>Display Name:</label>
+                                <input type=""text"" name=""display_name"" value=""<?php echo htmlspecialchars($displayName); ?>"" class=""form-input"">
+                                
+                                <label>Bio:</label>
+                                <textarea name=""bio"" class=""form-textarea""><?php echo htmlspecialchars($bio); ?></textarea>
+                                
+                                <label>Custom CSS (MySpace-style!):</label>
+                                <textarea name=""custom_css"" class=""form-textarea custom-css""><?php echo htmlspecialchars($customCss); ?></textarea>
+                                <p class=""hint"">Add your own CSS to customize your profile! Try: <code>body { background: #000; color: #0f0; }</code></p>
+                                
+                                <button type=""submit"" class=""btn-save"">💾 Save Changes</button>
+                            </form>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Right Column -->
+                <div class=""profile-main"">
+                    <div class=""profile-section"">
+                        <h3>Recent Forum Posts</h3>
+                        <?php if (empty($recentPosts)): ?>
+                            <p class=""no-content"">No forum posts yet.</p>
+                        <?php else: ?>
+                            <div class=""recent-posts"">
+                                <?php foreach ($recentPosts as $post): ?>
+                                    <div class=""post-item"">
+                                        <div class=""post-thread"">
+                                            <a href=""community/index.php?action=thread&thread=<?php echo $post['thread_id']; ?>"">
+                                                <?php echo htmlspecialchars($post['thread_title']); ?>
+                                            </a>
+                                        </div>
+                                        <div class=""post-preview"">
+                                            <?php echo htmlspecialchars(substr($post['content'], 0, 150)); ?><?php echo strlen($post['content']) > 150 ? '...' : ''; ?>
+                                        </div>
+                                        <div class=""post-date"">
+                                            <?php echo date('M d, Y', strtotime($post['created_at'])); ?>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class=""profile-section"">
+                        <h3>Profile Stats</h3>
+                        <div class=""stats"">
+                            <div class=""stat-item"">
+                                <span class=""stat-label"">Total Posts:</span>
+                                <span class=""stat-value""><?php echo count($recentPosts); ?>+</span>
+                            </div>
+                            <div class=""stat-item"">
+                                <span class=""stat-label"">Member Since:</span>
+                                <span class=""stat-value""><?php echo $profile ? date('M Y', strtotime($profile['created_at'])) : 'Recently'; ?></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class=""myspace-footer"">
+        <p>🎵 RaCore Profiles - Express Yourself!</p>
+    </div>
+</body>
+</html>";
+
+        File.WriteAllText(Path.Combine(_cmsRootPath!, "profile.php"), profileContent);
+        LogInfo("Generated profile.php (MySpace-style profiles)");
+
+        // Generate profile styles
+        var profileStylesContent = @"/* RaCore Profiles - MySpace Style */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: linear-gradient(to bottom, #0066CC 0%, #003366 100%);
+    color: #333;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+/* MySpace Header */
+.myspace-header {
+    background: #1A1A1A;
+    padding: 15px 0;
+    border-bottom: 3px solid #FF6600;
+    margin-bottom: 20px;
+}
+
+.myspace-header h1 {
+    color: #FF6600;
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+
+.header-nav {
+    display: flex;
+    gap: 15px;
+}
+
+.header-nav a {
+    color: #66CCFF;
+    text-decoration: none;
+    font-size: 12px;
+}
+
+.header-nav a:hover {
+    color: #FF6600;
+}
+
+/* Profile Layout */
+.profile-layout {
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    padding: 30px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+}
+
+.profile-avatar {
+    margin-right: 25px;
+}
+
+.avatar-placeholder {
+    width: 150px;
+    height: 150px;
+    background: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 80px;
+    border: 5px solid #fff;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.profile-info h2 {
+    font-size: 32px;
+    margin-bottom: 5px;
+}
+
+.username {
+    font-size: 18px;
+    opacity: 0.9;
+    margin-bottom: 15px;
+}
+
+.bio {
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 600px;
+}
+
+/* Profile Content */
+.profile-content {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 20px;
+    padding: 20px;
+}
+
+@media (max-width: 768px) {
+    .profile-content {
+        grid-template-columns: 1fr;
+    }
+}
+
+.profile-section {
+    background: #f9f9f9;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.profile-section h3 {
+    color: #FF6600;
+    font-size: 18px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #FF6600;
+}
+
+.about-content {
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.no-content {
+    color: #999;
+    font-style: italic;
+}
+
+/* Edit Section */
+.edit-section {
+    background: #FFF9E6;
+    border-color: #FF6600;
+}
+
+.edit-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.edit-form label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    margin-top: 10px;
+    color: #333;
+}
+
+.form-input, .form-textarea {
+    padding: 8px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+}
+
+.form-textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.custom-css {
+    min-height: 150px;
+    font-family: 'Courier New', monospace;
+    background: #1e1e1e;
+    color: #00ff00;
+}
+
+.hint {
+    font-size: 11px;
+    color: #666;
+    margin-top: 5px;
+}
+
+.hint code {
+    background: #ffe;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 11px;
+}
+
+.btn-save {
+    margin-top: 15px;
+    padding: 10px 20px;
+    background: #FF6600;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-save:hover {
+    background: #CC5200;
+}
+
+/* Recent Posts */
+.recent-posts {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.post-item {
+    padding: 12px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.post-thread {
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.post-thread a {
+    color: #0066CC;
+    text-decoration: none;
+}
+
+.post-thread a:hover {
+    color: #FF6600;
+    text-decoration: underline;
+}
+
+.post-preview {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.post-date {
+    font-size: 11px;
+    color: #999;
+}
+
+/* Stats */
+.stats {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.stat-label {
+    font-weight: bold;
+    color: #666;
+}
+
+.stat-value {
+    color: #FF6600;
+    font-weight: bold;
+}
+
+/* Footer */
+.myspace-footer {
+    text-align: center;
+    padding: 20px;
+    margin-top: 30px;
+    color: #fff;
+    font-size: 14px;
+}
+";
+
+        File.WriteAllText(Path.Combine(_cmsRootPath!, "profile_styles.css"), profileStylesContent);
+        LogInfo("Generated profile_styles.css");
     }
 
     #endregion
