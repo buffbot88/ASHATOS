@@ -1,7 +1,31 @@
-<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <TargetFramework>net9.0-windows10.0.19041.0</TargetFramework>
-        <Nullable>enable</Nullable>
-        <ImplicitUsings>enable</ImplicitUsings>
-    </PropertyGroup>
+<Project Sdk="Microsoft.NET.Sdk.Web">
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<OutputType>Exe</OutputType>
+		<!-- OutputType is omitted for web projects; default is Exe -->
+		<!-- Ready for agentic, modular, async workflows and plugin extensions -->
+	</PropertyGroup>
+	<ItemGroup>
+		<!-- Add distributed/cloud packages as needed for Phase 3: -->
+		<!-- <PackageReference Include="Grpc.Net.Client" Version="2.56.0" /> -->
+		<PackageReference Include="Microsoft.AspNetCore.Connections.Abstractions" Version="9.0.9" />
+		<PackageReference Include="Microsoft.AspNetCore.Http.Connections.Client" Version="9.0.9" />
+		<PackageReference Include="Microsoft.AspNetCore.Http.Connections.Common" Version="9.0.9" />
+		<PackageReference Include="Microsoft.Data.Sqlite.Core" Version="9.0.9" />
+		<PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.2" />
+		<PackageReference Include="SQLitePCLRaw.core" Version="3.0.2" />
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\Abstractions\Abstractions.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Update="Engine\Manager\ModuleManager.cs">
+	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+	  </Compile>
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Engine\Memory\" />
+	</ItemGroup>
 </Project>

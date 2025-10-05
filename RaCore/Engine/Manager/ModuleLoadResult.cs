@@ -1,19 +1,18 @@
-using System.Collections.Generic;
-
-namespace RaCore.Engine.Manager;
-
-/// <summary>
-/// Represents the result of module loading, including loaded module views and any errors.
-/// </summary>
-public class ModuleLoadResult
+namespace RaCore.Engine.Manager
 {
     /// <summary>
-    /// List of successfully loaded modules (views).
+    /// Result of module loading, including loaded modules and errors.
     /// </summary>
-    public List<ModuleWrapperView> Loaded { get; } = new();
+    public class ModuleLoadResult
+    {
+        /// <summary>
+        /// Successfully loaded modules (views).
+        /// </summary>
+        public List<ModuleWrapperView> Loaded { get; } = [];
 
-    /// <summary>
-    /// List of error messages encountered during module loading.
-    /// </summary>
-    public List<string> Errors { get; } = new();
+        /// <summary>
+        /// Error messages encountered during module loading.
+        /// </summary>
+        public List<string> Errors { get; } = [];
+    }
 }

@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 namespace RaCore.Engine.Manager;
 
 /// <summary>
-/// Extension methods for async loading of modules via ModuleManager.
-/// Ensures compatibility with updated core modules.
+/// Async extensions for module loading via ModuleManager.
+/// Ensures compatibility with all updated RaCore modules.
 /// </summary>
 public static class ModuleManagerAsync
 {
@@ -21,7 +21,6 @@ public static class ModuleManagerAsync
 
         var type = mgr.GetType();
 
-        // 1) Prefer an actual async method
         var asyncCandidate = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
             .FirstOrDefault(m =>
                 (m.Name.Equals("LoadModulesAsync", StringComparison.OrdinalIgnoreCase) ||
@@ -48,18 +47,14 @@ public static class ModuleManagerAsync
 
                 if (asyncCandidate.ReturnType.IsGenericType)
                 {
-                    // assume Task<ModuleLoadResult>
                     var resultProperty = task.GetType().GetProperty("Result");
                     return (ModuleLoadResult)resultProperty!.GetValue(task)!;
                 }
-
-                // if it was Task (non-generic), we don't have a ModuleLoadResult; throw or return default
                 throw new InvalidOperationException("Async Load method did not return ModuleLoadResult.");
             }
             catch (TargetInvocationException tie) { throw tie.InnerException ?? tie; }
         }
 
-        // 2) Fallback to synchronous method run on background thread
         var syncCandidates = new[] { "LoadModules", "ReloadModules", "LoadAllModules", "Load" };
         MethodInfo? syncMethod = null;
         foreach (var name in syncCandidates)
@@ -70,7 +65,6 @@ public static class ModuleManagerAsync
 
         if (syncMethod == null)
         {
-            // try to find any sync method returning ModuleLoadResult
             syncMethod = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
                 .FirstOrDefault(m => m.ReturnType == typeof(ModuleLoadResult) && m.GetParameters().Length <= 1);
         }

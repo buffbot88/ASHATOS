@@ -1,8 +1,0 @@
-﻿<Application x:Class="RaWin.App"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             StartupUri="MainWindow.xaml">
-    <Application.Resources>
-        <!-- You can move global brushes, effects, and styles here for reuse -->
-    </Application.Resources>
-</Application>

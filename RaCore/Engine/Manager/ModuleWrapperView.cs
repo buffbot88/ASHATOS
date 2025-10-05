@@ -1,11 +1,11 @@
+using Abstractions;
 using System;
 using System.Reflection;
-using RaCore.Engine.Manager;
 
 namespace RaCore.Engine.Manager
 {
     /// <summary>
-    /// Reflection adapter for ModuleWrapper, exposes the actual IRaModule instance for UI.
+    /// Reflection adapter for ModuleWrapper, exposes the IRaModule instance for UI and diagnostics.
     /// </summary>
     public class ModuleWrapperView
     {
@@ -18,9 +18,6 @@ namespace RaCore.Engine.Manager
             innerType = inner.GetType();
         }
 
-        /// <summary>
-        /// Direct access to IRaModule instance (or null if not present)
-        /// </summary>
         public IRaModule? ModuleInstance
         {
             get
