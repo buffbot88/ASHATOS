@@ -352,16 +352,28 @@ public sealed class CMSSpawnerModule : ModuleBase
                     LogInfo($"Created CMS directory: {_cmsRootPath}");
                 }
 
-                // Create Databases subdirectory for security
-                var databasesPath = Path.Combine(_cmsRootPath!, "Databases");
+                // Create Databases directory in project root for security
+                var projectRoot = AppContext.BaseDirectory;
+                var databasesPath = Path.Combine(projectRoot, "Databases");
                 if (!Directory.Exists(databasesPath))
                 {
                     Directory.CreateDirectory(databasesPath);
-                    LogInfo($"Created Databases directory: {databasesPath}");
+                    LogInfo($"Created Databases directory in project root: {databasesPath}");
                 }
 
                 // Generate .htaccess to protect databases folder
                 GenerateDatabasesHtaccess(databasesPath);
+
+                // Create Language directory in project root for LlamaCPP models
+                var languagePath = Path.Combine(projectRoot, "Language");
+                if (!Directory.Exists(languagePath))
+                {
+                    Directory.CreateDirectory(languagePath);
+                    LogInfo($"Created Language directory in project root: {languagePath}");
+                }
+
+                // Scan for LlamaCPP and .gguf files
+                ScanLanguageModels(languagePath);
 
                 // Create control subdirectory
                 var controlPath = Path.Combine(_cmsRootPath!, "control");
@@ -403,19 +415,24 @@ public sealed class CMSSpawnerModule : ModuleBase
                 return string.Join(Environment.NewLine,
                     "✅ Integrated CMS + Control Panel + Community generated successfully!",
                     "",
-                    $"📁 Location: {_cmsRootPath}",
-                    $"🗄️  Databases: {databasesPath}/",
+                    $"📁 CMS Location: {_cmsRootPath}",
+                    $"📁 Project Root: {projectRoot}",
+                    $"🗄️  Databases (Root): {databasesPath}/",
                     $"     - cms_database.sqlite",
                     $"     - control_panel.sqlite",
                     $"     - forum_database.sqlite",
+                    $"🤖 Language Models (Root): {languagePath}/",
                     $"🐘 PHP Version: {version}",
                     "",
                     "📝 Generated structure:",
-                    "  /                   - CMS Homepage",
-                    "  /Databases/         - Protected SQLite databases",
-                    "  /control/           - Control Panel (role-based + SQL Editor)",
-                    "  /community/         - vBulletin-style Forums",
-                    "  /profile.php        - MySpace-style User Profiles",
+                    "  Project Root/",
+                    "    Databases/        - Protected SQLite databases (.htaccess)",
+                    "    Language/         - LlamaCPP models and .gguf files",
+                    "    racore_cms/",
+                    "      /               - CMS Homepage",
+                    "      /control/       - Control Panel (role-based + SQL Editor)",
+                    "      /community/     - vBulletin-style Forums",
+                    "      /profile.php    - MySpace-style User Profiles",
                     "",
                     "🎛️ Access Control:",
                     "  - Homepage: Public access",
@@ -432,8 +449,8 @@ public sealed class CMSSpawnerModule : ModuleBase
                     "  - MySpace-style Profiles with Custom CSS",
                     "",
                     "🔒 Security:",
-                    "  - All databases in protected Databases/ folder",
-                    "  - .htaccess prevents direct web access",
+                    "  - All databases in protected Databases/ folder (project root)",
+                    "  - .htaccess prevents direct web access to databases",
                     "  - SQL Editor for SuperAdmin only",
                     "",
                     "🚀 To start the CMS:",
@@ -475,6 +492,97 @@ Options -Indexes
 
         File.WriteAllText(htaccessPath, htaccessContent);
         LogInfo($"Generated .htaccess for database protection: {htaccessPath}");
+    }
+
+    private void ScanLanguageModels(string languagePath)
+    {
+        try
+        {
+            LogInfo("Scanning for LlamaCPP and language model files...");
+            
+            // Look for LlamaCPP executable/library
+            var llamaCppFiles = Directory.GetFiles(languagePath, "llama*", SearchOption.AllDirectories)
+                .Where(f => f.EndsWith(".exe") || f.EndsWith(".dll") || f.EndsWith(".so") || f.EndsWith(".dylib"))
+                .ToList();
+            
+            // Look for .gguf model files
+            var ggufFiles = Directory.GetFiles(languagePath, "*.gguf", SearchOption.AllDirectories).ToList();
+            
+            // Look for .bin model files (older format)
+            var binFiles = Directory.GetFiles(languagePath, "*.bin", SearchOption.AllDirectories).ToList();
+            
+            if (llamaCppFiles.Any())
+            {
+                LogInfo($"✓ Found {llamaCppFiles.Count} LlamaCPP executable(s):");
+                foreach (var file in llamaCppFiles)
+                {
+                    var fileName = Path.GetFileName(file);
+                    var fileSize = new FileInfo(file).Length / 1024 / 1024; // MB
+                    LogInfo($"  - {fileName} ({fileSize} MB)");
+                }
+            }
+            else
+            {
+                LogInfo("⚠ No LlamaCPP executables found in Language/ folder");
+                LogInfo("  Place llama.cpp executable or library in Language/ folder for AI features");
+            }
+            
+            if (ggufFiles.Any())
+            {
+                LogInfo($"✓ Found {ggufFiles.Count} .gguf model file(s):");
+                foreach (var file in ggufFiles.Take(5)) // Show first 5
+                {
+                    var fileName = Path.GetFileName(file);
+                    var fileSize = new FileInfo(file).Length / 1024 / 1024; // MB
+                    LogInfo($"  - {fileName} ({fileSize} MB)");
+                }
+                if (ggufFiles.Count > 5)
+                {
+                    LogInfo($"  ... and {ggufFiles.Count - 5} more");
+                }
+            }
+            else
+            {
+                LogInfo("⚠ No .gguf model files found in Language/ folder");
+                LogInfo("  Place GGUF language model files in Language/ folder for AI inference");
+            }
+            
+            if (binFiles.Any())
+            {
+                LogInfo($"✓ Found {binFiles.Count} .bin model file(s) (legacy format)");
+            }
+            
+            // Create a README if folder is empty
+            if (!llamaCppFiles.Any() && !ggufFiles.Any() && !binFiles.Any())
+            {
+                var readmePath = Path.Combine(languagePath, "README.txt");
+                var readmeContent = @"Language Models Directory
+=========================
+
+This folder is for LlamaCPP executables and GGUF language model files.
+
+To enable AI features:
+1. Download LlamaCPP from: https://github.com/ggerganov/llama.cpp/releases
+2. Place the executable (llama.cpp or llama.exe) in this folder
+3. Download GGUF model files (e.g., from Hugging Face)
+4. Place .gguf model files in this folder
+
+Supported files:
+- LlamaCPP executables: .exe, .dll, .so, .dylib
+- Model files: .gguf (recommended), .bin (legacy)
+
+The system will automatically detect and log available models during startup.
+";
+                File.WriteAllText(readmePath, readmeContent);
+                LogInfo("Created README.txt in Language/ folder with setup instructions");
+            }
+            
+            LogInfo("Language model scan complete");
+        }
+        catch (Exception ex)
+        {
+            LogError($"Error scanning language models: {ex.Message}");
+        }
     }
 
     private void InitializeSQLiteDatabase(string dbPath)
@@ -552,12 +660,15 @@ VALUES (
 
     private void GenerateConfigFile(string dbPath)
     {
-        var configContent = $@"<?php
+        // Calculate relative path from CMS root to database in project root Databases folder
+        var relativePath = Path.GetRelativePath(_cmsRootPath!, dbPath).Replace("\\", "/");
+        
+        var configContent = @"<?php
 // RaCore CMS Configuration
 // Generated by RaCore CMSSpawner Module
 
-// Database configuration
-define('DB_PATH', __DIR__ . '/cms_database.sqlite');
+// Database configuration - points to Databases folder in project root
+define('DB_PATH', __DIR__ . '/" + relativePath + @"');
 
 // Site settings
 define('SITE_TITLE', 'RaCore AI Mainframe');
@@ -569,9 +680,9 @@ ini_set('session.cookie_httponly', 1);
 ini_set('session.use_strict_mode', 1);
 
 // Start session
-if (session_status() === PHP_SESSION_NONE) {{
+if (session_status() === PHP_SESSION_NONE) {
     session_start();
-}}
+}
 
 // Timezone
 date_default_timezone_set('UTC');
@@ -2203,12 +2314,16 @@ $pages = $db->getAllPages();
 
     private void GenerateControlPanelConfigFileAt(string controlPath, string dbPath)
     {
-        var configContent = $@"<?php
+        // Calculate relative path from control directory to database in root
+        var projectRoot = AppContext.BaseDirectory;
+        var relativePath = Path.GetRelativePath(controlPath, dbPath).Replace("\\", "/");
+        
+        var configContent = @"<?php
 // RaCore Control Panel Configuration
 // Generated by RaCore CMSSpawner Module
 
-// Database configuration
-define('DB_PATH', __DIR__ . '/control_panel.sqlite');
+// Database configuration - points to Databases folder in project root
+define('DB_PATH', __DIR__ . '/" + relativePath + @"');
 
 // RaCore Authentication API
 define('RACORE_AUTH_API', 'http://localhost:7077/api/auth');
@@ -2219,9 +2334,9 @@ ini_set('session.cookie_httponly', 1);
 ini_set('session.use_strict_mode', 1);
 
 // Start session
-if (session_status() === PHP_SESSION_NONE) {{
+if (session_status() === PHP_SESSION_NONE) {
     session_start();
-}}
+}
 
 // Timezone
 date_default_timezone_set('UTC');
@@ -2236,10 +2351,10 @@ define('ROLE_ADMIN', 1);
 define('ROLE_SUPERADMIN', 2);
 
 // Check if user is authenticated and return user data
-function checkAuthentication() {{
-    if (!isset($_SESSION['token'])) {{
+function checkAuthentication() {
+    if (!isset($_SESSION['token'])) {
         return null;
-    }}
+    }
     
     // Validate token with RaCore Auth API
     $ch = curl_init(RACORE_AUTH_API . '/validate');
@@ -3463,6 +3578,9 @@ INSERT INTO forum_categories (name, description, display_order, created_at) VALU
             Directory.CreateDirectory(communityDir);
         }
 
+        // Calculate relative path from community directory to database in root Databases folder
+        var relativePath = Path.GetRelativePath(communityDir, forumDbPath).Replace("\\", "/");
+
         var forumContent = @"<?php
 // RaCore Community Forums - vBulletin v3 Style
 session_start();
@@ -3471,8 +3589,8 @@ session_start();
 $isLoggedIn = isset($_SESSION['username']);
 $username = $isLoggedIn ? $_SESSION['username'] : 'Guest';
 
-// Database connection
-$dbPath = '../forum_database.sqlite';
+// Database connection - points to Databases folder in project root
+$dbPath = __DIR__ . '/" + relativePath + @"';
 $db = new PDO('sqlite:' . $dbPath);
 $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
@@ -4090,13 +4208,19 @@ body {
 
     private void GenerateProfileSystemFiles(string cmsDbPath)
     {
+        // Calculate relative paths from CMS root to databases in project root Databases folder
+        var cmsRelativePath = Path.GetRelativePath(_cmsRootPath!, cmsDbPath).Replace("\\", "/");
+        var forumDbPath = Path.Combine(Path.GetDirectoryName(cmsDbPath)!, "forum_database.sqlite");
+        var forumRelativePath = Path.GetRelativePath(_cmsRootPath!, forumDbPath).Replace("\\", "/");
+
         // Generate profile.php in root
         var profileContent = @"<?php
 // RaCore User Profiles - MySpace Style
 session_start();
 
-$dbPath = 'cms_database.sqlite';
-$forumDbPath = 'forum_database.sqlite';
+// Database paths - point to Databases folder in project root
+$dbPath = __DIR__ . '/" + cmsRelativePath + @"';
+$forumDbPath = __DIR__ . '/" + forumRelativePath + @"';
 
 $db = new PDO('sqlite:' . $dbPath);
 $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
