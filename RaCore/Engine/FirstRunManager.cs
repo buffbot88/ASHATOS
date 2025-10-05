@@ -17,7 +17,7 @@ public class FirstRunManager
     {
         _moduleManager = moduleManager;
         _firstRunMarkerPath = Path.Combine(AppContext.BaseDirectory, ".racore_initialized");
-        _cmsPath = Path.Combine(AppContext.BaseDirectory, "cms_homepage");
+        _cmsPath = Path.Combine(AppContext.BaseDirectory, "superadmin_control_panel");
     }
     
     /// <summary>
@@ -52,12 +52,13 @@ public class FirstRunManager
     }
     
     /// <summary>
-    /// Performs first-run initialization: spawns CMS and configures Apache
+    /// Performs first-run initialization: spawns SuperAdmin Control Panel and configures Apache
     /// </summary>
     public async Task<bool> InitializeAsync()
     {
         Console.WriteLine("========================================");
         Console.WriteLine("   RaCore First-Run Initialization");
+        Console.WriteLine("   SuperAdmin Control Panel Setup");
         Console.WriteLine("========================================");
         Console.WriteLine();
         
@@ -77,18 +78,18 @@ public class FirstRunManager
                 return false;
             }
             
-            Console.WriteLine("[FirstRunManager] Step 1/3: Spawning CMS Homepage...");
+            Console.WriteLine("[FirstRunManager] Step 1/3: Spawning SuperAdmin Control Panel...");
             Console.WriteLine();
             
-            // Spawn the CMS
-            var result = cmsModule.Process("cms spawn");
+            // Spawn the SuperAdmin Control Panel
+            var result = cmsModule.Process("cms spawn control");
             Console.WriteLine(result);
             Console.WriteLine();
             
-            // Check if CMS was created successfully
+            // Check if Control Panel was created successfully
             if (!Directory.Exists(_cmsPath))
             {
-                Console.WriteLine("[FirstRunManager] Error: CMS directory was not created");
+                Console.WriteLine("[FirstRunManager] Error: Control Panel directory was not created");
                 return false;
             }
             
@@ -122,10 +123,12 @@ public class FirstRunManager
                 if (started)
                 {
                     Console.WriteLine();
-                    Console.WriteLine("✅ CMS Homepage is now running!");
+                    Console.WriteLine("✅ SuperAdmin Control Panel is now running!");
                     Console.WriteLine($"   Access it at: http://localhost:8080");
-                    Console.WriteLine($"   Admin panel: http://localhost:8080/admin.php");
-                    Console.WriteLine($"   Default login: admin / admin123");
+                    Console.WriteLine($"   Login: admin / admin123 (SuperAdmin only)");
+                    Console.WriteLine();
+                    Console.WriteLine("⚠️  SECURITY: Only SuperAdmin accounts can access the Control Panel");
+                    Console.WriteLine("   Change the default password immediately!");
                     Console.WriteLine();
                 }
                 else
@@ -137,7 +140,7 @@ public class FirstRunManager
             }
             else
             {
-                Console.WriteLine("[FirstRunManager] PHP not found. Install PHP 8+ to run the CMS");
+                Console.WriteLine("[FirstRunManager] PHP not found. Install PHP 8+ to run the Control Panel");
                 Console.WriteLine();
             }
             
