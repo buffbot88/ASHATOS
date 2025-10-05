@@ -1353,9 +1353,20 @@ CREATE TABLE IF NOT EXISTS licenses (
     license_key TEXT UNIQUE NOT NULL,
     instance_name TEXT,
     status TEXT NOT NULL,
+    type TEXT DEFAULT 'Standard',
     created_at TEXT NOT NULL,
     expires_at TEXT,
     max_users INTEGER DEFAULT 1
+);
+
+CREATE TABLE IF NOT EXISTS user_licenses (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    license_id TEXT NOT NULL,
+    assigned_at TEXT NOT NULL,
+    is_active INTEGER DEFAULT 1,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (license_id) REFERENCES licenses(id)
 );
 
 CREATE TABLE IF NOT EXISTS audit_log (
@@ -1373,8 +1384,11 @@ CREATE TABLE IF NOT EXISTS audit_log (
 INSERT OR IGNORE INTO users (id, username, role, created_at) 
 VALUES ('admin-guid', 'admin', 'SuperAdmin', datetime('now'));
 
-INSERT OR IGNORE INTO licenses (id, license_key, instance_name, status, created_at, max_users) 
-VALUES ('default-license', 'RACORE-DEFAULT-' || substr(hex(randomblob(8)), 1, 16), 'RaCore Main Instance', 'active', datetime('now'), 10);";
+INSERT OR IGNORE INTO licenses (id, license_key, instance_name, status, type, created_at, max_users) 
+VALUES ('default-license', 'RACORE-DEFAULT-' || substr(hex(randomblob(8)), 1, 16), 'RaCore Main Instance', 'Active', 'Enterprise', datetime('now'), 10);
+
+INSERT OR IGNORE INTO user_licenses (id, user_id, license_id, assigned_at, is_active)
+VALUES ('admin-license-link', 'admin-guid', 'default-license', datetime('now'), 1);";
         cmd.ExecuteNonQuery();
 
         LogInfo($"Control Panel database initialized: {dbPath}");
