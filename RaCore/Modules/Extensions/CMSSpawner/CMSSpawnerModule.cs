@@ -27,7 +27,7 @@ public sealed class CMSSpawnerModule : ModuleBase
     {
         base.Initialize(manager);
         _manager = manager as ModuleManager;
-        _cmsRootPath = Path.Combine(AppContext.BaseDirectory, "superadmin_control_panel");
+        _cmsRootPath = Path.Combine(AppContext.BaseDirectory, "racore_cms");
         LogInfo("CMS Spawner module initialized");
     }
 
@@ -56,6 +56,11 @@ public sealed class CMSSpawnerModule : ModuleBase
             return SpawnControlPanel();
         }
 
+        if (text.Equals("cms spawn integrated", StringComparison.OrdinalIgnoreCase))
+        {
+            return SpawnIntegratedCMS();
+        }
+
         if (text.Equals("cms status", StringComparison.OrdinalIgnoreCase))
         {
             return GetCMSStatus();
@@ -75,7 +80,8 @@ public sealed class CMSSpawnerModule : ModuleBase
             "CMSSpawner commands:",
             "  cms spawn           - Create PHP CMS homepage with SQLite database",
             "  cms spawn home      - Same as 'cms spawn'",
-            "  cms spawn control   - Create Unified Control Panel (first-run)",
+            "  cms spawn control   - Create standalone Control Panel",
+            "  cms spawn integrated - Create CMS with integrated Control Panel (first-run)",
             "  cms status          - Show CMS deployment status",
             "  cms detect php      - Detect PHP runtime version",
             "  help                - Show this help message"
@@ -317,6 +323,98 @@ public sealed class CMSSpawnerModule : ModuleBase
             {
                 LogError($"Control Panel spawn error: {ex.Message}");
                 return $"❌ Error spawning Control Panel: {ex.Message}";
+            }
+        }
+    }
+
+    private string SpawnIntegratedCMS()
+    {
+        lock (_lock)
+        {
+            try
+            {
+                LogInfo("Starting Integrated CMS + Control Panel generation...");
+
+                // Detect PHP
+                _phpPath = FindPHPExecutable();
+                if (_phpPath == null)
+                {
+                    return "❌ Error: PHP runtime not found. Run 'cms detect php' for installation instructions.";
+                }
+
+                var version = GetPHPVersion(_phpPath);
+                LogInfo($"PHP detected: {version}");
+
+                // Create CMS directory
+                if (_cmsRootPath != null && !Directory.Exists(_cmsRootPath))
+                {
+                    Directory.CreateDirectory(_cmsRootPath);
+                    LogInfo($"Created CMS directory: {_cmsRootPath}");
+                }
+
+                // Create control subdirectory
+                var controlPath = Path.Combine(_cmsRootPath!, "control");
+                if (!Directory.Exists(controlPath))
+                {
+                    Directory.CreateDirectory(controlPath);
+                    LogInfo($"Created Control Panel directory: {controlPath}");
+                }
+
+                // Initialize main CMS database
+                var cmsDbPath = Path.Combine(_cmsRootPath!, "cms_database.sqlite");
+                InitializeSQLiteDatabase(cmsDbPath);
+
+                // Initialize Control Panel database
+                var controlDbPath = Path.Combine(controlPath, "control_panel.sqlite");
+                InitializeControlPanelDatabase(controlDbPath);
+
+                // Generate main CMS files
+                GenerateConfigFile(cmsDbPath);
+                GenerateDatabaseFile();
+                GenerateIntegratedIndexFile(); // New homepage with link to control panel
+                GenerateStylesFile();
+
+                // Generate Control Panel files in /control subdirectory
+                GenerateControlPanelConfigFileAt(controlPath, controlDbPath);
+                GenerateControlPanelDatabaseFileAt(controlPath);
+                GenerateControlPanelIndexFileAt(controlPath);
+                GenerateControlPanelStylesFileAt(controlPath);
+
+                var serverUrl = "http://localhost:8080";
+                
+                return string.Join(Environment.NewLine,
+                    "✅ Integrated CMS + Control Panel generated successfully!",
+                    "",
+                    $"📁 Location: {_cmsRootPath}",
+                    $"🗄️  CMS Database: {cmsDbPath}",
+                    $"🗄️  Control Database: {controlDbPath}",
+                    $"🐘 PHP Version: {version}",
+                    "",
+                    "📝 Generated structure:",
+                    "  /                   - CMS Homepage",
+                    "  /control/           - Control Panel (role-based)",
+                    "",
+                    "🎛️ Access Control:",
+                    "  - Homepage: Public access",
+                    "  - Control Panel: Authenticated users only",
+                    "    • SuperAdmin: All panels (Super + Admin + User)",
+                    "    • Admin: Admin panel + User panel",
+                    "    • User: User panel only",
+                    "",
+                    "🚀 To start the CMS:",
+                    $"  cd {_cmsRootPath}",
+                    $"  php -S localhost:8080",
+                    $"  Homepage: {serverUrl}",
+                    $"  Control Panel: {serverUrl}/control",
+                    "",
+                    "🔑 Default SuperAdmin: admin / admin123",
+                    "⚠️  CHANGE PASSWORD IMMEDIATELY!"
+                );
+            }
+            catch (Exception ex)
+            {
+                LogError($"Integrated CMS spawn error: {ex.Message}");
+                return $"❌ Error spawning Integrated CMS: {ex.Message}";
             }
         }
     }
@@ -1969,6 +2067,949 @@ footer {
 
         File.WriteAllText(Path.Combine(_cmsRootPath!, "styles.css"), stylesContent);
         LogInfo("Generated control panel styles.css");
+    }
+
+    #endregion
+
+    #region Integrated CMS Helper Methods
+
+    private void GenerateIntegratedIndexFile()
+    {
+        var indexContent = @"<?php
+// RaCore CMS Homepage
+// Generated by RaCore CMSSpawner Module
+
+require_once 'config.php';
+require_once 'db.php';
+
+$db = Database::getInstance();
+$pages = $db->getAllPages();
+?>
+<!DOCTYPE html>
+<html lang=""en"">
+<head>
+    <meta charset=""UTF-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>RaCore CMS</title>
+    <link rel=""stylesheet"" href=""styles.css"">
+</head>
+<body>
+    <header>
+        <div class=""container"">
+            <h1>🚀 RaCore CMS</h1>
+            <nav>
+                <a href=""/"">Home</a>
+                <a href=""/control"">Control Panel</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class=""container"">
+        <div class=""hero"">
+            <h2>Welcome to RaCore</h2>
+            <p>Your AI-powered content management system with integrated control panel.</p>
+        </div>
+
+        <?php if (!empty($pages)): ?>
+            <div class=""pages-section"">
+                <h3>Published Pages</h3>
+                <div class=""pages-grid"">
+                    <?php foreach ($pages as $page): ?>
+                        <div class=""page-card"">
+                            <h4><?php echo htmlspecialchars($page['title']); ?></h4>
+                            <p><?php echo htmlspecialchars(substr($page['content'], 0, 150)); ?>...</p>
+                            <small>Updated: <?php echo htmlspecialchars($page['updated_at']); ?></small>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        <?php else: ?>
+            <div class=""empty-state"">
+                <p>No pages yet. Go to the <a href=""/control"">Control Panel</a> to create content.</p>
+            </div>
+        <?php endif; ?>
+    </main>
+
+    <footer>
+        <div class=""container"">
+            <p>&copy; <?php echo date('Y'); ?> RaCore - Powered by AI</p>
+        </div>
+    </footer>
+</body>
+</html>
+";
+
+        File.WriteAllText(Path.Combine(_cmsRootPath!, "index.php"), indexContent);
+        LogInfo("Generated integrated CMS index.php");
+    }
+
+    private void GenerateControlPanelConfigFileAt(string controlPath, string dbPath)
+    {
+        var configContent = $@"<?php
+// RaCore Control Panel Configuration
+// Generated by RaCore CMSSpawner Module
+
+// Database configuration
+define('DB_PATH', __DIR__ . '/control_panel.sqlite');
+
+// RaCore Authentication API
+define('RACORE_AUTH_API', 'http://localhost:7077/api/auth');
+
+// Security settings
+define('SESSION_LIFETIME', 3600); // 1 hour
+ini_set('session.cookie_httponly', 1);
+ini_set('session.use_strict_mode', 1);
+
+// Start session
+if (session_status() === PHP_SESSION_NONE) {{
+    session_start();
+}}
+
+// Timezone
+date_default_timezone_set('UTC');
+
+// Error reporting (disable in production)
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
+
+// User role constants
+define('ROLE_USER', 0);
+define('ROLE_ADMIN', 1);
+define('ROLE_SUPERADMIN', 2);
+
+// Check if user is authenticated and return user data
+function checkAuthentication() {{
+    if (!isset($_SESSION['token'])) {{
+        return null;
+    }}
+    
+    // Validate token with RaCore Auth API
+    $ch = curl_init(RACORE_AUTH_API . '/validate');
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Authorization: Bearer ' . $_SESSION['token'],
+        'Content-Type: application/json'
+    ]);
+    
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    
+    if ($httpCode !== 200) {{
+        return null;
+    }}
+    
+    $data = json_decode($response, true);
+    if ($data['valid']) {{
+        return [
+            'username' => $data['user']['Username'] ?? $_SESSION['username'],
+            'role' => $data['user']['Role'] ?? 0,
+            'email' => $data['user']['Email'] ?? ''
+        ];
+    }}
+    return null;
+}}
+
+// Check if user has at least the specified role
+function hasRole($userRole, $requiredRole) {{
+    return $userRole >= $requiredRole;
+}}
+";
+
+        File.WriteAllText(Path.Combine(controlPath, "config.php"), configContent);
+        LogInfo("Generated control panel config.php in control directory");
+    }
+
+    private void GenerateControlPanelDatabaseFileAt(string controlPath)
+    {
+        var dbContent = @"<?php
+// Database layer for RaCore Control Panel
+require_once 'config.php';
+
+class Database {
+    private static $instance = null;
+    private $pdo;
+
+    private function __construct() {
+        try {
+            $this->pdo = new PDO('sqlite:' . DB_PATH);
+            $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $this->pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            die('Database connection failed: ' . $e->getMessage());
+        }
+    }
+
+    public static function getInstance() {
+        if (self::$instance === null) {
+            self::$instance = new Database();
+        }
+        return self::$instance;
+    }
+
+    public function getConnection() {
+        return $this->pdo;
+    }
+
+    public function query($sql, $params = []) {
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            return $stmt;
+        } catch (PDOException $e) {
+            error_log('Database query error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function getUsers() {
+        $stmt = $this->query('SELECT * FROM users ORDER BY created_at DESC');
+        return $stmt ? $stmt->fetchAll() : [];
+    }
+
+    public function getModules() {
+        $stmt = $this->query('SELECT * FROM modules ORDER BY name');
+        return $stmt ? $stmt->fetchAll() : [];
+    }
+
+    public function getLicenses() {
+        $stmt = $this->query('SELECT * FROM licenses ORDER BY created_at DESC');
+        return $stmt ? $stmt->fetchAll() : [];
+    }
+
+    public function getServerHealth() {
+        $stmt = $this->query('SELECT * FROM server_health ORDER BY timestamp DESC LIMIT 20');
+        return $stmt ? $stmt->fetchAll() : [];
+    }
+
+    public function getAuditLog($limit = 50) {
+        $stmt = $this->query('SELECT * FROM audit_log ORDER BY timestamp DESC LIMIT ?', [$limit]);
+        return $stmt ? $stmt->fetchAll() : [];
+    }
+
+    public function logAudit($userId, $action, $details, $ipAddress = '') {
+        return $this->query(
+            'INSERT INTO audit_log (timestamp, user_id, action, details, ip_address) VALUES (datetime(\'now\'), ?, ?, ?, ?)',
+            [$userId, $action, $details, $ipAddress]
+        );
+    }
+}
+";
+
+        File.WriteAllText(Path.Combine(controlPath, "db.php"), dbContent);
+        LogInfo("Generated control panel db.php in control directory");
+    }
+
+    private void GenerateControlPanelIndexFileAt(string controlPath)
+    {
+        // Use the same control panel index as before, just in the control subdirectory
+        var indexContent = @"<?php
+// RaCore Control Panel
+// Generated by RaCore CMSSpawner Module
+
+require_once 'config.php';
+require_once 'db.php';
+
+$error = '';
+$success = '';
+
+// Handle login
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    if ($_POST['action'] === 'login') {
+        $username = $_POST['username'] ?? '';
+        $password = $_POST['password'] ?? '';
+        
+        // Authenticate with RaCore Auth API
+        $ch = curl_init(RACORE_AUTH_API . '/login');
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+            'Username' => $username,
+            'Password' => $password
+        ]));
+        
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        
+        if ($httpCode === 200) {
+            $data = json_decode($response, true);
+            if ($data['Success']) {
+                $_SESSION['token'] = $data['Token'];
+                $_SESSION['username'] = $data['User']['Username'];
+                $_SESSION['user_id'] = $data['User']['Id'];
+                $_SESSION['role'] = $data['User']['Role'];
+                $success = 'Login successful!';
+            } else {
+                $error = 'Invalid credentials';
+            }
+        } else {
+            $error = 'Invalid credentials';
+        }
+    } elseif ($_POST['action'] === 'logout') {
+        session_destroy();
+        header('Location: index.php');
+        exit;
+    }
+}
+
+$currentUser = checkAuthentication();
+$isLoggedIn = $currentUser !== null;
+
+// Get user role and determine permissions
+$userRole = $currentUser['role'] ?? 0;
+$isUser = $isLoggedIn;
+$isAdmin = hasRole($userRole, ROLE_ADMIN);
+$isSuperAdmin = hasRole($userRole, ROLE_SUPERADMIN);
+
+// Get role name
+$roleName = 'Guest';
+if ($isSuperAdmin) {
+    $roleName = 'SuperAdmin';
+} elseif ($isAdmin) {
+    $roleName = 'Admin';
+} elseif ($isUser) {
+    $roleName = 'User';
+}
+
+// Get data if logged in
+$db = Database::getInstance();
+$users = [];
+$modules = [];
+$licenses = [];
+$auditLog = [];
+$serverHealth = [];
+
+if ($isLoggedIn) {
+    $users = $db->getUsers();
+    if ($isAdmin) {
+        $licenses = $db->getLicenses();
+        $auditLog = $db->getAuditLog(20);
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang=""en"">
+<head>
+    <meta charset=""UTF-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>RaCore Control Panel</title>
+    <link rel=""stylesheet"" href=""styles.css"">
+</head>
+<body>
+    <header>
+        <div class=""container"">
+            <h1>🎛️ RaCore Control Panel</h1>
+            <?php if ($isLoggedIn): ?>
+                <nav>
+                    <a href=""/"">← Back to Site</a>
+                    <span>Welcome, <?php echo htmlspecialchars($currentUser['username']); ?> (<?php echo $roleName; ?>)</span>
+                    <form method=""POST"" style=""display: inline;"">
+                        <input type=""hidden"" name=""action"" value=""logout"">
+                        <button type=""submit"" class=""logout-btn"">Logout</button>
+                    </form>
+                </nav>
+            <?php endif; ?>
+        </div>
+    </header>
+
+    <main class=""container"">
+        <?php if (!$isLoggedIn): ?>
+            <div class=""login-form"">
+                <h2>Control Panel Authentication</h2>
+                <p class=""info"">Login to access your personalized control panel</p>
+                <?php if ($error): ?>
+                    <div class=""error""><?php echo htmlspecialchars($error); ?></div>
+                <?php endif; ?>
+                <?php if ($success): ?>
+                    <div class=""success""><?php echo htmlspecialchars($success); ?></div>
+                <?php endif; ?>
+                <form method=""POST"">
+                    <input type=""hidden"" name=""action"" value=""login"">
+                    <div class=""form-group"">
+                        <label>Username:</label>
+                        <input type=""text"" name=""username"" required autofocus>
+                    </div>
+                    <div class=""form-group"">
+                        <label>Password:</label>
+                        <input type=""password"" name=""password"" required>
+                    </div>
+                    <button type=""submit"">Login</button>
+                    <p class=""hint"">Default: admin / admin123</p>
+                </form>
+            </div>
+        <?php else: ?>
+            <div class=""dashboard"">
+                <div class=""section"">
+                    <h2>📊 System Overview</h2>
+                    <div class=""stats-grid"">
+                        <div class=""stat-card"">
+                            <div class=""stat-icon"">👤</div>
+                            <div class=""stat-value"">You</div>
+                            <div class=""stat-label"">Access Level: <?php echo $roleName; ?></div>
+                        </div>
+                        <?php if ($isAdmin): ?>
+                        <div class=""stat-card"">
+                            <div class=""stat-icon"">👥</div>
+                            <div class=""stat-value""><?php echo count($users); ?></div>
+                            <div class=""stat-label"">Total Users</div>
+                        </div>
+                        <div class=""stat-card"">
+                            <div class=""stat-icon"">🔑</div>
+                            <div class=""stat-value""><?php echo count($licenses); ?></div>
+                            <div class=""stat-label"">Active Licenses</div>
+                        </div>
+                        <?php endif; ?>
+                        <div class=""stat-card"">
+                            <div class=""stat-icon"">🟢</div>
+                            <div class=""stat-value"">Online</div>
+                            <div class=""stat-label"">System Status</div>
+                        </div>
+                        <?php if ($isAdmin): ?>
+                        <div class=""stat-card"">
+                            <div class=""stat-icon"">📝</div>
+                            <div class=""stat-value""><?php echo count($auditLog); ?></div>
+                            <div class=""stat-label"">Recent Events</div>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <?php if ($isSuperAdmin): ?>
+                <div class=""section"">
+                    <h2>🔐 License Management (SuperAdmin)</h2>
+                    <div class=""info-box"">
+                        <p><strong>Subscription-Based Licensing:</strong> Control and manage licensed instances from this central mainframe.</p>
+                        <?php if (!empty($licenses)): ?>
+                            <table class=""data-table"">
+                                <thead>
+                                    <tr>
+                                        <th>Instance</th>
+                                        <th>License Key</th>
+                                        <th>Status</th>
+                                        <th>Max Users</th>
+                                        <th>Created</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($licenses as $license): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($license['instance_name']); ?></td>
+                                            <td><code><?php echo htmlspecialchars($license['license_key']); ?></code></td>
+                                            <td><span class=""status-badge status-<?php echo $license['status']; ?>""><?php echo ucfirst($license['status']); ?></span></td>
+                                            <td><?php echo $license['max_users']; ?></td>
+                                            <td><?php echo htmlspecialchars($license['created_at']); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        <?php else: ?>
+                            <p>No licenses configured</p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <?php if ($isAdmin): ?>
+                <div class=""section"">
+                    <h2>👥 User Management <?php echo $isSuperAdmin ? '(SuperAdmin)' : '(Admin)'; ?></h2>
+                    <div class=""info-box"">
+                        <?php if (!empty($users)): ?>
+                            <table class=""data-table"">
+                                <thead>
+                                    <tr>
+                                        <th>Username</th>
+                                        <th>Role</th>
+                                        <th>Created</th>
+                                        <th>Last Login</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($users as $user): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($user['username']); ?></td>
+                                            <td><span class=""role-badge role-<?php echo strtolower($user['role']); ?>""><?php echo htmlspecialchars($user['role']); ?></span></td>
+                                            <td><?php echo htmlspecialchars($user['created_at']); ?></td>
+                                            <td><?php echo htmlspecialchars($user['last_login'] ?? 'Never'); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        <?php else: ?>
+                            <p>No users in local database. Users are managed via RaCore Auth API.</p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <div class=""section"">
+                    <h2>ℹ️ Your Account</h2>
+                    <div class=""info-box"">
+                        <div class=""health-grid"">
+                            <div class=""health-item"">
+                                <strong>Username:</strong> <?php echo htmlspecialchars($currentUser['username']); ?>
+                            </div>
+                            <div class=""health-item"">
+                                <strong>Role:</strong> <?php echo $roleName; ?>
+                            </div>
+                            <div class=""health-item"">
+                                <strong>Email:</strong> <?php echo htmlspecialchars($currentUser['email'] ?: 'Not set'); ?>
+                            </div>
+                            <div class=""health-item"">
+                                <strong>Session:</strong> Active
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <?php if ($isAdmin): ?>
+                <div class=""section"">
+                    <h2>📝 Audit Log <?php echo $isSuperAdmin ? '(SuperAdmin)' : '(Admin)'; ?></h2>
+                    <div class=""info-box"">
+                        <?php if (!empty($auditLog)): ?>
+                            <table class=""data-table"">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>User</th>
+                                        <th>Action</th>
+                                        <th>Details</th>
+                                        <th>IP Address</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($auditLog as $log): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($log['timestamp']); ?></td>
+                                            <td><?php echo htmlspecialchars($log['user_id'] ?? 'System'); ?></td>
+                                            <td><?php echo htmlspecialchars($log['action']); ?></td>
+                                            <td><?php echo htmlspecialchars($log['details'] ?? '-'); ?></td>
+                                            <td><?php echo htmlspecialchars($log['ip_address'] ?? '-'); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        <?php else: ?>
+                            <p>No audit events recorded</p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <div class=""section"">
+                    <h2>🔧 System Health & Diagnostics</h2>
+                    <div class=""info-box"">
+                        <div class=""health-grid"">
+                            <div class=""health-item"">
+                                <strong>RaCore Version:</strong> 1.0.0
+                            </div>
+                            <div class=""health-item"">
+                                <strong>PHP Version:</strong> <?php echo PHP_VERSION; ?>
+                            </div>
+                            <div class=""health-item"">
+                                <strong>Database:</strong> SQLite
+                            </div>
+                            <div class=""health-item"">
+                                <strong>Auth API:</strong> <?php echo RACORE_AUTH_API; ?>
+                            </div>
+                            <div class=""health-item"">
+                                <strong>Server Time:</strong> <?php echo date('Y-m-d H:i:s'); ?> UTC
+                            </div>
+                            <?php if ($isAdmin): ?>
+                            <div class=""health-item"">
+                                <strong>Multi-Tenant:</strong> Enabled
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <?php if ($isSuperAdmin): ?>
+                <div class=""section"">
+                    <h2>🚀 Future Server Spawning (SuperAdmin)</h2>
+                    <div class=""info-box"">
+                        <p><strong>Coming Soon:</strong> Spawn and manage additional subscription-based RaCore instances from this Control Panel.</p>
+                        <ul>
+                            <li>✅ Secure license key generation</li>
+                            <li>✅ Multi-tenant architecture support</li>
+                            <li>✅ Centralized user permission management</li>
+                            <li>⏳ Automated instance deployment</li>
+                            <li>⏳ Remote server monitoring</li>
+                            <li>⏳ Update distribution from mainframe</li>
+                        </ul>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <?php if (!$isAdmin): ?>
+                <div class=""section"">
+                    <h2>ℹ️ Additional Features</h2>
+                    <div class=""info-box"">
+                        <p>You have <strong><?php echo $roleName; ?></strong> access level. Contact your administrator for access to advanced features such as:</p>
+                        <ul>
+                            <li>User Management</li>
+                            <li>License Management (SuperAdmin only)</li>
+                            <li>Audit Log Viewing</li>
+                            <li>Server Spawning (SuperAdmin only)</li>
+                        </ul>
+                    </div>
+                </div>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+    </main>
+
+    <footer>
+        <div class=""container"">
+            <p>&copy; <?php echo date('Y'); ?> RaCore AI Mainframe - Control Panel</p>
+            <p class=""security-notice"">Your access level: <?php echo $roleName; ?></p>
+        </div>
+    </footer>
+</body>
+</html>
+";
+
+        File.WriteAllText(Path.Combine(controlPath, "index.php"), indexContent);
+        LogInfo("Generated control panel index.php in control directory");
+    }
+
+    private void GenerateControlPanelStylesFileAt(string controlPath)
+    {
+        var stylesContent = @"/* RaCore Control Panel Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+header {
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    padding: 20px 0;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    color: white;
+}
+
+header h1 {
+    margin-bottom: 10px;
+}
+
+nav {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+nav a {
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+}
+
+nav a:hover {
+    color: white;
+}
+
+nav span {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+main {
+    background: white;
+    margin: 40px auto;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+}
+
+.login-form {
+    max-width: 450px;
+    margin: 50px auto;
+    padding: 40px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.1);
+}
+
+.login-form h2 {
+    color: #1e3c72;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.info {
+    text-align: center;
+    color: #666;
+    margin-bottom: 20px;
+    font-size: 0.9em;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #333;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+button {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    transition: transform 0.2s;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.logout-btn {
+    background: #dc3545;
+    padding: 8px 15px;
+    font-size: 14px;
+}
+
+.error {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    border-left: 4px solid #dc3545;
+}
+
+.success {
+    background: #d4edda;
+    color: #155724;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    border-left: 4px solid #28a745;
+}
+
+.hint {
+    color: #666;
+    font-size: 0.9em;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.dashboard {
+    padding: 20px 0;
+}
+
+.section {
+    margin-bottom: 40px;
+}
+
+.section h2 {
+    color: #1e3c72;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon {
+    font-size: 3em;
+    margin-bottom: 10px;
+}
+
+.stat-value {
+    font-size: 2.5em;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 0.9em;
+    opacity: 0.9;
+}
+
+.info-box {
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 10px;
+    border-left: 4px solid #1e3c72;
+}
+
+.info-box p {
+    margin-bottom: 15px;
+}
+
+.info-box ul {
+    list-style-position: inside;
+    margin-bottom: 15px;
+}
+
+.info-box li {
+    margin-bottom: 8px;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.data-table th {
+    background: #1e3c72;
+    color: white;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+}
+
+.data-table td {
+    padding: 12px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.data-table tr:last-child td {
+    border-bottom: none;
+}
+
+.data-table tr:hover {
+    background: #f8f9fa;
+}
+
+.data-table code {
+    background: #e9ecef;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.85em;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 500;
+}
+
+.status-active {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-inactive {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.role-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 500;
+}
+
+.role-superadmin {
+    background: #dc3545;
+    color: white;
+}
+
+.role-admin {
+    background: #ffc107;
+    color: #333;
+}
+
+.role-user {
+    background: #17a2b8;
+    color: white;
+}
+
+.health-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.health-item {
+    padding: 15px;
+    background: white;
+    border-radius: 5px;
+    border-left: 3px solid #1e3c72;
+}
+
+.health-item strong {
+    display: block;
+    margin-bottom: 5px;
+    color: #1e3c72;
+}
+
+footer {
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    padding: 20px 0;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.security-notice {
+    margin-top: 10px;
+    font-size: 0.9em;
+    color: #ffc107;
+}
+";
+
+        File.WriteAllText(Path.Combine(controlPath, "styles.css"), stylesContent);
+        LogInfo("Generated control panel styles.css in control directory");
     }
 
     #endregion
