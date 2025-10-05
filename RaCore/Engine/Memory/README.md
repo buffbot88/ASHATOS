@@ -117,3 +117,8 @@ Console.WriteLine(recall.Text); // "Memory recall: \"user_name\" = \"Aika\"."
 ## Contributors
 
 Please document all new memory types, extension points, and diagnostics in this README.
+
+---
+
+**Last Updated:** 2025-01-05  
+**Version:** 1.0

@@ -55,3 +55,8 @@ Console.WriteLine(result.Text);
 ## Contributors
 
 Document new orchestration patterns, extension points, and diagnostics here.
+
+---
+
+**Last Updated:** 2025-01-05  
+**Version:** 1.0

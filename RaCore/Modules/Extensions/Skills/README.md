@@ -63,3 +63,8 @@ await openSkill.InvokeAsync("{\"target\":\"Calculator.exe\"}");
 ## Contributors
 
 Document new skill types, registry extensions, and diagnostics here.
+
+---
+
+**Last Updated:** 2025-01-05  
+**Version:** 1.0

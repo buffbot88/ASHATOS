@@ -53,3 +53,8 @@ Console.WriteLine(result.Text);
 ## Contributors
 
 Document new feature detection patterns and diagnostics here.
+
+---
+
+**Last Updated:** 2025-01-05  
+**Version:** 1.0

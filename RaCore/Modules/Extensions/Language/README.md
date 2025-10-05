@@ -60,3 +60,8 @@ Console.WriteLine(response.Text);
 ## Contributors
 
 Document new commands, model support, and capabilities here.
+
+---
+
+**Last Updated:** 2025-01-05  
+**Version:** 1.0

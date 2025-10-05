@@ -43,3 +43,8 @@ Subconscious/
 - Extend SubconsciousModels.cs for new agentic features.
 - Add new agent loops or state trackers as needed.
 - Document all new extension points in README.md.
+
+---
+
+**Last Updated:** 2025-01-05  
+**Version:** 1.0

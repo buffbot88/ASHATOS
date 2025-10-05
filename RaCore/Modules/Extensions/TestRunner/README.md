@@ -56,3 +56,8 @@ Console.WriteLine(resultJson.Text);
 ## Contributors
 
 Document new test cases, diagnostics, and integration patterns here.
+
+---
+
+**Last Updated:** 2025-01-05  
+**Version:** 1.0
