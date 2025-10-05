@@ -19,6 +19,7 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
     private readonly Dictionary<string, Session> _sessions = new();
     private readonly List<SecurityEvent> _securityEvents = new();
     private readonly object _lock = new();
+    private ILicenseModule? _licenseModule;
     
     // Security configuration
     private const int SaltSize = 32; // 256 bits
@@ -32,6 +33,13 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
     public override void Initialize(object? manager)
     {
         base.Initialize(manager);
+        
+        // Get reference to license module
+        if (manager is ModuleManager moduleManager)
+        {
+            _licenseModule = moduleManager.GetModuleByName("License") as ILicenseModule;
+        }
+        
         LogInfo("Authentication module initialized with secure password hashing (PBKDF2)");
         
         // Create default admin user if no users exist
@@ -183,6 +191,21 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
                 return new AuthResponse { Success = false, Message = "Invalid username or password" };
             }
 
+            // Check license for non-SuperAdmin users
+            if (user.Role != UserRole.SuperAdmin && _licenseModule != null)
+            {
+                if (!_licenseModule.HasValidLicense(user))
+                {
+                    LogSecurityEvent(SecurityEventType.LicenseValidationFailure, user.Username, user.Id, ipAddress, "No valid license", false);
+                    _ = _licenseModule.LogLicenseEventAsync(user.Id, "Login", "License validation failed", false);
+                    return new AuthResponse 
+                    { 
+                        Success = false, 
+                        Message = "Access denied: Valid license required. Please contact sales to purchase a license." 
+                    };
+                }
+            }
+
             // Create session
             var token = GenerateSecureToken();
             var session = new Session
@@ -201,6 +224,10 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
             user.LastLoginUtc = DateTime.UtcNow;
 
             LogSecurityEvent(SecurityEventType.LoginSuccess, user.Username, user.Id, ipAddress, "Login successful", true);
+            if (_licenseModule != null && user.Role != UserRole.SuperAdmin)
+            {
+                _ = _licenseModule.LogLicenseEventAsync(user.Id, "Login", "License validated successfully", true);
+            }
             LogInfo($"User logged in: {user.Username}");
 
             return new AuthResponse
@@ -278,6 +305,37 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
 
         // Check role hierarchy
         return user.Role >= requiredRole;
+    }
+
+    /// <summary>
+    /// Check if user has both role permission AND valid license.
+    /// SuperAdmin bypasses license check.
+    /// </summary>
+    public bool HasLicensePermission(User user, string moduleName, UserRole requiredRole = UserRole.User)
+    {
+        if (user == null || !user.IsActive)
+            return false;
+
+        // SuperAdmin has access to everything without license check
+        if (user.Role == UserRole.SuperAdmin)
+            return true;
+
+        // Check role permission first
+        if (user.Role < requiredRole)
+            return false;
+
+        // Check license
+        if (_licenseModule != null)
+        {
+            if (!_licenseModule.HasValidLicense(user))
+            {
+                LogSecurityEvent(SecurityEventType.LicenseValidationFailure, user.Username, user.Id, "", 
+                    $"License check failed for module: {moduleName}", false);
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public async Task<List<SecurityEvent>> GetSecurityEventsAsync(int limit = 100)

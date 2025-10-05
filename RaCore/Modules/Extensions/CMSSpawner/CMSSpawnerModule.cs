@@ -1529,6 +1529,17 @@ class Database {
         return $stmt ? $stmt->fetchAll() : [];
     }
 
+    public function getUserLicense($userId) {
+        $stmt = $this->query(
+            'SELECT l.* FROM licenses l 
+             INNER JOIN user_licenses ul ON l.id = ul.license_id 
+             WHERE ul.user_id = ? AND ul.is_active = 1 
+             ORDER BY ul.assigned_at DESC LIMIT 1',
+            [$userId]
+        );
+        return $stmt ? $stmt->fetch() : null;
+    }
+
     public function getServerHealth() {
         $stmt = $this->query('SELECT * FROM server_health ORDER BY timestamp DESC LIMIT 20');
         return $stmt ? $stmt->fetchAll() : [];
@@ -2463,6 +2474,17 @@ class Database {
     public function getLicenses() {
         $stmt = $this->query('SELECT * FROM licenses ORDER BY created_at DESC');
         return $stmt ? $stmt->fetchAll() : [];
+    }
+
+    public function getUserLicense($userId) {
+        $stmt = $this->query(
+            'SELECT l.* FROM licenses l 
+             INNER JOIN user_licenses ul ON l.id = ul.license_id 
+             WHERE ul.user_id = ? AND ul.is_active = 1 
+             ORDER BY ul.assigned_at DESC LIMIT 1',
+            [$userId]
+        );
+        return $stmt ? $stmt->fetch() : null;
     }
 
     public function getServerHealth() {
