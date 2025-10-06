@@ -96,8 +96,13 @@ public sealed class CMSSpawnerModule : ModuleBase
             
             if (_phpPath == null)
             {
+                var baseDirectory = AppContext.BaseDirectory;
+                var localPhpFolder = Path.Combine(baseDirectory, "php");
+                
                 return "PHP runtime not found. Please install PHP 8.0 or higher.\n" +
-                       "Installation guide:\n" +
+                       "Recommended: Place PHP in the local 'php' folder:\n" +
+                       $"  {localPhpFolder}\n" +
+                       "\nAlternative installation:\n" +
                        "  - Linux: sudo apt install php8.2-cli php8.2-sqlite3\n" +
                        "  - macOS: brew install php\n" +
                        "  - Windows: Download from https://windows.php.net/download/";
@@ -115,9 +120,15 @@ public sealed class CMSSpawnerModule : ModuleBase
 
     private string? FindPHPExecutable()
     {
-        // Try common PHP locations
+        // Try local php folder first (same directory as RaCore.exe)
+        var baseDirectory = AppContext.BaseDirectory;
+        var localPhpFolder = Path.Combine(baseDirectory, "php");
+        
+        // Try common PHP locations, prioritizing local folder
         string[] possiblePaths = 
         {
+            Path.Combine(localPhpFolder, "php.exe"),     // Local Windows
+            Path.Combine(localPhpFolder, "php"),         // Local Linux/macOS
             "php",           // In PATH
             "/usr/bin/php",  // Linux
             "/usr/local/bin/php", // Linux/macOS
@@ -129,6 +140,12 @@ public sealed class CMSSpawnerModule : ModuleBase
         {
             try
             {
+                // Check if file exists for absolute paths
+                if (Path.IsPathRooted(path) && !File.Exists(path))
+                {
+                    continue;
+                }
+
                 var startInfo = new ProcessStartInfo
                 {
                     FileName = path,
@@ -197,7 +214,10 @@ public sealed class CMSSpawnerModule : ModuleBase
                 _phpPath = FindPHPExecutable();
                 if (_phpPath == null)
                 {
-                    return "❌ Error: PHP runtime not found. Run 'cms detect php' for installation instructions.";
+                    var localPhpFolder = Path.Combine(AppContext.BaseDirectory, "php");
+                    return $"❌ Error: PHP runtime not found.\n" +
+                           $"Place PHP in: {localPhpFolder}\n" +
+                           $"Or run 'cms detect php' for installation instructions.";
                 }
 
                 var version = GetPHPVersion(_phpPath);
@@ -265,7 +285,10 @@ public sealed class CMSSpawnerModule : ModuleBase
                 _phpPath = FindPHPExecutable();
                 if (_phpPath == null)
                 {
-                    return "❌ Error: PHP runtime not found. Run 'cms detect php' for installation instructions.";
+                    var localPhpFolder = Path.Combine(AppContext.BaseDirectory, "php");
+                    return $"❌ Error: PHP runtime not found.\n" +
+                           $"Place PHP in: {localPhpFolder}\n" +
+                           $"Or run 'cms detect php' for installation instructions.";
                 }
 
                 var version = GetPHPVersion(_phpPath);
@@ -339,7 +362,10 @@ public sealed class CMSSpawnerModule : ModuleBase
                 _phpPath = FindPHPExecutable();
                 if (_phpPath == null)
                 {
-                    return "❌ Error: PHP runtime not found. Run 'cms detect php' for installation instructions.";
+                    var localPhpFolder = Path.Combine(AppContext.BaseDirectory, "php");
+                    return $"❌ Error: PHP runtime not found.\n" +
+                           $"Place PHP in: {localPhpFolder}\n" +
+                           $"Or run 'cms detect php' for installation instructions.";
                 }
 
                 var version = GetPHPVersion(_phpPath);
