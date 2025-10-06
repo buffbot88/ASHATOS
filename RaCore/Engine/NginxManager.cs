@@ -840,6 +840,66 @@ server {{
     }
     
     /// <summary>
+    /// Gets the suggested path for generating a php.ini file based on PHP's expected location
+    /// </summary>
+    public static string? GetSuggestedPhpIniPath(string? phpPath = null)
+    {
+        phpPath ??= FindPhpExecutable();
+        
+        if (phpPath == null)
+        {
+            return null;
+        }
+        
+        // Try to get php.ini path from PHP itself
+        try
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = phpPath,
+                Arguments = "--ini",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            
+            using var process = Process.Start(startInfo);
+            if (process != null)
+            {
+                var output = process.StandardOutput.ReadToEnd();
+                process.WaitForExit(3000);
+                
+                var lines = output.Split('\n');
+                
+                // First try to find "Configuration File (php.ini) Path:"
+                foreach (var line in lines)
+                {
+                    if (line.Contains("Configuration File (php.ini) Path:"))
+                    {
+                        var pathPart = line.Substring(line.IndexOf(':') + 1).Trim();
+                        if (!string.IsNullOrEmpty(pathPart) && pathPart != "(none)")
+                        {
+                            // Return the full path to php.ini in that directory
+                            return Path.Combine(pathPart, "php.ini");
+                        }
+                    }
+                }
+                
+                // Fallback: generate in the same directory as php.exe
+                var phpDir = Path.GetDirectoryName(phpPath);
+                if (!string.IsNullOrEmpty(phpDir))
+                {
+                    return Path.Combine(phpDir, "php.ini");
+                }
+            }
+        }
+        catch { }
+        
+        return null;
+    }
+    
+    /// <summary>
     /// Generates a basic PHP configuration file
     /// </summary>
     public static bool GeneratePhpIni(string outputPath)
