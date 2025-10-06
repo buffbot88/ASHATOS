@@ -28,6 +28,25 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
         _adminsFolder = Path.Combine(_baseDirectory, "Admins");
     }
 
+    public override void Initialize(object? manager)
+    {
+        base.Initialize(manager);
+        
+        // Automatically discover and create server folders on initialization
+        var result = DiscoverServerFoldersAsync().GetAwaiter().GetResult();
+        
+        if (result.CreatedFolders.Any())
+        {
+            LogInfo($"Created server folders: {string.Join(", ", result.CreatedFolders)}");
+        }
+        
+        LogInfo("ServerSetup module initialized");
+        LogInfo($"  Databases folder: {_databasesFolder}");
+        LogInfo($"  PHP folder: {_phpFolder}");
+        LogInfo($"  Apache folder: {_apacheFolder}");
+        LogInfo($"  Admins folder: {_adminsFolder}");
+    }
+
     public override string Process(string input)
     {
         var result = ProcessAsync(input).GetAwaiter().GetResult();
