@@ -68,31 +68,11 @@ moduleManager.RegisterBuiltInModule(memoryModule);
 moduleManager.LoadModules();
 
 // 4. Run boot sequence with self-healing checks and configuration verification
+// Apache reverse proxy is now automatically configured during boot sequence
 var bootSequence = new RaCore.Engine.BootSequenceManager(moduleManager);
 await bootSequence.ExecuteBootSequenceAsync();
 
-// 5. Configure Apache reverse proxy if requested via environment variable
-var configureApacheProxy = Environment.GetEnvironmentVariable("RACORE_CONFIGURE_APACHE_PROXY");
-if (!string.IsNullOrEmpty(configureApacheProxy) && configureApacheProxy.Equals("true", StringComparison.OrdinalIgnoreCase))
-{
-    Console.WriteLine("[RaCore] Configuring Apache reverse proxy...");
-    var apacheManager = new RaCore.Engine.ApacheManager("", 8080);
-    var proxyDomain = Environment.GetEnvironmentVariable("RACORE_PROXY_DOMAIN") ?? "localhost";
-    var proxyPort = int.Parse(port);
-    
-    if (apacheManager.ConfigureReverseProxy(proxyPort, proxyDomain))
-    {
-        Console.WriteLine($"[RaCore] ✅ Apache reverse proxy configured for {proxyDomain} -> localhost:{proxyPort}");
-        Console.WriteLine("[RaCore] Please restart Apache for changes to take effect");
-    }
-    else
-    {
-        Console.WriteLine("[RaCore] ⚠️  Failed to configure Apache reverse proxy");
-    }
-    Console.WriteLine();
-}
-
-// 6. Check for first run and auto-spawn CMS + Apache
+// 5. Check for first run and auto-spawn CMS + Apache
 var firstRunManager = new RaCore.Engine.FirstRunManager(moduleManager);
 if (firstRunManager.IsFirstRun())
 {
@@ -1715,9 +1695,10 @@ Console.WriteLine("To use a different port, set the RACORE_PORT environment vari
 Console.WriteLine("  Example: export RACORE_PORT=8080 (Linux/Mac)");
 Console.WriteLine("  Example: set RACORE_PORT=8080 (Windows)");
 Console.WriteLine();
-Console.WriteLine("To configure Apache reverse proxy on Windows:");
-Console.WriteLine("  set RACORE_CONFIGURE_APACHE_PROXY=true");
-Console.WriteLine("  set RACORE_PROXY_DOMAIN=yourdomain.com (optional)");
+Console.WriteLine("Apache Reverse Proxy Configuration:");
+Console.WriteLine("  ✨ Apache is automatically configured during boot sequence!");
+Console.WriteLine("  To customize domain: set RACORE_PROXY_DOMAIN=yourdomain.com");
+Console.WriteLine("  After configuration, restart Apache to access via http://localhost");
 Console.WriteLine("========================================");
 Console.WriteLine();
 

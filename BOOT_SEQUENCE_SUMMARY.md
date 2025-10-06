@@ -154,7 +154,10 @@ dotnet run
 
 ✅ Apache found: apache2
 ✅ Apache config found: /etc/apache2/apache2.conf
-ℹ️  Reverse proxy modules not enabled (use ConfigureReverseProxy to enable)
+♡ (っ◔◡◔)っ Auto-configuring Apache reverse proxy...
+✅ Apache reverse proxy configured for localhost!
+♡ Access RaCore at: http://localhost (after Apache restart)
+⚠️  Please restart Apache for changes to take effect
 
 [BootSequence] Step 3/3: Verifying PHP configuration...
 
@@ -223,27 +226,31 @@ dotnet run
 # Boot sequence runs automatically
 # Self-healing checks all modules
 # Apache/PHP detection happens
+# Apache reverse proxy auto-configured if not present
 # Server starts normally
 ```
 
-### With Apache Reverse Proxy (Windows)
+### With Custom Domain (Windows)
 ```batch
-set RACORE_CONFIGURE_APACHE_PROXY=true
 set RACORE_PROXY_DOMAIN=agpstudios.online
-dotnet run
+RaOS.exe
 # Automatically configures Apache
 # Enables proxy modules
 # Adds VirtualHost configuration
-# Server accessible on port 80
+# Creates backup of httpd.conf
+# Server accessible on port 80 after Apache restart
 ```
 
 ### Programmatic Configuration
 ```csharp
-// Configure Apache reverse proxy
+// Apache reverse proxy is now automatically configured during boot!
+// No manual configuration needed.
+
+// Optional: Manual configuration still available
 var apacheManager = new ApacheManager("/cms", 8080);
 bool success = apacheManager.ConfigureReverseProxy(5000, "example.com");
 
-// Generate PHP config
+// Generate PHP config (if needed)
 bool phpSuccess = ApacheManager.GeneratePhpIni("C:/php/php.ini");
 ```
 
