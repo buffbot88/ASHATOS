@@ -1,0 +1,280 @@
+# Boot Sequence and Configuration Management
+
+## Overview
+RaCore now includes an advanced boot sequence that performs automatic health checks, configuration verification, and self-healing on every startup.
+
+## Boot Sequence Features
+
+### 1. Self-Healing Health Checks
+On every startup, RaCore:
+- Runs health checks on all loaded modules
+- Identifies healthy, degraded, and unhealthy modules
+- Automatically attempts recovery for degraded/unhealthy modules
+- Reports results to the console
+
+**Example Output:**
+```
+[BootSequence] Step 1/3: Running self-healing health checks...
+✅ Health check complete:
+   Healthy: 34
+   ⚠️  Degraded: 1
+[BootSequence] Attempting auto-recovery...
+   AILanguage: ✅ Recovered
+```
+
+### 2. Apache Configuration Management
+
+#### Detection and Verification
+RaCore automatically detects and verifies Apache installation:
+- Finds Apache executable on Windows, Linux, and macOS
+- Locates httpd.conf configuration file
+- Checks for reverse proxy module availability
+- Reports status on every boot
+
+#### Reverse Proxy Configuration (Windows)
+Configure Apache 2.4 as a reverse proxy for RaCore on Windows:
+
+```csharp
+var apacheManager = new ApacheManager("/path/to/cms", 8080);
+bool success = apacheManager.ConfigureReverseProxy(
+    racorePort: 5000,     // RaCore server port
+    domain: "localhost"   // Domain or hostname
+);
+```
+
+**Features:**
+- Auto-detects Apache installation path on Windows (C:\Apache, E:\Apache, etc.)
+- Finds httpd.conf configuration file automatically
+- Enables mod_proxy and mod_proxy_http modules
+- Adds reverse proxy VirtualHost configuration
+- Supports WebSocket proxying for /ws endpoint
+- Creates automatic backup before modifying config
+- Supports custom domains and ports
+
+**Generated Configuration:**
+```apache
+# RaCore Reverse Proxy Configuration
+<VirtualHost *:80>
+    ServerName localhost
+    
+    ProxyPreserveHost On
+    ProxyPass / http://localhost:5000/
+    ProxyPassReverse / http://localhost:5000/
+    
+    # WebSocket support
+    ProxyPass /ws ws://localhost:5000/ws
+    ProxyPassReverse /ws ws://localhost:5000/ws
+    
+    ErrorLog "logs/racore_proxy_error.log"
+    CustomLog "logs/racore_proxy_access.log" combined
+</VirtualHost>
+```
+
+#### Using the Configuration
+After configuring the reverse proxy, restart Apache:
+- Windows: Open Apache Service Manager and restart
+- Linux: `sudo systemctl restart apache2`
+
+Access RaCore through Apache on port 80 instead of port 5000.
+
+### 3. PHP Configuration Management
+
+#### Detection and Verification
+RaCore automatically detects PHP installation:
+- Searches common installation paths (C:\php, E:\php, /usr/bin/php, etc.)
+- Verifies PHP version (PHP 8+ recommended)
+- Locates php.ini configuration file
+- Reports status on every boot
+
+#### Static Methods Available
+
+**Find PHP Executable:**
+```csharp
+string? phpPath = ApacheManager.FindPhpExecutable();
+if (phpPath != null)
+{
+    Console.WriteLine($"PHP found at: {phpPath}");
+}
+```
+
+**Find php.ini Configuration:**
+```csharp
+string? phpIniPath = ApacheManager.FindPhpIniPath();
+if (phpIniPath != null)
+{
+    Console.WriteLine($"PHP config at: {phpIniPath}");
+}
+```
+
+**Generate php.ini:**
+```csharp
+bool success = ApacheManager.GeneratePhpIni("/path/to/php.ini");
+```
+
+Generated php.ini includes:
+- Recommended PHP settings for RaCore
+- Error logging configuration
+- Upload and post size limits
+- SQLite3 support
+- UTC timezone
+- Security settings
+
+## Boot Sequence Flow
+
+```
+1. Module Loading
+   ↓
+2. Boot Sequence Execution
+   ├─ Self-Healing Health Checks
+   │  ├─ Check all modules
+   │  ├─ Identify issues
+   │  └─ Attempt auto-recovery
+   ├─ Apache Configuration Verification
+   │  ├─ Detect Apache
+   │  ├─ Find httpd.conf
+   │  └─ Check proxy modules
+   └─ PHP Configuration Verification
+      ├─ Detect PHP
+      ├─ Get version
+      └─ Find php.ini
+   ↓
+3. First Run Check (if needed)
+   ↓
+4. Server Startup
+```
+
+## Configuration API
+
+### Environment Variables
+
+**Configure Apache Reverse Proxy on Startup:**
+Set these environment variables before starting RaCore:
+- `RACORE_CONFIGURE_APACHE_PROXY=true` - Enable automatic Apache reverse proxy configuration
+- `RACORE_PROXY_DOMAIN=yourdomain.com` - Optional: Set custom domain (default: localhost)
+- `RACORE_PORT=5000` - RaCore server port (default: 5000)
+
+**Example (Windows):**
+```batch
+set RACORE_CONFIGURE_APACHE_PROXY=true
+set RACORE_PROXY_DOMAIN=example.com
+set RACORE_PORT=5000
+dotnet run
+```
+
+**Example (Linux/macOS):**
+```bash
+export RACORE_CONFIGURE_APACHE_PROXY=true
+export RACORE_PROXY_DOMAIN=example.com
+export RACORE_PORT=5000
+dotnet run
+```
+
+### Apache Configuration
+```csharp
+// Find Apache
+string? apachePath = ApacheManager.FindApacheExecutable();
+string? configPath = ApacheManager.FindApacheConfigPath();
+
+// Configure reverse proxy
+var manager = new ApacheManager("/cms/path", 8080);
+bool success = manager.ConfigureReverseProxy(5000, "example.com");
+```
+
+### PHP Configuration
+```csharp
+// Find PHP
+string? phpPath = ApacheManager.FindPhpExecutable();
+string? phpIni = ApacheManager.FindPhpIniPath(phpPath);
+
+// Generate php.ini
+bool success = ApacheManager.GeneratePhpIni("/output/php.ini");
+```
+
+## Supported Platforms
+
+### Apache Detection
+- **Windows:** C:\Apache, D:\Apache, E:\Apache, C:\Apache24, XAMPP
+- **Linux:** /etc/apache2, /etc/httpd, /opt/apache2
+- **macOS:** /usr/local/apache2
+
+### PHP Detection
+- **Windows:** C:\php, D:\php, E:\php, C:\xampp\php
+- **Linux:** /usr/bin/php, /usr/local/bin/php
+- **macOS:** /usr/local/bin/php
+
+## Troubleshooting
+
+### Apache Not Found
+If Apache is installed but not detected, check:
+1. Apache is in one of the standard locations
+2. httpd.exe (Windows) or httpd (Linux) is executable
+3. Apache version is 2.4+
+
+### PHP Not Found
+If PHP is installed but not detected:
+1. Add PHP to system PATH
+2. Install in a standard location (C:\php, /usr/bin/php)
+3. Verify PHP 8+ is installed
+
+### Reverse Proxy Not Working
+1. Verify Apache modules are loaded (check console output)
+2. Restart Apache after configuration
+3. Check Apache error logs for details
+4. Verify RaCore is running on configured port
+
+## Examples
+
+### Complete Setup Script (Windows)
+```csharp
+// 1. Verify Apache
+var apachePath = ApacheManager.FindApacheExecutable();
+if (apachePath == null)
+{
+    Console.WriteLine("Apache not found. Install Apache 2.4+");
+    return;
+}
+
+// 2. Verify PHP
+var phpPath = ApacheManager.FindPhpExecutable();
+if (phpPath == null)
+{
+    Console.WriteLine("PHP not found. Install PHP 8+");
+    return;
+}
+
+// 3. Configure reverse proxy
+var manager = new ApacheManager("/cms/path", 8080);
+var success = manager.ConfigureReverseProxy(5000, "localhost");
+if (success)
+{
+    Console.WriteLine("Reverse proxy configured!");
+    Console.WriteLine("Restart Apache to apply changes.");
+}
+```
+
+### Check System Health
+```csharp
+var bootSequence = new BootSequenceManager(moduleManager);
+bool success = await bootSequence.ExecuteBootSequenceAsync();
+if (!success)
+{
+    Console.WriteLine("Boot sequence completed with warnings");
+}
+```
+
+## Security Notes
+
+1. **Backup:** Apache configuration is automatically backed up before modification
+2. **Permissions:** Modifying httpd.conf may require administrator privileges
+3. **Testing:** Test configuration with `httpd -t` before restarting Apache
+4. **Monitoring:** Check Apache error logs after configuration changes
+
+## Future Enhancements
+
+Planned features:
+- Auto-configuration on Linux (currently Windows-only)
+- SSL/TLS certificate management
+- Multiple domain/port configurations
+- Advanced proxy rules (load balancing, caching)
+- PHP-FPM configuration
+- Database server detection and configuration
