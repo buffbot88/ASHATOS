@@ -4,8 +4,17 @@ using System.Runtime.InteropServices;
 namespace RaCore.Engine;
 
 /// <summary>
-/// Manages Apache web server configuration and lifecycle for RaCore CMS
+/// [DEPRECATED] Manages Apache web server configuration and lifecycle for RaCore CMS
+/// 
+/// ⚠️ NOTICE: This class is deprecated as of RaOS 5.0
+/// RaCore has migrated to Nginx. Please use NginxManager instead.
+/// 
+/// This class is kept for reference and backward compatibility only.
+/// For new code, use NginxManager.cs which provides equivalent functionality for Nginx.
+/// 
+/// Migration Guide: See NGINX_MIGRATION_GUIDE.md
 /// </summary>
+[Obsolete("ApacheManager is deprecated. Use NginxManager for Nginx support. See NGINX_MIGRATION_GUIDE.md")]
 public class ApacheManager
 {
     private readonly string _cmsPath;
