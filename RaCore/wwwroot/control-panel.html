@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RaCore Control Panel - Configuration</title>
+    <title>RaCore Control Panel - Modular</title>
     <style>
         * {
             margin: 0;
@@ -15,12 +15,73 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+        }
+
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
             padding: 20px;
+        }
+
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .login-box h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .login-box h3 {
+            color: #666;
+            margin-bottom: 30px;
+            font-weight: normal;
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .login-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .login-box button {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .login-box button:hover {
+            background: #5568d3;
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
+            padding: 20px;
         }
 
         .header {
@@ -50,23 +111,8 @@
             color: white;
             padding: 5px 15px;
             border-radius: 20px;
-            font-size: 14px;
-            font-weight: bold;
-        }
-
-        .logout-btn {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.3s;
-        }
-
-        .logout-btn:hover {
-            background: #c82333;
+            font-size: 12px;
+            font-weight: 600;
         }
 
         .main-content {
@@ -83,17 +129,9 @@
             height: fit-content;
         }
 
-        .sidebar h2 {
-            color: #667eea;
-            font-size: 18px;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #667eea;
-        }
-
         .nav-item {
             padding: 12px 15px;
-            margin: 5px 0;
+            margin-bottom: 8px;
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s;
@@ -110,7 +148,7 @@
             color: white;
         }
 
-        .content-area {
+        .content {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 15px;
             padding: 30px;
@@ -118,822 +156,293 @@
             min-height: 600px;
         }
 
-        .config-section {
-            display: none;
-        }
-
-        .config-section.active {
-            display: block;
-        }
-
-        .config-section h2 {
+        .content h2 {
             color: #667eea;
-            font-size: 24px;
             margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 3px solid #667eea;
+            font-size: 24px;
         }
 
-        .config-group {
-            background: #f8f9fa;
-            border-radius: 10px;
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
             padding: 20px;
-            margin: 20px 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
-        .config-group h3 {
-            color: #333;
-            font-size: 18px;
-            margin-bottom: 15px;
-        }
-
-        .form-group {
-            margin: 15px 0;
-        }
-
-        .form-group label {
-            display: block;
-            color: #555;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
+        .stat-card h3 {
             font-size: 14px;
-            transition: border-color 0.3s;
+            margin-bottom: 10px;
+            opacity: 0.9;
         }
 
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .checkbox-group input[type="checkbox"] {
-            width: auto;
-            cursor: pointer;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-right: 10px;
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
         }
 
         .btn-primary {
             background: #667eea;
             color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+            margin-right: 10px;
         }
 
         .btn-primary:hover {
             background: #5568d3;
         }
 
-        .btn-success {
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-small {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.3s;
+        }
+
+        .btn-small:hover {
+            background: #5568d3;
+        }
+
+        .quick-actions {
+            margin-top: 30px;
+        }
+
+        .quick-actions h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+        }
+
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .form-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .form-card h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .form-card input,
+        .form-card select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-card input:focus,
+        .form-card select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .error-message {
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        .alert-success {
             background: #28a745;
             color: white;
         }
 
-        .btn-success:hover {
-            background: #218838;
-        }
-
-        .btn-danger {
+        .alert-error {
             background: #dc3545;
             color: white;
         }
 
-        .btn-danger:hover {
-            background: #c82333;
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
 
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 18px;
         }
 
-        .table th,
-        .table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
         }
 
-        .table th {
-            background: #667eea;
-            color: white;
+        .section-actions {
+            margin-bottom: 20px;
+        }
+
+        .license-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .license-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .license-card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .license-card p {
+            margin-bottom: 8px;
+            color: #666;
+        }
+
+        .status-active {
+            color: #28a745;
             font-weight: 600;
         }
 
-        .table tr:hover {
+        .status-inactive {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .config-section {
             background: #f8f9fa;
-        }
-
-        .alert {
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin: 15px 0;
-        }
-
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .alert-info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
-
-        .alert-warning {
-            background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
-        }
-
-        .role-permissions {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
-            margin: 15px 0;
-        }
-
-        .permission-item {
-            background: white;
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #ddd;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin: 20px 0;
-        }
-
-        .stat-card {
-            background: white;
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            text-align: center;
+            margin-top: 20px;
         }
 
-        .stat-card .number {
-            font-size: 32px;
-            font-weight: bold;
-            color: #667eea;
-        }
-
-        .stat-card .label {
-            color: #666;
-            margin-top: 5px;
+        .config-section h3 {
+            margin-bottom: 15px;
+            color: #333;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🎛️ RaCore Control Panel</h1>
-            <div class="user-info">
-                <span id="username">Loading...</span>
-                <span class="role-badge" id="userRole">Loading...</span>
-                <button class="logout-btn" onclick="logout()">Logout</button>
-            </div>
-        </div>
-
-        <div class="main-content">
+        <div class="main-content" style="display: none;">
             <div class="sidebar">
-                <h2>Navigation</h2>
-                <div class="nav-item active" onclick="showSection('dashboard')">📊 Dashboard</div>
-                <div class="nav-item" onclick="showSection('users')">👥 User Management</div>
-                <div class="nav-item" onclick="showSection('roles')">🔐 Role Management</div>
-                <div class="nav-item" onclick="showSection('licenses')">📜 License Management</div>
-                <div class="nav-item" onclick="showSection('racoin')">💰 RaCoin Settings</div>
-                <div class="nav-item" onclick="showSection('game')">🎮 Game Server Config</div>
-                <div class="nav-item" onclick="showSection('forum')">💬 Forum Settings</div>
-                <div class="nav-item" onclick="showSection('site')">🌐 Site Builder Config</div>
-                <div class="nav-item" onclick="showSection('system')">⚙️ System Settings</div>
+                <h3 style="margin-bottom: 20px; color: #667eea;">Navigation</h3>
+                <div class="nav-item active" data-section="dashboard">📊 Dashboard</div>
+                <div class="nav-item" data-section="users">👥 User Management</div>
+                <div class="nav-item" data-section="licenses">📜 License Management</div>
+                <div class="nav-item" data-section="racoin">💰 RaCoin Management</div>
+                <div class="nav-item" data-section="game">🎮 Game Server</div>
+                <div class="nav-item" data-section="forum">💬 Forum Moderation</div>
             </div>
-
-            <div class="content-area">
-                <!-- Dashboard Section -->
-                <div id="dashboard" class="config-section active">
-                    <h2>Dashboard</h2>
-                    <div class="alert alert-info">
-                        Welcome to the RaCore Control Panel! Manage all aspects of your system from this centralized interface.
-                    </div>
-
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="number" id="totalUsers">0</div>
-                            <div class="label">Total Users</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="number" id="activeLicenses">0</div>
-                            <div class="label">Active Licenses</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="number" id="totalRaCoins">0</div>
-                            <div class="label">Total RaCoins</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="number" id="activeServers">0</div>
-                            <div class="label">Active Game Servers</div>
-                        </div>
-                    </div>
-
-                    <div class="config-group">
-                        <h3>Quick Actions</h3>
-                        <button class="btn btn-primary" onclick="createNewUser()">➕ Create User</button>
-                        <button class="btn btn-primary" onclick="assignLicense()">📜 Assign License</button>
-                        <button class="btn btn-success" onclick="topUpRaCoins()">💰 Top Up RaCoins</button>
-                    </div>
-                </div>
-
-                <!-- User Management Section -->
-                <div id="users" class="config-section">
-                    <h2>User Management</h2>
-                    
-                    <div class="config-group">
-                        <h3>Create New User</h3>
-                        <div class="form-group">
-                            <label>Username:</label>
-                            <input type="text" id="newUsername" placeholder="Enter username">
-                        </div>
-                        <div class="form-group">
-                            <label>Password:</label>
-                            <input type="password" id="newPassword" placeholder="Enter password">
-                        </div>
-                        <div class="form-group">
-                            <label>Role:</label>
-                            <select id="newUserRole">
-                                <option value="0">User</option>
-                                <option value="1">Admin</option>
-                                <option value="2">SuperAdmin</option>
-                                <option value="3">Game Master</option>
-                                <option value="4">Game Monitor</option>
-                                <option value="5">Forum Moderator</option>
-                            </select>
-                        </div>
-                        <button class="btn btn-primary" onclick="createUser()">Create User</button>
-                    </div>
-
-                    <div class="config-group">
-                        <h3>Existing Users</h3>
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Username</th>
-                                    <th>Role</th>
-                                    <th>Created</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="usersList">
-                                <tr>
-                                    <td colspan="4" style="text-align: center;">Loading users...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Role Management Section -->
-                <div id="roles" class="config-section">
-                    <h2>Role Management</h2>
-                    
-                    <div class="alert alert-info">
-                        Define permissions and capabilities for each role in the system.
-                    </div>
-
-                    <div class="config-group">
-                        <h3>User Role (Level 0)</h3>
-                        <p>Basic access to the system. Can view own data and use basic features.</p>
-                        <div class="role-permissions">
-                            <div class="permission-item">
-                                <input type="checkbox" checked disabled> View Profile
-                            </div>
-                            <div class="permission-item">
-                                <input type="checkbox" checked disabled> Use Basic Features
-                            </div>
-                            <div class="permission-item">
-                                <input type="checkbox" checked disabled> View RaCoin Balance
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="config-group">
-                        <h3>Admin Role (Level 1)</h3>
-                        <p>Manage users and licenses within their scope.</p>
-                        <div class="role-permissions">
-                            <div class="permission-item">
-                                <input type="checkbox" checked disabled> All User Permissions
-                            </div>
-                            <div class="permission-item">
-                                <input type="checkbox" checked> Create Users
-                            </div>
-                            <div class="permission-item">
-                                <input type="checkbox" checked> Assign Licenses
-                            </div>
-                            <div class="permission-item">
-                                <input type="checkbox" checked> Manage RaCoins
-                            </div>
-                            <div class="permission-item">
-                                <input type="checkbox" checked> View Reports
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="config-group">
-                        <h3>SuperAdmin Role (Level 2)</h3>
-                        <p>Full system access. Can manage all aspects including other admins.</p>
-                        <div class="role-permissions">
-                            <div class="permission-item">
-                                <input type="checkbox" checked disabled> All Admin Permissions
-                            </div>
-                            <div class="permission-item">
-                                <input type="checkbox" checked> Create Admins
-                            </div>
-                            <div class="permission-item">
-                                <input type="checkbox" checked> System Configuration
-                            </div>
-                            <div class="permission-item">
-                                <input type="checkbox" checked> Database Management
-                            </div>
-                            <div class="permission-item">
-                                <input type="checkbox" checked> Security Settings
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="config-group">
-                        <h3>Game Master Role (Level 3)</h3>
-                        <p>Manage game servers and game-related content.</p>
-                        <div class="role-permissions">
-                            <div class="permission-item">
-                                <input type="checkbox" checked> Create Game Content
-                            </div>
-                            <div class="permission-item">
-                                <input type="checkbox" checked> Manage NPCs/Quests
-                            </div>
-                            <div class="permission-item">
-                                <input type="checkbox" checked> Modify Game World
-                            </div>
-                            <div class="permission-item">
-                                <input type="checkbox" checked> Manage Players
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="config-group">
-                        <h3>Game Monitor Role (Level 4)</h3>
-                        <p>Monitor game server status and performance (read-only for game servers).</p>
-                        <div class="role-permissions">
-                            <div class="permission-item">
-                                <input type="checkbox" checked> View Game Stats
-                            </div>
-                            <div class="permission-item">
-                                <input type="checkbox" checked> View Server Logs
-                            </div>
-                            <div class="permission-item">
-                                <input type="checkbox" checked> View Player Activity
-                            </div>
-                            <div class="permission-item">
-                                <input type="checkbox" checked> Generate Reports
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="config-group">
-                        <h3>Forum Moderator Role (Level 5)</h3>
-                        <p>Moderate forum content and manage community.</p>
-                        <div class="role-permissions">
-                            <div class="permission-item">
-                                <input type="checkbox" checked> Edit/Delete Posts
-                            </div>
-                            <div class="permission-item">
-                                <input type="checkbox" checked> Ban Users
-                            </div>
-                            <div class="permission-item">
-                                <input type="checkbox" checked> Create Announcements
-                            </div>
-                            <div class="permission-item">
-                                <input type="checkbox" checked> Manage Categories
-                            </div>
-                        </div>
-                    </div>
-
-                    <button class="btn btn-success" onclick="saveRolePermissions()">Save All Permissions</button>
-                </div>
-
-                <!-- License Management Section -->
-                <div id="licenses" class="config-section">
-                    <h2>License Management</h2>
-                    
-                    <div class="config-group">
-                        <h3>Assign New License</h3>
-                        <div class="form-group">
-                            <label>User:</label>
-                            <select id="licenseUser">
-                                <option>Select user...</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>License Type:</label>
-                            <select id="licenseType">
-                                <option value="Standard">Standard</option>
-                                <option value="Professional">Professional</option>
-                                <option value="Enterprise">Enterprise</option>
-                                <option value="ForumScript">Forum Script</option>
-                                <option value="CMSScript">CMS Script</option>
-                                <option value="GameServer">Custom Game Server</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Instance Name:</label>
-                            <input type="text" id="instanceName" placeholder="e.g., MyGameServer">
-                        </div>
-                        <div class="form-group">
-                            <label>Duration (years):</label>
-                            <input type="number" id="licenseDuration" value="1" min="1" max="10">
-                        </div>
-                        <button class="btn btn-primary" onclick="assignNewLicense()">Assign License</button>
-                    </div>
-
-                    <div class="config-group">
-                        <h3>Active Licenses</h3>
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>User</th>
-                                    <th>Type</th>
-                                    <th>Instance</th>
-                                    <th>Expires</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="licensesList">
-                                <tr>
-                                    <td colspan="6" style="text-align: center;">Loading licenses...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- RaCoin Settings Section -->
-                <div id="racoin" class="config-section">
-                    <h2>RaCoin Settings</h2>
-                    
-                    <div class="alert alert-warning">
-                        USD to RaCoin Ratio: 1:1000 (1 USD = 1,000 RaCoins)
-                    </div>
-
-                    <div class="config-group">
-                        <h3>Top Up User RaCoins</h3>
-                        <div class="form-group">
-                            <label>User:</label>
-                            <select id="racoinUser">
-                                <option>Select user...</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Amount (RaCoins):</label>
-                            <input type="number" id="racoinAmount" placeholder="e.g., 10000" min="1">
-                        </div>
-                        <div class="form-group">
-                            <label>Reason:</label>
-                            <input type="text" id="racoinReason" placeholder="e.g., Monthly credit">
-                        </div>
-                        <button class="btn btn-success" onclick="topUpUserRaCoins()">Top Up</button>
-                    </div>
-
-                    <div class="config-group">
-                        <h3>Pricing Configuration</h3>
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Product</th>
-                                    <th>USD Price</th>
-                                    <th>RaCoin Price</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Forum Script License</td>
-                                    <td>$20/year</td>
-                                    <td>20,000 RC</td>
-                                    <td><button class="btn btn-primary" onclick="editPrice('forum')">Edit</button></td>
-                                </tr>
-                                <tr>
-                                    <td>CMS Script License</td>
-                                    <td>$20/year</td>
-                                    <td>20,000 RC</td>
-                                    <td><button class="btn btn-primary" onclick="editPrice('cms')">Edit</button></td>
-                                </tr>
-                                <tr>
-                                    <td>Custom Game Server</td>
-                                    <td>$1000/year</td>
-                                    <td>1,000,000 RC</td>
-                                    <td><button class="btn btn-primary" onclick="editPrice('gameserver')">Edit</button></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Game Server Config Section -->
-                <div id="game" class="config-section">
-                    <h2>Game Server Configuration</h2>
-                    
-                    <div class="config-group">
-                        <h3>Global Game Settings</h3>
-                        <div class="form-group">
-                            <label>Max Players Per Server:</label>
-                            <input type="number" id="maxPlayers" value="1000" min="1">
-                        </div>
-                        <div class="form-group">
-                            <label>Default Difficulty:</label>
-                            <select id="difficulty">
-                                <option value="easy">Easy</option>
-                                <option value="normal" selected>Normal</option>
-                                <option value="hard">Hard</option>
-                                <option value="expert">Expert</option>
-                            </select>
-                        </div>
-                        <div class="form-group checkbox-group">
-                            <input type="checkbox" id="autoSave" checked>
-                            <label for="autoSave">Enable Auto-Save</label>
-                        </div>
-                        <div class="form-group">
-                            <label>Save Interval (seconds):</label>
-                            <input type="number" id="saveInterval" value="300" min="30">
-                        </div>
-                        <button class="btn btn-success" onclick="saveGameSettings()">Save Settings</button>
-                    </div>
-
-                    <div class="config-group">
-                        <h3>Game Master Permissions</h3>
-                        <div class="role-permissions">
-                            <div class="permission-item">
-                                <input type="checkbox" checked> Create Game Content
-                            </div>
-                            <div class="permission-item">
-                                <input type="checkbox" checked> Spawn NPCs
-                            </div>
-                            <div class="permission-item">
-                                <input type="checkbox" checked> Create Quests
-                            </div>
-                            <div class="permission-item">
-                                <input type="checkbox" checked> Modify Terrain
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Forum Settings Section -->
-                <div id="forum" class="config-section">
-                    <h2>Forum Settings</h2>
-                    
-                    <div class="config-group">
-                        <h3>Forum Configuration</h3>
-                        <div class="form-group">
-                            <label>Forum Title:</label>
-                            <input type="text" id="forumTitle" value="RaCore Community Forums" placeholder="Enter forum title">
-                        </div>
-                        <div class="form-group">
-                            <label>Posts Per Page:</label>
-                            <input type="number" id="postsPerPage" value="20" min="5" max="100">
-                        </div>
-                        <div class="form-group checkbox-group">
-                            <input type="checkbox" id="requireRegistration" checked>
-                            <label for="requireRegistration">Require Registration to Post</label>
-                        </div>
-                        <div class="form-group checkbox-group">
-                            <input type="checkbox" id="enableModeration" checked>
-                            <label for="enableModeration">Enable Post Moderation</label>
-                        </div>
-                        <button class="btn btn-success" onclick="saveForumSettings()">Save Settings</button>
-                    </div>
-
-                    <div class="config-group">
-                        <h3>Forum Moderators</h3>
-                        <p>Users with Forum Moderator role can manage forum content.</p>
-                        <div class="form-group">
-                            <label>Assign Moderator:</label>
-                            <select id="newModerator">
-                                <option>Select user...</option>
-                            </select>
-                            <button class="btn btn-primary" onclick="assignModerator()">Assign</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Site Builder Config Section -->
-                <div id="site" class="config-section">
-                    <h2>Site Builder Configuration</h2>
-                    
-                    <div class="config-group">
-                        <h3>PHP Configuration</h3>
-                        <div class="form-group">
-                            <label>PHP Path:</label>
-                            <input type="text" id="phpPath" placeholder="/path/to/php or leave empty for auto-detect">
-                        </div>
-                        <button class="btn btn-primary" onclick="detectPHP()">Detect PHP</button>
-                        <div id="phpStatus" style="margin-top: 10px;"></div>
-                    </div>
-
-                    <div class="config-group">
-                        <h3>Quick Actions</h3>
-                        <button class="btn btn-primary" onclick="generateCMS()">Generate CMS</button>
-                        <button class="btn btn-primary" onclick="generateControlPanel()">Generate Control Panel</button>
-                        <button class="btn btn-success" onclick="generateIntegratedSite()">Generate Integrated Site</button>
-                    </div>
-                </div>
-
-                <!-- System Settings Section -->
-                <div id="system" class="config-section">
-                    <h2>System Settings</h2>
-                    
-                    <div class="config-group">
-                        <h3>General Settings</h3>
-                        <div class="form-group">
-                            <label>System Name:</label>
-                            <input type="text" id="systemName" value="RaCore AI Platform">
-                        </div>
-                        <div class="form-group">
-                            <label>Admin Email:</label>
-                            <input type="email" id="adminEmail" placeholder="admin@example.com">
-                        </div>
-                        <div class="form-group">
-                            <label>Session Timeout (minutes):</label>
-                            <input type="number" id="sessionTimeout" value="60" min="5">
-                        </div>
-                        <button class="btn btn-success" onclick="saveSystemSettings()">Save Settings</button>
-                    </div>
-
-                    <div class="config-group">
-                        <h3>Database Management</h3>
-                        <button class="btn btn-primary" onclick="backupDatabase()">Backup Database</button>
-                        <button class="btn btn-danger" onclick="clearCache()">Clear Cache</button>
-                    </div>
-
-                    <div class="config-group">
-                        <h3>System Information</h3>
-                        <p><strong>Version:</strong> RaCore 1.0</p>
-                        <p><strong>Uptime:</strong> <span id="uptime">Loading...</span></p>
-                        <p><strong>Memory Usage:</strong> <span id="memoryUsage">Loading...</span></p>
-                    </div>
-                </div>
+            <div class="content" id="content">
+                <div class="loading">Loading...</div>
             </div>
         </div>
     </div>
 
+    <!-- Load modular JavaScript files -->
+    <script src="/js/control-panel-api.js"></script>
+    <script src="/js/control-panel-ui.js"></script>
+    
+    <!-- Initialize the control panel -->
     <script>
-        // Load user info
-        async function loadUserInfo() {
-            try {
-                const token = localStorage.getItem('authToken');
-                if (!token) {
-                    window.location.href = 'login.html';
-                    return;
-                }
-
-                // Mock data - in production, this would call the actual API
-                document.getElementById('username').textContent = 'admin';
-                document.getElementById('userRole').textContent = 'SuperAdmin';
-                
-                // Load stats
-                document.getElementById('totalUsers').textContent = '15';
-                document.getElementById('activeLicenses').textContent = '8';
-                document.getElementById('totalRaCoins').textContent = '125,000';
-                document.getElementById('activeServers').textContent = '3';
-            } catch (error) {
-                console.error('Error loading user info:', error);
-            }
-        }
-
-        function showSection(sectionId) {
-            // Hide all sections
-            document.querySelectorAll('.config-section').forEach(section => {
-                section.classList.remove('active');
-            });
-            
-            // Remove active class from all nav items
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            
-            // Show selected section
-            document.getElementById(sectionId).classList.add('active');
-            
-            // Add active class to clicked nav item
-            event.target.classList.add('active');
-        }
-
-        function logout() {
-            localStorage.removeItem('authToken');
-            window.location.href = 'login.html';
-        }
-
-        // Placeholder functions - these would call actual APIs
-        function createUser() {
-            const username = document.getElementById('newUsername').value;
-            const password = document.getElementById('newPassword').value;
-            const role = document.getElementById('newUserRole').value;
-            
-            if (!username || !password) {
-                alert('Please fill in all fields');
-                return;
-            }
-            
-            alert(`User "${username}" created successfully with role ${role}`);
-            document.getElementById('newUsername').value = '';
-            document.getElementById('newPassword').value = '';
-        }
-
-        function assignNewLicense() {
-            alert('License assigned successfully');
-        }
-
-        function topUpUserRaCoins() {
-            alert('RaCoins topped up successfully');
-        }
-
-        function saveRolePermissions() {
-            alert('Role permissions saved successfully');
-        }
-
-        function saveGameSettings() {
-            alert('Game settings saved successfully');
-        }
-
-        function saveForumSettings() {
-            alert('Forum settings saved successfully');
-        }
-
-        function detectPHP() {
-            document.getElementById('phpStatus').innerHTML = '<div class="alert alert-success">PHP detected at: /usr/bin/php<br>Version: PHP 8.2</div>';
-        }
-
-        function generateCMS() {
-            alert('CMS generation started');
-        }
-
-        function generateControlPanel() {
-            alert('Control Panel generation started');
-        }
-
-        function generateIntegratedSite() {
-            alert('Integrated Site generation started');
-        }
-
-        function saveSystemSettings() {
-            alert('System settings saved successfully');
-        }
-
-        function backupDatabase() {
-            alert('Database backup started');
-        }
-
-        function clearCache() {
-            if (confirm('Are you sure you want to clear the cache?')) {
-                alert('Cache cleared successfully');
-            }
-        }
-
-        // Load user info on page load
-        window.addEventListener('load', loadUserInfo);
+        // Initialize API client and UI
+        const api = new ControlPanelAPI();
+        const ui = new ControlPanelUI(api);
+        
+        // Start the application
+        document.addEventListener('DOMContentLoaded', () => {
+            ui.init();
+        });
     </script>
 </body>
 </html>

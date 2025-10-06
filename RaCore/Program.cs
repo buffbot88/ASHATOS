@@ -5,11 +5,32 @@ using SQLitePCL;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.WebHost.UseUrls("http://*:7077");
+
+// Add CORS support for agpstudios.online domain
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost", "http://agpstudios.online", "https://agpstudios.online")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
+
+// Support both localhost and agpstudios.online domain on standard HTTP port
+builder.WebHost.UseUrls("http://*:80", "http://localhost", "http://agpstudios.online");
 
 var app = builder.Build();
+app.UseCors(); // Enable CORS
 app.UseWebSockets();
 app.UseStaticFiles();
+
+// URL redirects for cleaner access
+app.MapGet("/control-panel", async context =>
+{
+    context.Response.Redirect("/control-panel.html");
+});
 
 // 1. Instantiate MemoryModule FIRST
 var memoryModule = new MemoryModule();
