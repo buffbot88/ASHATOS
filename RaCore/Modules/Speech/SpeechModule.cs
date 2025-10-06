@@ -71,10 +71,15 @@ public partial class SpeechModule : ModuleBase, ISpeechModule
     {
         base.Initialize(manager);
         _manager = manager as ModuleManager;
-        _aiLang = _manager?.GetModuleInstanceByName("AILanguage") as IAILanguageModule;
+        if (_manager == null)
+        {
+            LogError("Initialize called with null or invalid manager.");
+            return;
+        }
+        _aiLang = _manager.GetModuleInstanceByName("AILanguage") as IAILanguageModule;
         _thoughtProcessor = new ThoughtProcessor(_manager);
 
-        _memoryInst = _manager?.GetModuleInstanceByName("Memory") as IMemory;
+        _memoryInst = _manager.GetModuleInstanceByName("Memory") as IMemory;
 
         if (_memoryInst == null)
             LogWarn("Memory module not found. Speech will operate in reduced mode (remember/recall limited).");
@@ -311,7 +316,7 @@ public partial class SpeechModule : ModuleBase, ISpeechModule
         catch { }
     }
 
-    public void OnSystemEvent(string name, object? payload)
+    public override void OnSystemEvent(string name, object? payload)
     {
         if (string.Equals(name, "MemoryReady", StringComparison.OrdinalIgnoreCase))
         {

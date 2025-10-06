@@ -58,6 +58,7 @@ public class FirstRunManager
     /// </summary>
     public async Task<bool> InitializeAsync()
     {
+        await Task.CompletedTask;
         Console.WriteLine("========================================");
         Console.WriteLine("   RaCore First-Run Initialization");
         Console.WriteLine("   CMS + Integrated Control Panel");

@@ -32,7 +32,39 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
         base.Initialize(manager);
         _manager = (ModuleManager?)manager;
         _modelPath ??= Path.Combine("llama.cpp", "models", "llama-2-7b-chat.Q4_K_M.gguf");
-        try { _modelPath = Path.GetFullPath(_modelPath!); } catch { /* ignore */ }
+        try 
+        { 
+            _modelPath = Path.GetFullPath(_modelPath!); 
+            LogInfo($"AILanguage module initializing with model path: {_modelPath}");
+        } 
+        catch (Exception ex)
+        { 
+            LogError($"Failed to resolve model path: {ex.Message}");
+        }
+        
+        // Validate configuration
+        if (!File.Exists(_llamaExePath))
+        {
+            LogWarn($"llama.cpp executable not found at: {_llamaExePath}");
+            LogWarn("AILanguage module will not be functional until llama.cpp is configured.");
+            LogInfo("Use 'set-exe <path>' to configure llama.cpp executable path.");
+        }
+        
+        if (!File.Exists(_modelPath ?? ""))
+        {
+            LogWarn($"Model file not found at: {_modelPath}");
+            LogWarn("AILanguage module will not be functional until a model is configured.");
+            LogInfo("Use 'set-model <path>' to configure model path.");
+        }
+        
+        if (File.Exists(_llamaExePath) && File.Exists(_modelPath ?? ""))
+        {
+            LogInfo("AILanguage module initialized successfully and ready.");
+        }
+        else
+        {
+            LogError("AILanguage module initialization incomplete - missing dependencies.");
+        }
     }
 
     public override string Process(string input)
@@ -43,12 +75,16 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
     public async Task<ModuleResponse> ProcessAsync(string input)
     {
         var text = (input ?? "").Trim();
+        LogInfo($"Processing request: {(text.Length > 50 ? text.Substring(0, 50) + "..." : text)}");
 
         if (!File.Exists(_llamaExePath) || !File.Exists(_modelPath ?? ""))
         {
+            var errorMsg = $"(error: llama.cpp executable or model not found)\nExe: {_llamaExePath}\nModel: {_modelPath}";
+            LogError(errorMsg);
+            LogError("Please configure AILanguage module using 'set-exe' and 'set-model' commands.");
             return new ModuleResponse
             {
-                Text = $"(error: llama.cpp executable or model not found)\nExe: {_llamaExePath}\nModel: {_modelPath}",
+                Text = errorMsg,
                 Type = "error",
                 Status = "error",
                 Language = "en",
@@ -95,7 +131,16 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
             if (!string.IsNullOrWhiteSpace(newPath))
             {
                 try { _modelPath = Path.GetFullPath(newPath); } catch { _modelPath = newPath; }
+                LogInfo($"Model path set to: {_modelPath}");
                 Initialize(_manager!);
+                if (Status == "ready")
+                {
+                    LogInfo("Model loaded successfully.");
+                }
+                else
+                {
+                    LogError("Failed to load model - file may not exist or be inaccessible.");
+                }
                 return new ModuleResponse
                 {
                     Text = Status == "ready" ? $"Model set to {_modelPath} and loaded." : "Failed to load model.",
@@ -105,6 +150,7 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
                     Metadata = Capabilities
                 };
             }
+            LogWarn("set-model command called without a valid path.");
             return new ModuleResponse
             {
                 Text = "Usage: set-model <path-to-gguf>",
@@ -120,6 +166,7 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
             if (int.TryParse(arg, out var newSize) && newSize > 0 && newSize <= 8192)
             {
                 _contextSize = newSize;
+                LogInfo($"Context size set to {_contextSize}.");
                 Initialize(_manager!);
                 return new ModuleResponse
                 {
@@ -130,6 +177,7 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
                     Metadata = Capabilities
                 };
             }
+            LogWarn($"Invalid context size: {arg}. Must be between 1 and 8192.");
             return new ModuleResponse
             {
                 Text = "Usage: set-context <integer 1-8192>",
@@ -145,6 +193,7 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
             if (int.TryParse(arg, out var newMax) && newMax > 0 && newMax <= 2048)
             {
                 _maxTokens = newMax;
+                LogInfo($"Max tokens set to {_maxTokens}.");
                 return new ModuleResponse
                 {
                     Text = $"Max tokens set to {_maxTokens}.",
@@ -154,6 +203,7 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
                     Metadata = Capabilities
                 };
             }
+            LogWarn($"Invalid max tokens: {arg}. Must be between 1 and 2048.");
             return new ModuleResponse
             {
                 Text = "Usage: set-tokens <integer 1-2048>",
@@ -169,6 +219,15 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
             if (!string.IsNullOrWhiteSpace(arg) && File.Exists(arg))
             {
                 _llamaExePath = arg;
+                LogInfo($"llama.cpp executable path set to {_llamaExePath}.");
+                if (Status == "ready")
+                {
+                    LogInfo("AILanguage module is now ready.");
+                }
+                else
+                {
+                    LogWarn("AILanguage module still not ready - check model path.");
+                }
                 return new ModuleResponse
                 {
                     Text = $"llama.cpp executable path set to {_llamaExePath}.",
@@ -178,6 +237,7 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
                     Metadata = Capabilities
                 };
             }
+            LogWarn($"Invalid executable path: {arg}. File not found.");
             return new ModuleResponse
             {
                 Text = "Usage: set-exe <path-to-main.exe>",
@@ -191,10 +251,13 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
         string resultText;
         try
         {
+            LogInfo("Running llama.cpp for text generation...");
             resultText = await RunLlamaCppAsync(text);
+            LogInfo($"Text generation completed. Output length: {resultText.Length} characters.");
         }
         catch (Exception ex)
         {
+            LogError($"Text generation failed: {ex.GetType().Name}: {ex.Message}");
             resultText = $"(error: {ex.GetType().Name}: {ex.Message})";
         }
 
@@ -210,11 +273,15 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
 
     public async Task<ModuleResponse> GenerateAsync(string intent, string context, string language = "en", Dictionary<string, object>? metadata = null)
     {
+        LogInfo($"GenerateAsync called with intent: {intent}, language: {language}");
+        
         if (!File.Exists(_llamaExePath) || !File.Exists(_modelPath ?? ""))
         {
+            var errorMsg = $"(error: llama.cpp executable or model not found)\nExe: {_llamaExePath}\nModel: {_modelPath}";
+            LogError(errorMsg);
             return new ModuleResponse
             {
-                Text = $"(error: llama.cpp executable or model not found)\nExe: {_llamaExePath}\nModel: {_modelPath}",
+                Text = errorMsg,
                 Type = "error",
                 Status = "error",
                 Language = language,
@@ -239,10 +306,13 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
         string output;
         try
         {
+            LogInfo($"Generating response for intent: {intent}");
             output = await RunLlamaCppAsync(prompt);
+            LogInfo($"Generation successful. Output length: {output.Length} characters.");
         }
         catch (Exception ex)
         {
+            LogError($"Generation failed: {ex.GetType().Name}: {ex.Message}");
             output = $"(error: {ex.GetType().Name}: {ex.Message})";
         }
 
@@ -258,6 +328,7 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
 
     private async Task<string> RunLlamaCppAsync(string prompt)
     {
+        LogInfo("Starting llama.cpp process...");
         var psi = new ProcessStartInfo
         {
             FileName = _llamaExePath,
@@ -269,15 +340,27 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
         };
 
         using var process = new Process { StartInfo = psi };
-        process.Start();
+        try
+        {
+            process.Start();
+            LogInfo("llama.cpp process started successfully.");
+        }
+        catch (Exception ex)
+        {
+            LogError($"Failed to start llama.cpp process: {ex.Message}");
+            throw;
+        }
 
         string output = await process.StandardOutput.ReadToEndAsync();
         string error = await process.StandardError.ReadToEndAsync();
 
         process.WaitForExit();
+        
+        LogInfo($"llama.cpp process exited with code: {process.ExitCode}");
 
         if (!string.IsNullOrWhiteSpace(error))
         {
+            LogWarn($"llama.cpp stderr output: {error.Substring(0, Math.Min(200, error.Length))}...");
             output += $"\n(error log):\n{error}";
         }
 
@@ -289,6 +372,6 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
         base.Dispose();
     }
 
-    public static void OnSystemEvent(string? name, object? payload = null) { }
+    public override void OnSystemEvent(string name, object? payload = null) { }
 
 }

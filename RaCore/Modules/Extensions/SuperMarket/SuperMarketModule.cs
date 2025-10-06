@@ -258,6 +258,7 @@ public sealed class SuperMarketModule : ModuleBase
 
     private async Task<string> PurchaseProductAsync(Guid userId, Guid productId)
     {
+        await Task.CompletedTask;
         if (_racoinModule == null)
         {
             return JsonSerializer.Serialize(new

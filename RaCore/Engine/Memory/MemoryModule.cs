@@ -78,6 +78,7 @@ VALUES ($id, $key, $value, $createdAt, $metadata);";
 
         public async Task<ModuleResponse> RecallAsync(string key)
         {
+            await Task.CompletedTask;
             using var conn = new SqliteConnection(_connectionString);
             conn.Open();
             using var cmd = conn.CreateCommand();
@@ -115,6 +116,7 @@ LIMIT 1;";
 
         public async Task<ModuleResponse> GetAllItemsAsync()
         {
+            await Task.CompletedTask;
             var items = GetAllItems().ToList();
             string summary = items.Count == 0
                 ? "Memory is empty."

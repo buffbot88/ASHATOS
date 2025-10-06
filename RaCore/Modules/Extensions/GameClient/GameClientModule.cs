@@ -474,6 +474,7 @@ xdg-open http://localhost:{config.ServerPort}/clients/{package.Id}/index.html
 
     public async Task<bool> UpdateClientConfigAsync(Guid packageId, ClientConfiguration config)
     {
+        await Task.CompletedTask;
         lock (_lock)
         {
             if (_clients.TryGetValue(packageId, out var package))
@@ -493,8 +494,9 @@ xdg-open http://localhost:{config.ServerPort}/clients/{package.Id}/index.html
         return dirInfo.GetFiles("*", SearchOption.AllDirectories).Sum(file => file.Length);
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
         // Cleanup if needed
+        base.Dispose();
     }
 }
