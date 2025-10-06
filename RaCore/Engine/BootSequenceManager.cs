@@ -396,6 +396,26 @@ public class BootSequenceManager
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine($"    ♡ Config found: {phpIniPath}");
                 Console.ResetColor();
+                
+                // Auto-configure PHP settings
+                Console.ForegroundColor = ConsoleColor.Magenta;
+                Console.WriteLine("    ♡ (っ◔◡◔)っ Auto-configuring PHP settings...");
+                Console.ResetColor();
+                
+                var phpConfigSuccess = ApacheManager.ConfigurePhpIni(phpIniPath);
+                
+                if (phpConfigSuccess)
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("    ✨ PHP configuration updated successfully!");
+                    Console.ResetColor();
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine("    (´･ω･`) PHP configuration update had issues");
+                    Console.ResetColor();
+                }
             }
             else
             {
