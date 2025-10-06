@@ -49,7 +49,7 @@
 ### Phase 4.2: Enhanced Game Engine ✅ **IN PROGRESS**
 - ✅ **SQLite Persistence Layer** - Scenes and entities persist across server restarts
 - ✅ **WebSocket Real-time Event Broadcasting** - Live updates for all game engine operations
-- 🔜 Advanced entity components (health, inventory, stats)
+- ✅ **Advanced Entity Components** - Health, inventory, stats, and status effects system
 - 🔜 Quest system integration
 - 🔜 Web-based player dashboards
 
