@@ -347,6 +347,7 @@ public class ApacheManager
 # instead of http://localhost:{racorePort}
 <VirtualHost *:80>
     ServerName {domain}
+    ServerAlias agpstudios.online www.agpstudios.online
     
     ProxyPreserveHost On
     ProxyPass / http://localhost:{racorePort}/
@@ -362,6 +363,7 @@ public class ApacheManager
 ";
                 config += proxyConfig;
                 Console.WriteLine($"[ApacheManager] ✅ Added reverse proxy configuration for {domain}:{racorePort}");
+                Console.WriteLine($"[ApacheManager] ✅ ServerAlias configured for: agpstudios.online, www.agpstudios.online");
                 modified = true;
             }
             else
@@ -380,11 +382,32 @@ public class ApacheManager
                 File.WriteAllText(configPath, config);
                 Console.WriteLine($"[ApacheManager] ✅ Apache configuration updated: {configPath}");
                 Console.WriteLine();
-                Console.WriteLine("[ApacheManager] ⚠️  IMPORTANT: Please restart Apache for changes to take effect!");
-                Console.WriteLine("[ApacheManager] Windows: Open Services and restart 'Apache2.4' service");
-                Console.WriteLine("[ApacheManager] Or run: httpd.exe -k restart");
-                Console.WriteLine();
-                Console.WriteLine($"[ApacheManager] After restart, access RaCore at: http://{domain}");
+                
+                // Automatically restart Apache
+                Console.WriteLine("[ApacheManager] 🔄 Attempting to restart Apache automatically...");
+                var (restartSuccess, restartMessage) = RestartApache();
+                
+                if (restartSuccess)
+                {
+                    Console.WriteLine("[ApacheManager] ✅ Apache restarted successfully!");
+                    Console.WriteLine();
+                    Console.WriteLine($"[ApacheManager] 🎉 RaCore is now accessible at:");
+                    Console.WriteLine($"[ApacheManager]   - http://{domain}");
+                    Console.WriteLine($"[ApacheManager]   - http://agpstudios.online");
+                    Console.WriteLine($"[ApacheManager]   - http://www.agpstudios.online");
+                }
+                else
+                {
+                    Console.WriteLine($"[ApacheManager] ⚠️  Automatic restart failed: {restartMessage}");
+                    Console.WriteLine("[ApacheManager] ⚠️  Please restart Apache manually for changes to take effect!");
+                    Console.WriteLine("[ApacheManager] Windows: Open Services and restart 'Apache2.4' service");
+                    Console.WriteLine("[ApacheManager] Or run: httpd.exe -k restart");
+                    Console.WriteLine();
+                    Console.WriteLine($"[ApacheManager] After restart, access RaCore at:");
+                    Console.WriteLine($"[ApacheManager]   - http://{domain}");
+                    Console.WriteLine($"[ApacheManager]   - http://agpstudios.online");
+                    Console.WriteLine($"[ApacheManager]   - http://www.agpstudios.online");
+                }
                 
                 return true;
             }

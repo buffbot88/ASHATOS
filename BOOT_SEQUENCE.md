@@ -32,10 +32,11 @@ On every startup, RaCore:
 - Locates httpd.conf configuration file
 - Checks if RaCore reverse proxy is already configured
 - **Automatically configures reverse proxy** if not present
+- **Automatically includes ServerAlias for agpstudios.online and www.agpstudios.online**
 - Creates backup of httpd.conf before modifications
 - Reports detailed status and instructions
 
-**No environment variables required!** Simply launch RaOS.exe and Apache will be configured automatically.
+**No environment variables required!** Simply launch RaOS.exe and Apache will be configured automatically to accept traffic from localhost, agpstudios.online, and www.agpstudios.online.
 
 #### How It Works
 1. **Apache Detection**: Boot sequence finds Apache executable and config file
@@ -43,9 +44,13 @@ On every startup, RaCore:
 3. **Auto-Configuration**: If not configured:
    - Enables mod_proxy and mod_proxy_http modules
    - Adds VirtualHost configuration for port 80
+   - Adds ServerAlias for agpstudios.online and www.agpstudios.online
    - Creates timestamped backup of httpd.conf
-   - Provides clear instructions for Apache restart
-4. **User Action**: Restart Apache to activate changes
+   - **Automatically restarts Apache** to apply changes
+4. **Immediate Access**: After automatic restart, access RaCore at:
+   - http://localhost
+   - http://agpstudios.online
+   - http://www.agpstudios.online
 
 #### Customization (Optional)
 You can customize the domain using environment variables:
@@ -85,6 +90,7 @@ Apache 2.4 reverse proxy configuration for RaCore:
 # instead of http://localhost:5000
 <VirtualHost *:80>
     ServerName localhost
+    ServerAlias agpstudios.online www.agpstudios.online
     
     ProxyPreserveHost On
     ProxyPass / http://localhost:5000/
@@ -100,23 +106,27 @@ Apache 2.4 reverse proxy configuration for RaCore:
 ```
 
 #### Using the Configuration
-After automatic configuration, restart Apache:
+After automatic configuration, **Apache is restarted automatically by RaOS**. No manual intervention needed!
+
+If automatic restart fails (e.g., due to permissions), manually restart Apache:
 - **Windows**: Open Services, find "Apache2.4", click Restart
   - Or run: `httpd.exe -k restart` in Apache bin directory
 - **Linux**: `sudo systemctl restart apache2`
 - **macOS**: `sudo apachectl restart`
 
-After restart, access RaCore at:
+After restart (automatic or manual), access RaCore at:
 - **Standard URL**: http://localhost (port 80)
-- **Custom domain**: http://yourdomain.com (if configured)
+- **Production domain**: http://agpstudios.online (port 80)
+- **www subdomain**: http://www.agpstudios.online (port 80)
 - **Direct access**: http://localhost:5000 (always works)
 
 #### Troubleshooting
 If automatic configuration fails:
-1. **Permission denied**: Run RaCore as Administrator (Windows)
+1. **Permission denied**: Run RaCore as Administrator (Windows) or with sudo (Linux/macOS)
 2. **Apache not found**: Install Apache 2.4+ and ensure it's in PATH
 3. **Config file not found**: Check Apache installation directory
 4. **Manual configuration**: See error message for manual config steps
+5. **Restart failed**: Manually restart Apache using commands above
 
 ### 3. PHP Configuration Management
 

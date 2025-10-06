@@ -271,10 +271,10 @@ public class BootSequenceManager
                     {
                         Console.ForegroundColor = ConsoleColor.Green;
                         Console.WriteLine($"    ✨ Apache reverse proxy configured for {domain}!");
-                        Console.WriteLine($"    ♡ Access RaCore at: http://{domain} (after Apache restart)");
-                        Console.ResetColor();
-                        Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.WriteLine("    ⚠️  Please restart Apache for changes to take effect");
+                        Console.WriteLine($"    ♡ Access RaCore at:");
+                        Console.WriteLine($"       - http://{domain}");
+                        Console.WriteLine($"       - http://agpstudios.online");
+                        Console.WriteLine($"       - http://www.agpstudios.online");
                         Console.ResetColor();
                         
                         // Store detected port for RaCore to use
