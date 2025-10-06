@@ -2,6 +2,7 @@ using Abstractions;
 using RaCore.Engine.Manager;
 using RaCore.Engine.Memory;
 using RaCore.Modules.Core.SelfHealing;
+using RaCore.Modules.Core.LanguageModelProcessor;
 
 namespace RaCore.Engine;
 
@@ -96,7 +97,7 @@ public class BootSequenceManager
         Console.ResetColor();
         Console.WriteLine();
         Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine("    ✧･ﾟ: *✧･ﾟ:* Welcome to Ra OS v.4.9 *:･ﾟ✧*:･ﾟ✧");
+        Console.WriteLine("    ✧･ﾟ: *✧･ﾟ:* Welcome to Ra OS v5.0 *:･ﾟ✧*:･ﾟ✧");
         Console.ResetColor();
         Console.WriteLine();
         Console.ForegroundColor = ConsoleColor.Magenta;
@@ -108,6 +109,9 @@ public class BootSequenceManager
         
         // Step 1: Run self-healing checks
         success &= await RunSelfHealingChecksAsync();
+        
+        // Step 1.5: Process .gguf language models
+        success &= await ProcessLanguageModelsAsync();
         
         // Step 2: Verify Nginx configuration
         success &= VerifyWebServerConfiguration();
@@ -134,7 +138,7 @@ public class BootSequenceManager
     {
         Console.ForegroundColor = ConsoleColor.Cyan;
         Console.WriteLine("    ╭─────────────────────────────────────╮");
-        Console.WriteLine("    │  ଘ(੭ˊᵕˋ)੭ Step 1/3: Health Check!  │");
+        Console.WriteLine("    │  ଘ(੭ˊᵕˋ)੭ Step 1/4: Health Check!  │");
         Console.WriteLine("    ╰─────────────────────────────────────╯");
         Console.ResetColor();
         Console.WriteLine();
@@ -258,11 +262,81 @@ public class BootSequenceManager
         }
     }
     
+    private async Task<bool> ProcessLanguageModelsAsync()
+    {
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("    ╭─────────────────────────────────────────╮");
+        Console.WriteLine("    │  ଘ(੭ˊᵕˋ)੭ Step 1.5: .gguf Processing! │");
+        Console.WriteLine("    ╰─────────────────────────────────────────╯");
+        Console.ResetColor();
+        Console.WriteLine();
+        
+        try
+        {
+            // Find LanguageModelProcessorModule
+            var lmProcessorModule = _moduleManager.Modules
+                .Select(m => m.Instance)
+                .OfType<LanguageModelProcessorModule>()
+                .FirstOrDefault();
+            
+            if (lmProcessorModule == null)
+            {
+                Console.WriteLine("    (｡•́︿•̀｡) LanguageModelProcessor not found - skipping...");
+                Console.WriteLine();
+                return true; // Not a fatal error
+            }
+            
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            Console.WriteLine("    ♡ (っ◔◡◔)っ Processing language models...");
+            Console.ResetColor();
+            
+            // Process all .gguf models
+            var result = await lmProcessorModule.ProcessModelsAsync();
+            
+            if (result)
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("    ✨ Language model processing complete! ✨");
+                Console.ResetColor();
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("    (´･ω･`) Model processing had issues but continuing...");
+                Console.ResetColor();
+            }
+            
+            // Get status summary
+            var status = lmProcessorModule.Process("status");
+            var statusLines = status.Split('\n');
+            
+            // Display summary
+            foreach (var line in statusLines.Take(4)) // Show first 4 lines (header + counts)
+            {
+                if (!string.IsNullOrWhiteSpace(line))
+                {
+                    Console.WriteLine($"       {line.Trim()}");
+                }
+            }
+            
+            Console.WriteLine();
+            return true; // Always continue boot
+        }
+        catch (Exception ex)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"    (╥﹏╥) Oopsie! Error processing models: {ex.Message}");
+            Console.ResetColor();
+            Console.WriteLine();
+            return true; // Don't fail boot on model processing errors
+        }
+    }
+    
     private bool VerifyWebServerConfiguration()
     {
         Console.ForegroundColor = ConsoleColor.Cyan;
         Console.WriteLine("    ╭─────────────────────────────────────╮");
-        Console.WriteLine("    │  ଘ(੭*ˊᵕˋ)੭* Step 2/3: Nginx Check!  │");
+        Console.WriteLine("    │  ଘ(੭*ˊᵕˋ)੭* Step 2/4: Nginx Check!  │");
         Console.WriteLine("    ╰─────────────────────────────────────╯");
         Console.ResetColor();
         Console.WriteLine();
@@ -404,7 +478,7 @@ public class BootSequenceManager
     {
         Console.ForegroundColor = ConsoleColor.Cyan;
         Console.WriteLine("    ╭─────────────────────────────────────╮");
-        Console.WriteLine("    │  ଘ(੭ˊ꒳ˋ)੭✧ Step 3/3: PHP Check!   │");
+        Console.WriteLine("    │  ଘ(੭ˊ꒳ˋ)੭✧ Step 3/4: PHP Check!   │");
         Console.WriteLine("    ╰─────────────────────────────────────╯");
         Console.ResetColor();
         Console.WriteLine();
