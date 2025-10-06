@@ -772,7 +772,7 @@ This document describes the available modules in the RaCore Control Panel.
 - Balance management
 
 ### Server Setup
-- Apache configuration
+- Nginx configuration
 - PHP configuration
 - Database management
 

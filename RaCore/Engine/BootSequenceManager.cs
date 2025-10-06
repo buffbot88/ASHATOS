@@ -343,37 +343,40 @@ public class BootSequenceManager
                 }
                 else
                 {
-                    // RaCore proxy is already configured - detect port from Apache
+                    // RaCore proxy is already configured - detect port from Nginx
                     Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine("    ♡ (◕‿◕✿) RaCore reverse proxy already configured!");
+                    Console.WriteLine("    ✨ RaCore reverse proxy already configured!");
                     Console.ResetColor();
                     
-                    // Detect configured port in Apache - this is the source of truth
-                    var configuredPort = ApacheManager.GetConfiguredRaCorePort();
+                    // Detect configured port in Nginx - this is the source of truth
+                    var configuredPort = NginxManager.GetConfiguredRaCorePort();
+                    
                     if (configuredPort.HasValue)
                     {
                         Console.ForegroundColor = ConsoleColor.Cyan;
-                        Console.WriteLine($"    📋 Apache is configured to proxy to port {configuredPort.Value}");
-                        Console.WriteLine($"    ♡ RaCore will use port {configuredPort.Value} from Apache configuration");
+                        Console.WriteLine($"    📋 Nginx is configured to proxy to port {configuredPort.Value}");
+                        Console.WriteLine($"    ♡ RaCore will use port {configuredPort.Value} from Nginx configuration");
                         Console.ResetColor();
                         
-                        // Store detected port for RaCore to use
+                        // Store the detected port from Nginx as the source of truth
                         Environment.SetEnvironmentVariable("RACORE_DETECTED_PORT", configuredPort.Value.ToString());
                         
                         // Persist configuration to Ra_Memory database
-                        StoreConfig("apache.port", configuredPort.Value.ToString());
-                        StoreConfig("apache.configured", "true");
+                        StoreConfig("nginx.port", configuredPort.Value.ToString());
+                        StoreConfig("nginx.configured", "true");
                     }
                     else
                     {
+                        // If we can't detect port from Nginx, fall back to default 5000
                         Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.WriteLine("    (´･ω･`) Could not detect port from Apache config");
-                        Console.WriteLine("    Using default port 5000");
+                        Console.WriteLine("    (´･ω･`) Could not detect port from Nginx config");
+                        Console.WriteLine("    🔧 Using default port 5000");
                         Console.ResetColor();
+                        
                         Environment.SetEnvironmentVariable("RACORE_DETECTED_PORT", "5000");
                         
                         // Store default configuration to Ra_Memory database
-                        StoreConfig("apache.port", "5000");
+                        StoreConfig("nginx.port", "5000");
                     }
                 }
             }

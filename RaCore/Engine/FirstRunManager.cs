@@ -5,7 +5,7 @@ using System.Text.Json;
 namespace RaCore.Engine;
 
 /// <summary>
-/// Manages first-run initialization for RaCore, including CMS spawning and Apache setup
+/// Manages first-run initialization for RaCore, including CMS spawning and Nginx setup
 /// </summary>
 public class FirstRunManager
 {
@@ -104,46 +104,46 @@ public class FirstRunManager
                 return false;
             }
             
-            Console.WriteLine("[FirstRunManager] Step 3/4: Configuring Apache...");
+            Console.WriteLine("[FirstRunManager] Step 3/4: Configuring Nginx...");
             Console.WriteLine();
             
-            // Configure Apache
-            var apacheManager = new ApacheManager(_cmsPath, 8080);
+            // Configure Nginx
+            var nginxManager = new NginxManager(_cmsPath, 8080);
             
-            if (ApacheManager.IsApacheAvailable())
+            if (NginxManager.IsNginxAvailable())
             {
-                // First, configure the CMS-specific Apache config (for Linux)
-                apacheManager.ConfigureApache();
+                // First, create the CMS-specific Nginx config
+                nginxManager.CreateNginxConfig();
                 Console.WriteLine();
-                Console.WriteLine("[FirstRunManager] Apache configuration files created");
-                Console.WriteLine("[FirstRunManager] See instructions above to enable Apache for CMS");
+                Console.WriteLine("[FirstRunManager] Nginx configuration files created");
+                Console.WriteLine("[FirstRunManager] See instructions above to enable Nginx for CMS");
                 
                 // Also configure reverse proxy for RaCore if not already done
-                var configPath = ApacheManager.FindApacheConfigPath();
+                var configPath = NginxManager.FindNginxConfigPath();
                 if (configPath != null)
                 {
                     var config = File.ReadAllText(configPath);
                     if (!config.Contains("# RaCore Reverse Proxy Configuration"))
                     {
                         Console.WriteLine();
-                        Console.WriteLine("[FirstRunManager] Configuring Apache reverse proxy for RaCore...");
+                        Console.WriteLine("[FirstRunManager] Configuring Nginx reverse proxy for RaCore...");
                         
                         var port = Environment.GetEnvironmentVariable("RACORE_PORT") ?? "5000";
                         var domain = Environment.GetEnvironmentVariable("RACORE_PROXY_DOMAIN") ?? "localhost";
                         var racorePort = int.Parse(port);
                         
-                        var proxyManager = new ApacheManager("", 8080);
+                        var proxyManager = new NginxManager("", 8080);
                         if (proxyManager.ConfigureReverseProxy(racorePort, domain))
                         {
-                            Console.WriteLine($"[FirstRunManager] ✅ Apache reverse proxy configured for {domain}");
-                            Console.WriteLine($"[FirstRunManager] After Apache restart, access RaCore at: http://{domain}");
+                            Console.WriteLine($"[FirstRunManager] ✅ Nginx reverse proxy configured for {domain}");
+                            Console.WriteLine($"[FirstRunManager] After Nginx restart, access RaCore at: http://{domain}");
                         }
                     }
                 }
             }
             else
             {
-                Console.WriteLine("[FirstRunManager] Apache not available, will use PHP built-in server");
+                Console.WriteLine("[FirstRunManager] Nginx not available, will use PHP built-in server");
             }
             
             Console.WriteLine();
@@ -154,7 +154,7 @@ public class FirstRunManager
             var phpPath = FindPhpExecutable();
             if (phpPath != null)
             {
-                var started = apacheManager.StartPhpServer(phpPath);
+                var started = nginxManager.StartPhpServer(phpPath);
                 if (started)
                 {
                     Console.WriteLine();
