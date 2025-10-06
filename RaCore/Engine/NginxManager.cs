@@ -877,11 +877,15 @@ server {{
                 {
                     if (line.Contains("Configuration File (php.ini) Path:"))
                     {
-                        var pathPart = line.Substring(line.IndexOf(':') + 1).Trim();
-                        if (!string.IsNullOrEmpty(pathPart) && pathPart != "(none)")
+                        var colonIndex = line.IndexOf("Path:");
+                        if (colonIndex >= 0)
                         {
-                            // Return the full path to php.ini in that directory
-                            return Path.Combine(pathPart, "php.ini");
+                            var pathPart = line.Substring(colonIndex + 5).Trim();
+                            if (!string.IsNullOrEmpty(pathPart) && pathPart != "(none)")
+                            {
+                                // Return the full path to php.ini in that directory
+                                return Path.Combine(pathPart, "php.ini");
+                            }
                         }
                     }
                 }
