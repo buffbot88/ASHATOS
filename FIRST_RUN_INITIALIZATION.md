@@ -28,7 +28,7 @@ When you run RaCore for the first time:
 
 ✅ RaCore CMS is now running!
    Homepage: http://localhost:8080
-   Control Panel: http://localhost:8080/control (or http://localhost:5000/control-panel.html)
+   Control Panel: http://localhost:8080/control (or http://localhost:80/control-panel.html)
    Default login: admin / admin123
 
 🎛️  ROLE-BASED ACCESS:
@@ -51,7 +51,7 @@ The CMS homepage includes navigation to:
 - **Social** - MySpace-style user profiles (coming soon)
 - **Settings** - Control Panel for personal and admin settings
 
-**Default Entry Point**: When you visit `http://localhost:5000/`, you are automatically redirected to the CMS homepage at `http://localhost:8080/`.
+**Default Entry Point**: When you visit `http://localhost:80/`, you are automatically redirected to the CMS homepage at `http://localhost:8080/`.
 
 ## SuperAdmin Control Panel Features
 
@@ -260,9 +260,11 @@ Start RaCore Web Server (port 7077)
 ### Configuration
 
 ### RaCore Server Port Configuration
-**Default:** `5000` (non-privileged port)
+**Default:** `80` (standard HTTP port)
 
-The RaCore server port is configurable via the `RACORE_PORT` environment variable. This allows the application to run without administrator/root privileges.
+The RaCore server port is configurable via the `RACORE_PORT` environment variable. 
+
+**Important:** Port 80 is the standard HTTP port and requires administrator/root privileges on most operating systems. If you don't have these privileges or port 80 is already in use, you can configure a different port using the environment variable.
 
 To change the port:
 
@@ -289,13 +291,13 @@ When the server starts, it displays:
 ========================================
    RaCore Server Starting
 ========================================
-Server URL: http://localhost:5000
-Control Panel: http://localhost:5000/control-panel.html
-WebSocket: ws://localhost:5000/ws
+Server URL: http://localhost:80
+Control Panel: http://localhost:80/control-panel.html
+WebSocket: ws://localhost:80/ws
 ========================================
 ```
 
-**Note:** The default port 80 has been removed to ensure plug-and-play operation without requiring administrator privileges. Port 5000 is used by default as it's non-privileged and commonly available.
+**Note:** Port 80 is used by default for seamless domain access without specifying a port. If you need to run on a non-privileged port (like 5000 or 8080), set the RACORE_PORT environment variable. When using Nginx as a reverse proxy, Nginx listens on port 80 and forwards to RaCore on the configured port.
 
 ### CMS PHP Server Port Configuration
 Default: `8080`
