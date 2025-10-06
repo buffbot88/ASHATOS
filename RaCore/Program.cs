@@ -16,12 +16,29 @@ if (!Directory.Exists(wwwrootPath))
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure port - use environment variable or default to 5000 (non-privileged port)
-var port = Environment.GetEnvironmentVariable("RACORE_PORT") ?? "5000";
-var urls = $"http://*:{port}";
-
 // Explicitly configure WebRootPath to ensure it's found correctly
 builder.WebHost.UseWebRoot(wwwrootPath);
+
+// 1. Instantiate MemoryModule FIRST
+var memoryModule = new MemoryModule();
+memoryModule.Initialize(null); // Pass ModuleManager if needed
+
+// 2. Instantiate ModuleManager and register MemoryModule as built-in
+var moduleManager = new ModuleManager();
+moduleManager.RegisterBuiltInModule(memoryModule);
+
+// 3. Load other modules (plugins, etc.)
+moduleManager.LoadModules();
+
+// 4. Run boot sequence with self-healing checks and configuration verification
+// This will detect the port from Apache configuration (MUST run before building app)
+var bootSequence = new RaCore.Engine.BootSequenceManager(moduleManager);
+await bootSequence.ExecuteBootSequenceAsync();
+
+// 5. Configure port - use detected port from Apache config or fallback to default
+// Apache configuration is the source of truth for port management
+var port = Environment.GetEnvironmentVariable("RACORE_DETECTED_PORT") ?? "5000";
+var urls = $"http://*:{port}";
 
 // Add CORS support for agpstudios.online domain and dynamic port
 var allowedOrigins = new List<string>
@@ -56,22 +73,6 @@ app.MapGet("/control-panel", async context =>
 {
     context.Response.Redirect("/control-panel.html");
 });
-
-// 1. Instantiate MemoryModule FIRST
-var memoryModule = new MemoryModule();
-memoryModule.Initialize(null); // Pass ModuleManager if needed
-
-// 2. Instantiate ModuleManager and register MemoryModule as built-in
-var moduleManager = new ModuleManager();
-moduleManager.RegisterBuiltInModule(memoryModule);
-
-// 3. Load other modules (plugins, etc.)
-moduleManager.LoadModules();
-
-// 4. Run boot sequence with self-healing checks and configuration verification
-// Apache reverse proxy is now automatically configured during boot sequence
-var bootSequence = new RaCore.Engine.BootSequenceManager(moduleManager);
-await bootSequence.ExecuteBootSequenceAsync();
 
 // 5. Check for first run and auto-spawn CMS + Apache
 var firstRunManager = new RaCore.Engine.FirstRunManager(moduleManager);
