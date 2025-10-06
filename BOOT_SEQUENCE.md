@@ -3,6 +3,21 @@
 ## Overview
 RaCore now includes an advanced boot sequence that performs automatic health checks, configuration verification, and self-healing on every startup.
 
+## ⚠️ Important: External Dependencies
+
+**Nginx and PHP are EXTERNAL dependencies** that must be installed and managed separately from RaOS:
+
+- **RaOS CONFIGURES** Nginx/PHP but does NOT start, stop, or restart them
+- **You must manually install** Nginx and PHP on your system
+- **You must manually start/restart** Nginx and PHP after RaOS configures them
+- RaOS will generate configuration files and provide clear instructions
+
+**Why this design?**
+- Allows you to use your preferred versions of Nginx and PHP
+- Prevents conflicts with existing web server installations
+- Gives you full control over web server lifecycle management
+- Enables easy upgrades of Nginx/PHP without RaOS involvement
+
 ## Boot Sequence Features
 
 ### 1. Self-Healing Health Checks
@@ -27,6 +42,8 @@ On every startup, RaCore:
 #### Automatic Configuration on Boot
 **NEW:** RaCore now automatically configures Nginx reverse proxy during boot sequence when Nginx is detected!
 
+**IMPORTANT:** RaCore only CONFIGURES Nginx, it does not START or RESTART it. You must manually start/restart Nginx after RaCore configures it.
+
 On every startup, RaCore:
 - Detects Nginx installation (Windows, Linux, macOS)
 - Locates nginx.conf configuration file
@@ -35,8 +52,13 @@ On every startup, RaCore:
 - **Automatically includes server names for agpstudios.online and www.agpstudios.online**
 - Creates backup of nginx.conf before modifications
 - Reports detailed status and instructions
+- **Provides clear instructions to manually start/restart Nginx**
 
 **No environment variables required!** Simply launch RaOS.exe and Nginx will be configured automatically to accept traffic from localhost, agpstudios.online, and www.agpstudios.online.
+
+**You must then manually start or restart Nginx** for the changes to take effect:
+- Windows: `cd C:\nginx && start nginx` (or `nginx -s reload` if already running)
+- Linux/Mac: `sudo systemctl start nginx` (or `sudo systemctl reload nginx` if already running)
 
 #### How It Works
 1. **Nginx Detection**: Boot sequence finds Nginx executable and config file
@@ -46,8 +68,9 @@ On every startup, RaCore:
    - Adds server names for localhost, agpstudios.online, and www.agpstudios.online
    - Configures WebSocket support
    - Creates timestamped backup of nginx.conf
-   - **Automatically reloads Nginx** to apply changes
-4. **Immediate Access**: After automatic reload, access RaCore at:
+   - **Displays instructions to manually start/restart Nginx**
+4. **Manual Nginx Start**: You must start/restart Nginx manually
+5. **Access**: After starting Nginx, access RaCore at:
    - http://localhost
    - http://agpstudios.online
    - http://www.agpstudios.online
@@ -275,17 +298,65 @@ If Nginx is installed but not detected, check:
 2. nginx.exe (Windows) or nginx (Linux/macOS) is executable
 3. Nginx is in system PATH
 
+### Nginx Not Starting
+**RaCore does NOT start Nginx automatically.** You must manually start Nginx:
+
+**Windows:**
+```batch
+cd C:\nginx
+start nginx
+```
+Or to reload if already running:
+```batch
+nginx -s reload
+```
+
+**Linux:**
+```bash
+sudo systemctl start nginx
+# Or to reload if already running:
+sudo systemctl reload nginx
+```
+
+**macOS:**
+```bash
+brew services start nginx
+# Or to reload if already running:
+nginx -s reload
+```
+
 ### PHP Not Found
 If PHP is installed but not detected:
 1. Add PHP to system PATH
 2. Install in a standard location (C:\php, /usr/bin/php)
 3. Verify PHP 8+ is installed
 
+### PHP Not Starting for CMS
+**RaCore does NOT start PHP automatically.** You must manually start PHP or PHP-FPM:
+
+**Option 1: PHP Built-in Server (for testing):**
+```bash
+cd /path/to/racore_cms
+php -S localhost:8080
+```
+
+**Option 2: PHP-FPM with Nginx (recommended for production):**
+```bash
+# Linux
+sudo systemctl start php-fpm
+sudo systemctl start nginx
+
+# macOS
+brew services start php
+brew services start nginx
+```
+
 ### Reverse Proxy Not Working
 1. Verify Nginx configuration with `nginx -t`
-2. Reload/restart Nginx after configuration
+2. **Manually start or reload Nginx** after RaCore configures it
 3. Check Nginx error logs for details
 4. Verify RaCore is running on configured port
+5. Ensure Nginx and RaCore are not using conflicting ports
 
 ## Examples
 
