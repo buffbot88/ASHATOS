@@ -128,7 +128,7 @@ public class FirstRunManager
                         Console.WriteLine();
                         Console.WriteLine("[FirstRunManager] Configuring Nginx reverse proxy for RaCore...");
                         
-                        var port = Environment.GetEnvironmentVariable("RACORE_PORT") ?? "5000";
+                        var port = Environment.GetEnvironmentVariable("RACORE_PORT") ?? "80";
                         var domain = Environment.GetEnvironmentVariable("RACORE_PROXY_DOMAIN") ?? "localhost";
                         var racorePort = int.Parse(port);
                         

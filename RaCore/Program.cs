@@ -35,9 +35,9 @@ moduleManager.LoadModules();
 var bootSequence = new RaCore.Engine.BootSequenceManager(moduleManager);
 await bootSequence.ExecuteBootSequenceAsync();
 
-// 5. Configure port - use detected port from Apache config or fallback to default
-// Apache configuration is the source of truth for port management
-var port = Environment.GetEnvironmentVariable("RACORE_DETECTED_PORT") ?? "5000";
+// 5. Configure port - use detected port from Nginx config or fallback to default
+// Nginx configuration is the source of truth for port management
+var port = Environment.GetEnvironmentVariable("RACORE_DETECTED_PORT") ?? "80";
 var urls = $"http://*:{port}";
 
 // Add CORS support for agpstudios.online domain and dynamic port
@@ -2584,13 +2584,13 @@ Console.WriteLine("To use a different port, set the RACORE_PORT environment vari
 Console.WriteLine("  Example: export RACORE_PORT=8080 (Linux/Mac)");
 Console.WriteLine("  Example: set RACORE_PORT=8080 (Windows)");
 Console.WriteLine();
-Console.WriteLine("Apache Reverse Proxy Configuration:");
-Console.WriteLine("  ✨ Apache is automatically configured during boot sequence!");
+Console.WriteLine("Nginx Reverse Proxy Configuration:");
+Console.WriteLine("  ✨ Nginx is automatically configured during boot sequence!");
 Console.WriteLine("  To customize domain: set RACORE_PROXY_DOMAIN=yourdomain.com");
-Console.WriteLine("  After configuration, restart Apache to access via http://localhost");
+Console.WriteLine("  After configuration, restart Nginx to access via http://localhost");
 Console.WriteLine();
-Console.WriteLine("Apache Management API:");
-Console.WriteLine("  POST /api/control/system/restart-apache - Restart Apache without restarting RaOS");
+Console.WriteLine("Nginx Management API:");
+Console.WriteLine("  POST /api/control/system/restart-nginx - Restart Nginx without restarting RaOS");
 Console.WriteLine("  (Admin authentication required)");
 Console.WriteLine("========================================");
 Console.WriteLine();

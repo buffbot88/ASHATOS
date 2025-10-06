@@ -260,7 +260,7 @@ public class NginxManager
     /// <summary>
     /// Configures Nginx as a reverse proxy for RaCore
     /// </summary>
-    public bool ConfigureReverseProxy(int racorePort = 5000, string domain = "localhost")
+    public bool ConfigureReverseProxy(int racorePort = 80, string domain = "localhost")
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
