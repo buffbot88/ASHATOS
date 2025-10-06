@@ -318,11 +318,48 @@ rm -rf superadmin_control_panel
 dotnet run
 ```
 
+## Windows Installation Support
+
+RaCore now includes enhanced detection for Apache and PHP installations on Windows with support for multiple drive letters (C:, D:, E:, F:).
+
+### Supported Apache Paths on Windows
+- `C:\Apache\bin\httpd.exe`
+- `C:\Apache24\bin\httpd.exe`
+- `C:\Apache2\bin\httpd.exe`
+- `D:\Apache\bin\httpd.exe`
+- `E:\Apache\bin\httpd.exe`
+- `C:\Program Files\Apache Software Foundation\Apache2.4\bin\httpd.exe`
+- `C:\xampp\apache\bin\httpd.exe`
+
+### Supported PHP Paths on Windows
+- Local `php` folder (same directory as RaCore.exe)
+- `C:\php\php.exe`
+- `D:\php\php.exe`
+- `E:\php\php.exe`
+- `F:\php\php.exe`
+- `C:\php8\php.exe` (and D:, E:, F: variants)
+- `C:\xampp\php\php.exe` (and D:, E:, F: variants)
+- `C:\Program Files\php\php.exe` (and D:, E:, F: variants)
+- System PATH
+
+### Windows Setup Example
+1. Extract Apache to `E:\Apache` (or any supported drive)
+2. Extract PHP 8+ to `E:\php` (or any supported drive)
+3. Run RaCore.exe
+4. FirstRunManager will automatically detect and configure both
+
+### Diagnostic Messages
+When Apache or PHP cannot be found, RaCore now displays helpful diagnostic messages showing:
+- Paths that were checked
+- Recommended installation locations
+- Platform-specific installation instructions
+
 ## Fallback Behavior
 
 ### No PHP Found
 - Skips PHP server startup
-- Displays installation instructions
+- Displays installation instructions with paths that were checked
+- Shows platform-specific installation guidance
 - Continues with RaCore startup
 
 ### Apache Not Available

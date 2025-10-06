@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace RaCore.Modules.Extensions.SiteBuilder;
 
@@ -47,17 +48,36 @@ public class PhpDetector
         var serverRoot = Directory.GetCurrentDirectory();
         var localPhpFolder = Path.Combine(serverRoot, "php");
         
-        // Try common PHP locations, prioritizing local folder
-        string[] possiblePaths = 
+        // Build list of possible paths
+        var possiblePaths = new List<string>
         {
             Path.Combine(localPhpFolder, "php.exe"),     // Local Windows
             Path.Combine(localPhpFolder, "php"),         // Local Linux/macOS
-            "php",           // In PATH
-            "/usr/bin/php",  // Linux
-            "/usr/local/bin/php", // Linux/macOS
-            "C:\\php\\php.exe",   // Windows
-            "C:\\xampp\\php\\php.exe" // XAMPP on Windows
+            "php",                                        // In PATH
+            "/usr/bin/php",                               // Linux
+            "/usr/local/bin/php",                         // Linux/macOS
         };
+        
+        // Add Windows-specific paths with multiple drive letters
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            var driveLetters = new[] { "C", "D", "E", "F" };
+            var phpPaths = new[]
+            {
+                @"\php\php.exe",
+                @"\php8\php.exe",
+                @"\xampp\php\php.exe",
+                @"\Program Files\php\php.exe"
+            };
+            
+            foreach (var drive in driveLetters)
+            {
+                foreach (var phpPath in phpPaths)
+                {
+                    possiblePaths.Add($"{drive}:{phpPath}");
+                }
+            }
+        }
 
         foreach (var path in possiblePaths)
         {
