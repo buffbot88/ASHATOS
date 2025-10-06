@@ -149,6 +149,44 @@ public class BootSequenceManager
                 Console.WriteLine();
             }
             
+            // Run system-wide diagnostics
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("    🔍 Running system-wide diagnostics...");
+            Console.ResetColor();
+            
+            var diagnosticReport = selfHealingModule.Process("diagnose fix");
+            var diagnosticLines = diagnosticReport.Split('\n');
+            
+            // Show only summary and critical info during boot
+            var showLine = false;
+            foreach (var line in diagnosticLines)
+            {
+                if (line.Contains("Summary:") || line.Contains("Repair Summary:"))
+                {
+                    showLine = true;
+                }
+                
+                if (showLine && !string.IsNullOrWhiteSpace(line))
+                {
+                    if (line.Contains("✓") || line.Contains("✗"))
+                    {
+                        Console.ForegroundColor = line.Contains("✓") ? ConsoleColor.Green : ConsoleColor.Red;
+                        Console.WriteLine($"       {line.Trim()}");
+                        Console.ResetColor();
+                    }
+                    else
+                    {
+                        Console.WriteLine($"       {line.Trim()}");
+                    }
+                }
+                
+                if (line.Contains("Repair Summary:"))
+                {
+                    break;
+                }
+            }
+            Console.WriteLine();
+            
             return unhealthy == 0; // Return false only if there are unhealthy modules
         }
         catch (Exception ex)

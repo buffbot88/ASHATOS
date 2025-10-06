@@ -36,6 +36,20 @@ public class RecoveryAction
     public string Description { get; set; } = string.Empty;
     public bool RequiresUserApproval { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public bool WasSuccessful { get; set; }
+    public string? ErrorMessage { get; set; }
+}
+
+/// <summary>
+/// System-wide diagnostic result
+/// </summary>
+public class SystemDiagnosticResult
+{
+    public string DiagnosticName { get; set; } = string.Empty;
+    public bool Passed { get; set; }
+    public List<string> Issues { get; set; } = new();
+    public List<string> Warnings { get; set; } = new();
+    public List<RecoveryAction> SuggestedActions { get; set; } = new();
 }
 
 /// <summary>
