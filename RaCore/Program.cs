@@ -4,6 +4,15 @@ using RaCore.Engine.Memory;
 using SQLitePCL;
 using System.Text.Json;
 
+// Ensure wwwroot directory exists (will be populated by SiteBuilder on first run)
+// Use source directory for development compatibility
+var wwwrootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+if (!Directory.Exists(wwwrootPath))
+{
+    Directory.CreateDirectory(wwwrootPath);
+    Console.WriteLine($"[RaCore] Created wwwroot directory: {wwwrootPath}");
+}
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure port - use environment variable or default to 5000 (non-privileged port)
@@ -11,7 +20,7 @@ var port = Environment.GetEnvironmentVariable("RACORE_PORT") ?? "5000";
 var urls = $"http://*:{port}";
 
 // Explicitly configure WebRootPath to ensure it's found correctly
-builder.WebHost.UseWebRoot(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"));
+builder.WebHost.UseWebRoot(wwwrootPath);
 
 // Add CORS support for agpstudios.online domain and dynamic port
 var allowedOrigins = new List<string>

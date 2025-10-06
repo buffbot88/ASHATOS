@@ -23,12 +23,31 @@ public sealed class SiteBuilderModule : ModuleBase
     private ForumGenerator? _forumGenerator;
     private ProfileGenerator? _profileGenerator;
     private IntegratedSiteGenerator? _integratedSiteGenerator;
+    private WwwrootGenerator? _wwwrootGenerator;
 
     public override void Initialize(object? manager)
     {
         base.Initialize(manager);
         _manager = manager as ModuleManager;
         _cmsRootPath = Path.Combine(AppContext.BaseDirectory, "racore_cms");
+        
+        // For wwwroot, use the project source directory to work with ASP.NET's static files
+        // When running from bin/Debug, we need to go up to the source directory
+        var baseDir = AppContext.BaseDirectory;
+        var sourceDir = baseDir;
+        
+        // Navigate up from bin/Debug/net9.0 to project root if we're in a build output directory
+        if (baseDir.Contains(Path.Combine("bin", "Debug")) || baseDir.Contains(Path.Combine("bin", "Release")))
+        {
+            var parts = baseDir.Split(Path.DirectorySeparatorChar);
+            var binIndex = Array.FindIndex(parts, p => p == "bin");
+            if (binIndex > 0)
+            {
+                sourceDir = string.Join(Path.DirectorySeparatorChar.ToString(), parts.Take(binIndex));
+            }
+        }
+        
+        var wwwrootPath = Path.Combine(sourceDir, "wwwroot");
         
         // Initialize components
         _phpDetector = new PhpDetector(this);
@@ -38,6 +57,7 @@ public sealed class SiteBuilderModule : ModuleBase
         _profileGenerator = new ProfileGenerator(this, _cmsRootPath);
         _integratedSiteGenerator = new IntegratedSiteGenerator(
             this, _cmsRootPath, _cmsGenerator, _controlPanelGenerator, _forumGenerator, _profileGenerator);
+        _wwwrootGenerator = new WwwrootGenerator(this, wwwrootPath);
         
         LogInfo("SiteBuilder module initialized");
     }
@@ -154,6 +174,22 @@ public sealed class SiteBuilderModule : ModuleBase
             }
 
             return _integratedSiteGenerator.GenerateIntegratedSite(phpPath);
+        }
+    }
+
+    /// <summary>
+    /// Generates wwwroot directory with control panel files
+    /// </summary>
+    public string GenerateWwwroot()
+    {
+        lock (_lock)
+        {
+            if (_wwwrootGenerator == null)
+            {
+                return "Error: Wwwroot generator not initialized";
+            }
+
+            return _wwwrootGenerator.GenerateWwwroot();
         }
     }
 
