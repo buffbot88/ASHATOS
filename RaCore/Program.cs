@@ -806,6 +806,49 @@ app.MapGet("/api/control/stats", async (HttpContext context) =>
     }
 });
 
+// Control Panel: Get Available Modules (Admin+)
+app.MapGet("/api/control/modules", async (HttpContext context) =>
+{
+    try
+    {
+        if (authModule == null)
+        {
+            context.Response.StatusCode = 503;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Authentication not available" });
+            return;
+        }
+
+        var authHeader = context.Request.Headers["Authorization"].ToString();
+        var token = authHeader.StartsWith("Bearer ") ? authHeader[7..] : authHeader;
+        var user = await authModule.GetUserByTokenAsync(token);
+
+        if (user == null || user.Role < UserRole.Admin)
+        {
+            context.Response.StatusCode = 403;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Insufficient permissions" });
+            return;
+        }
+
+        // Get available modules from moduleManager
+        var modules = moduleManager.Modules
+            .Where(m => m.Instance != null)
+            .Select(m => new
+            {
+                name = m.Instance!.Name,
+                description = $"{m.Instance.Name} module",
+                category = m.Category
+            })
+            .ToList();
+
+        await context.Response.WriteAsJsonAsync(new { success = true, modules });
+    }
+    catch (Exception ex)
+    {
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+    }
+});
+
 // Control Panel: Get All Users (Admin+)
 app.MapGet("/api/control/users", async (HttpContext context) =>
 {
