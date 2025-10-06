@@ -112,6 +112,7 @@ public class LlamaCppDetector
 
         _module.LogInfoPublic($"Checking {possiblePaths.Count} possible llama.cpp locations...");
 
+        int checkedCount = 0;
         // Try each path
         foreach (var path in possiblePaths)
         {
@@ -123,7 +124,7 @@ public class LlamaCppDetector
                     continue;
                 }
 
-                _module.LogInfoPublic($"Testing: {path}");
+                checkedCount++;
 
                 var startInfo = new ProcessStartInfo
                 {
@@ -158,6 +159,7 @@ public class LlamaCppDetector
             }
         }
 
+        _module.LogInfoPublic($"Checked {checkedCount} accessible locations without finding a valid executable.");
         _module.LogWarnPublic("llama.cpp executable not found in any common location.");
         _module.LogInfoPublic("Searched locations include:");
         _module.LogInfoPublic("  - Local: ./llama.cpp/");
