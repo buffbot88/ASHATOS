@@ -6,20 +6,35 @@ using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add CORS support for agpstudios.online domain
+// Configure port - use environment variable or default to 5000 (non-privileged port)
+var port = Environment.GetEnvironmentVariable("RACORE_PORT") ?? "5000";
+var urls = $"http://*:{port}";
+
+// Explicitly configure WebRootPath to ensure it's found correctly
+builder.WebHost.UseWebRoot(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"));
+
+// Add CORS support for agpstudios.online domain and dynamic port
+var allowedOrigins = new List<string>
+{
+    $"http://localhost:{port}",
+    "http://localhost",
+    "http://agpstudios.online",
+    "https://agpstudios.online"
+};
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost", "http://agpstudios.online", "https://agpstudios.online")
+        policy.WithOrigins(allowedOrigins.ToArray())
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
     });
 });
 
-// Support both localhost and agpstudios.online domain on standard HTTP port
-builder.WebHost.UseUrls("http://*:80", "http://localhost", "http://agpstudios.online");
+// Configure URLs with dynamic port
+builder.WebHost.UseUrls(urls);
 
 var app = builder.Build();
 app.UseCors(); // Enable CORS
@@ -1386,6 +1401,21 @@ app.MapGet("/api/control/audit/logs", async (HttpContext context) =>
     var events = await authModule!.GetSecurityEventsAsync(limit: 100);
     return Results.Json(new { logs = events });
 });
+
+// Display startup information
+Console.WriteLine();
+Console.WriteLine("========================================");
+Console.WriteLine("   RaCore Server Starting");
+Console.WriteLine("========================================");
+Console.WriteLine($"Server URL: http://localhost:{port}");
+Console.WriteLine($"Control Panel: http://localhost:{port}/control-panel.html");
+Console.WriteLine($"WebSocket: ws://localhost:{port}/ws");
+Console.WriteLine();
+Console.WriteLine("To use a different port, set the RACORE_PORT environment variable:");
+Console.WriteLine("  Example: export RACORE_PORT=8080 (Linux/Mac)");
+Console.WriteLine("  Example: set RACORE_PORT=8080 (Windows)");
+Console.WriteLine("========================================");
+Console.WriteLine();
 
 app.Run();
 

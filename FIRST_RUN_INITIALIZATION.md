@@ -241,7 +241,45 @@ Start RaCore Web Server (port 7077)
 
 ### Configuration
 
-### Port Configuration
+### RaCore Server Port Configuration
+**Default:** `5000` (non-privileged port)
+
+The RaCore server port is configurable via the `RACORE_PORT` environment variable. This allows the application to run without administrator/root privileges.
+
+To change the port:
+
+**Linux/Mac:**
+```bash
+export RACORE_PORT=8080
+dotnet run
+```
+
+**Windows:**
+```cmd
+set RACORE_PORT=8080
+dotnet run
+```
+
+**Docker/Compose:**
+```yaml
+environment:
+  - RACORE_PORT=8080
+```
+
+When the server starts, it displays:
+```
+========================================
+   RaCore Server Starting
+========================================
+Server URL: http://localhost:5000
+Control Panel: http://localhost:5000/control-panel.html
+WebSocket: ws://localhost:5000/ws
+========================================
+```
+
+**Note:** The default port 80 has been removed to ensure plug-and-play operation without requiring administrator privileges. Port 5000 is used by default as it's non-privileged and commonly available.
+
+### CMS PHP Server Port Configuration
 Default: `8080`
 
 To change:
