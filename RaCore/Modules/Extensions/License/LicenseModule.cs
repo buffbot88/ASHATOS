@@ -81,6 +81,11 @@ public sealed class LicenseModule : ModuleBase, ILicenseModule
             return ValidateUserLicense(parts[2]);
         }
 
+        if (text.Equals("license prices", StringComparison.OrdinalIgnoreCase))
+        {
+            return GetLicensePrices();
+        }
+
         return "Unknown license command. Type 'help' for available commands.";
     }
 
@@ -92,7 +97,10 @@ public sealed class LicenseModule : ModuleBase, ILicenseModule
             "  license create [name]      - Create new license",
             "  license assign <user> <key> - Assign license to user",
             "  license validate <user>    - Check user license status",
-            "  help                       - Show this help message"
+            "  license prices             - Show license prices in RaCoins",
+            "  help                       - Show this help message",
+            "",
+            "Note: Licenses can be purchased via the SuperMarket module using RaCoins"
         );
     }
 
@@ -363,6 +371,32 @@ public sealed class LicenseModule : ModuleBase, ILicenseModule
         var bytes = RandomNumberGenerator.GetBytes(16);
         var hex = BitConverter.ToString(bytes).Replace("-", "");
         return $"RACORE-{hex.Substring(0, 8)}-{hex.Substring(8, 8)}-{hex.Substring(16, 8)}";
+    }
+
+    /// <summary>
+    /// Get license pricing information.
+    /// </summary>
+    private string GetLicensePrices()
+    {
+        var prices = new
+        {
+            Message = "License Pricing (in RaCoins)",
+            Note = "Purchase licenses through the SuperMarket module",
+            Licenses = new[]
+            {
+                new { Type = "Standard", Price = 100, Duration = "1 year", MaxUsers = 10, Features = "Basic features" },
+                new { Type = "Professional", Price = 500, Duration = "1 year", MaxUsers = 50, Features = "Advanced features" },
+                new { Type = "Enterprise", Price = 2000, Duration = "1 year", MaxUsers = 500, Features = "Unlimited features" }
+            },
+            PurchaseInstructions = new[]
+            {
+                "1. Ensure you have sufficient RaCoins (use 'racoin balance <user-id>')",
+                "2. Top up if needed (use 'racoin topup <user-id> <amount>')",
+                "3. Browse SuperMarket catalog (use 'market catalog')",
+                "4. Purchase license (use 'market buy <user-id> <product-id>')"
+            }
+        };
+        return JsonSerializer.Serialize(prices, _jsonOptions);
     }
 
     /// <summary>
