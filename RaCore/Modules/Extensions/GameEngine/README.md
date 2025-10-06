@@ -59,6 +59,7 @@ curl -X POST http://localhost:7077/api/gameengine/scene/<sceneId>/generate \
 ✅ **Permission-based Access** - RBAC integration for security  
 ✅ **REST API** - Full HTTP API for remote control  
 ✅ **Real-time Stats** - Monitor engine health and performance  
+✅ **SQLite Persistence** - All data persists across server restarts (Phase 4.2)  
 
 ## Architecture
 
@@ -132,13 +133,21 @@ var scene = new GameScene
 ## Performance
 
 - **In-memory storage** for fast access
+- **SQLite persistence** for data durability
 - **Thread-safe operations** via ConcurrentDictionary
 - **Async/await** for non-blocking I/O
 - **Efficient lookups** via dictionary indexing
 
+## Persistence
+
+All scenes and entities are automatically saved to SQLite database:
+- **Database:** `Databases/game_engine.sqlite`
+- **Auto-load:** Scenes restored on server startup
+- **Zero config:** Works automatically
+- **See:** [GAMEENGINE_PERSISTENCE.md](../../../GAMEENGINE_PERSISTENCE.md) for details
+
 ## Future Enhancements
 
-- [ ] Persistence layer (SQLite database)
 - [ ] WebSocket event broadcasting
 - [ ] Physics simulation integration
 - [ ] Multi-client synchronization
@@ -146,6 +155,7 @@ var scene = new GameScene
 - [ ] Player dashboards (web UI)
 - [ ] Quest system integration
 - [ ] Inventory management
+- [x] **Persistence layer (SQLite database)** - ✅ Completed in Phase 4.2
 
 ## Documentation
 

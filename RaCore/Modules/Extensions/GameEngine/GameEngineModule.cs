@@ -19,13 +19,34 @@ public sealed class GameEngineModule : ModuleBase, IGameEngineModule
     private readonly ConcurrentDictionary<string, GameScene> _scenes = new();
     private readonly ConcurrentDictionary<string, Asset> _assets = new();
     private readonly DateTime _startTime = DateTime.UtcNow;
+    private readonly GameEngineDatabase _database;
     private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
+
+    public GameEngineModule()
+    {
+        _database = new GameEngineDatabase();
+    }
 
     public override void Initialize(object? manager)
     {
         base.Initialize(manager);
         _manager = manager as ModuleManager;
-        LogInfo("Game Engine module initialized - Ready for AI-driven game operations");
+        
+        // Load existing scenes from database
+        var savedScenes = _database.LoadAllScenes();
+        foreach (var scene in savedScenes)
+        {
+            _scenes.TryAdd(scene.Id, scene);
+        }
+        
+        LogInfo($"Game Engine module initialized - Loaded {savedScenes.Count} scenes from database");
+        LogInfo("Game Engine ready for AI-driven game operations");
+    }
+
+    public override void Dispose()
+    {
+        _database?.Dispose();
+        base.Dispose();
     }
 
     public override string Process(string input)
@@ -116,6 +137,9 @@ public sealed class GameEngineModule : ModuleBase, IGameEngineModule
 
             if (_scenes.TryAdd(scene.Id, scene))
             {
+                // Save to database
+                _database.SaveScene(scene);
+                
                 LogInfo($"Scene created: {scene.Name} (ID: {scene.Id})");
                 return new GameEngineResponse
                 {
@@ -149,6 +173,9 @@ public sealed class GameEngineModule : ModuleBase, IGameEngineModule
         {
             if (_scenes.TryRemove(sceneId, out var scene))
             {
+                // Delete from database
+                _database.DeleteScene(sceneId);
+                
                 LogInfo($"Scene deleted: {scene.Name} (ID: {sceneId}) by {deletedBy}");
                 return new GameEngineResponse
                 {
@@ -181,6 +208,9 @@ public sealed class GameEngineModule : ModuleBase, IGameEngineModule
             entity.CreatedBy = createdBy;
             entity.CreatedAt = DateTime.UtcNow;
             scene.Entities.Add(entity);
+            
+            // Save to database
+            _database.SaveEntity(sceneId, entity);
 
             LogInfo($"Entity created: {entity.Name} ({entity.Type}) in scene {scene.Name}");
             return new GameEngineResponse
@@ -222,6 +252,9 @@ public sealed class GameEngineModule : ModuleBase, IGameEngineModule
             existingEntity.Rotation = entity.Rotation;
             existingEntity.Scale = entity.Scale;
             existingEntity.Properties = entity.Properties;
+            
+            // Save to database
+            _database.SaveEntity(sceneId, existingEntity);
 
             LogInfo($"Entity updated: {entity.Name} in scene {scene.Name} by {updatedBy}");
             return new GameEngineResponse
@@ -257,6 +290,10 @@ public sealed class GameEngineModule : ModuleBase, IGameEngineModule
             }
 
             scene.Entities.Remove(entity);
+            
+            // Delete from database
+            _database.DeleteEntity(entityId);
+            
             LogInfo($"Entity deleted: {entity.Name} from scene {scene.Name} by {deletedBy}");
 
             return new GameEngineResponse
@@ -312,6 +349,9 @@ public sealed class GameEngineModule : ModuleBase, IGameEngineModule
 
                     scene.Entities.Add(npc);
                     generatedEntities.Add(npc);
+                    
+                    // Save to database
+                    _database.SaveEntity(sceneId, npc);
                 }
             }
 
@@ -327,6 +367,9 @@ public sealed class GameEngineModule : ModuleBase, IGameEngineModule
                 terrain.Properties["theme"] = request.Theme;
                 scene.Entities.Add(terrain);
                 generatedEntities.Add(terrain);
+                
+                // Save to database
+                _database.SaveEntity(sceneId, terrain);
             }
 
             LogInfo($"Generated {generatedEntities.Count} entities for scene {scene.Name}");
