@@ -156,5 +156,5 @@ For more information:
 ---
 
 **Status:** ✅ COMPLETE  
-**Version:** 4.4  
-**Last Updated:** 2025-10-06
+**Version:** v4.8.9  
+**Last Updated:** 2025-01-13

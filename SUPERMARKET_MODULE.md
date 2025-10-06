@@ -476,6 +476,6 @@ The SuperMarket Module provides a complete e-commerce solution for RaCore, enabl
 
 **Module**: SuperMarket  
 **Status**: ✅ IMPLEMENTED  
-**Version**: 1.0  
+**Version**: v4.8.9  
 **Category**: Extension of CMSSpawner  
-**Last Updated**: 2025-10-06
+**Last Updated**: 2025-01-13
