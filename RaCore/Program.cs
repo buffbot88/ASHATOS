@@ -207,6 +207,490 @@ if (authModule != null)
     Console.WriteLine("  GET  /api/auth/events (admin only)");
 }
 
+// Get game engine module if present
+IGameEngineModule? gameEngineModule = moduleManager.Modules
+    .Select(m => m.Instance)
+    .OfType<IGameEngineModule>()
+    .FirstOrDefault();
+
+// Game Engine API endpoints
+if (gameEngineModule != null)
+{
+    // Helper function to validate auth and permissions
+    async Task<(bool authorized, User? user, string? error)> ValidateGameEngineAccess(HttpContext context, UserRole requiredRole = UserRole.User)
+    {
+        if (authModule == null)
+            return (false, null, "Authentication not available");
+
+        var authHeader = context.Request.Headers["Authorization"].ToString();
+        var token = authHeader.StartsWith("Bearer ") ? authHeader[7..] : authHeader;
+        
+        if (string.IsNullOrWhiteSpace(token))
+            return (false, null, "No token provided");
+
+        var user = await authModule.GetUserByTokenAsync(token);
+        if (user == null)
+            return (false, null, "Invalid or expired token");
+
+        if (!authModule.HasPermission(user, "GameEngine", requiredRole))
+            return (false, user, "Insufficient permissions");
+
+        return (true, user, null);
+    }
+
+    // Create scene endpoint
+    app.MapPost("/api/gameengine/scene", async (HttpContext context) =>
+    {
+        try
+        {
+            var (authorized, user, error) = await ValidateGameEngineAccess(context, UserRole.Admin);
+            if (!authorized)
+            {
+                context.Response.StatusCode = error == "No token provided" || error == "Invalid or expired token" ? 401 : 403;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = error });
+                return;
+            }
+
+            var request = await context.Request.ReadFromJsonAsync<CreateSceneRequest>();
+            if (request == null || string.IsNullOrWhiteSpace(request.Name))
+            {
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Invalid request" });
+                return;
+            }
+
+            var response = await gameEngineModule.CreateSceneAsync(request.Name, user!.Username);
+            await context.Response.WriteAsJsonAsync(response);
+        }
+        catch (Exception ex)
+        {
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+        }
+    });
+
+    // List scenes endpoint
+    app.MapGet("/api/gameengine/scenes", async (HttpContext context) =>
+    {
+        try
+        {
+            var (authorized, _, error) = await ValidateGameEngineAccess(context);
+            if (!authorized)
+            {
+                context.Response.StatusCode = error == "No token provided" || error == "Invalid or expired token" ? 401 : 403;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = error });
+                return;
+            }
+
+            var scenes = await gameEngineModule.ListScenesAsync();
+            await context.Response.WriteAsJsonAsync(new { success = true, scenes });
+        }
+        catch (Exception ex)
+        {
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+        }
+    });
+
+    // Get scene endpoint
+    app.MapGet("/api/gameengine/scene/{sceneId}", async (HttpContext context) =>
+    {
+        try
+        {
+            var (authorized, _, error) = await ValidateGameEngineAccess(context);
+            if (!authorized)
+            {
+                context.Response.StatusCode = error == "No token provided" || error == "Invalid or expired token" ? 401 : 403;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = error });
+                return;
+            }
+
+            var sceneId = context.Request.RouteValues["sceneId"]?.ToString();
+            if (string.IsNullOrWhiteSpace(sceneId))
+            {
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Scene ID required" });
+                return;
+            }
+
+            var scene = await gameEngineModule.GetSceneAsync(sceneId);
+            if (scene == null)
+            {
+                context.Response.StatusCode = 404;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Scene not found" });
+                return;
+            }
+
+            await context.Response.WriteAsJsonAsync(new { success = true, scene });
+        }
+        catch (Exception ex)
+        {
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+        }
+    });
+
+    // Delete scene endpoint
+    app.MapDelete("/api/gameengine/scene/{sceneId}", async (HttpContext context) =>
+    {
+        try
+        {
+            var (authorized, user, error) = await ValidateGameEngineAccess(context, UserRole.Admin);
+            if (!authorized)
+            {
+                context.Response.StatusCode = error == "No token provided" || error == "Invalid or expired token" ? 401 : 403;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = error });
+                return;
+            }
+
+            var sceneId = context.Request.RouteValues["sceneId"]?.ToString();
+            if (string.IsNullOrWhiteSpace(sceneId))
+            {
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Scene ID required" });
+                return;
+            }
+
+            var response = await gameEngineModule.DeleteSceneAsync(sceneId, user!.Username);
+            await context.Response.WriteAsJsonAsync(response);
+        }
+        catch (Exception ex)
+        {
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+        }
+    });
+
+    // Create entity endpoint
+    app.MapPost("/api/gameengine/scene/{sceneId}/entity", async (HttpContext context) =>
+    {
+        try
+        {
+            var (authorized, user, error) = await ValidateGameEngineAccess(context, UserRole.Admin);
+            if (!authorized)
+            {
+                context.Response.StatusCode = error == "No token provided" || error == "Invalid or expired token" ? 401 : 403;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = error });
+                return;
+            }
+
+            var sceneId = context.Request.RouteValues["sceneId"]?.ToString();
+            if (string.IsNullOrWhiteSpace(sceneId))
+            {
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Scene ID required" });
+                return;
+            }
+
+            var entity = await context.Request.ReadFromJsonAsync<GameEntity>();
+            if (entity == null)
+            {
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Invalid entity data" });
+                return;
+            }
+
+            var response = await gameEngineModule.CreateEntityAsync(sceneId, entity, user!.Username);
+            await context.Response.WriteAsJsonAsync(response);
+        }
+        catch (Exception ex)
+        {
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+        }
+    });
+
+    // List entities endpoint
+    app.MapGet("/api/gameengine/scene/{sceneId}/entities", async (HttpContext context) =>
+    {
+        try
+        {
+            var (authorized, _, error) = await ValidateGameEngineAccess(context);
+            if (!authorized)
+            {
+                context.Response.StatusCode = error == "No token provided" || error == "Invalid or expired token" ? 401 : 403;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = error });
+                return;
+            }
+
+            var sceneId = context.Request.RouteValues["sceneId"]?.ToString();
+            if (string.IsNullOrWhiteSpace(sceneId))
+            {
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Scene ID required" });
+                return;
+            }
+
+            var entities = await gameEngineModule.ListEntitiesAsync(sceneId);
+            await context.Response.WriteAsJsonAsync(new { success = true, entities });
+        }
+        catch (Exception ex)
+        {
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+        }
+    });
+
+    // AI-generate world content endpoint
+    app.MapPost("/api/gameengine/scene/{sceneId}/generate", async (HttpContext context) =>
+    {
+        try
+        {
+            var (authorized, user, error) = await ValidateGameEngineAccess(context, UserRole.Admin);
+            if (!authorized)
+            {
+                context.Response.StatusCode = error == "No token provided" || error == "Invalid or expired token" ? 401 : 403;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = error });
+                return;
+            }
+
+            var sceneId = context.Request.RouteValues["sceneId"]?.ToString();
+            if (string.IsNullOrWhiteSpace(sceneId))
+            {
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Scene ID required" });
+                return;
+            }
+
+            var request = await context.Request.ReadFromJsonAsync<WorldGenerationRequest>();
+            if (request == null)
+            {
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Invalid request" });
+                return;
+            }
+
+            var response = await gameEngineModule.GenerateWorldContentAsync(sceneId, request, user!.Username);
+            await context.Response.WriteAsJsonAsync(response);
+        }
+        catch (Exception ex)
+        {
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+        }
+    });
+
+    // Get engine stats endpoint
+    app.MapGet("/api/gameengine/stats", async (HttpContext context) =>
+    {
+        try
+        {
+            var (authorized, _, error) = await ValidateGameEngineAccess(context);
+            if (!authorized)
+            {
+                context.Response.StatusCode = error == "No token provided" || error == "Invalid or expired token" ? 401 : 403;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = error });
+                return;
+            }
+
+            var stats = await gameEngineModule.GetStatsAsync();
+            await context.Response.WriteAsJsonAsync(new { success = true, stats });
+        }
+        catch (Exception ex)
+        {
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+        }
+    });
+
+    Console.WriteLine("[RaCore] Game Engine API endpoints registered:");
+    Console.WriteLine("  POST   /api/gameengine/scene - Create scene (admin only)");
+    Console.WriteLine("  GET    /api/gameengine/scenes - List scenes");
+    Console.WriteLine("  GET    /api/gameengine/scene/{sceneId} - Get scene details");
+    Console.WriteLine("  DELETE /api/gameengine/scene/{sceneId} - Delete scene (admin only)");
+    Console.WriteLine("  POST   /api/gameengine/scene/{sceneId}/entity - Create entity (admin only)");
+    Console.WriteLine("  GET    /api/gameengine/scene/{sceneId}/entities - List entities");
+    Console.WriteLine("  POST   /api/gameengine/scene/{sceneId}/generate - AI-generate content (admin only)");
+    Console.WriteLine("  GET    /api/gameengine/stats - Get engine statistics");
+}
+
+// ServerSetup API endpoints - Folder discovery and admin instance management
+IServerSetupModule? serverSetupModule = moduleManager.Modules
+    .Select(m => m.Instance)
+    .OfType<IServerSetupModule>()
+    .FirstOrDefault();
+
+if (serverSetupModule != null && authModule != null)
+{
+    // Discover server folders (Databases, php, Apache, Admins)
+    app.MapGet("/api/serversetup/discover", async (HttpContext context) =>
+    {
+        try
+        {
+            var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Replace("Bearer ", "");
+            if (string.IsNullOrEmpty(token))
+            {
+                context.Response.StatusCode = 401;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Unauthorized" });
+                return;
+            }
+
+            var user = await authModule.GetUserByTokenAsync(token);
+            if (user == null)
+            {
+                context.Response.StatusCode = 401;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Invalid token" });
+                return;
+            }
+
+            var result = await serverSetupModule.DiscoverServerFoldersAsync();
+            await context.Response.WriteAsJsonAsync(new { success = true, data = result });
+        }
+        catch (Exception ex)
+        {
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+        }
+    });
+
+    // Create admin instance
+    app.MapPost("/api/serversetup/admin", async (HttpContext context) =>
+    {
+        try
+        {
+            var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Replace("Bearer ", "");
+            if (string.IsNullOrEmpty(token))
+            {
+                context.Response.StatusCode = 401;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Unauthorized" });
+                return;
+            }
+
+            var user = await authModule.GetUserByTokenAsync(token);
+            if (user == null || !authModule.HasPermission(user, "ServerSetup", UserRole.Admin))
+            {
+                context.Response.StatusCode = 403;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Admin role required" });
+                return;
+            }
+
+            var request = await context.Request.ReadFromJsonAsync<CreateAdminInstanceRequest>();
+            if (request == null || string.IsNullOrEmpty(request.LicenseNumber) || string.IsNullOrEmpty(request.Username))
+            {
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Invalid request: licenseNumber and username required" });
+                return;
+            }
+
+            var result = await serverSetupModule.CreateAdminFolderStructureAsync(request.LicenseNumber, request.Username);
+            if (result.Success)
+            {
+                await context.Response.WriteAsJsonAsync(new { success = true, message = result.Message, data = result.Details });
+            }
+            else
+            {
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = result.Message });
+            }
+        }
+        catch (Exception ex)
+        {
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+        }
+    });
+
+    // Setup Apache configuration
+    app.MapPost("/api/serversetup/apache", async (HttpContext context) =>
+    {
+        try
+        {
+            var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Replace("Bearer ", "");
+            if (string.IsNullOrEmpty(token))
+            {
+                context.Response.StatusCode = 401;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Unauthorized" });
+                return;
+            }
+
+            var user = await authModule.GetUserByTokenAsync(token);
+            if (user == null || !authModule.HasPermission(user, "ServerSetup", UserRole.Admin))
+            {
+                context.Response.StatusCode = 403;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Admin role required" });
+                return;
+            }
+
+            var request = await context.Request.ReadFromJsonAsync<SetupConfigRequest>();
+            if (request == null || string.IsNullOrEmpty(request.LicenseNumber) || string.IsNullOrEmpty(request.Username))
+            {
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Invalid request: licenseNumber and username required" });
+                return;
+            }
+
+            var result = await serverSetupModule.SetupApacheConfigAsync(request.LicenseNumber, request.Username);
+            if (result.Success)
+            {
+                await context.Response.WriteAsJsonAsync(new { success = true, message = result.Message, data = result.Details });
+            }
+            else
+            {
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = result.Message });
+            }
+        }
+        catch (Exception ex)
+        {
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+        }
+    });
+
+    // Setup PHP configuration
+    app.MapPost("/api/serversetup/php", async (HttpContext context) =>
+    {
+        try
+        {
+            var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Replace("Bearer ", "");
+            if (string.IsNullOrEmpty(token))
+            {
+                context.Response.StatusCode = 401;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Unauthorized" });
+                return;
+            }
+
+            var user = await authModule.GetUserByTokenAsync(token);
+            if (user == null || !authModule.HasPermission(user, "ServerSetup", UserRole.Admin))
+            {
+                context.Response.StatusCode = 403;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Admin role required" });
+                return;
+            }
+
+            var request = await context.Request.ReadFromJsonAsync<SetupConfigRequest>();
+            if (request == null || string.IsNullOrEmpty(request.LicenseNumber) || string.IsNullOrEmpty(request.Username))
+            {
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Invalid request: licenseNumber and username required" });
+                return;
+            }
+
+            var result = await serverSetupModule.SetupPhpConfigAsync(request.LicenseNumber, request.Username);
+            if (result.Success)
+            {
+                await context.Response.WriteAsJsonAsync(new { success = true, message = result.Message, data = result.Details });
+            }
+            else
+            {
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = result.Message });
+            }
+        }
+        catch (Exception ex)
+        {
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+        }
+    });
+
+    Console.WriteLine("ServerSetup API endpoints registered:");
+    Console.WriteLine("  GET    /api/serversetup/discover - Discover server folders");
+    Console.WriteLine("  POST   /api/serversetup/admin - Create admin instance (admin only)");
+    Console.WriteLine("  POST   /api/serversetup/apache - Setup Apache config (admin only)");
+    Console.WriteLine("  POST   /api/serversetup/php - Setup PHP config (admin only)");
+}
+
 // Redirect root to login page
 app.MapGet("/", (HttpContext context) =>
 {
@@ -215,3 +699,22 @@ app.MapGet("/", (HttpContext context) =>
 });
 
 app.Run();
+
+// Request models for API endpoints
+public class CreateSceneRequest
+{
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+}
+
+public class CreateAdminInstanceRequest
+{
+    public string LicenseNumber { get; set; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
+}
+
+public class SetupConfigRequest
+{
+    public string LicenseNumber { get; set; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
+}
