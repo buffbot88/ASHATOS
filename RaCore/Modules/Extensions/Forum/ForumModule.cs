@@ -12,10 +12,23 @@ public sealed class ForumModule : ModuleBase, IForumModule
     private readonly ConcurrentDictionary<string, ForumPost> _posts = new();
     private readonly ConcurrentDictionary<string, List<ForumWarning>> _userWarnings = new();
     private readonly ConcurrentDictionary<string, BanRecord> _bannedUsers = new();
+    private ModuleManager? _manager;
+    private IContentModerationModule? _moderationModule;
     
     public override void Initialize(object? manager)
     {
+        _manager = manager as ModuleManager;
+        
+        if (_manager != null)
+        {
+            _moderationModule = _manager.Modules
+                .Select(m => m.Instance)
+                .OfType<IContentModerationModule>()
+                .FirstOrDefault();
+        }
+        
         Console.WriteLine($"[{Name}] Initializing Forum Module...");
+        Console.WriteLine($"[{Name}] Content moderation: {(_moderationModule != null ? "enabled" : "disabled")}");
         
         // Seed some example data
         SeedExampleData();
@@ -69,6 +82,85 @@ public sealed class ForumModule : ModuleBase, IForumModule
             .Skip((page - 1) * perPage)
             .Take(perPage)
             .ToList());
+    }
+    
+    public async Task<(bool success, string message, string? postId)> CreatePostAsync(string userId, string username, string title, string content)
+    {
+        // Check if user is suspended
+        if (_moderationModule != null)
+        {
+            var isSuspended = await _moderationModule.IsUserSuspendedAsync(userId);
+            if (isSuspended)
+            {
+                var suspension = await _moderationModule.GetActiveSuspensionAsync(userId);
+                return (false, $"Cannot post: User is suspended until {suspension?.ExpiresAt?.ToString() ?? "indefinitely"}", null);
+            }
+        }
+        
+        // Check if user is banned
+        if (_bannedUsers.ContainsKey(userId))
+        {
+            return (false, "Cannot post: User is banned from the forum", null);
+        }
+        
+        // Moderate content before accepting
+        if (_moderationModule != null)
+        {
+            var postId = Guid.NewGuid().ToString();
+            var moderationResult = await _moderationModule.ScanTextAsync($"{title}\n{content}", userId, Name, postId);
+            
+            if (moderationResult.Action == ModerationAction.Blocked || moderationResult.Action == ModerationAction.AutoSuspended)
+            {
+                var violations = string.Join(", ", moderationResult.Violations.Select(v => v.Type));
+                return (false, $"Post blocked due to content violations: {violations}", null);
+            }
+            
+            if (moderationResult.Action == ModerationAction.Flagged)
+            {
+                Console.WriteLine($"[{Name}] Post {postId} flagged for review");
+            }
+            
+            // Create the post
+            var post = new ForumPost
+            {
+                Id = postId,
+                ThreadId = postId, // New thread
+                UserId = userId,
+                Username = username,
+                Title = title,
+                Content = content,
+                CreatedAt = DateTime.UtcNow,
+                ReplyCount = 0,
+                ViewCount = 0
+            };
+            
+            _posts[postId] = post;
+            Console.WriteLine($"[{Name}] Post created by {username}: {title}");
+            
+            return (true, "Post created successfully", postId);
+        }
+        else
+        {
+            // No moderation module - create post without scanning
+            var postId = Guid.NewGuid().ToString();
+            var post = new ForumPost
+            {
+                Id = postId,
+                ThreadId = postId,
+                UserId = userId,
+                Username = username,
+                Title = title,
+                Content = content,
+                CreatedAt = DateTime.UtcNow,
+                ReplyCount = 0,
+                ViewCount = 0
+            };
+            
+            _posts[postId] = post;
+            Console.WriteLine($"[{Name}] Post created by {username}: {title} (no moderation)");
+            
+            return (true, "Post created successfully", postId);
+        }
     }
     
     public async Task<bool> DeletePostAsync(string postId, string moderatorId, string reason)

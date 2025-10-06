@@ -14,6 +14,7 @@ Extensions/
 ├── Safety/
 │   ├── ConsentRegistryModule.cs          # Consent management & registry (async agentic)
 │   ├── EthicsGuardModule.cs              # Ethics guard, risk and consent analysis (async agentic)
+│   ├── ContentModerationModule.cs        # Real-time content moderation & harm detection (NEW in v4.6)
 │   ├── SafetyPolicy.cs                   # Safety policies, harm types, skill defaults
 │   ├── RiskScorer.cs                     # Risk scoring engine for skill/plan steps
 │   ├── README.md                         # Documentation for contributors/extension
@@ -22,6 +23,9 @@ Extensions/
 ---
 
 ## Key Components
+
+- **ContentModerationModule.cs** (NEW in v4.6):  
+  Real-time content scanning and harm detection across all interactive modules (forums, blogs, games, etc.). Automatically detects and blocks harmful content, suspends violating users, and maintains audit trails.
 
 - **ConsentRegistryModule.cs**:  
   Registry for user/system consent for skills and scopes. Async, agentic, integrates with ThoughtProcessor.
@@ -37,8 +41,43 @@ Extensions/
 
 ---
 
+## Content Moderation (Phase 4.6)
+
+### Features
+
+- **Real-time Content Scanning**: Analyzes text content for harmful patterns before accepting
+- **Multi-violation Detection**: Detects hate speech, violence, harassment, spam, phishing, and more
+- **Automated Actions**: Auto-blocks or auto-suspends based on severity thresholds
+- **Manual Review Queue**: Flags questionable content for human moderation
+- **User Suspension System**: Temporary or permanent suspensions with appeal tracking
+- **Audit Trails**: Complete logging of all moderation actions
+- **Integration Hooks**: Easy integration with forums, blogs, chat, and other modules
+
+### Violation Types
+
+- Harassment, Hate Speech, Violence, Self-Harm
+- Sexual Content, Spam, Phishing, Malware
+- Personal Information, Copyright, Illegal Content
+- Misinformation, Excessive Profanity
+
+### Console Commands
+
+```bash
+moderation stats              # View moderation statistics
+moderation scan <text>        # Scan text manually
+moderation history <userId>   # View user's history
+moderation pending            # List pending reviews
+moderation suspend <userId> <days> <reason>  # Suspend user
+moderation unsuspend <userId> # Unsuspend user
+```
+
+---
+
 ## API Highlights
 
+- `ContentModerationModule.ScanTextAsync(text, userId, module, contentId)` — scan content for violations.
+- `ContentModerationModule.IsUserSuspendedAsync(userId)` — check suspension status.
+- `ContentModerationModule.GetPendingReviewsAsync()` — retrieve flagged content for review.
 - `ConsentRegistryModule.ProcessAsync(input)` — grant, revoke, list, or query consents.
 - `EthicsGuardModule.ProcessAsync(planJson)` — analyze agentic plan, block/confirm/approve.
 - Skill/harm/severity defaults and thresholds for extensibility.
@@ -62,14 +101,39 @@ Extensions/
 ## Example Usage
 
 ```csharp
+// Consent
 var consent = new ConsentRegistryModule();
 await consent.ProcessAsync("consent grant File.Delete");
 bool hasConsent = consent.HasConsent("File.Delete");
 
+// Ethics
 var ethics = new EthicsGuardModule();
 var planJson = "{\"Steps\":[{\"Skill\":\"File.Delete\",\"ArgumentsJson\":\"{\\\"action\\\":\\\"delete\\\"}\"}]}";
 var result = await ethics.ProcessAsync(planJson);
 Console.WriteLine(result.Text);
+
+// Content Moderation (NEW in v4.6)
+var moderation = new ContentModerationModule();
+var scanResult = await moderation.ScanTextAsync(
+    "User posted content here",
+    "user123",
+    "Forum",
+    "post456"
+);
+
+if (scanResult.Action == ModerationAction.Blocked)
+{
+    Console.WriteLine($"Content blocked: {string.Join(", ", scanResult.Violations.Select(v => v.Type))}");
+}
+
+// Forum integration example
+var forumModule = new ForumModule();
+var (success, message, postId) = await forumModule.CreatePostAsync(
+    "user123",
+    "JohnDoe",
+    "My post title",
+    "Post content that will be moderated automatically"
+);
 ```
 
 ---
@@ -81,4 +145,4 @@ Document new skills, policy extensions, and diagnostics here.
 ---
 
 **Last Updated:** 2025-01-05  
-**Version:** 1.0
+**Version:** 4.6 (Phase 4.6 - Real-Time Content Moderation)

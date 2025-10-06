@@ -79,7 +79,13 @@ public enum SecurityEventType
     PermissionDenied,
     LicenseValidationFailure,
     LicenseExpired,
-    LicenseRevoked
+    LicenseRevoked,
+    ContentFlagged,
+    ContentBlocked,
+    UserAutoSuspended,
+    UserManuallySuspended,
+    UserUnsuspended,
+    ModerationReview
 }
 
 /// <summary>
