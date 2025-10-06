@@ -569,6 +569,172 @@ Options -Indexes
     }
     
     /// <summary>
+    /// Restarts the Apache web server
+    /// </summary>
+    /// <returns>Tuple with success status and message</returns>
+    public static (bool success, string message) RestartApache()
+    {
+        try
+        {
+            var apachePath = FindApacheExecutable();
+            if (apachePath == null)
+            {
+                return (false, "Apache not found. Please ensure Apache is installed.");
+            }
+            
+            Console.WriteLine($"[ApacheManager] Attempting to restart Apache using: {apachePath}");
+            
+            // Windows: Use httpd.exe -k restart
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                // Try to restart using httpd.exe -k restart
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = apachePath,
+                    Arguments = "-k restart",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+                
+                using var process = Process.Start(startInfo);
+                if (process != null)
+                {
+                    var output = process.StandardOutput.ReadToEnd();
+                    var error = process.StandardError.ReadToEnd();
+                    process.WaitForExit(10000);
+                    
+                    if (process.ExitCode == 0 || string.IsNullOrEmpty(error))
+                    {
+                        Console.WriteLine("[ApacheManager] ✅ Apache restarted successfully");
+                        return (true, "Apache restarted successfully");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[ApacheManager] ⚠️  Apache restart returned code {process.ExitCode}: {error}");
+                        return (false, $"Apache restart failed: {error}");
+                    }
+                }
+                
+                return (false, "Failed to start Apache restart process");
+            }
+            // Linux/Unix: Use systemctl or service command
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                // Try systemctl first (most modern Linux distributions)
+                try
+                {
+                    var startInfo = new ProcessStartInfo
+                    {
+                        FileName = "systemctl",
+                        Arguments = "restart apache2",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+                    
+                    using var process = Process.Start(startInfo);
+                    if (process != null)
+                    {
+                        var error = process.StandardError.ReadToEnd();
+                        process.WaitForExit(10000);
+                        
+                        if (process.ExitCode == 0)
+                        {
+                            Console.WriteLine("[ApacheManager] ✅ Apache restarted successfully via systemctl");
+                            return (true, "Apache restarted successfully");
+                        }
+                        else if (error.Contains("Permission denied") || error.Contains("access denied"))
+                        {
+                            return (false, "Permission denied. Please run RaCore with sudo or grant appropriate permissions.");
+                        }
+                    }
+                }
+                catch { }
+                
+                // Fallback to service command
+                try
+                {
+                    var startInfo = new ProcessStartInfo
+                    {
+                        FileName = "service",
+                        Arguments = "apache2 restart",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+                    
+                    using var process = Process.Start(startInfo);
+                    if (process != null)
+                    {
+                        var error = process.StandardError.ReadToEnd();
+                        process.WaitForExit(10000);
+                        
+                        if (process.ExitCode == 0)
+                        {
+                            Console.WriteLine("[ApacheManager] ✅ Apache restarted successfully via service");
+                            return (true, "Apache restarted successfully");
+                        }
+                        else if (error.Contains("Permission denied") || error.Contains("access denied"))
+                        {
+                            return (false, "Permission denied. Please run RaCore with sudo or grant appropriate permissions.");
+                        }
+                    }
+                }
+                catch { }
+                
+                return (false, "Apache restart requires sudo privileges. Please restart manually with: sudo systemctl restart apache2");
+            }
+            // macOS: Use apachectl
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = "apachectl",
+                    Arguments = "restart",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+                
+                using var process = Process.Start(startInfo);
+                if (process != null)
+                {
+                    var error = process.StandardError.ReadToEnd();
+                    process.WaitForExit(10000);
+                    
+                    if (process.ExitCode == 0)
+                    {
+                        Console.WriteLine("[ApacheManager] ✅ Apache restarted successfully via apachectl");
+                        return (true, "Apache restarted successfully");
+                    }
+                    else if (error.Contains("Permission denied") || error.Contains("access denied"))
+                    {
+                        return (false, "Permission denied. Please run RaCore with sudo or grant appropriate permissions.");
+                    }
+                    else
+                    {
+                        return (false, $"Apache restart failed: {error}");
+                    }
+                }
+                
+                return (false, "Failed to start Apache restart process");
+            }
+            
+            return (false, "Unsupported platform for automatic Apache restart");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ApacheManager] ❌ Error restarting Apache: {ex.Message}");
+            return (false, $"Error restarting Apache: {ex.Message}");
+        }
+    }
+    
+    /// <summary>
     /// Finds PHP executable in common locations
     /// </summary>
     public static string? FindPhpExecutable()

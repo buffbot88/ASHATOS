@@ -1397,6 +1397,35 @@ app.MapGet("/api/control/system/health", async (HttpContext context) =>
     return await Task.FromResult(Results.Json(new { health }));
 });
 
+// Restart Apache server (Admin only)
+app.MapPost("/api/control/system/restart-apache", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null || !authModule!.HasPermission(user, "System", UserRole.Admin))
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { success = false, error = "Insufficient permissions. Admin role required." });
+    }
+    
+    Console.WriteLine($"[API] Apache restart requested by user: {user.Username}");
+    
+    var (success, message) = RaCore.Engine.ApacheManager.RestartApache();
+    
+    if (success)
+    {
+        Console.WriteLine($"[API] ✅ Apache restarted successfully by {user.Username}");
+        return Results.Json(new { success = true, message });
+    }
+    else
+    {
+        Console.WriteLine($"[API] ⚠️  Apache restart failed: {message}");
+        context.Response.StatusCode = 500;
+        return Results.Json(new { success = false, error = message });
+    }
+});
+
 // ============================================================================
 // Audit Logs API Endpoints
 // ============================================================================
@@ -1699,6 +1728,10 @@ Console.WriteLine("Apache Reverse Proxy Configuration:");
 Console.WriteLine("  ✨ Apache is automatically configured during boot sequence!");
 Console.WriteLine("  To customize domain: set RACORE_PROXY_DOMAIN=yourdomain.com");
 Console.WriteLine("  After configuration, restart Apache to access via http://localhost");
+Console.WriteLine();
+Console.WriteLine("Apache Management API:");
+Console.WriteLine("  POST /api/control/system/restart-apache - Restart Apache without restarting RaOS");
+Console.WriteLine("  (Admin authentication required)");
 Console.WriteLine("========================================");
 Console.WriteLine();
 
