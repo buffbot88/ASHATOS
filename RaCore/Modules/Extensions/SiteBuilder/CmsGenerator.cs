@@ -52,7 +52,7 @@ public class CmsGenerator
             // Generate new feature pages
             GenerateBlogsFile();
             GenerateForumsFile();
-            GenerateDigiChatFile();
+            GenerateChatFile();
             GenerateProfileFile();
 
             return $"✅ CMS homepage generated successfully at: {_cmsRootPath}";
@@ -210,7 +210,7 @@ $page = $pages[0] ?? ['title' => 'Welcome', 'content' => 'No content'];
                 <a href='index.php'>Home</a>
                 <a href='blogs.php'>Blogs</a>
                 <a href='forums.php'>Forums</a>
-                <a href='digichat.php'>DigiChat</a>
+                <a href='chat.php'>Chat</a>
                 <a href='profile.php?user=<?php echo urlencode($currentUser); ?>'>Social</a>
                 <a href='/control-panel.html' target='_blank'>Settings</a>
             </div>
@@ -226,7 +226,7 @@ $page = $pages[0] ?? ['title' => 'Welcome', 'content' => 'No content'];
 </html>";
 
         File.WriteAllText(Path.Combine(_cmsRootPath, "index.php"), content);
-        _module.Log("Generated index.php with full CMS navigation (Home, Blogs, Forums, DigiChat, Social, Settings)");
+        _module.Log("Generated index.php with full CMS navigation (Home, Blogs, Forums, Chat, Social, Settings)");
     }
 
     private void GenerateAdminFile()
@@ -484,12 +484,73 @@ require_once 'db.php';
 
 session_start();
 $currentUser = $_SESSION['username'] ?? 'guest';
+$isLoggedIn = isset($_SESSION['user_id']);
+
+// Fetch blog posts from RaCore API
+$apiUrl = 'http://localhost:5000/api/blog/posts';
+$posts = [];
+try {
+    $response = @file_get_contents($apiUrl);
+    if ($response) {
+        $data = json_decode($response, true);
+        $posts = $data['posts'] ?? [];
+    }
+} catch (Exception $e) {
+    // Silently handle error
+}
 ?>
 <!DOCTYPE html>
 <html>
 <head>
     <title>Blogs - <?php echo SITE_NAME; ?></title>
     <link rel='stylesheet' href='styles.css'>
+    <style>
+        .blog-post {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .blog-post h2 {
+            margin-top: 0;
+        }
+        .blog-meta {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+        .blog-category {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            margin-right: 10px;
+        }
+        .blog-stats {
+            margin-top: 10px;
+            color: #666;
+        }
+        .create-post-btn {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            margin-bottom: 20px;
+        }
+        .create-post-btn:hover {
+            background: #218838;
+        }
+        .no-posts {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
 </head>
 <body>
     <div class='container'>
@@ -499,7 +560,7 @@ $currentUser = $_SESSION['username'] ?? 'guest';
                 <a href='index.php'>Home</a>
                 <a href='blogs.php'>Blogs</a>
                 <a href='forums.php'>Forums</a>
-                <a href='digichat.php'>DigiChat</a>
+                <a href='chat.php'>Chat</a>
                 <a href='profile.php?user=<?php echo urlencode($currentUser); ?>'>Social</a>
                 <a href='/control-panel.html' target='_blank'>Settings</a>
             </div>
@@ -507,15 +568,55 @@ $currentUser = $_SESSION['username'] ?? 'guest';
         <div class='content'>
             <h1>Blogs</h1>
             <p>Share your thoughts and stories with the community.</p>
-            <div style='margin-top: 20px; padding: 20px; background: #f9f9f9; border-radius: 5px;'>
-                <h3>Coming Soon!</h3>
-                <p>The blog feature is currently under development. Check back soon for updates.</p>
+            
+            <?php if ($isLoggedIn): ?>
+            <a href='#' class='create-post-btn' onclick='createPost(); return false;'>+ Create New Post</a>
+            <?php endif; ?>
+            
+            <?php if (empty($posts)): ?>
+            <div class='no-posts'>
+                <p>No blog posts yet. Be the first to share your story!</p>
             </div>
+            <?php else: ?>
+                <?php foreach ($posts as $post): ?>
+                <div class='blog-post'>
+                    <?php if (!empty($post['category'])): ?>
+                    <span class='blog-category'><?php echo htmlspecialchars($post['category']); ?></span>
+                    <?php endif; ?>
+                    <h2><?php echo htmlspecialchars($post['title']); ?></h2>
+                    <div class='blog-meta'>
+                        By <?php echo htmlspecialchars($post['username']); ?> 
+                        on <?php echo date('F j, Y', strtotime($post['createdAt'])); ?>
+                    </div>
+                    <p><?php echo nl2br(htmlspecialchars(substr($post['content'], 0, 300))); ?>
+                    <?php if (strlen($post['content']) > 300): ?>...<?php endif; ?>
+                    </p>
+                    <div class='blog-stats'>
+                        👁 <?php echo $post['viewCount']; ?> views • 💬 <?php echo $post['commentCount']; ?> comments
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </div>
         <footer class='site-footer'>
             <p>Powered by RaCore | <a href='/control-panel.html'>Manage Your Site</a></p>
         </footer>
     </div>
+    
+    <script>
+    function createPost() {
+        const title = prompt('Enter post title:');
+        if (!title) return;
+        
+        const content = prompt('Enter post content:');
+        if (!content) return;
+        
+        const category = prompt('Enter category (optional):');
+        
+        // In a real implementation, this would use the API
+        alert('Blog post creation requires API integration. Coming soon!');
+    }
+    </script>
 </body>
 </html>";
 
@@ -546,7 +647,7 @@ $currentUser = $_SESSION['username'] ?? 'guest';
                 <a href='index.php'>Home</a>
                 <a href='blogs.php'>Blogs</a>
                 <a href='forums.php'>Forums</a>
-                <a href='digichat.php'>DigiChat</a>
+                <a href='chat.php'>Chat</a>
                 <a href='profile.php?user=<?php echo urlencode($currentUser); ?>'>Social</a>
                 <a href='/control-panel.html' target='_blank'>Settings</a>
             </div>
@@ -570,7 +671,7 @@ $currentUser = $_SESSION['username'] ?? 'guest';
         _module.Log("Generated forums.php");
     }
 
-    private void GenerateDigiChatFile()
+    private void GenerateChatFile()
     {
         var content = @"<?php
 require_once 'config.php';
@@ -578,12 +679,105 @@ require_once 'db.php';
 
 session_start();
 $currentUser = $_SESSION['username'] ?? 'guest';
+$isLoggedIn = isset($_SESSION['user_id']);
+
+// Fetch chat rooms from RaCore API
+$apiUrl = 'http://localhost:5000/api/chat/rooms';
+$rooms = [];
+try {
+    $response = @file_get_contents($apiUrl);
+    if ($response) {
+        $data = json_decode($response, true);
+        $rooms = $data['rooms'] ?? [];
+    }
+} catch (Exception $e) {
+    // Silently handle error
+}
 ?>
 <!DOCTYPE html>
 <html>
 <head>
-    <title>DigiChat - <?php echo SITE_NAME; ?></title>
+    <title>Chat - <?php echo SITE_NAME; ?></title>
     <link rel='stylesheet' href='styles.css'>
+    <style>
+        .chat-container {
+            display: flex;
+            gap: 20px;
+            height: 600px;
+        }
+        .rooms-panel {
+            flex: 0 0 250px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        .chat-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            border-bottom: 1px solid #ddd;
+        }
+        .chat-input-area {
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        .chat-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .send-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .send-btn:hover {
+            background: #0056b3;
+        }
+        .room-item {
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+        .room-item:hover {
+            background: #f0f0f0;
+        }
+        .room-item.active {
+            background: #007bff;
+            color: white;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 8px;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+        .message-author {
+            font-weight: bold;
+            color: #007bff;
+        }
+        .message-time {
+            font-size: 0.8em;
+            color: #666;
+        }
+    </style>
 </head>
 <body>
     <div class='container'>
@@ -593,28 +787,139 @@ $currentUser = $_SESSION['username'] ?? 'guest';
                 <a href='index.php'>Home</a>
                 <a href='blogs.php'>Blogs</a>
                 <a href='forums.php'>Forums</a>
-                <a href='digichat.php'>DigiChat</a>
+                <a href='chat.php'>Chat</a>
                 <a href='profile.php?user=<?php echo urlencode($currentUser); ?>'>Social</a>
                 <a href='/control-panel.html' target='_blank'>Settings</a>
             </div>
         </nav>
         <div class='content'>
-            <h1>DigiChat</h1>
+            <h1>Chat</h1>
             <p>Real-time chat room for instant communication.</p>
-            <div style='margin-top: 20px; padding: 20px; background: #f9f9f9; border-radius: 5px;'>
-                <h3>Coming Soon!</h3>
-                <p>The DigiChat feature is currently under development. Check back soon for updates.</p>
+            
+            <?php if (!$isLoggedIn): ?>
+            <div style='padding: 20px; background: #fff3cd; border-radius: 5px; margin: 20px 0;'>
+                <p>Please log in to use chat features.</p>
+            </div>
+            <?php endif; ?>
+            
+            <div class='chat-container'>
+                <div class='rooms-panel'>
+                    <h3>Chat Rooms</h3>
+                    <?php if (empty($rooms)): ?>
+                    <p style='text-align: center; color: #666;'>No rooms available</p>
+                    <?php else: ?>
+                        <?php foreach ($rooms as $room): ?>
+                        <div class='room-item' onclick='selectRoom(<?php echo json_encode($room['id']); ?>)'>
+                            <strong><?php echo htmlspecialchars($room['name']); ?></strong>
+                            <div style='font-size: 0.8em; color: #666;'>
+                                <?php echo $room['activeUserCount']; ?> users
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+                
+                <div class='chat-panel'>
+                    <div class='chat-messages' id='chatMessages'>
+                        <p style='text-align: center; color: #666; margin-top: 50px;'>
+                            Select a room to start chatting
+                        </p>
+                    </div>
+                    <?php if ($isLoggedIn): ?>
+                    <div class='chat-input-area'>
+                        <input type='text' class='chat-input' id='messageInput' placeholder='Type your message...' />
+                        <button class='send-btn' onclick='sendMessage()'>Send</button>
+                    </div>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
         <footer class='site-footer'>
             <p>Powered by RaCore | <a href='/control-panel.html'>Manage Your Site</a></p>
         </footer>
     </div>
+    
+    <script>
+    let currentRoomId = null;
+    let ws = null;
+    
+    function selectRoom(roomId) {
+        currentRoomId = roomId;
+        loadMessages(roomId);
+        
+        // Highlight selected room
+        document.querySelectorAll('.room-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        event.target.closest('.room-item').classList.add('active');
+    }
+    
+    function loadMessages(roomId) {
+        fetch('http://localhost:5000/api/chat/rooms/' + roomId + '/messages')
+            .then(response => response.json())
+            .then(data => {
+                const messagesDiv = document.getElementById('chatMessages');
+                messagesDiv.innerHTML = '';
+                
+                if (data.messages && data.messages.length > 0) {
+                    data.messages.forEach(msg => {
+                        addMessageToUI(msg);
+                    });
+                } else {
+                    messagesDiv.innerHTML = '<p style=""text-align: center; color: #666;"">No messages yet. Be the first to say something!</p>';
+                }
+            })
+            .catch(error => console.error('Error loading messages:', error));
+    }
+    
+    function addMessageToUI(msg) {
+        const messagesDiv = document.getElementById('chatMessages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message';
+        
+        const time = new Date(msg.timestamp).toLocaleTimeString();
+        messageDiv.innerHTML = '<span class=""message-author"">' + escapeHtml(msg.username) + '</span> ' +
+                              '<span class=""message-time"">' + time + '</span><br/>' +
+                              escapeHtml(msg.content);
+        
+        messagesDiv.appendChild(messageDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+    
+    function sendMessage() {
+        if (!currentRoomId) {
+            alert('Please select a room first');
+            return;
+        }
+        
+        const input = document.getElementById('messageInput');
+        const content = input.value.trim();
+        
+        if (!content) return;
+        
+        // In a real implementation, this would use the API with authentication
+        alert('Message sending requires API integration with authentication. Coming soon!');
+        input.value = '';
+    }
+    
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // Auto-refresh messages every 5 seconds
+    setInterval(() => {
+        if (currentRoomId) {
+            loadMessages(currentRoomId);
+        }
+    }, 5000);
+    </script>
 </body>
 </html>";
 
-        File.WriteAllText(Path.Combine(_cmsRootPath, "digichat.php"), content);
-        _module.Log("Generated digichat.php");
+        File.WriteAllText(Path.Combine(_cmsRootPath, "chat.php"), content);
+        _module.Log("Generated chat.php");
     }
 
     private void GenerateProfileFile()
@@ -626,12 +931,140 @@ require_once 'db.php';
 session_start();
 $currentUser = $_SESSION['username'] ?? 'guest';
 $viewUser = $_GET['user'] ?? $currentUser;
+$isLoggedIn = isset($_SESSION['user_id']);
+
+// Fetch profile from RaCore API
+$apiUrl = 'http://localhost:5000/api/social/profile/' . urlencode($viewUser);
+$profile = null;
+$posts = [];
+$activity = [];
+
+try {
+    $response = @file_get_contents($apiUrl);
+    if ($response) {
+        $data = json_decode($response, true);
+        $profile = $data['profile'] ?? null;
+    }
+    
+    // Fetch user's posts
+    $postsResponse = @file_get_contents('http://localhost:5000/api/social/profile/' . urlencode($viewUser) . '/posts');
+    if ($postsResponse) {
+        $postsData = json_decode($postsResponse, true);
+        $posts = $postsData['posts'] ?? [];
+    }
+    
+    // Fetch activity feed
+    $activityResponse = @file_get_contents('http://localhost:5000/api/social/profile/' . urlencode($viewUser) . '/activity');
+    if ($activityResponse) {
+        $activityData = json_decode($activityResponse, true);
+        $activity = $activityData['activity'] ?? [];
+    }
+} catch (Exception $e) {
+    // Silently handle error
+}
 ?>
 <!DOCTYPE html>
 <html>
 <head>
     <title>Profile: <?php echo htmlspecialchars($viewUser); ?> - <?php echo SITE_NAME; ?></title>
     <link rel='stylesheet' href='styles.css'>
+    <style>
+        .profile-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+        .profile-sidebar {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+        }
+        .profile-avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 60px;
+            margin: 0 auto 20px;
+        }
+        .profile-main {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+        }
+        .profile-stat {
+            display: inline-block;
+            margin-right: 20px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+        }
+        .profile-stat strong {
+            display: block;
+            font-size: 1.5em;
+            color: #007bff;
+        }
+        .social-post {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .post-meta {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+        .activity-item {
+            padding: 10px;
+            border-left: 3px solid #007bff;
+            margin-bottom: 10px;
+            background: #f9f9f9;
+        }
+        .activity-time {
+            color: #666;
+            font-size: 0.8em;
+        }
+        .friends-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .friend-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            background: #007bff;
+            color: white;
+            border-radius: 15px;
+            font-size: 0.9em;
+        }
+        .add-friend-btn {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            margin-top: 10px;
+        }
+        .add-friend-btn:hover {
+            background: #218838;
+        }
+        .section {
+            margin-top: 30px;
+        }
+        .section h3 {
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
     <div class='container'>
@@ -641,26 +1074,122 @@ $viewUser = $_GET['user'] ?? $currentUser;
                 <a href='index.php'>Home</a>
                 <a href='blogs.php'>Blogs</a>
                 <a href='forums.php'>Forums</a>
-                <a href='digichat.php'>DigiChat</a>
+                <a href='chat.php'>Chat</a>
                 <a href='profile.php?user=<?php echo urlencode($currentUser); ?>'>Social</a>
                 <a href='/control-panel.html' target='_blank'>Settings</a>
             </div>
         </nav>
         <div class='content'>
-            <h1><?php echo htmlspecialchars($viewUser); ?>'s Profile</h1>
-            <div style='margin-top: 20px; padding: 20px; background: #f9f9f9; border-radius: 5px;'>
-                <h3>MySpace-Style Profile</h3>
-                <p>User: <strong><?php echo htmlspecialchars($viewUser); ?></strong></p>
-                <p>Member since: <em>Coming Soon</em></p>
-                <hr style='margin: 20px 0;'>
-                <h3>Coming Soon!</h3>
-                <p>The profile feature is currently under development with MySpace-like social features. Check back soon for updates.</p>
+            <div class='profile-container'>
+                <div class='profile-sidebar'>
+                    <div class='profile-avatar'>
+                        <?php echo strtoupper(substr($viewUser, 0, 1)); ?>
+                    </div>
+                    <h2 style='text-align: center;'><?php echo htmlspecialchars($viewUser); ?></h2>
+                    <?php if ($profile && !empty($profile['bio'])): ?>
+                    <p style='text-align: center; color: #666;'><?php echo htmlspecialchars($profile['bio']); ?></p>
+                    <?php endif; ?>
+                    
+                    <div style='margin-top: 20px;'>
+                        <div class='profile-stat'>
+                            <strong><?php echo count($posts); ?></strong>
+                            <span>Posts</span>
+                        </div>
+                        <div class='profile-stat'>
+                            <strong><?php echo $profile ? count($profile['friends'] ?? []) : 0; ?></strong>
+                            <span>Friends</span>
+                        </div>
+                    </div>
+                    
+                    <?php if ($isLoggedIn && $viewUser !== $currentUser): ?>
+                    <a href='#' class='add-friend-btn' onclick='addFriend(); return false;'>+ Add Friend</a>
+                    <?php endif; ?>
+                    
+                    <?php if ($profile && !empty($profile['friends'])): ?>
+                    <div style='margin-top: 20px;'>
+                        <h4>Friends</h4>
+                        <div class='friends-list'>
+                            <?php foreach (array_slice($profile['friends'], 0, 5) as $friendId): ?>
+                            <span class='friend-badge'><?php echo htmlspecialchars($friendId); ?></span>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                </div>
+                
+                <div class='profile-main'>
+                    <?php if ($isLoggedIn && $viewUser === $currentUser): ?>
+                    <div style='margin-bottom: 20px;'>
+                        <textarea id='postContent' placeholder='What\'s on your mind?' 
+                                  style='width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; min-height: 80px;'></textarea>
+                        <button onclick='createPost()' 
+                                style='margin-top: 10px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;'>
+                            Post
+                        </button>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <div class='section'>
+                        <h3>Posts</h3>
+                        <?php if (empty($posts)): ?>
+                        <p style='text-align: center; color: #666; padding: 20px;'>No posts yet.</p>
+                        <?php else: ?>
+                            <?php foreach ($posts as $post): ?>
+                            <div class='social-post'>
+                                <div class='post-meta'>
+                                    <strong><?php echo htmlspecialchars($post['username']); ?></strong> • 
+                                    <?php echo date('F j, Y g:i a', strtotime($post['createdAt'])); ?>
+                                </div>
+                                <p><?php echo nl2br(htmlspecialchars($post['content'])); ?></p>
+                                <div style='margin-top: 10px; color: #666;'>
+                                    ❤️ <?php echo count($post['likes'] ?? []); ?> likes • 
+                                    💬 <?php echo count($post['comments'] ?? []); ?> comments
+                                </div>
+                            </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                    
+                    <div class='section'>
+                        <h3>Recent Activity</h3>
+                        <?php if (empty($activity)): ?>
+                        <p style='text-align: center; color: #666; padding: 20px;'>No recent activity.</p>
+                        <?php else: ?>
+                            <?php foreach (array_slice($activity, 0, 10) as $act): ?>
+                            <div class='activity-item'>
+                                <div><?php echo htmlspecialchars($act['description']); ?></div>
+                                <div class='activity-time'>
+                                    <?php echo date('F j, Y g:i a', strtotime($act['timestamp'])); ?>
+                                </div>
+                            </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
             </div>
         </div>
         <footer class='site-footer'>
             <p>Powered by RaCore | <a href='/control-panel.html'>Manage Your Site</a></p>
         </footer>
     </div>
+    
+    <script>
+    function createPost() {
+        const content = document.getElementById('postContent').value.trim();
+        if (!content) {
+            alert('Please enter some content');
+            return;
+        }
+        
+        // In a real implementation, this would use the API
+        alert('Post creation requires API integration with authentication. Coming soon!');
+        document.getElementById('postContent').value = '';
+    }
+    
+    function addFriend() {
+        alert('Adding friends requires API integration with authentication. Coming soon!');
+    }
+    </script>
 </body>
 </html>";
 

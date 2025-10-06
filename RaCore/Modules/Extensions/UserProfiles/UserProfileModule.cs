@@ -234,4 +234,200 @@ public sealed class UserProfileModule : ModuleBase
                $"  Average preferences: {avgPreferences:F1}\n" +
                $"  Profiles with module restrictions: {withRestrictions}";
     }
+    
+    // Social features
+    
+    public async Task<bool> AddFriendAsync(string userId, string friendId)
+    {
+        await Task.CompletedTask;
+        
+        if (!_profiles.TryGetValue(userId, out var profile))
+            return false;
+        
+        if (!profile.Friends.Contains(friendId))
+        {
+            profile.Friends.Add(friendId);
+            
+            // Add activity
+            var activity = new Activity
+            {
+                Id = Guid.NewGuid().ToString(),
+                UserId = userId,
+                Username = profile.DisplayName ?? userId,
+                Type = ActivityType.FriendAdded,
+                Description = $"Added {friendId} as a friend",
+                Timestamp = DateTime.UtcNow,
+                Data = new Dictionary<string, string> { { "friendId", friendId } }
+            };
+            profile.ActivityFeed.Insert(0, activity);
+            
+            LogInfo($"User {userId} added friend {friendId}");
+            return true;
+        }
+        
+        return false;
+    }
+    
+    public async Task<bool> RemoveFriendAsync(string userId, string friendId)
+    {
+        await Task.CompletedTask;
+        
+        if (!_profiles.TryGetValue(userId, out var profile))
+            return false;
+        
+        return profile.Friends.Remove(friendId);
+    }
+    
+    public async Task<List<string>> GetFriendsAsync(string userId)
+    {
+        await Task.CompletedTask;
+        
+        if (!_profiles.TryGetValue(userId, out var profile))
+            return new List<string>();
+        
+        return profile.Friends;
+    }
+    
+    public async Task<(bool success, string? postId)> CreateSocialPostAsync(string userId, string content)
+    {
+        await Task.CompletedTask;
+        
+        if (!_profiles.TryGetValue(userId, out var profile))
+            return (false, null);
+        
+        var postId = Guid.NewGuid().ToString();
+        var post = new SocialPost
+        {
+            Id = postId,
+            UserId = userId,
+            Username = profile.DisplayName ?? userId,
+            Content = content,
+            CreatedAt = DateTime.UtcNow
+        };
+        
+        profile.Posts.Insert(0, post);
+        
+        // Add activity
+        var activity = new Activity
+        {
+            Id = Guid.NewGuid().ToString(),
+            UserId = userId,
+            Username = profile.DisplayName ?? userId,
+            Type = ActivityType.PostCreated,
+            Description = content.Length > 50 ? content.Substring(0, 50) + "..." : content,
+            Timestamp = DateTime.UtcNow,
+            Data = new Dictionary<string, string> { { "postId", postId } }
+        };
+        profile.ActivityFeed.Insert(0, activity);
+        
+        LogInfo($"User {userId} created social post");
+        return (true, postId);
+    }
+    
+    public async Task<bool> LikeSocialPostAsync(string postId, string userId)
+    {
+        await Task.CompletedTask;
+        
+        foreach (var profile in _profiles.Values)
+        {
+            var post = profile.Posts.FirstOrDefault(p => p.Id == postId);
+            if (post != null)
+            {
+                if (!post.Likes.Contains(userId))
+                {
+                    post.Likes.Add(userId);
+                    return true;
+                }
+                return false;
+            }
+        }
+        
+        return false;
+    }
+    
+    public async Task<bool> AddSocialCommentAsync(string postId, string userId, string username, string content)
+    {
+        await Task.CompletedTask;
+        
+        foreach (var profile in _profiles.Values)
+        {
+            var post = profile.Posts.FirstOrDefault(p => p.Id == postId);
+            if (post != null)
+            {
+                var comment = new SocialComment
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    UserId = userId,
+                    Username = username,
+                    Content = content,
+                    CreatedAt = DateTime.UtcNow
+                };
+                post.Comments.Add(comment);
+                
+                // Add activity
+                if (_profiles.TryGetValue(userId, out var userProfile))
+                {
+                    var activity = new Activity
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        UserId = userId,
+                        Username = username,
+                        Type = ActivityType.CommentAdded,
+                        Description = $"Commented on a post",
+                        Timestamp = DateTime.UtcNow,
+                        Data = new Dictionary<string, string> { { "postId", postId } }
+                    };
+                    userProfile.ActivityFeed.Insert(0, activity);
+                }
+                
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    public async Task<List<SocialPost>> GetSocialPostsAsync(string userId)
+    {
+        await Task.CompletedTask;
+        
+        if (!_profiles.TryGetValue(userId, out var profile))
+            return new List<SocialPost>();
+        
+        return profile.Posts;
+    }
+    
+    public async Task<List<Activity>> GetActivityFeedAsync(string userId, int limit = 20)
+    {
+        await Task.CompletedTask;
+        
+        if (!_profiles.TryGetValue(userId, out var profile))
+            return new List<Activity>();
+        
+        return profile.ActivityFeed.Take(limit).ToList();
+    }
+    
+    public async Task<bool> UpdateProfileBioAsync(string userId, string bio)
+    {
+        await Task.CompletedTask;
+        
+        if (!_profiles.TryGetValue(userId, out var profile))
+            return false;
+        
+        profile.Bio = bio;
+        
+        // Add activity
+        var activity = new Activity
+        {
+            Id = Guid.NewGuid().ToString(),
+            UserId = userId,
+            Username = profile.DisplayName ?? userId,
+            Type = ActivityType.ProfileUpdated,
+            Description = "Updated profile bio",
+            Timestamp = DateTime.UtcNow
+        };
+        profile.ActivityFeed.Insert(0, activity);
+        
+        return true;
+    }
 }

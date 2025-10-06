@@ -2,7 +2,7 @@
 
 ## Overview
 
-RaCore now features automatic first-run initialization that spawns a fully functional CMS with integrated Control Panel, using PHP 8+ and SQLite database, requiring zero manual setup from users. The CMS homepage serves as the default entry point with navigation to all major features including Blogs, Forums, DigiChat, Social (MySpace-like profiles), and Settings (Control Panel).
+RaCore now features automatic first-run initialization that spawns a fully functional CMS with integrated Control Panel, using PHP 8+ and SQLite database, requiring zero manual setup from users. The CMS homepage serves as the default entry point with navigation to all major features including Blogs, Forums, Chat, Social (MySpace-like profiles), and Settings (Control Panel).
 
 ## What Happens on First Run?
 
@@ -47,7 +47,7 @@ The CMS homepage includes navigation to:
 - **Home** - Welcome page with site overview
 - **Blogs** - Community blogging platform (coming soon)
 - **Forums** - Discussion forums (coming soon)
-- **DigiChat** - Real-time chat room (coming soon)
+- **Chat** - Real-time chat room (coming soon)
 - **Social** - MySpace-style user profiles (coming soon)
 - **Settings** - Control Panel for personal and admin settings
 
