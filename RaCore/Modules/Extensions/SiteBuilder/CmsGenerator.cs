@@ -136,8 +136,27 @@ class Database {
     private $db;
     
     public function __construct() {
-        $this->db = new PDO('sqlite:' . DB_PATH);
-        $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        try {
+            // Check if database file exists
+            if (!file_exists(DB_PATH)) {
+                $dbDir = dirname(DB_PATH);
+                throw new Exception(
+                    ""Database file not found at: "" . DB_PATH . ""\n"" .
+                    ""Database directory: "" . $dbDir . ""\n"" .
+                    ""Directory exists: "" . (is_dir($dbDir) ? 'Yes' : 'No') . ""\n"" .
+                    ""Please ensure the database file is created and accessible.""
+                );
+            }
+            
+            $this->db = new PDO('sqlite:' . DB_PATH);
+            $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        } catch (PDOException $e) {
+            throw new Exception(
+                ""PDO Database connection failed: "" . $e->getMessage() . ""\n"" .
+                ""Database path: "" . DB_PATH . ""\n"" .
+                ""Resolved path: "" . realpath(dirname(__FILE__)) . '/' . DB_PATH
+            );
+        }
     }
     
     public function query($sql, $params = []) {
@@ -439,6 +458,8 @@ a:hover {
         var cmsUri = new Uri(_cmsRootPath + Path.DirectorySeparatorChar);
         var dbUri = new Uri(dbPath);
         var relativeUri = cmsUri.MakeRelativeUri(dbUri);
-        return Uri.UnescapeDataString(relativeUri.ToString()).Replace('/', Path.DirectorySeparatorChar);
+        // Always use forward slashes for PHP paths (works on all platforms, including Windows)
+        // Backslashes are escape characters in PHP, not path separators
+        return Uri.UnescapeDataString(relativeUri.ToString());
     }
 }
