@@ -97,5 +97,5 @@ You can turn any old computer into RaAI or use RaAI client to access RaAI's main
 
 ---
 
-**Last Updated:** 2025-01-08  
-**Current Version:** Phase 4.5 (Distribution & Updates)
+**Last Updated:** 2025-10-06  
+**Current Version:** Phase 4.4 (Completed)

@@ -120,4 +120,4 @@ You're ready to use RaCoin and SuperMarket. Happy shopping! 🛒
 
 **Quick Reference Guide**  
 **Version:** 1.0  
-**Last Updated:** 2025-01-05
+**Last Updated:** 2025-10-06
