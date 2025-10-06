@@ -32,10 +32,11 @@ On every startup, RaCore:
 - Locates httpd.conf configuration file
 - Checks if RaCore reverse proxy is already configured
 - **Automatically configures reverse proxy** if not present
+- **Automatically includes ServerAlias for agpstudios.online and www.agpstudios.online**
 - Creates backup of httpd.conf before modifications
 - Reports detailed status and instructions
 
-**No environment variables required!** Simply launch RaOS.exe and Apache will be configured automatically.
+**No environment variables required!** Simply launch RaOS.exe and Apache will be configured automatically to accept traffic from localhost, agpstudios.online, and www.agpstudios.online.
 
 #### How It Works
 1. **Apache Detection**: Boot sequence finds Apache executable and config file
@@ -43,9 +44,14 @@ On every startup, RaCore:
 3. **Auto-Configuration**: If not configured:
    - Enables mod_proxy and mod_proxy_http modules
    - Adds VirtualHost configuration for port 80
+   - Adds ServerAlias for agpstudios.online and www.agpstudios.online
    - Creates timestamped backup of httpd.conf
    - Provides clear instructions for Apache restart
 4. **User Action**: Restart Apache to activate changes
+5. **Access**: After Apache restart, access RaCore at:
+   - http://localhost
+   - http://agpstudios.online
+   - http://www.agpstudios.online
 
 #### Customization (Optional)
 You can customize the domain using environment variables:
@@ -85,6 +91,7 @@ Apache 2.4 reverse proxy configuration for RaCore:
 # instead of http://localhost:5000
 <VirtualHost *:80>
     ServerName localhost
+    ServerAlias agpstudios.online www.agpstudios.online
     
     ProxyPreserveHost On
     ProxyPass / http://localhost:5000/

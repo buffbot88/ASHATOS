@@ -347,6 +347,7 @@ public class ApacheManager
 # instead of http://localhost:{racorePort}
 <VirtualHost *:80>
     ServerName {domain}
+    ServerAlias agpstudios.online www.agpstudios.online
     
     ProxyPreserveHost On
     ProxyPass / http://localhost:{racorePort}/
@@ -362,6 +363,7 @@ public class ApacheManager
 ";
                 config += proxyConfig;
                 Console.WriteLine($"[ApacheManager] ✅ Added reverse proxy configuration for {domain}:{racorePort}");
+                Console.WriteLine($"[ApacheManager] ✅ ServerAlias configured for: agpstudios.online, www.agpstudios.online");
                 modified = true;
             }
             else
@@ -384,7 +386,10 @@ public class ApacheManager
                 Console.WriteLine("[ApacheManager] Windows: Open Services and restart 'Apache2.4' service");
                 Console.WriteLine("[ApacheManager] Or run: httpd.exe -k restart");
                 Console.WriteLine();
-                Console.WriteLine($"[ApacheManager] After restart, access RaCore at: http://{domain}");
+                Console.WriteLine($"[ApacheManager] After restart, access RaCore at:");
+                Console.WriteLine($"[ApacheManager]   - http://{domain}");
+                Console.WriteLine($"[ApacheManager]   - http://agpstudios.online");
+                Console.WriteLine($"[ApacheManager]   - http://www.agpstudios.online");
                 
                 return true;
             }
