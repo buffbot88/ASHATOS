@@ -8,10 +8,12 @@ using RaCore.Engine.Manager;
 namespace RaCore.Modules.Extensions.CMSSpawner;
 
 /// <summary>
-/// CMS Spawner Module - Generates and manages PHP 8+ homepage with SQLite database.
-/// Supports AI-powered content generation and automated CMS deployment.
+/// CMS Spawner Module - DEPRECATED - Use SiteBuilder module instead.
+/// This module has been refactored into SiteBuilder with better modularity.
+/// Kept for backward compatibility only.
 /// </summary>
 [RaModule(Category = "extensions")]
+[Obsolete("CMSSpawner has been refactored into SiteBuilder. Use SiteBuilder module instead.")]
 public sealed class CMSSpawnerModule : ModuleBase
 {
     public override string Name => "CMSSpawner";
@@ -28,7 +30,7 @@ public sealed class CMSSpawnerModule : ModuleBase
         base.Initialize(manager);
         _manager = manager as ModuleManager;
         _cmsRootPath = Path.Combine(AppContext.BaseDirectory, "racore_cms");
-        LogInfo("CMS Spawner module initialized");
+        LogInfo("CMS Spawner module initialized (DEPRECATED - Use SiteBuilder instead)");
     }
 
     public override string Process(string input)

@@ -1,6 +1,28 @@
-# CMSSpawner Module
+# CMSSpawner Module - DEPRECATED
 
-## Overview
+## ⚠️ DEPRECATION NOTICE
+
+**This module has been refactored into the [SiteBuilder](../SiteBuilder/README.md) module.**
+
+The monolithic CMSSpawner (4747 lines) has been split into modular components for better maintainability:
+- ✅ PhpDetector
+- ✅ CmsGenerator
+- ✅ ControlPanelGenerator
+- ✅ ForumGenerator
+- ✅ ProfileGenerator
+- ✅ IntegratedSiteGenerator
+
+**All `cms` commands still work** for backward compatibility, but we recommend using the new `site` commands:
+- `site spawn` instead of `cms spawn`
+- `site spawn control` instead of `cms spawn control`
+- `site status` instead of `cms status`
+- `site detect php` instead of `cms detect php`
+
+See the [SiteBuilder README](../SiteBuilder/README.md) for full documentation.
+
+---
+
+## Original Documentation (Legacy)
 
 The CMSSpawner module is an AI-powered CMS generation tool that automatically creates and deploys a PHP 8+ homepage with SQLite database integration. It bridges .NET 10 and PHP 8+ technologies, enabling rapid web presence deployment directly from the RaCore mainframe.
 
