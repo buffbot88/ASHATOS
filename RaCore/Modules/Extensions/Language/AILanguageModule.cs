@@ -13,7 +13,7 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
     private int _maxTokens = 128;
     private ModuleManager? _manager;
     private LlamaCppDetector? _detector;
-    private string _modelsDirectory = Path.Combine("llama.cpp", "models");
+    private string _modelsDirectory = "models";
 
     public static string Description => AILanguageConstants.Description;
     public static IReadOnlyList<string> SupportedCommands => AILanguageConstants.SupportedCommands;
@@ -52,7 +52,7 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
             else
             {
                 // Fallback to default path for backward compatibility
-                _modelPath = Path.Combine("llama.cpp", "models", "llama-2-7b-chat.Q4_K_M.gguf");
+                _modelPath = Path.Combine("models", "llama-2-7b-chat.Q4_K_M.gguf");
             }
         }
         
