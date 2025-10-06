@@ -230,6 +230,48 @@ public class ApacheManager
     }
     
     /// <summary>
+    /// Parses the Apache httpd.conf to extract configured RaCore port from existing proxy rules
+    /// </summary>
+    /// <returns>The configured RaCore port, or null if not found</returns>
+    public static int? GetConfiguredRaCorePort()
+    {
+        var configPath = FindApacheConfigPath();
+        if (configPath == null || !File.Exists(configPath))
+        {
+            return null;
+        }
+
+        try
+        {
+            var config = File.ReadAllText(configPath);
+            
+            // Look for RaCore proxy configuration marker
+            if (!config.Contains("# RaCore Reverse Proxy Configuration"))
+            {
+                return null;
+            }
+
+            // Extract port from ProxyPass directive
+            // Looking for patterns like: ProxyPass / http://localhost:5000/
+            var proxyPassMatch = System.Text.RegularExpressions.Regex.Match(
+                config,
+                @"ProxyPass\s+/\s+http://localhost:(\d+)/"
+            );
+
+            if (proxyPassMatch.Success && int.TryParse(proxyPassMatch.Groups[1].Value, out var port))
+            {
+                return port;
+            }
+
+            return null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
     /// Configures Apache as a reverse proxy for RaCore on Windows
     /// </summary>
     public bool ConfigureReverseProxy(int racorePort = 5000, string domain = "localhost")

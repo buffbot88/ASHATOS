@@ -251,19 +251,21 @@ public class BootSequenceManager
                     Console.ResetColor();
                 }
                 
-                // Auto-configure Apache reverse proxy if not already configured
+                var domain = Environment.GetEnvironmentVariable("RACORE_PROXY_DOMAIN") ?? "localhost";
+                
+                // Check if RaCore reverse proxy is already configured
                 if (!hasRaCoreProxy)
                 {
                     Console.ForegroundColor = ConsoleColor.Magenta;
                     Console.WriteLine("    ♡ (っ◔◡◔)っ Auto-configuring Apache reverse proxy...");
                     Console.ResetColor();
                     
-                    var port = Environment.GetEnvironmentVariable("RACORE_PORT") ?? "5000";
-                    var domain = Environment.GetEnvironmentVariable("RACORE_PROXY_DOMAIN") ?? "localhost";
-                    var racorePort = int.Parse(port);
+                    // Use environment variable only for initial setup, fallback to 5000
+                    var portEnv = Environment.GetEnvironmentVariable("RACORE_PORT") ?? "5000";
+                    var initialPort = int.Parse(portEnv);
                     
                     var apacheManager = new ApacheManager("", 8080);
-                    var success = apacheManager.ConfigureReverseProxy(racorePort, domain);
+                    var success = apacheManager.ConfigureReverseProxy(initialPort, domain);
                     
                     if (success)
                     {
@@ -274,6 +276,9 @@ public class BootSequenceManager
                         Console.ForegroundColor = ConsoleColor.Yellow;
                         Console.WriteLine("    ⚠️  Please restart Apache for changes to take effect");
                         Console.ResetColor();
+                        
+                        // Store detected port for RaCore to use
+                        Environment.SetEnvironmentVariable("RACORE_DETECTED_PORT", initialPort.ToString());
                     }
                     else
                     {
@@ -285,9 +290,31 @@ public class BootSequenceManager
                 }
                 else
                 {
+                    // RaCore proxy is already configured - detect port from Apache
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine("    ♡ (◕‿◕✿) RaCore reverse proxy already configured!");
                     Console.ResetColor();
+                    
+                    // Detect configured port in Apache - this is the source of truth
+                    var configuredPort = ApacheManager.GetConfiguredRaCorePort();
+                    if (configuredPort.HasValue)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.WriteLine($"    📋 Apache is configured to proxy to port {configuredPort.Value}");
+                        Console.WriteLine($"    ♡ RaCore will use port {configuredPort.Value} from Apache configuration");
+                        Console.ResetColor();
+                        
+                        // Store detected port for RaCore to use
+                        Environment.SetEnvironmentVariable("RACORE_DETECTED_PORT", configuredPort.Value.ToString());
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine("    (´･ω･`) Could not detect port from Apache config");
+                        Console.WriteLine("    Using default port 5000");
+                        Console.ResetColor();
+                        Environment.SetEnvironmentVariable("RACORE_DETECTED_PORT", "5000");
+                    }
                 }
             }
             else
