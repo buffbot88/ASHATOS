@@ -175,17 +175,26 @@ $page = $pages[0] ?? ['title' => 'Welcome', 'content' => 'No content'];
 </head>
 <body>
     <div class='container'>
-        <h1><?php echo SITE_NAME; ?></h1>
+        <nav class='main-nav'>
+            <div class='nav-brand'><?php echo SITE_NAME; ?></div>
+            <div class='nav-links'>
+                <a href='index.php'>Home</a>
+                <a href='admin.php'>Admin Panel</a>
+                <a href='/control-panel.html' target='_blank'>RaCore Control Panel</a>
+            </div>
+        </nav>
         <div class='content'>
             <?php echo $page['content']; ?>
         </div>
-        <a href='admin.php'>Admin Panel</a>
+        <footer class='site-footer'>
+            <p>Powered by RaCore | <a href='/control-panel.html'>Manage Your Site</a></p>
+        </footer>
     </div>
 </body>
 </html>";
 
         File.WriteAllText(Path.Combine(_cmsRootPath, "index.php"), content);
-        _module.Log("Generated index.php");
+        _module.Log("Generated index.php with RaCore Control Panel integration");
     }
 
     private void GenerateAdminFile()
@@ -210,7 +219,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in']) {
-    echo '<form method='post'><input name='username' placeholder='Username'><input type='password' name='password' placeholder='Password'><button>Login</button></form>';
+    ?>
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Admin Login - <?php echo SITE_NAME; ?></title>
+        <link rel='stylesheet' href='styles.css'>
+        <style>
+            .login-container {
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            }
+            .login-box {
+                background: white;
+                padding: 40px;
+                border-radius: 15px;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+                max-width: 400px;
+                width: 100%;
+            }
+            .login-box input {
+                width: 100%;
+                padding: 12px;
+                margin: 10px 0;
+                border: 2px solid #e0e0e0;
+                border-radius: 8px;
+            }
+            .login-box button {
+                width: 100%;
+                padding: 12px;
+                background: #667eea;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 16px;
+                font-weight: bold;
+            }
+        </style>
+    </head>
+    <body>
+        <div class='login-container'>
+            <div class='login-box'>
+                <h2>Admin Login</h2>
+                <form method='post'>
+                    <input name='username' placeholder='Username' required>
+                    <input type='password' name='password' placeholder='Password' required>
+                    <button>Login</button>
+                </form>
+                <p style='margin-top: 20px; text-align: center;'>
+                    <a href='index.php'>Back to Homepage</a>
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+    <?php
     exit;
 }
 ?>
@@ -222,15 +289,59 @@ if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in']) {
 </head>
 <body>
     <div class='container'>
-        <h1>Admin Panel</h1>
-        <p>Logged in as: <?php echo htmlspecialchars($_SESSION['username']); ?></p>
-        <a href='index.php'>Back to Homepage</a>
+        <nav class='main-nav'>
+            <div class='nav-brand'>Admin Panel - <?php echo SITE_NAME; ?></div>
+            <div class='nav-links'>
+                <a href='index.php'>Home</a>
+                <a href='admin.php'>Admin</a>
+                <a href='/control-panel.html' target='_blank'>RaCore Control Panel</a>
+                <a href='?logout=1'>Logout</a>
+            </div>
+        </nav>
+        <div class='content'>
+            <h1>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!</h1>
+            
+            <div style='margin: 30px 0; padding: 20px; background: #f8f9fa; border-radius: 10px;'>
+                <h2 style='color: #667eea; margin-bottom: 15px;'>Quick Actions</h2>
+                <ul style='list-style: none; padding: 0;'>
+                    <li style='margin: 10px 0;'>
+                        <a href='/control-panel.html' target='_blank' style='display: inline-block; padding: 10px 20px; background: #667eea; color: white; border-radius: 5px; text-decoration: none;'>
+                            🎛️ Open RaCore Control Panel
+                        </a>
+                    </li>
+                    <li style='margin: 10px 0; color: #666;'>
+                        📝 Manage Pages (Coming Soon)
+                    </li>
+                    <li style='margin: 10px 0; color: #666;'>
+                        👥 Manage Users (Coming Soon)
+                    </li>
+                    <li style='margin: 10px 0; color: #666;'>
+                        ⚙️ Site Settings (Coming Soon)
+                    </li>
+                </ul>
+            </div>
+            
+            <div style='margin: 30px 0; padding: 20px; background: #e8f4f8; border-radius: 10px; border-left: 4px solid #667eea;'>
+                <h3 style='color: #667eea; margin-bottom: 10px;'>💡 Pro Tip</h3>
+                <p>Use the <strong>RaCore Control Panel</strong> for advanced management including:</p>
+                <ul style='margin-top: 10px;'>
+                    <li>User & Role Management</li>
+                    <li>License Management</li>
+                    <li>RaCoin Wallet Management</li>
+                    <li>Game Server Configuration</li>
+                    <li>Forum Moderation</li>
+                </ul>
+            </div>
+        </div>
+        <footer class='site-footer'>
+            <p>Powered by RaCore | <a href='/control-panel.html'>Advanced Management</a></p>
+        </footer>
     </div>
 </body>
 </html>";
 
         File.WriteAllText(Path.Combine(_cmsRootPath, "admin.php"), content);
-        _module.Log("Generated admin.php");
+        _module.Log("Generated admin.php with RaCore Control Panel integration");
     }
 
     private void GenerateStylesFile()
@@ -238,24 +349,62 @@ if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in']) {
         var content = @"body {
     font-family: Arial, sans-serif;
     margin: 0;
-    padding: 20px;
+    padding: 0;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: #333;
+    min-height: 100vh;
 }
 
 .container {
-    max-width: 800px;
+    max-width: 1200px;
     margin: 0 auto;
     background: white;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    min-height: 100vh;
+    box-shadow: 0 0 60px rgba(0,0,0,0.3);
+}
+
+.main-nav {
+    background: #667eea;
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.nav-brand {
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.nav-links {
+    display: flex;
+    gap: 20px;
+}
+
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    transition: background 0.3s;
+}
+
+.nav-links a:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.content {
+    padding: 40px 30px;
+    min-height: 400px;
 }
 
 h1 {
     color: #667eea;
     border-bottom: 3px solid #764ba2;
     padding-bottom: 10px;
+    margin-bottom: 20px;
 }
 
 a {
@@ -266,10 +415,23 @@ a {
 
 a:hover {
     color: #764ba2;
+}
+
+.site-footer {
+    background: #f5f5f5;
+    padding: 20px 30px;
+    text-align: center;
+    color: #666;
+    border-top: 1px solid #ddd;
+}
+
+.site-footer a {
+    color: #667eea;
+    margin-left: 10px;
 }";
 
         File.WriteAllText(Path.Combine(_cmsRootPath, "styles.css"), content);
-        _module.Log("Generated styles.css");
+        _module.Log("Generated styles.css with integrated navigation");
     }
 
     private string GetRelativeDatabasePath(string dbPath)
