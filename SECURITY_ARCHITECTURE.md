@@ -547,6 +547,6 @@ Document security enhancements, vulnerability fixes, and compliance updates here
 
 ---
 
-**Last Updated**: 2025-10-05  
-**Version**: 1.0  
+**Last Updated**: 2025-01-13  
+**Version**: v4.8.9  
 **Maintainer**: RaCore Security Team

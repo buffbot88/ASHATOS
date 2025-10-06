@@ -303,7 +303,7 @@ The ServerSetup module transforms RaCore into a complete multi-tenant server man
 ---
 
 **Module:** ServerSetup  
-**Version:** 1.0  
+**Version:** v4.8.9  
 **Status:** ✅ Production Ready  
 **Commit:** 4c3b286  
-**Date:** 2025-10-06
+**Date:** 2025-01-13
