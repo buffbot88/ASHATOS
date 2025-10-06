@@ -48,6 +48,12 @@ public class CmsGenerator
             GenerateIndexFile();
             GenerateAdminFile();
             GenerateStylesFile();
+            
+            // Generate new feature pages
+            GenerateBlogsFile();
+            GenerateForumsFile();
+            GenerateDigiChatFile();
+            GenerateProfileFile();
 
             return $"✅ CMS homepage generated successfully at: {_cmsRootPath}";
         }
@@ -182,6 +188,10 @@ class Database {
 require_once 'config.php';
 require_once 'db.php';
 
+// Get current user from session if available
+session_start();
+$currentUser = $_SESSION['username'] ?? 'guest';
+
 $db = new Database();
 $pages = $db->query('SELECT * FROM pages LIMIT 1');
 $page = $pages[0] ?? ['title' => 'Welcome', 'content' => 'No content'];
@@ -198,8 +208,11 @@ $page = $pages[0] ?? ['title' => 'Welcome', 'content' => 'No content'];
             <div class='nav-brand'><?php echo SITE_NAME; ?></div>
             <div class='nav-links'>
                 <a href='index.php'>Home</a>
-                <a href='admin.php'>Admin Panel</a>
-                <a href='/control-panel.html' target='_blank'>RaCore Control Panel</a>
+                <a href='blogs.php'>Blogs</a>
+                <a href='forums.php'>Forums</a>
+                <a href='digichat.php'>DigiChat</a>
+                <a href='profile.php?user=<?php echo urlencode($currentUser); ?>'>Social</a>
+                <a href='/control-panel.html' target='_blank'>Settings</a>
             </div>
         </nav>
         <div class='content'>
@@ -213,7 +226,7 @@ $page = $pages[0] ?? ['title' => 'Welcome', 'content' => 'No content'];
 </html>";
 
         File.WriteAllText(Path.Combine(_cmsRootPath, "index.php"), content);
-        _module.Log("Generated index.php with RaCore Control Panel integration");
+        _module.Log("Generated index.php with full CMS navigation (Home, Blogs, Forums, DigiChat, Social, Settings)");
     }
 
     private void GenerateAdminFile()
@@ -461,5 +474,197 @@ a:hover {
         // Always use forward slashes for PHP paths (works on all platforms, including Windows)
         // Backslashes are escape characters in PHP, not path separators
         return Uri.UnescapeDataString(relativeUri.ToString());
+    }
+
+    private void GenerateBlogsFile()
+    {
+        var content = @"<?php
+require_once 'config.php';
+require_once 'db.php';
+
+session_start();
+$currentUser = $_SESSION['username'] ?? 'guest';
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Blogs - <?php echo SITE_NAME; ?></title>
+    <link rel='stylesheet' href='styles.css'>
+</head>
+<body>
+    <div class='container'>
+        <nav class='main-nav'>
+            <div class='nav-brand'><?php echo SITE_NAME; ?></div>
+            <div class='nav-links'>
+                <a href='index.php'>Home</a>
+                <a href='blogs.php'>Blogs</a>
+                <a href='forums.php'>Forums</a>
+                <a href='digichat.php'>DigiChat</a>
+                <a href='profile.php?user=<?php echo urlencode($currentUser); ?>'>Social</a>
+                <a href='/control-panel.html' target='_blank'>Settings</a>
+            </div>
+        </nav>
+        <div class='content'>
+            <h1>Blogs</h1>
+            <p>Share your thoughts and stories with the community.</p>
+            <div style='margin-top: 20px; padding: 20px; background: #f9f9f9; border-radius: 5px;'>
+                <h3>Coming Soon!</h3>
+                <p>The blog feature is currently under development. Check back soon for updates.</p>
+            </div>
+        </div>
+        <footer class='site-footer'>
+            <p>Powered by RaCore | <a href='/control-panel.html'>Manage Your Site</a></p>
+        </footer>
+    </div>
+</body>
+</html>";
+
+        File.WriteAllText(Path.Combine(_cmsRootPath, "blogs.php"), content);
+        _module.Log("Generated blogs.php");
+    }
+
+    private void GenerateForumsFile()
+    {
+        var content = @"<?php
+require_once 'config.php';
+require_once 'db.php';
+
+session_start();
+$currentUser = $_SESSION['username'] ?? 'guest';
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Forums - <?php echo SITE_NAME; ?></title>
+    <link rel='stylesheet' href='styles.css'>
+</head>
+<body>
+    <div class='container'>
+        <nav class='main-nav'>
+            <div class='nav-brand'><?php echo SITE_NAME; ?></div>
+            <div class='nav-links'>
+                <a href='index.php'>Home</a>
+                <a href='blogs.php'>Blogs</a>
+                <a href='forums.php'>Forums</a>
+                <a href='digichat.php'>DigiChat</a>
+                <a href='profile.php?user=<?php echo urlencode($currentUser); ?>'>Social</a>
+                <a href='/control-panel.html' target='_blank'>Settings</a>
+            </div>
+        </nav>
+        <div class='content'>
+            <h1>Forums</h1>
+            <p>Engage in discussions with other community members.</p>
+            <div style='margin-top: 20px; padding: 20px; background: #f9f9f9; border-radius: 5px;'>
+                <h3>Coming Soon!</h3>
+                <p>The forum feature is currently under development. Check back soon for updates.</p>
+            </div>
+        </div>
+        <footer class='site-footer'>
+            <p>Powered by RaCore | <a href='/control-panel.html'>Manage Your Site</a></p>
+        </footer>
+    </div>
+</body>
+</html>";
+
+        File.WriteAllText(Path.Combine(_cmsRootPath, "forums.php"), content);
+        _module.Log("Generated forums.php");
+    }
+
+    private void GenerateDigiChatFile()
+    {
+        var content = @"<?php
+require_once 'config.php';
+require_once 'db.php';
+
+session_start();
+$currentUser = $_SESSION['username'] ?? 'guest';
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DigiChat - <?php echo SITE_NAME; ?></title>
+    <link rel='stylesheet' href='styles.css'>
+</head>
+<body>
+    <div class='container'>
+        <nav class='main-nav'>
+            <div class='nav-brand'><?php echo SITE_NAME; ?></div>
+            <div class='nav-links'>
+                <a href='index.php'>Home</a>
+                <a href='blogs.php'>Blogs</a>
+                <a href='forums.php'>Forums</a>
+                <a href='digichat.php'>DigiChat</a>
+                <a href='profile.php?user=<?php echo urlencode($currentUser); ?>'>Social</a>
+                <a href='/control-panel.html' target='_blank'>Settings</a>
+            </div>
+        </nav>
+        <div class='content'>
+            <h1>DigiChat</h1>
+            <p>Real-time chat room for instant communication.</p>
+            <div style='margin-top: 20px; padding: 20px; background: #f9f9f9; border-radius: 5px;'>
+                <h3>Coming Soon!</h3>
+                <p>The DigiChat feature is currently under development. Check back soon for updates.</p>
+            </div>
+        </div>
+        <footer class='site-footer'>
+            <p>Powered by RaCore | <a href='/control-panel.html'>Manage Your Site</a></p>
+        </footer>
+    </div>
+</body>
+</html>";
+
+        File.WriteAllText(Path.Combine(_cmsRootPath, "digichat.php"), content);
+        _module.Log("Generated digichat.php");
+    }
+
+    private void GenerateProfileFile()
+    {
+        var content = @"<?php
+require_once 'config.php';
+require_once 'db.php';
+
+session_start();
+$currentUser = $_SESSION['username'] ?? 'guest';
+$viewUser = $_GET['user'] ?? $currentUser;
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Profile: <?php echo htmlspecialchars($viewUser); ?> - <?php echo SITE_NAME; ?></title>
+    <link rel='stylesheet' href='styles.css'>
+</head>
+<body>
+    <div class='container'>
+        <nav class='main-nav'>
+            <div class='nav-brand'><?php echo SITE_NAME; ?></div>
+            <div class='nav-links'>
+                <a href='index.php'>Home</a>
+                <a href='blogs.php'>Blogs</a>
+                <a href='forums.php'>Forums</a>
+                <a href='digichat.php'>DigiChat</a>
+                <a href='profile.php?user=<?php echo urlencode($currentUser); ?>'>Social</a>
+                <a href='/control-panel.html' target='_blank'>Settings</a>
+            </div>
+        </nav>
+        <div class='content'>
+            <h1><?php echo htmlspecialchars($viewUser); ?>'s Profile</h1>
+            <div style='margin-top: 20px; padding: 20px; background: #f9f9f9; border-radius: 5px;'>
+                <h3>MySpace-Style Profile</h3>
+                <p>User: <strong><?php echo htmlspecialchars($viewUser); ?></strong></p>
+                <p>Member since: <em>Coming Soon</em></p>
+                <hr style='margin: 20px 0;'>
+                <h3>Coming Soon!</h3>
+                <p>The profile feature is currently under development with MySpace-like social features. Check back soon for updates.</p>
+            </div>
+        </div>
+        <footer class='site-footer'>
+            <p>Powered by RaCore | <a href='/control-panel.html'>Manage Your Site</a></p>
+        </footer>
+    </div>
+</body>
+</html>";
+
+        File.WriteAllText(Path.Combine(_cmsRootPath, "profile.php"), content);
+        _module.Log("Generated profile.php with MySpace-style profile");
     }
 }

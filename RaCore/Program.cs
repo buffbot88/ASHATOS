@@ -741,10 +741,12 @@ if (serverSetupModule != null && authModule != null)
     Console.WriteLine("  POST   /api/serversetup/php - Setup PHP config (admin only)");
 }
 
-// Redirect root to login page
+// Redirect root to CMS homepage
 app.MapGet("/", (HttpContext context) =>
 {
-    context.Response.Redirect("/login.html");
+    // Get CMS port from environment or use default 8080
+    var cmsPort = Environment.GetEnvironmentVariable("RACORE_CMS_PORT") ?? "8080";
+    context.Response.Redirect($"http://localhost:{cmsPort}");
     return Task.CompletedTask;
 });
 

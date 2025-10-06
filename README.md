@@ -48,7 +48,18 @@ On first run, RaCore automatically:
 3. Starts PHP development server (port 8080)
 4. Creates default admin user
 
-Access the Control Panel at: `http://localhost:5000/control-panel.html`
+**Default Entry Points:**
+- **Main CMS Homepage:** `http://localhost:5000/` (redirects to CMS on port 8080)
+- **CMS Direct Access:** `http://localhost:8080/`
+- **Control Panel:** `http://localhost:5000/control-panel.html`
+
+The CMS homepage provides navigation to:
+- **Home** - Landing/welcome page
+- **Blogs** - Share thoughts and stories
+- **Forums** - Community discussions
+- **DigiChat** - Real-time chat room
+- **Social** - MySpace-like user profiles
+- **Settings** - Control Panel for admin/user settings
 
 For more details, see [FIRST_RUN_INITIALIZATION.md](FIRST_RUN_INITIALIZATION.md)
 
