@@ -14,6 +14,7 @@ public sealed class ForumModule : ModuleBase, IForumModule
     private readonly ConcurrentDictionary<string, BanRecord> _bannedUsers = new();
     private ModuleManager? _manager;
     private IContentModerationModule? _moderationModule;
+    private IParentalControlModule? _parentalControlModule;
     
     public override void Initialize(object? manager)
     {
@@ -25,10 +26,16 @@ public sealed class ForumModule : ModuleBase, IForumModule
                 .Select(m => m.Instance)
                 .OfType<IContentModerationModule>()
                 .FirstOrDefault();
+            
+            _parentalControlModule = _manager.Modules
+                .Select(m => m.Instance)
+                .OfType<IParentalControlModule>()
+                .FirstOrDefault();
         }
         
         Console.WriteLine($"[{Name}] Initializing Forum Module...");
         Console.WriteLine($"[{Name}] Content moderation: {(_moderationModule != null ? "enabled" : "disabled")}");
+        Console.WriteLine($"[{Name}] Parental controls: {(_parentalControlModule != null ? "enabled" : "disabled")}");
         
         // Seed some example data
         SeedExampleData();
@@ -84,6 +91,30 @@ public sealed class ForumModule : ModuleBase, IForumModule
             .ToList());
     }
     
+    public async Task<List<ForumPost>> GetPostsForUserAsync(string userId, int page = 1, int perPage = 20)
+    {
+        var query = _posts.Values.Where(p => !p.IsDeleted);
+        
+        // Filter by age-appropriate content if parental controls enabled
+        if (_parentalControlModule != null)
+        {
+            var settings = await _parentalControlModule.GetSettingsAsync(userId);
+            if (settings != null && settings.IsMinor)
+            {
+                var maxRating = settings.MaxAllowedRating;
+                query = query.Where(p => p.ContentRating <= maxRating);
+                
+                Console.WriteLine($"[{Name}] Filtering posts for user {userId} with max rating: {maxRating}");
+            }
+        }
+        
+        return await Task.FromResult(query
+            .OrderByDescending(p => p.CreatedAt)
+            .Skip((page - 1) * perPage)
+            .Take(perPage)
+            .ToList());
+    }
+    
     public async Task<(bool success, string message, string? postId)> CreatePostAsync(string userId, string username, string title, string content)
     {
         // Check if user is suspended
@@ -103,6 +134,16 @@ public sealed class ForumModule : ModuleBase, IForumModule
             return (false, "Cannot post: User is banned from the forum", null);
         }
         
+        // Check time restrictions for minors
+        if (_parentalControlModule != null)
+        {
+            var (allowed, reason) = await _parentalControlModule.CheckTimeRestrictionsAsync(userId);
+            if (!allowed)
+            {
+                return (false, $"Cannot post: {reason}", null);
+            }
+        }
+        
         // Moderate content before accepting
         if (_moderationModule != null)
         {
@@ -120,6 +161,20 @@ public sealed class ForumModule : ModuleBase, IForumModule
                 Console.WriteLine($"[{Name}] Post {postId} flagged for review");
             }
             
+            // Rate content for age-appropriateness
+            ContentRating rating = ContentRating.Everyone;
+            if (_parentalControlModule != null)
+            {
+                var ratingInfo = await _parentalControlModule.RateContentAsync(postId, "forum_post", $"{title}\n{content}");
+                rating = ratingInfo.Rating;
+                
+                Console.WriteLine($"[{Name}] Post rated: {rating}");
+                if (ratingInfo.Descriptors.Count > 0)
+                {
+                    Console.WriteLine($"[{Name}] Content descriptors: {string.Join(", ", ratingInfo.Descriptors)}");
+                }
+            }
+            
             // Create the post
             var post = new ForumPost
             {
@@ -131,7 +186,8 @@ public sealed class ForumModule : ModuleBase, IForumModule
                 Content = content,
                 CreatedAt = DateTime.UtcNow,
                 ReplyCount = 0,
-                ViewCount = 0
+                ViewCount = 0,
+                ContentRating = rating // Store rating with post
             };
             
             _posts[postId] = post;
