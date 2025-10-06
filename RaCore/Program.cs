@@ -1,6 +1,7 @@
 using Abstractions;
 using RaCore.Engine.Manager;
 using RaCore.Engine.Memory;
+using RaCore.Modules.Extensions.UserProfiles;
 using SQLitePCL;
 using System.Text.Json;
 
@@ -1413,6 +1414,488 @@ app.MapGet("/api/control/forum/stats", async (HttpContext context) =>
 });
 
 // ============================================================================
+// Blog API Endpoints
+// ============================================================================
+
+app.MapGet("/api/blog/posts", async (HttpContext context) =>
+{
+    var blogModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<IBlogModule>()
+        .FirstOrDefault();
+    
+    if (blogModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Blog module not available" });
+    }
+    
+    var pageStr = context.Request.Query["page"].ToString();
+    var page = int.TryParse(pageStr, out var p) ? p : 1;
+    var category = context.Request.Query["category"].ToString();
+    
+    var posts = await blogModule.GetPostsAsync(page, 20, string.IsNullOrEmpty(category) ? null : category);
+    return Results.Json(new { posts });
+});
+
+app.MapGet("/api/blog/posts/{postId}", async (HttpContext context) =>
+{
+    var postId = context.Request.RouteValues["postId"]?.ToString();
+    if (string.IsNullOrEmpty(postId))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Post ID required" });
+    }
+    
+    var blogModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<IBlogModule>()
+        .FirstOrDefault();
+    
+    if (blogModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Blog module not available" });
+    }
+    
+    var post = await blogModule.GetPostByIdAsync(postId);
+    if (post == null)
+    {
+        context.Response.StatusCode = 404;
+        return Results.Json(new { error = "Post not found" });
+    }
+    
+    return Results.Json(new { post });
+});
+
+app.MapPost("/api/blog/posts", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null)
+    {
+        context.Response.StatusCode = 401;
+        return Results.Json(new { error = "Authentication required" });
+    }
+    
+    var body = await context.Request.ReadFromJsonAsync<CreateBlogPostRequest>();
+    if (body == null || string.IsNullOrEmpty(body.Title) || string.IsNullOrEmpty(body.Content))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Title and content required" });
+    }
+    
+    var blogModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<IBlogModule>()
+        .FirstOrDefault();
+    
+    if (blogModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Blog module not available" });
+    }
+    
+    var result = await blogModule.CreatePostAsync(user.Id.ToString(), user.Username, body.Title, body.Content, body.Category);
+    return Results.Json(new { success = result.success, message = result.message, postId = result.postId });
+});
+
+app.MapGet("/api/blog/posts/{postId}/comments", async (HttpContext context) =>
+{
+    var postId = context.Request.RouteValues["postId"]?.ToString();
+    if (string.IsNullOrEmpty(postId))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Post ID required" });
+    }
+    
+    var blogModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<IBlogModule>()
+        .FirstOrDefault();
+    
+    if (blogModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Blog module not available" });
+    }
+    
+    var comments = await blogModule.GetCommentsAsync(postId);
+    return Results.Json(new { comments });
+});
+
+app.MapPost("/api/blog/posts/{postId}/comments", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null)
+    {
+        context.Response.StatusCode = 401;
+        return Results.Json(new { error = "Authentication required" });
+    }
+    
+    var postId = context.Request.RouteValues["postId"]?.ToString();
+    if (string.IsNullOrEmpty(postId))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Post ID required" });
+    }
+    
+    var body = await context.Request.ReadFromJsonAsync<AddCommentRequest>();
+    if (body == null || string.IsNullOrEmpty(body.Content))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Content required" });
+    }
+    
+    var blogModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<IBlogModule>()
+        .FirstOrDefault();
+    
+    if (blogModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Blog module not available" });
+    }
+    
+    var result = await blogModule.AddCommentAsync(postId, user.Id.ToString(), user.Username, body.Content);
+    return Results.Json(new { success = result.success, message = result.message, commentId = result.commentId });
+});
+
+app.MapGet("/api/blog/categories", async (HttpContext context) =>
+{
+    var blogModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<IBlogModule>()
+        .FirstOrDefault();
+    
+    if (blogModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Blog module not available" });
+    }
+    
+    var categories = await blogModule.GetCategoriesAsync();
+    return Results.Json(new { categories });
+});
+
+// ============================================================================
+// Chat API Endpoints
+// ============================================================================
+
+app.MapGet("/api/chat/rooms", async (HttpContext context) =>
+{
+    var chatModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<IChatModule>()
+        .FirstOrDefault();
+    
+    if (chatModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Chat module not available" });
+    }
+    
+    var rooms = await chatModule.GetRoomsAsync();
+    return Results.Json(new { rooms });
+});
+
+app.MapPost("/api/chat/rooms", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null)
+    {
+        context.Response.StatusCode = 401;
+        return Results.Json(new { error = "Authentication required" });
+    }
+    
+    var body = await context.Request.ReadFromJsonAsync<CreateChatRoomRequest>();
+    if (body == null || string.IsNullOrEmpty(body.Name))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Room name required" });
+    }
+    
+    var chatModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<IChatModule>()
+        .FirstOrDefault();
+    
+    if (chatModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Chat module not available" });
+    }
+    
+    var result = await chatModule.CreateRoomAsync(body.Name, user.Id.ToString(), body.IsPrivate);
+    return Results.Json(new { success = result.success, message = result.message, roomId = result.roomId });
+});
+
+app.MapGet("/api/chat/rooms/{roomId}/messages", async (HttpContext context) =>
+{
+    var roomId = context.Request.RouteValues["roomId"]?.ToString();
+    if (string.IsNullOrEmpty(roomId))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Room ID required" });
+    }
+    
+    var chatModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<IChatModule>()
+        .FirstOrDefault();
+    
+    if (chatModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Chat module not available" });
+    }
+    
+    var messages = await chatModule.GetMessagesAsync(roomId);
+    return Results.Json(new { messages });
+});
+
+app.MapPost("/api/chat/rooms/{roomId}/messages", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null)
+    {
+        context.Response.StatusCode = 401;
+        return Results.Json(new { error = "Authentication required" });
+    }
+    
+    var roomId = context.Request.RouteValues["roomId"]?.ToString();
+    if (string.IsNullOrEmpty(roomId))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Room ID required" });
+    }
+    
+    var body = await context.Request.ReadFromJsonAsync<SendMessageRequest>();
+    if (body == null || string.IsNullOrEmpty(body.Content))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Content required" });
+    }
+    
+    var chatModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<IChatModule>()
+        .FirstOrDefault();
+    
+    if (chatModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Chat module not available" });
+    }
+    
+    var result = await chatModule.SendMessageAsync(roomId, user.Id.ToString(), user.Username, body.Content);
+    return Results.Json(new { success = result.success, message = result.message, messageId = result.messageId });
+});
+
+app.MapPost("/api/chat/rooms/{roomId}/join", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null)
+    {
+        context.Response.StatusCode = 401;
+        return Results.Json(new { error = "Authentication required" });
+    }
+    
+    var roomId = context.Request.RouteValues["roomId"]?.ToString();
+    if (string.IsNullOrEmpty(roomId))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Room ID required" });
+    }
+    
+    var chatModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<IChatModule>()
+        .FirstOrDefault();
+    
+    if (chatModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Chat module not available" });
+    }
+    
+    var success = await chatModule.JoinRoomAsync(roomId, user.Id.ToString(), user.Username);
+    return Results.Json(new { success });
+});
+
+// ============================================================================
+// Social Profile API Endpoints
+// ============================================================================
+
+app.MapGet("/api/social/profile/{userId}", async (HttpContext context) =>
+{
+    var userId = context.Request.RouteValues["userId"]?.ToString();
+    if (string.IsNullOrEmpty(userId))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "User ID required" });
+    }
+    
+    var profileModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<UserProfileModule>()
+        .FirstOrDefault();
+    
+    if (profileModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Profile module not available" });
+    }
+    
+    var profile = await profileModule.GetProfileAsync(userId);
+    if (profile == null)
+    {
+        context.Response.StatusCode = 404;
+        return Results.Json(new { error = "Profile not found" });
+    }
+    
+    return Results.Json(new { profile });
+});
+
+app.MapPost("/api/social/profile/{userId}/friends", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null)
+    {
+        context.Response.StatusCode = 401;
+        return Results.Json(new { error = "Authentication required" });
+    }
+    
+    var userId = context.Request.RouteValues["userId"]?.ToString();
+    if (string.IsNullOrEmpty(userId))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "User ID required" });
+    }
+    
+    var body = await context.Request.ReadFromJsonAsync<AddFriendRequest>();
+    if (body == null || string.IsNullOrEmpty(body.FriendId))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Friend ID required" });
+    }
+    
+    var profileModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<UserProfileModule>()
+        .FirstOrDefault();
+    
+    if (profileModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Profile module not available" });
+    }
+    
+    var success = await profileModule.AddFriendAsync(userId, body.FriendId);
+    return Results.Json(new { success });
+});
+
+app.MapGet("/api/social/profile/{userId}/posts", async (HttpContext context) =>
+{
+    var userId = context.Request.RouteValues["userId"]?.ToString();
+    if (string.IsNullOrEmpty(userId))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "User ID required" });
+    }
+    
+    var profileModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<UserProfileModule>()
+        .FirstOrDefault();
+    
+    if (profileModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Profile module not available" });
+    }
+    
+    var posts = await profileModule.GetSocialPostsAsync(userId);
+    return Results.Json(new { posts });
+});
+
+app.MapPost("/api/social/profile/{userId}/posts", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null)
+    {
+        context.Response.StatusCode = 401;
+        return Results.Json(new { error = "Authentication required" });
+    }
+    
+    var userId = context.Request.RouteValues["userId"]?.ToString();
+    if (string.IsNullOrEmpty(userId))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "User ID required" });
+    }
+    
+    var body = await context.Request.ReadFromJsonAsync<CreateSocialPostRequest>();
+    if (body == null || string.IsNullOrEmpty(body.Content))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Content required" });
+    }
+    
+    var profileModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<UserProfileModule>()
+        .FirstOrDefault();
+    
+    if (profileModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Profile module not available" });
+    }
+    
+    var result = await profileModule.CreateSocialPostAsync(userId, body.Content);
+    return Results.Json(new { success = result.success, postId = result.postId });
+});
+
+app.MapGet("/api/social/profile/{userId}/activity", async (HttpContext context) =>
+{
+    var userId = context.Request.RouteValues["userId"]?.ToString();
+    if (string.IsNullOrEmpty(userId))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "User ID required" });
+    }
+    
+    var profileModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<UserProfileModule>()
+        .FirstOrDefault();
+    
+    if (profileModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Profile module not available" });
+    }
+    
+    var activity = await profileModule.GetActivityFeedAsync(userId);
+    return Results.Json(new { activity });
+});
+
+// ============================================================================
 // System Health & Monitoring API Endpoints
 // ============================================================================
 
@@ -1812,6 +2295,43 @@ public class ForumBanRequest
 {
     public bool Banned { get; set; }
     public string? Reason { get; set; }
+}
+
+// ============================================================================
+// Request Models for Blog, Chat, and Social
+// ============================================================================
+
+public class CreateBlogPostRequest
+{
+    public string Title { get; set; } = string.Empty;
+    public string Content { get; set; } = string.Empty;
+    public string? Category { get; set; }
+}
+
+public class AddCommentRequest
+{
+    public string Content { get; set; } = string.Empty;
+}
+
+public class CreateChatRoomRequest
+{
+    public string Name { get; set; } = string.Empty;
+    public bool IsPrivate { get; set; }
+}
+
+public class SendMessageRequest
+{
+    public string Content { get; set; } = string.Empty;
+}
+
+public class AddFriendRequest
+{
+    public string FriendId { get; set; } = string.Empty;
+}
+
+public class CreateSocialPostRequest
+{
+    public string Content { get; set; } = string.Empty;
 }
 
 public class CreateAdminInstanceRequest
