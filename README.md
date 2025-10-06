@@ -2,6 +2,58 @@
 
 ---
 
+## 🚀 Quick Start
+
+### Prerequisites
+- .NET 9.0 SDK
+- Optional: PHP 8+ for CMS features
+- Optional: Apache for production CMS deployment
+
+### Running RaCore
+
+```bash
+# Clone the repository
+git clone https://github.com/buffbot88/TheRaProject.git
+cd TheRaProject
+
+# Build and run
+cd RaCore
+dotnet build
+dotnet run
+```
+
+### Default Configuration
+- **RaCore Server Port:** 5000 (configurable via `RACORE_PORT` environment variable)
+- **CMS PHP Server Port:** 8080 (auto-started on first run)
+- **Default Admin:** username: `admin`, password: `admin123` ⚠️ **Change this immediately!**
+
+### Custom Port Configuration
+
+**Linux/Mac:**
+```bash
+export RACORE_PORT=8080
+dotnet run
+```
+
+**Windows:**
+```cmd
+set RACORE_PORT=8080
+dotnet run
+```
+
+### First Run
+On first run, RaCore automatically:
+1. Creates a CMS with integrated Control Panel
+2. Initializes SQLite database
+3. Starts PHP development server (port 8080)
+4. Creates default admin user
+
+Access the Control Panel at: `http://localhost:5000/control-panel.html`
+
+For more details, see [FIRST_RUN_INITIALIZATION.md](FIRST_RUN_INITIALIZATION.md)
+
+---
+
 ## 🧩 **Phase 2: Modular Expansion** ✅ **COMPLETED**
 - ✅ Add dynamic plugin/module discovery
 - ✅ Support extensions (skills, planners, executors, etc)

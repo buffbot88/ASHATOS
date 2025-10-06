@@ -21,7 +21,8 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
 
     public ServerSetupModule()
     {
-        _baseDirectory = AppContext.BaseDirectory;
+        // Use GetCurrentDirectory() for server root directory (where RaCore.exe runs)
+        _baseDirectory = Directory.GetCurrentDirectory();
         _databasesFolder = Path.Combine(_baseDirectory, "Databases");
         _phpFolder = Path.Combine(_baseDirectory, "php");
         _apacheFolder = Path.Combine(_baseDirectory, "Apache");

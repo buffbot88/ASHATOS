@@ -23,12 +23,17 @@ public sealed class SiteBuilderModule : ModuleBase
     private ForumGenerator? _forumGenerator;
     private ProfileGenerator? _profileGenerator;
     private IntegratedSiteGenerator? _integratedSiteGenerator;
+    private WwwrootGenerator? _wwwrootGenerator;
 
     public override void Initialize(object? manager)
     {
         base.Initialize(manager);
         _manager = manager as ModuleManager;
-        _cmsRootPath = Path.Combine(AppContext.BaseDirectory, "racore_cms");
+        
+        // Use GetCurrentDirectory() to get the RaCore.exe server root directory (where the executable runs)
+        var serverRoot = Directory.GetCurrentDirectory();
+        _cmsRootPath = Path.Combine(serverRoot, "racore_cms");
+        var wwwrootPath = Path.Combine(serverRoot, "wwwroot");
         
         // Initialize components
         _phpDetector = new PhpDetector(this);
@@ -38,6 +43,7 @@ public sealed class SiteBuilderModule : ModuleBase
         _profileGenerator = new ProfileGenerator(this, _cmsRootPath);
         _integratedSiteGenerator = new IntegratedSiteGenerator(
             this, _cmsRootPath, _cmsGenerator, _controlPanelGenerator, _forumGenerator, _profileGenerator);
+        _wwwrootGenerator = new WwwrootGenerator(this, wwwrootPath);
         
         LogInfo("SiteBuilder module initialized");
     }
@@ -154,6 +160,22 @@ public sealed class SiteBuilderModule : ModuleBase
             }
 
             return _integratedSiteGenerator.GenerateIntegratedSite(phpPath);
+        }
+    }
+
+    /// <summary>
+    /// Generates wwwroot directory with control panel files
+    /// </summary>
+    public string GenerateWwwroot()
+    {
+        lock (_lock)
+        {
+            if (_wwwrootGenerator == null)
+            {
+                return "Error: Wwwroot generator not initialized";
+            }
+
+            return _wwwrootGenerator.GenerateWwwroot();
         }
     }
 

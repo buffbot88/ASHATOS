@@ -16,8 +16,10 @@ public class FirstRunManager
     public FirstRunManager(ModuleManager moduleManager)
     {
         _moduleManager = moduleManager;
-        _firstRunMarkerPath = Path.Combine(AppContext.BaseDirectory, ".racore_initialized");
-        _cmsPath = Path.Combine(AppContext.BaseDirectory, "racore_cms");
+        // Use GetCurrentDirectory() to get the RaCore.exe server root directory (where the executable runs)
+        var serverRoot = Directory.GetCurrentDirectory();
+        _firstRunMarkerPath = Path.Combine(serverRoot, ".racore_initialized");
+        _cmsPath = Path.Combine(serverRoot, "racore_cms");
     }
     
     /// <summary>
@@ -78,7 +80,15 @@ public class FirstRunManager
                 return false;
             }
             
-            Console.WriteLine("[FirstRunManager] Step 1/3: Spawning site with Integrated Control Panel...");
+            Console.WriteLine("[FirstRunManager] Step 1/4: Generating wwwroot control panel...");
+            Console.WriteLine();
+            
+            // Generate wwwroot directory with control panel files
+            var wwwrootResult = siteBuilderModule.GenerateWwwroot();
+            Console.WriteLine(wwwrootResult);
+            Console.WriteLine();
+            
+            Console.WriteLine("[FirstRunManager] Step 2/4: Spawning CMS with Integrated Control Panel...");
             Console.WriteLine();
             
             // Spawn the site with integrated control panel
@@ -93,7 +103,7 @@ public class FirstRunManager
                 return false;
             }
             
-            Console.WriteLine("[FirstRunManager] Step 2/3: Configuring Apache...");
+            Console.WriteLine("[FirstRunManager] Step 3/4: Configuring Apache...");
             Console.WriteLine();
             
             // Configure Apache
@@ -112,7 +122,7 @@ public class FirstRunManager
             }
             
             Console.WriteLine();
-            Console.WriteLine("[FirstRunManager] Step 3/3: Starting web server...");
+            Console.WriteLine("[FirstRunManager] Step 4/4: Starting web server...");
             Console.WriteLine();
             
             // Try to start PHP server

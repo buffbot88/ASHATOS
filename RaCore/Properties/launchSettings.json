@@ -4,9 +4,10 @@
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "RACORE_PORT": "5000"
       },
-      "applicationUrl": "https://localhost:49555;http://localhost:49556"
+      "applicationUrl": "http://localhost:5000"
     }
   }
 }

@@ -51,7 +51,7 @@ public class IntegratedSiteGenerator
             return $@"✅ Integrated site generated successfully!
 
 📁 CMS Location: {_cmsRootPath}
-📁 Project Root: {AppContext.BaseDirectory}
+📁 Server Root: {Directory.GetCurrentDirectory()}
 
 Generated structure:
   {_cmsRootPath}/
