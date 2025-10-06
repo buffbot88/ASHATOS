@@ -498,3 +498,6 @@ RaCore/Databases/
 RaCore/Apache/
 RaCore/php/
 RaCore/Admins/
+
+# Test model files (empty placeholders)
+RaCore/llama.cpp/models/*.gguf

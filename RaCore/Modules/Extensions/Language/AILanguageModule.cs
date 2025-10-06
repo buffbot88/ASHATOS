@@ -13,6 +13,7 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
     private int _maxTokens = 128;
     private ModuleManager? _manager;
     private LlamaCppDetector? _detector;
+    private string _modelsDirectory = Path.Combine("llama.cpp", "models");
 
     public static string Description => AILanguageConstants.Description;
     public static IReadOnlyList<string> SupportedCommands => AILanguageConstants.SupportedCommands;
@@ -39,7 +40,22 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
         _manager = (ModuleManager?)manager;
         _detector = new LlamaCppDetector(this);
         
-        _modelPath ??= Path.Combine("llama.cpp", "models", "llama-2-7b-chat.Q4_K_M.gguf");
+        // Try to auto-detect model if not set
+        if (_modelPath == null)
+        {
+            var availableModels = ScanForModels();
+            if (availableModels.Count > 0)
+            {
+                _modelPath = availableModels[0];
+                LogInfo($"Auto-detected model: {Path.GetFileName(_modelPath)}");
+            }
+            else
+            {
+                // Fallback to default path for backward compatibility
+                _modelPath = Path.Combine("llama.cpp", "models", "llama-2-7b-chat.Q4_K_M.gguf");
+            }
+        }
+        
         try 
         { 
             _modelPath = Path.GetFullPath(_modelPath!); 
@@ -75,8 +91,21 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
         if (!File.Exists(_modelPath ?? ""))
         {
             LogWarn($"Model file not found at: {_modelPath}");
-            LogWarn("AILanguage module will not be functional until a model is configured.");
-            LogInfo("Use 'set-model <path>' to configure model path.");
+            var availableModels = ScanForModels();
+            if (availableModels.Count > 0)
+            {
+                LogInfo($"Found {availableModels.Count} available model(s) in {_modelsDirectory}:");
+                foreach (var model in availableModels)
+                {
+                    LogInfo($"  - {Path.GetFileName(model)}");
+                }
+                LogInfo("Use 'list-models' to see all models or 'select-model <name>' to choose one.");
+            }
+            else
+            {
+                LogWarn("AILanguage module will not be functional until a model is configured.");
+                LogInfo("Use 'set-model <path>' to configure model path.");
+            }
         }
         
         if (File.Exists(_llamaExePath) && File.Exists(_modelPath ?? ""))
@@ -117,12 +146,102 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
         if (string.IsNullOrWhiteSpace(text) || text.Equals("help", StringComparison.OrdinalIgnoreCase))
             return new ModuleResponse
             {
-                Text = "Commands: help, status, reload, set-model <path>, set-context <n>, set-tokens <n>, set-exe <path>",
+                Text = "Commands: help, status, reload, list-models, select-model <name-or-number>, set-model <path>, set-context <n>, set-tokens <n>, set-exe <path>",
                 Type = "help",
                 Status = "ok",
                 Language = "en",
                 Metadata = Capabilities
             };
+
+        if (text.Equals("list-models", StringComparison.OrdinalIgnoreCase))
+        {
+            var modelsList = GetAvailableModelsText();
+            return new ModuleResponse
+            {
+                Text = modelsList,
+                Type = "list-models",
+                Status = "ok",
+                Language = "en",
+                Metadata = Capabilities
+            };
+        }
+
+        if (text.StartsWith("select-model ", StringComparison.OrdinalIgnoreCase))
+        {
+            var arg = text["select-model ".Length..].Trim();
+            if (!string.IsNullOrWhiteSpace(arg))
+            {
+                var models = ScanForModels();
+                if (models.Count == 0)
+                {
+                    return new ModuleResponse
+                    {
+                        Text = $"No .gguf models found in {_modelsDirectory}.",
+                        Type = "error",
+                        Status = "error",
+                        Language = "en"
+                    };
+                }
+
+                string? selectedModel = null;
+
+                // Try to parse as number first
+                if (int.TryParse(arg, out var index) && index >= 1 && index <= models.Count)
+                {
+                    selectedModel = models[index - 1];
+                }
+                else
+                {
+                    // Try to match by filename (partial or full)
+                    foreach (var model in models)
+                    {
+                        var fileName = Path.GetFileName(model);
+                        if (fileName.Equals(arg, StringComparison.OrdinalIgnoreCase) ||
+                            fileName.Contains(arg, StringComparison.OrdinalIgnoreCase))
+                        {
+                            selectedModel = model;
+                            break;
+                        }
+                    }
+                }
+
+                if (selectedModel != null)
+                {
+                    _modelPath = selectedModel;
+                    LogInfo($"Model selected: {Path.GetFileName(_modelPath)}");
+                    Initialize(_manager!);
+                    
+                    return new ModuleResponse
+                    {
+                        Text = Status == "ready" 
+                            ? $"Model switched to {Path.GetFileName(_modelPath)} and loaded successfully." 
+                            : $"Model set to {Path.GetFileName(_modelPath)} but failed to load.",
+                        Type = "select-model",
+                        Status = Status == "ready" ? "ok" : "error",
+                        Language = "en",
+                        Metadata = Capabilities
+                    };
+                }
+                else
+                {
+                    return new ModuleResponse
+                    {
+                        Text = $"Model not found: {arg}\n\n{GetAvailableModelsText()}",
+                        Type = "error",
+                        Status = "error",
+                        Language = "en"
+                    };
+                }
+            }
+            
+            return new ModuleResponse
+            {
+                Text = "Usage: select-model <name-or-number>\n\n" + GetAvailableModelsText(),
+                Type = "error",
+                Status = "error",
+                Language = "en"
+            };
+        }
 
         if (text.StartsWith("status", StringComparison.OrdinalIgnoreCase))
             return new ModuleResponse
@@ -388,6 +507,71 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
         }
 
         return output.Trim();
+    }
+
+    /// <summary>
+    /// Scans the models directory for all available .gguf model files.
+    /// </summary>
+    /// <returns>List of full paths to .gguf files found</returns>
+    private List<string> ScanForModels()
+    {
+        var models = new List<string>();
+        
+        try
+        {
+            // Try to get full path of models directory
+            string modelsDir;
+            try
+            {
+                modelsDir = Path.GetFullPath(_modelsDirectory);
+            }
+            catch
+            {
+                modelsDir = _modelsDirectory;
+            }
+            
+            if (Directory.Exists(modelsDir))
+            {
+                var ggufFiles = Directory.GetFiles(modelsDir, "*.gguf", SearchOption.TopDirectoryOnly);
+                models.AddRange(ggufFiles);
+                LogInfo($"Scanned {modelsDir} and found {models.Count} .gguf model(s).");
+            }
+            else
+            {
+                LogInfo($"Models directory not found: {modelsDir}");
+            }
+        }
+        catch (Exception ex)
+        {
+            LogError($"Error scanning for models: {ex.Message}");
+        }
+        
+        return models;
+    }
+
+    /// <summary>
+    /// Gets a formatted list of available models.
+    /// </summary>
+    /// <returns>Formatted string listing all available models</returns>
+    private string GetAvailableModelsText()
+    {
+        var models = ScanForModels();
+        
+        if (models.Count == 0)
+        {
+            return $"No .gguf models found in {_modelsDirectory}.\nPlace your model files there or use 'set-model <path>' to specify a custom location.";
+        }
+        
+        var result = $"Available models ({models.Count} found in {_modelsDirectory}):\n";
+        for (int i = 0; i < models.Count; i++)
+        {
+            var fileName = Path.GetFileName(models[i]);
+            var isCurrentModel = models[i].Equals(_modelPath, StringComparison.OrdinalIgnoreCase);
+            result += $"  {i + 1}. {fileName}{(isCurrentModel ? " (current)" : "")}\n";
+        }
+        result += "\nUse 'select-model <name-or-number>' to switch to a different model.";
+        
+        return result;
     }
 
     public override void Dispose()
