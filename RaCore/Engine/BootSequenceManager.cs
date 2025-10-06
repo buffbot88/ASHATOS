@@ -350,6 +350,26 @@ public class BootSequenceManager
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine("    (｡•́︿•̀｡) Nginx not found - that's okay!");
                 Console.ResetColor();
+                
+                // When Nginx is not available, use RACORE_PORT environment variable if set
+                var portEnv = Environment.GetEnvironmentVariable("RACORE_PORT");
+                if (!string.IsNullOrEmpty(portEnv))
+                {
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.WriteLine($"    📋 Using RACORE_PORT environment variable: {portEnv}");
+                    Console.ResetColor();
+                    Environment.SetEnvironmentVariable("RACORE_DETECTED_PORT", portEnv);
+                    StoreConfig("nginx.port", portEnv);
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.WriteLine("    📋 Using default port: 80");
+                    Console.ResetColor();
+                    Environment.SetEnvironmentVariable("RACORE_DETECTED_PORT", "80");
+                    StoreConfig("nginx.port", "80");
+                }
+                
                 Console.WriteLine();
                 return true; // Not a fatal error
             }
@@ -419,6 +439,15 @@ public class BootSequenceManager
                         Console.WriteLine("    (´･ω･`) Could not auto-configure Nginx");
                         Console.WriteLine("    No worries! You can configure it manually later.");
                         Console.ResetColor();
+                        
+                        // If auto-config failed, use RACORE_PORT environment variable if set
+                        var fallbackPortEnv = Environment.GetEnvironmentVariable("RACORE_PORT") ?? "80";
+                        var fallbackPort = int.Parse(fallbackPortEnv);
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.WriteLine($"    📋 Using port {fallbackPort} from RACORE_PORT");
+                        Console.ResetColor();
+                        Environment.SetEnvironmentVariable("RACORE_DETECTED_PORT", fallbackPort.ToString());
+                        StoreConfig("nginx.port", fallbackPort.ToString());
                     }
                 }
                 else

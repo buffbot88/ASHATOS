@@ -1071,12 +1071,148 @@ if (gameServerModule != null && authModule != null)
     Console.WriteLine("  GET    /api/gameserver/capabilities - Get system capabilities");
 }
 
-// Redirect root to CMS homepage
-app.MapGet("/", (HttpContext context) =>
+// Root endpoint - check if CMS is running, otherwise show landing page
+app.MapGet("/", async (HttpContext context) =>
 {
     // Get CMS port from environment or use default 8080
     var cmsPort = Environment.GetEnvironmentVariable("RACORE_CMS_PORT") ?? "8080";
-    context.Response.Redirect($"http://localhost:{cmsPort}");
+    
+    // Check if CMS is accessible
+    var cmsAccessible = false;
+    try
+    {
+        using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(2) };
+        var response = await httpClient.GetAsync($"http://localhost:{cmsPort}");
+        cmsAccessible = response.IsSuccessStatusCode;
+    }
+    catch
+    {
+        // CMS is not accessible
+        cmsAccessible = false;
+    }
+    
+    if (cmsAccessible)
+    {
+        // Redirect to CMS if it's running
+        context.Response.Redirect($"http://localhost:{cmsPort}");
+    }
+    else
+    {
+        // Show landing page with instructions
+        context.Response.ContentType = "text/html";
+        await context.Response.WriteAsync($@"<!DOCTYPE html>
+<html>
+<head>
+    <title>RaCore - Welcome</title>
+    <style>
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }}
+        .container {{
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }}
+        h1 {{
+            color: #667eea;
+            margin-bottom: 10px;
+        }}
+        .status {{
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }}
+        .info {{
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+        }}
+        .success {{
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }}
+        code {{
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }}
+        .button {{
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 10px 5px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }}
+        .button:hover {{
+            background: #5568d3;
+        }}
+        .button.secondary {{
+            background: #6c757d;
+        }}
+        .button.secondary:hover {{
+            background: #5a6268;
+        }}
+        ul {{
+            line-height: 1.8;
+        }}
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <h1>🌟 Welcome to RaCore!</h1>
+        <p>RaCore server is running successfully on port {port}.</p>
+        
+        <div class='status'>
+            <strong>⚠️ CMS Not Running</strong>
+            <p>The CMS homepage is not currently accessible on port {cmsPort}.</p>
+        </div>
+        
+        <div class='info'>
+            <h3>📋 To access the CMS:</h3>
+            <p>You need to start the PHP server manually. Open a terminal and run:</p>
+            <code>cd racore_cms && php -S localhost:{cmsPort}</code>
+            <p style='margin-top: 15px;'>Then refresh this page, and you'll be automatically redirected to the CMS.</p>
+        </div>
+        
+        <div class='success'>
+            <h3>🎛️ Available Now:</h3>
+            <ul>
+                <li><strong>Control Panel:</strong> Manage your RaCore instance
+                    <br><a href='/control-panel.html' class='button'>Open Control Panel</a>
+                </li>
+                <li><strong>WebSocket API:</strong> ws://localhost:{port}/ws</li>
+                <li><strong>REST API:</strong> http://localhost:{port}/api/*</li>
+            </ul>
+        </div>
+        
+        <div class='info'>
+            <h3>📚 Quick Links:</h3>
+            <ul>
+                <li><a href='/control-panel.html'>Control Panel</a> - Admin dashboard</li>
+                <li>API Documentation - Check the README.md</li>
+                <li>CMS Location: <code>racore_cms/</code> directory</li>
+            </ul>
+        </div>
+        
+        <p style='margin-top: 30px; text-align: center; color: #6c757d;'>
+            <small>RaCore v1.0 | <a href='https://github.com/buffbot88/TheRaProject' target='_blank'>GitHub</a></small>
+        </p>
+    </div>
+</body>
+</html>");
+    }
+    
     return Task.CompletedTask;
 });
 
