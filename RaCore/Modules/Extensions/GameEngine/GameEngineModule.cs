@@ -20,11 +20,13 @@ public sealed class GameEngineModule : ModuleBase, IGameEngineModule
     private readonly ConcurrentDictionary<string, Asset> _assets = new();
     private readonly DateTime _startTime = DateTime.UtcNow;
     private readonly GameEngineDatabase _database;
+    private readonly GameEngineWebSocketBroadcaster _broadcaster;
     private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
 
     public GameEngineModule()
     {
         _database = new GameEngineDatabase();
+        _broadcaster = new GameEngineWebSocketBroadcaster();
     }
 
     public override void Initialize(object? manager)
@@ -40,11 +42,12 @@ public sealed class GameEngineModule : ModuleBase, IGameEngineModule
         }
         
         LogInfo($"Game Engine module initialized - Loaded {savedScenes.Count} scenes from database");
-        LogInfo("Game Engine ready for AI-driven game operations");
+        LogInfo("Game Engine ready for AI-driven game operations with WebSocket broadcasting");
     }
 
     public override void Dispose()
     {
+        _broadcaster?.Dispose();
         _database?.Dispose();
         base.Dispose();
     }
@@ -124,37 +127,43 @@ public sealed class GameEngineModule : ModuleBase, IGameEngineModule
 
     public async Task<GameEngineResponse> CreateSceneAsync(string sceneName, string createdBy)
     {
-        return await Task.Run(() =>
+        var scene = new GameScene
         {
-            var scene = new GameScene
-            {
-                Id = Guid.NewGuid().ToString(),
-                Name = sceneName,
-                CreatedBy = createdBy,
-                CreatedAt = DateTime.UtcNow,
-                IsActive = true
-            };
+            Id = Guid.NewGuid().ToString(),
+            Name = sceneName,
+            CreatedBy = createdBy,
+            CreatedAt = DateTime.UtcNow,
+            IsActive = true
+        };
 
-            if (_scenes.TryAdd(scene.Id, scene))
+        if (_scenes.TryAdd(scene.Id, scene))
+        {
+            // Save to database
+            _database.SaveScene(scene);
+            
+            // Broadcast event
+            await _broadcaster.BroadcastEventAsync(new GameEngineEvent
             {
-                // Save to database
-                _database.SaveScene(scene);
-                
-                LogInfo($"Scene created: {scene.Name} (ID: {scene.Id})");
-                return new GameEngineResponse
-                {
-                    Success = true,
-                    Message = $"Scene '{scene.Name}' created successfully",
-                    Data = scene
-                };
-            }
-
+                EventType = GameEngineEventTypes.SceneCreated,
+                SceneId = scene.Id,
+                Data = scene,
+                Actor = createdBy
+            });
+            
+            LogInfo($"Scene created: {scene.Name} (ID: {scene.Id})");
             return new GameEngineResponse
             {
-                Success = false,
-                Message = "Failed to create scene"
+                Success = true,
+                Message = $"Scene '{scene.Name}' created successfully",
+                Data = scene
             };
-        });
+        }
+
+        return new GameEngineResponse
+        {
+            Success = false,
+            Message = "Failed to create scene"
+        };
     }
 
     public async Task<List<GameScene>> ListScenesAsync()
@@ -169,139 +178,166 @@ public sealed class GameEngineModule : ModuleBase, IGameEngineModule
 
     public async Task<GameEngineResponse> DeleteSceneAsync(string sceneId, string deletedBy)
     {
-        return await Task.Run(() =>
+        if (_scenes.TryRemove(sceneId, out var scene))
         {
-            if (_scenes.TryRemove(sceneId, out var scene))
+            // Delete from database
+            _database.DeleteScene(sceneId);
+            
+            // Broadcast event
+            await _broadcaster.BroadcastEventAsync(new GameEngineEvent
             {
-                // Delete from database
-                _database.DeleteScene(sceneId);
-                
-                LogInfo($"Scene deleted: {scene.Name} (ID: {sceneId}) by {deletedBy}");
-                return new GameEngineResponse
-                {
-                    Success = true,
-                    Message = $"Scene '{scene.Name}' deleted successfully"
-                };
-            }
+                EventType = GameEngineEventTypes.SceneDeleted,
+                SceneId = sceneId,
+                Data = new { sceneName = scene.Name },
+                Actor = deletedBy
+            });
+            
+            LogInfo($"Scene deleted: {scene.Name} (ID: {sceneId}) by {deletedBy}");
+            return new GameEngineResponse
+            {
+                Success = true,
+                Message = $"Scene '{scene.Name}' deleted successfully"
+            };
+        }
 
+        return new GameEngineResponse
+        {
+            Success = false,
+            Message = $"Scene '{sceneId}' not found"
+        };
+    }
+
+    public async Task<GameEngineResponse> CreateEntityAsync(string sceneId, GameEntity entity, string createdBy)
+    {
+        if (!_scenes.TryGetValue(sceneId, out var scene))
+        {
             return new GameEngineResponse
             {
                 Success = false,
                 Message = $"Scene '{sceneId}' not found"
             };
-        });
-    }
+        }
 
-    public async Task<GameEngineResponse> CreateEntityAsync(string sceneId, GameEntity entity, string createdBy)
-    {
-        return await Task.Run(() =>
+        entity.CreatedBy = createdBy;
+        entity.CreatedAt = DateTime.UtcNow;
+        scene.Entities.Add(entity);
+        
+        // Save to database
+        _database.SaveEntity(sceneId, entity);
+        
+        // Broadcast event
+        await _broadcaster.BroadcastEventAsync(new GameEngineEvent
         {
-            if (!_scenes.TryGetValue(sceneId, out var scene))
-            {
-                return new GameEngineResponse
-                {
-                    Success = false,
-                    Message = $"Scene '{sceneId}' not found"
-                };
-            }
-
-            entity.CreatedBy = createdBy;
-            entity.CreatedAt = DateTime.UtcNow;
-            scene.Entities.Add(entity);
-            
-            // Save to database
-            _database.SaveEntity(sceneId, entity);
-
-            LogInfo($"Entity created: {entity.Name} ({entity.Type}) in scene {scene.Name}");
-            return new GameEngineResponse
-            {
-                Success = true,
-                Message = $"Entity '{entity.Name}' created successfully",
-                Data = entity
-            };
+            EventType = GameEngineEventTypes.EntityCreated,
+            SceneId = sceneId,
+            EntityId = entity.Id,
+            Data = entity,
+            Actor = createdBy
         });
+
+        LogInfo($"Entity created: {entity.Name} ({entity.Type}) in scene {scene.Name}");
+        return new GameEngineResponse
+        {
+            Success = true,
+            Message = $"Entity '{entity.Name}' created successfully",
+            Data = entity
+        };
     }
 
     public async Task<GameEngineResponse> UpdateEntityAsync(string sceneId, string entityId, GameEntity entity, string updatedBy)
     {
-        return await Task.Run(() =>
+        if (!_scenes.TryGetValue(sceneId, out var scene))
         {
-            if (!_scenes.TryGetValue(sceneId, out var scene))
-            {
-                return new GameEngineResponse
-                {
-                    Success = false,
-                    Message = $"Scene '{sceneId}' not found"
-                };
-            }
-
-            var existingEntity = scene.Entities.FirstOrDefault(e => e.Id == entityId);
-            if (existingEntity == null)
-            {
-                return new GameEngineResponse
-                {
-                    Success = false,
-                    Message = $"Entity '{entityId}' not found in scene"
-                };
-            }
-
-            // Update entity properties
-            existingEntity.Name = entity.Name;
-            existingEntity.Type = entity.Type;
-            existingEntity.Position = entity.Position;
-            existingEntity.Rotation = entity.Rotation;
-            existingEntity.Scale = entity.Scale;
-            existingEntity.Properties = entity.Properties;
-            
-            // Save to database
-            _database.SaveEntity(sceneId, existingEntity);
-
-            LogInfo($"Entity updated: {entity.Name} in scene {scene.Name} by {updatedBy}");
             return new GameEngineResponse
             {
-                Success = true,
-                Message = $"Entity '{entity.Name}' updated successfully",
-                Data = existingEntity
+                Success = false,
+                Message = $"Scene '{sceneId}' not found"
             };
+        }
+
+        var existingEntity = scene.Entities.FirstOrDefault(e => e.Id == entityId);
+        if (existingEntity == null)
+        {
+            return new GameEngineResponse
+            {
+                Success = false,
+                Message = $"Entity '{entityId}' not found in scene"
+            };
+        }
+
+        // Update entity properties
+        existingEntity.Name = entity.Name;
+        existingEntity.Type = entity.Type;
+        existingEntity.Position = entity.Position;
+        existingEntity.Rotation = entity.Rotation;
+        existingEntity.Scale = entity.Scale;
+        existingEntity.Properties = entity.Properties;
+        
+        // Save to database
+        _database.SaveEntity(sceneId, existingEntity);
+        
+        // Broadcast event
+        await _broadcaster.BroadcastEventAsync(new GameEngineEvent
+        {
+            EventType = GameEngineEventTypes.EntityUpdated,
+            SceneId = sceneId,
+            EntityId = entityId,
+            Data = existingEntity,
+            Actor = updatedBy
         });
+
+        LogInfo($"Entity updated: {entity.Name} in scene {scene.Name} by {updatedBy}");
+        return new GameEngineResponse
+        {
+            Success = true,
+            Message = $"Entity '{entity.Name}' updated successfully",
+            Data = existingEntity
+        };
     }
 
     public async Task<GameEngineResponse> DeleteEntityAsync(string sceneId, string entityId, string deletedBy)
     {
-        return await Task.Run(() =>
+        if (!_scenes.TryGetValue(sceneId, out var scene))
         {
-            if (!_scenes.TryGetValue(sceneId, out var scene))
-            {
-                return new GameEngineResponse
-                {
-                    Success = false,
-                    Message = $"Scene '{sceneId}' not found"
-                };
-            }
-
-            var entity = scene.Entities.FirstOrDefault(e => e.Id == entityId);
-            if (entity == null)
-            {
-                return new GameEngineResponse
-                {
-                    Success = false,
-                    Message = $"Entity '{entityId}' not found"
-                };
-            }
-
-            scene.Entities.Remove(entity);
-            
-            // Delete from database
-            _database.DeleteEntity(entityId);
-            
-            LogInfo($"Entity deleted: {entity.Name} from scene {scene.Name} by {deletedBy}");
-
             return new GameEngineResponse
             {
-                Success = true,
-                Message = $"Entity '{entity.Name}' deleted successfully"
+                Success = false,
+                Message = $"Scene '{sceneId}' not found"
             };
+        }
+
+        var entity = scene.Entities.FirstOrDefault(e => e.Id == entityId);
+        if (entity == null)
+        {
+            return new GameEngineResponse
+            {
+                Success = false,
+                Message = $"Entity '{entityId}' not found"
+            };
+        }
+
+        scene.Entities.Remove(entity);
+        
+        // Delete from database
+        _database.DeleteEntity(entityId);
+        
+        // Broadcast event
+        await _broadcaster.BroadcastEventAsync(new GameEngineEvent
+        {
+            EventType = GameEngineEventTypes.EntityDeleted,
+            SceneId = sceneId,
+            EntityId = entityId,
+            Data = new { entityName = entity.Name, entityType = entity.Type },
+            Actor = deletedBy
         });
+        
+        LogInfo($"Entity deleted: {entity.Name} from scene {scene.Name} by {deletedBy}");
+
+        return new GameEngineResponse
+        {
+            Success = true,
+            Message = $"Entity '{entity.Name}' deleted successfully"
+        };
     }
 
     public async Task<List<GameEntity>> ListEntitiesAsync(string sceneId)
@@ -318,69 +354,75 @@ public sealed class GameEngineModule : ModuleBase, IGameEngineModule
 
     public async Task<GameEngineResponse> GenerateWorldContentAsync(string sceneId, WorldGenerationRequest request, string requestedBy)
     {
-        return await Task.Run(() =>
+        if (!_scenes.TryGetValue(sceneId, out var scene))
         {
-            if (!_scenes.TryGetValue(sceneId, out var scene))
-            {
-                return new GameEngineResponse
-                {
-                    Success = false,
-                    Message = $"Scene '{sceneId}' not found"
-                };
-            }
-
-            // Generate entities based on the request
-            var generatedEntities = new List<GameEntity>();
-
-            if (request.GenerateNPCs)
-            {
-                for (int i = 0; i < request.EntityCount; i++)
-                {
-                    var npc = new GameEntity
-                    {
-                        Name = GenerateNPCName(request.Theme, i),
-                        Type = "NPC",
-                        Position = GenerateRandomPosition(),
-                        CreatedBy = $"AI:{requestedBy}"
-                    };
-
-                    npc.Properties["dialogue"] = GenerateNPCDialogue(npc.Name, request.Theme);
-                    npc.Properties["occupation"] = GenerateOccupation(request.Theme);
-
-                    scene.Entities.Add(npc);
-                    generatedEntities.Add(npc);
-                    
-                    // Save to database
-                    _database.SaveEntity(sceneId, npc);
-                }
-            }
-
-            if (request.GenerateTerrain)
-            {
-                var terrain = new GameEntity
-                {
-                    Name = $"{request.Theme} Terrain",
-                    Type = "Terrain",
-                    Scale = new Vector3 { X = 100, Y = 1, Z = 100 },
-                    CreatedBy = $"AI:{requestedBy}"
-                };
-                terrain.Properties["theme"] = request.Theme;
-                scene.Entities.Add(terrain);
-                generatedEntities.Add(terrain);
-                
-                // Save to database
-                _database.SaveEntity(sceneId, terrain);
-            }
-
-            LogInfo($"Generated {generatedEntities.Count} entities for scene {scene.Name}");
-
             return new GameEngineResponse
             {
-                Success = true,
-                Message = $"Generated {generatedEntities.Count} entities in scene '{scene.Name}'",
-                Data = generatedEntities
+                Success = false,
+                Message = $"Scene '{sceneId}' not found"
             };
+        }
+
+        // Generate entities based on the request
+        var generatedEntities = new List<GameEntity>();
+
+        if (request.GenerateNPCs)
+        {
+            for (int i = 0; i < request.EntityCount; i++)
+            {
+                var npc = new GameEntity
+                {
+                    Name = GenerateNPCName(request.Theme, i),
+                    Type = "NPC",
+                    Position = GenerateRandomPosition(),
+                    CreatedBy = $"AI:{requestedBy}"
+                };
+
+                npc.Properties["dialogue"] = GenerateNPCDialogue(npc.Name, request.Theme);
+                npc.Properties["occupation"] = GenerateOccupation(request.Theme);
+
+                scene.Entities.Add(npc);
+                generatedEntities.Add(npc);
+                
+                // Save to database
+                _database.SaveEntity(sceneId, npc);
+            }
+        }
+
+        if (request.GenerateTerrain)
+        {
+            var terrain = new GameEntity
+            {
+                Name = $"{request.Theme} Terrain",
+                Type = "Terrain",
+                Scale = new Vector3 { X = 100, Y = 1, Z = 100 },
+                CreatedBy = $"AI:{requestedBy}"
+            };
+            terrain.Properties["theme"] = request.Theme;
+            scene.Entities.Add(terrain);
+            generatedEntities.Add(terrain);
+            
+            // Save to database
+            _database.SaveEntity(sceneId, terrain);
+        }
+
+        LogInfo($"Generated {generatedEntities.Count} entities for scene {scene.Name}");
+        
+        // Broadcast event
+        await _broadcaster.BroadcastEventAsync(new GameEngineEvent
+        {
+            EventType = GameEngineEventTypes.WorldGenerated,
+            SceneId = sceneId,
+            Data = new { entityCount = generatedEntities.Count, entities = generatedEntities },
+            Actor = requestedBy
         });
+
+        return new GameEngineResponse
+        {
+            Success = true,
+            Message = $"Generated {generatedEntities.Count} entities in scene '{scene.Name}'",
+            Data = generatedEntities
+        };
     }
 
     public async Task<GameEngineResponse> StreamAssetAsync(AssetStreamRequest request)
@@ -426,7 +468,7 @@ public sealed class GameEngineModule : ModuleBase, IGameEngineModule
             MemoryUsageMB = GC.GetTotalMemory(false) / (1024 * 1024),
             Uptime = DateTime.UtcNow - _startTime,
             StartTime = _startTime,
-            ConnectedClients = 0 // Would be tracked by WebSocket handler
+            ConnectedClients = _broadcaster.ConnectedClients
         });
     }
 
@@ -437,6 +479,14 @@ public sealed class GameEngineModule : ModuleBase, IGameEngineModule
             LogInfo($"Broadcasting event: {gameEvent.EventType} for scene {gameEvent.SceneId}");
             // In a full implementation, this would broadcast via WebSocket handler
         });
+    }
+    
+    /// <summary>
+    /// Get the WebSocket broadcaster for external registration.
+    /// </summary>
+    public GameEngineWebSocketBroadcaster GetBroadcaster()
+    {
+        return _broadcaster;
     }
 
     #endregion
