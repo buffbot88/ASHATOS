@@ -672,7 +672,7 @@ if (serverSetupModule != null && authModule != null)
                 return;
             }
 
-            var result = await serverSetupModule.SetupApacheConfigAsync(request.LicenseNumber, request.Username);
+            var result = await serverSetupModule.SetupNginxConfigAsync(request.LicenseNumber, request.Username);
             if (result.Success)
             {
                 await context.Response.WriteAsJsonAsync(new { success = true, message = result.Message, data = result.Details });
