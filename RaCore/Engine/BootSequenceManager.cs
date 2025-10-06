@@ -21,9 +21,28 @@ public class BootSequenceManager
     /// </summary>
     public async Task<bool> ExecuteBootSequenceAsync()
     {
-        Console.WriteLine("========================================");
-        Console.WriteLine("   RaCore Boot Sequence");
-        Console.WriteLine("========================================");
+        // Display kawaii Ra's All Seeing Eye logo
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine();
+        Console.WriteLine("          .:*~*:.");
+        Console.WriteLine("        .*###%%%###*.");
+        Console.WriteLine("       *#%%%◆◆◆%%%#*");
+        Console.WriteLine("      .#%%◆     ◆%%#.");
+        Console.WriteLine("      *%%◆  ●●●  ◆%%*");
+        Console.WriteLine("      *%%◆ ●███● ◆%%*");
+        Console.WriteLine("      .#%%◆ ●●●  ◆%%#.");
+        Console.WriteLine("       *#%%%◆◆◆%%%#*");
+        Console.WriteLine("        .*###%%%###*.");
+        Console.WriteLine("          ':*~*:'");
+        Console.ResetColor();
+        Console.WriteLine();
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("    ✧･ﾟ: *✧･ﾟ:* Welcome to Ra OS v.4.7 *:･ﾟ✧*:･ﾟ✧");
+        Console.ResetColor();
+        Console.WriteLine();
+        Console.ForegroundColor = ConsoleColor.Magenta;
+        Console.WriteLine("    ♡ ～(つˆ0ˆ)つ｡☆  Booting up with love!  ☆｡(⊃｡•́‿•̀｡)⊃ ♡");
+        Console.ResetColor();
         Console.WriteLine();
         
         var success = true;
@@ -38,9 +57,15 @@ public class BootSequenceManager
         success &= VerifyPhpConfiguration();
         
         Console.WriteLine();
-        Console.WriteLine("========================================");
-        Console.WriteLine($"   Boot Sequence Complete: {(success ? "✅ Success" : "⚠️  With Warnings")}");
-        Console.WriteLine("========================================");
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine("    ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿");
+        Console.ResetColor();
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine($"      Boot Complete: {(success ? "✨ Success! ✨ (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧" : "⚠️  With Warnings (´･ω･`)")}");
+        Console.ResetColor();
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine("    ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿");
+        Console.ResetColor();
         Console.WriteLine();
         
         return success;
@@ -48,7 +73,11 @@ public class BootSequenceManager
     
     private async Task<bool> RunSelfHealingChecksAsync()
     {
-        Console.WriteLine("[BootSequence] Step 1/3: Running self-healing health checks...");
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("    ╭─────────────────────────────────────╮");
+        Console.WriteLine("    │  ଘ(੭ˊᵕˋ)੭ Step 1/3: Health Check!  │");
+        Console.WriteLine("    ╰─────────────────────────────────────╯");
+        Console.ResetColor();
         Console.WriteLine();
         
         try
@@ -61,7 +90,7 @@ public class BootSequenceManager
             
             if (selfHealingModule == null)
             {
-                Console.WriteLine("ℹ️  SelfHealingModule not found - skipping health checks");
+                Console.WriteLine("    (｡•́︿•̀｡) SelfHealingModule not found - skipping...");
                 Console.WriteLine();
                 return true; // Not a fatal error
             }
@@ -74,16 +103,30 @@ public class BootSequenceManager
             var degraded = results.Values.Count(s => s.State == HealthState.Degraded);
             var unhealthy = results.Values.Count(s => s.State == HealthState.Unhealthy);
             
-            Console.WriteLine($"✅ Health check complete:");
-            Console.WriteLine($"   Healthy: {healthy}");
-            if (degraded > 0) Console.WriteLine($"   ⚠️  Degraded: {degraded}");
-            if (unhealthy > 0) Console.WriteLine($"   ❌ Unhealthy: {unhealthy}");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"    ✨ Health check complete! ✨");
+            Console.ResetColor();
+            Console.WriteLine($"       (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ Healthy: {healthy}");
+            if (degraded > 0)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine($"       (´･ω･`) Degraded: {degraded}");
+                Console.ResetColor();
+            }
+            if (unhealthy > 0)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"       (╥﹏╥) Unhealthy: {unhealthy}");
+                Console.ResetColor();
+            }
             Console.WriteLine();
             
             // Attempt auto-recovery if needed
             if (degraded > 0 || unhealthy > 0)
             {
-                Console.WriteLine("[BootSequence] Attempting auto-recovery...");
+                Console.ForegroundColor = ConsoleColor.Magenta;
+                Console.WriteLine("    ♡ (っ◔◡◔)っ Attempting auto-recovery with love...");
+                Console.ResetColor();
                 
                 var unhealthyModules = results.Values
                     .Where(s => s.State == HealthState.Unhealthy || s.State == HealthState.Degraded)
@@ -99,7 +142,8 @@ public class BootSequenceManager
                     };
                     
                     var recovered = await selfHealingModule.AttemptRecoveryAsync(action);
-                    Console.WriteLine($"   {status.ModuleName}: {(recovered ? "✅ Recovered" : "❌ Failed")}");
+                    var emoji = recovered ? "✨💚" : "💔";
+                    Console.WriteLine($"       {emoji} {status.ModuleName}: {(recovered ? "Healed! (◕‿◕✿)" : "Needs help (╥﹏╥)")}");
                 }
                 
                 Console.WriteLine();
@@ -109,7 +153,9 @@ public class BootSequenceManager
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"⚠️  Error during self-healing checks: {ex.Message}");
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"    (╥﹏╥) Oopsie! Error during health checks: {ex.Message}");
+            Console.ResetColor();
             Console.WriteLine();
             return true; // Don't fail boot on self-healing errors
         }
@@ -117,7 +163,11 @@ public class BootSequenceManager
     
     private bool VerifyApacheConfiguration()
     {
-        Console.WriteLine("[BootSequence] Step 2/3: Verifying Apache configuration...");
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("    ╭─────────────────────────────────────╮");
+        Console.WriteLine("    │  ଘ(੭*ˊᵕˋ)੭* Step 2/3: Apache Check! │");
+        Console.WriteLine("    ╰─────────────────────────────────────╯");
+        Console.ResetColor();
         Console.WriteLine();
         
         try
@@ -126,17 +176,23 @@ public class BootSequenceManager
             
             if (apachePath == null)
             {
-                Console.WriteLine("ℹ️  Apache not found - skipping Apache configuration");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("    (｡•́︿•̀｡) Apache not found - that's okay!");
+                Console.ResetColor();
                 Console.WriteLine();
                 return true; // Not a fatal error
             }
             
-            Console.WriteLine($"✅ Apache found: {apachePath}");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"    ✨ Apache found: {apachePath}");
+            Console.ResetColor();
             
             var configPath = ApacheManager.FindApacheConfigPath();
             if (configPath != null)
             {
-                Console.WriteLine($"✅ Apache config found: {configPath}");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"    ♡ Config found: {configPath}");
+                Console.ResetColor();
                 
                 // Check if reverse proxy modules are available
                 var config = File.ReadAllText(configPath);
@@ -145,16 +201,22 @@ public class BootSequenceManager
                 
                 if (hasProxyModule && hasProxyHttpModule)
                 {
-                    Console.WriteLine("✅ Reverse proxy modules available");
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("    (◕‿◕✿) Reverse proxy modules ready!");
+                    Console.ResetColor();
                 }
                 else
                 {
-                    Console.WriteLine("ℹ️  Reverse proxy modules not enabled (use ConfigureReverseProxy to enable)");
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.WriteLine("    (•ᴗ•) Proxy modules not enabled yet - no worries!");
+                    Console.ResetColor();
                 }
             }
             else
             {
-                Console.WriteLine("⚠️  Apache config file not found");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("    (´･ω･`) Config file not found");
+                Console.ResetColor();
             }
             
             Console.WriteLine();
@@ -162,7 +224,9 @@ public class BootSequenceManager
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"⚠️  Error verifying Apache: {ex.Message}");
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"    (╥﹏╥) Oopsie! Error with Apache: {ex.Message}");
+            Console.ResetColor();
             Console.WriteLine();
             return true; // Don't fail boot on Apache verification errors
         }
@@ -170,7 +234,11 @@ public class BootSequenceManager
     
     private bool VerifyPhpConfiguration()
     {
-        Console.WriteLine("[BootSequence] Step 3/3: Verifying PHP configuration...");
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("    ╭─────────────────────────────────────╮");
+        Console.WriteLine("    │  ଘ(੭ˊ꒳ˋ)੭✧ Step 3/3: PHP Check!   │");
+        Console.WriteLine("    ╰─────────────────────────────────────╯");
+        Console.ResetColor();
         Console.WriteLine();
         
         try
@@ -179,13 +247,16 @@ public class BootSequenceManager
             
             if (phpPath == null)
             {
-                Console.WriteLine("⚠️  PHP not found in common locations");
-                Console.WriteLine("   Install PHP 8+ to run CMS and web applications");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("    (｡•́︿•̀｡) PHP not found - install PHP 8+ for CMS!");
+                Console.ResetColor();
                 Console.WriteLine();
                 return true; // Not a fatal error for RaCore itself
             }
             
-            Console.WriteLine($"✅ PHP found: {phpPath}");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"    ✨ PHP found: {phpPath}");
+            Console.ResetColor();
             
             // Get PHP version
             try
@@ -205,7 +276,9 @@ public class BootSequenceManager
                 {
                     var output = process.StandardOutput.ReadToEnd();
                     var firstLine = output.Split('\n')[0];
-                    Console.WriteLine($"   Version: {firstLine}");
+                    Console.ForegroundColor = ConsoleColor.Magenta;
+                    Console.WriteLine($"       ♡ Version: {firstLine}");
+                    Console.ResetColor();
                     process.WaitForExit(5000);
                 }
             }
@@ -215,11 +288,15 @@ public class BootSequenceManager
             var phpIniPath = ApacheManager.FindPhpIniPath(phpPath);
             if (phpIniPath != null)
             {
-                Console.WriteLine($"✅ PHP config found: {phpIniPath}");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"    ♡ Config found: {phpIniPath}");
+                Console.ResetColor();
             }
             else
             {
-                Console.WriteLine("ℹ️  PHP config (php.ini) not found - using defaults");
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine("    (•ᴗ•) No php.ini found - using defaults!");
+                Console.ResetColor();
             }
             
             Console.WriteLine();
@@ -227,7 +304,9 @@ public class BootSequenceManager
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"⚠️  Error verifying PHP: {ex.Message}");
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"    (╥﹏╥) Oopsie! Error with PHP: {ex.Message}");
+            Console.ResetColor();
             Console.WriteLine();
             return true; // Don't fail boot on PHP verification errors
         }
