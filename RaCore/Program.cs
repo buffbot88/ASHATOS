@@ -672,7 +672,7 @@ if (serverSetupModule != null && authModule != null)
                 return;
             }
 
-            var result = await serverSetupModule.SetupApacheConfigAsync(request.LicenseNumber, request.Username);
+            var result = await serverSetupModule.SetupNginxConfigAsync(request.LicenseNumber, request.Username);
             if (result.Success)
             {
                 await context.Response.WriteAsJsonAsync(new { success = true, message = result.Message, data = result.Details });
@@ -740,7 +740,7 @@ if (serverSetupModule != null && authModule != null)
     Console.WriteLine("ServerSetup API endpoints registered:");
     Console.WriteLine("  GET    /api/serversetup/discover - Discover server folders");
     Console.WriteLine("  POST   /api/serversetup/admin - Create admin instance (admin only)");
-    Console.WriteLine("  POST   /api/serversetup/apache - Setup Apache config (admin only)");
+    Console.WriteLine("  POST   /api/serversetup/nginx - Setup Nginx config (admin only)");
     Console.WriteLine("  POST   /api/serversetup/php - Setup PHP config (admin only)");
 }
 
@@ -2266,18 +2266,18 @@ app.MapPost("/api/control/system/restart-apache", async (HttpContext context) =>
         return Results.Json(new { success = false, error = "Insufficient permissions. Admin role required." });
     }
     
-    Console.WriteLine($"[API] Apache restart requested by user: {user.Username}");
+    Console.WriteLine($"[API] Nginx restart requested by user: {user.Username}");
     
-    var (success, message) = RaCore.Engine.ApacheManager.RestartApache();
+    var (success, message) = RaCore.Engine.NginxManager.RestartNginx();
     
     if (success)
     {
-        Console.WriteLine($"[API] ✅ Apache restarted successfully by {user.Username}");
+        Console.WriteLine($"[API] ✅ Nginx restarted successfully by {user.Username}");
         return Results.Json(new { success = true, message });
     }
     else
     {
-        Console.WriteLine($"[API] ⚠️  Apache restart failed: {message}");
+        Console.WriteLine($"[API] ⚠️  Nginx restart failed: {message}");
         context.Response.StatusCode = 500;
         return Results.Json(new { success = false, error = message });
     }

@@ -372,7 +372,7 @@ public sealed class SelfHealingModule : ModuleBase, ISelfHealingModule
         {
             Path.Combine(baseDirectory, "Databases"),
             Path.Combine(baseDirectory, "Admins"),
-            Path.Combine(baseDirectory, "Apache"),
+            Path.Combine(baseDirectory, "Nginx"),
             Path.Combine(baseDirectory, "php")
         };
 
@@ -467,14 +467,14 @@ public sealed class SelfHealingModule : ModuleBase, ISelfHealingModule
 
         var baseDirectory = Directory.GetCurrentDirectory();
 
-        // Check for Apache config if Apache folder exists
-        var apacheDir = Path.Combine(baseDirectory, "Apache");
-        if (Directory.Exists(apacheDir))
+        // Check for Nginx config if Nginx folder exists
+        var nginxDir = Path.Combine(baseDirectory, "Nginx");
+        if (Directory.Exists(nginxDir))
         {
-            var configFiles = Directory.GetFiles(apacheDir, "*.conf", SearchOption.AllDirectories);
+            var configFiles = Directory.GetFiles(nginxDir, "*.conf", SearchOption.AllDirectories);
             if (configFiles.Length == 0)
             {
-                result.Warnings.Add("Apache directory exists but no .conf files found");
+                result.Warnings.Add("Nginx directory exists but no .conf files found");
             }
             else
             {

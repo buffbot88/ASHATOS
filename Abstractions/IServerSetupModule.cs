@@ -4,14 +4,14 @@ namespace Abstractions;
 
 /// <summary>
 /// Interface for server setup and configuration management.
-/// Handles Apache, PHP, Database folders, and per-admin instance management.
+/// Handles Nginx, PHP, Database folders, and per-admin instance management.
 /// </summary>
 public interface IServerSetupModule
 {
     /// <summary>
-    /// Setup Apache HTTP server configuration for an admin
+    /// Setup Nginx web server configuration for an admin
     /// </summary>
-    Task<SetupResult> SetupApacheConfigAsync(string licenseNumber, string username);
+    Task<SetupResult> SetupNginxConfigAsync(string licenseNumber, string username);
     
     /// <summary>
     /// Setup PHP configuration for an admin
@@ -24,7 +24,7 @@ public interface IServerSetupModule
     Task<SetupResult> CreateAdminFolderStructureAsync(string licenseNumber, string username);
     
     /// <summary>
-    /// Discover and validate required folders (Databases, php, Apache)
+    /// Discover and validate required folders (Databases, php, Nginx)
     /// </summary>
     Task<DiscoveryResult> DiscoverServerFoldersAsync();
     
@@ -56,8 +56,8 @@ public class DiscoveryResult
     public bool PhpFolderExists { get; set; }
     public string? PhpFolderPath { get; set; }
     
-    public bool ApacheFolderExists { get; set; }
-    public string? ApacheFolderPath { get; set; }
+    public bool NginxFolderExists { get; set; }
+    public string? NginxFolderPath { get; set; }
     
     public bool AdminsFolderExists { get; set; }
     public string? AdminsFolderPath { get; set; }

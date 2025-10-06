@@ -109,8 +109,8 @@ public class BootSequenceManager
         // Step 1: Run self-healing checks
         success &= await RunSelfHealingChecksAsync();
         
-        // Step 2: Verify Apache configuration
-        success &= VerifyApacheConfiguration();
+        // Step 2: Verify Nginx configuration
+        success &= VerifyWebServerConfiguration();
         
         // Step 3: Verify PHP configuration
         success &= VerifyPhpConfiguration();
@@ -258,57 +258,46 @@ public class BootSequenceManager
         }
     }
     
-    private bool VerifyApacheConfiguration()
+    private bool VerifyWebServerConfiguration()
     {
         Console.ForegroundColor = ConsoleColor.Cyan;
         Console.WriteLine("    ╭─────────────────────────────────────╮");
-        Console.WriteLine("    │  ଘ(੭*ˊᵕˋ)੭* Step 2/3: Apache Check! │");
+        Console.WriteLine("    │  ଘ(੭*ˊᵕˋ)੭* Step 2/3: Nginx Check!  │");
         Console.WriteLine("    ╰─────────────────────────────────────╯");
         Console.ResetColor();
         Console.WriteLine();
         
         try
         {
-            var apachePath = ApacheManager.FindApacheExecutable();
+            var nginxPath = NginxManager.FindNginxExecutable();
             
-            if (apachePath == null)
+            if (nginxPath == null)
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("    (｡•́︿•̀｡) Apache not found - that's okay!");
+                Console.WriteLine("    (｡•́︿•̀｡) Nginx not found - that's okay!");
                 Console.ResetColor();
                 Console.WriteLine();
                 return true; // Not a fatal error
             }
             
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"    ✨ Apache found: {apachePath}");
+            Console.WriteLine($"    ✨ Nginx found: {nginxPath}");
             Console.ResetColor();
             
-            var configPath = ApacheManager.FindApacheConfigPath();
+            var configPath = NginxManager.FindNginxConfigPath();
             if (configPath != null)
             {
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine($"    ♡ Config found: {configPath}");
                 Console.ResetColor();
                 
-                // Check if reverse proxy modules are available
+                // Check if RaCore reverse proxy is configured
                 var config = File.ReadAllText(configPath);
-                var hasProxyModule = config.Contains("LoadModule proxy_module");
-                var hasProxyHttpModule = config.Contains("LoadModule proxy_http_module");
                 var hasRaCoreProxy = config.Contains("# RaCore Reverse Proxy Configuration");
                 
-                if (hasProxyModule && hasProxyHttpModule)
-                {
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine("    (◕‿◕✿) Reverse proxy modules ready!");
-                    Console.ResetColor();
-                }
-                else
-                {
-                    Console.ForegroundColor = ConsoleColor.Cyan;
-                    Console.WriteLine("    (•ᴗ•) Proxy modules not enabled yet - no worries!");
-                    Console.ResetColor();
-                }
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("    (◕‿◕✿) Nginx is ready for reverse proxy configuration!");
+                Console.ResetColor();
                 
                 var domain = Environment.GetEnvironmentVariable("RACORE_PROXY_DOMAIN") ?? "localhost";
                 
@@ -316,20 +305,20 @@ public class BootSequenceManager
                 if (!hasRaCoreProxy)
                 {
                     Console.ForegroundColor = ConsoleColor.Magenta;
-                    Console.WriteLine("    ♡ (っ◔◡◔)っ Auto-configuring Apache reverse proxy...");
+                    Console.WriteLine("    ♡ (っ◔◡◔)っ Auto-configuring Nginx reverse proxy...");
                     Console.ResetColor();
                     
                     // Use environment variable only for initial setup, fallback to 5000
                     var portEnv = Environment.GetEnvironmentVariable("RACORE_PORT") ?? "5000";
                     var initialPort = int.Parse(portEnv);
                     
-                    var apacheManager = new ApacheManager("", 8080);
-                    var success = apacheManager.ConfigureReverseProxy(initialPort, domain);
+                    var nginxManager = new NginxManager("", 8080);
+                    var success = nginxManager.ConfigureReverseProxy(initialPort, domain);
                     
                     if (success)
                     {
                         Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine($"    ✨ Apache reverse proxy configured for {domain}!");
+                        Console.WriteLine($"    ✨ Nginx reverse proxy configured for {domain}!");
                         Console.WriteLine($"    ♡ Access RaCore at:");
                         Console.WriteLine($"       - http://{domain}");
                         Console.WriteLine($"       - http://agpstudios.online");
@@ -340,51 +329,54 @@ public class BootSequenceManager
                         Environment.SetEnvironmentVariable("RACORE_DETECTED_PORT", initialPort.ToString());
                         
                         // Persist configuration to Ra_Memory database
-                        StoreConfig("apache.port", initialPort.ToString());
-                        StoreConfig("apache.domain", domain);
-                        StoreConfig("apache.configured", "true");
+                        StoreConfig("nginx.port", initialPort.ToString());
+                        StoreConfig("nginx.domain", domain);
+                        StoreConfig("nginx.configured", "true");
                     }
                     else
                     {
                         Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.WriteLine("    (´･ω･`) Could not auto-configure Apache");
+                        Console.WriteLine("    (´･ω･`) Could not auto-configure Nginx");
                         Console.WriteLine("    No worries! You can configure it manually later.");
                         Console.ResetColor();
                     }
                 }
                 else
                 {
-                    // RaCore proxy is already configured - detect port from Apache
+                    // RaCore proxy is already configured - detect port from Nginx
                     Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine("    ♡ (◕‿◕✿) RaCore reverse proxy already configured!");
+                    Console.WriteLine("    ✨ RaCore reverse proxy already configured!");
                     Console.ResetColor();
                     
-                    // Detect configured port in Apache - this is the source of truth
-                    var configuredPort = ApacheManager.GetConfiguredRaCorePort();
+                    // Detect configured port in Nginx - this is the source of truth
+                    var configuredPort = NginxManager.GetConfiguredRaCorePort();
+                    
                     if (configuredPort.HasValue)
                     {
                         Console.ForegroundColor = ConsoleColor.Cyan;
-                        Console.WriteLine($"    📋 Apache is configured to proxy to port {configuredPort.Value}");
-                        Console.WriteLine($"    ♡ RaCore will use port {configuredPort.Value} from Apache configuration");
+                        Console.WriteLine($"    📋 Nginx is configured to proxy to port {configuredPort.Value}");
+                        Console.WriteLine($"    ♡ RaCore will use port {configuredPort.Value} from Nginx configuration");
                         Console.ResetColor();
                         
-                        // Store detected port for RaCore to use
+                        // Store the detected port from Nginx as the source of truth
                         Environment.SetEnvironmentVariable("RACORE_DETECTED_PORT", configuredPort.Value.ToString());
                         
                         // Persist configuration to Ra_Memory database
-                        StoreConfig("apache.port", configuredPort.Value.ToString());
-                        StoreConfig("apache.configured", "true");
+                        StoreConfig("nginx.port", configuredPort.Value.ToString());
+                        StoreConfig("nginx.configured", "true");
                     }
                     else
                     {
+                        // If we can't detect port from Nginx, fall back to default 5000
                         Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.WriteLine("    (´･ω･`) Could not detect port from Apache config");
-                        Console.WriteLine("    Using default port 5000");
+                        Console.WriteLine("    (´･ω･`) Could not detect port from Nginx config");
+                        Console.WriteLine("    🔧 Using default port 5000");
                         Console.ResetColor();
+                        
                         Environment.SetEnvironmentVariable("RACORE_DETECTED_PORT", "5000");
                         
                         // Store default configuration to Ra_Memory database
-                        StoreConfig("apache.port", "5000");
+                        StoreConfig("nginx.port", "5000");
                     }
                 }
             }
@@ -401,10 +393,10 @@ public class BootSequenceManager
         catch (Exception ex)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"    (╥﹏╥) Oopsie! Error with Apache: {ex.Message}");
+            Console.WriteLine($"    (╥﹏╥) Oopsie! Error with Nginx: {ex.Message}");
             Console.ResetColor();
             Console.WriteLine();
-            return true; // Don't fail boot on Apache verification errors
+            return true; // Don't fail boot on Nginx verification errors
         }
     }
     
@@ -419,7 +411,7 @@ public class BootSequenceManager
         
         try
         {
-            var phpPath = ApacheManager.FindPhpExecutable();
+            var phpPath = NginxManager.FindPhpExecutable();
             
             if (phpPath == null)
             {
@@ -461,7 +453,7 @@ public class BootSequenceManager
             catch { }
             
             // Check for php.ini
-            var phpIniPath = ApacheManager.FindPhpIniPath(phpPath);
+            var phpIniPath = NginxManager.FindPhpIniPath(phpPath);
             if (phpIniPath != null)
             {
                 Console.ForegroundColor = ConsoleColor.Green;
@@ -473,7 +465,7 @@ public class BootSequenceManager
                 Console.WriteLine("    ♡ (っ◔◡◔)っ Auto-configuring PHP settings...");
                 Console.ResetColor();
                 
-                var phpConfigSuccess = ApacheManager.ConfigurePhpIni(phpIniPath);
+                var phpConfigSuccess = NginxManager.ConfigurePhpIni(phpIniPath);
                 
                 if (phpConfigSuccess)
                 {
