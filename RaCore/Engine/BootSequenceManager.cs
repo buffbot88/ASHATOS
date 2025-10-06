@@ -382,8 +382,8 @@ public class BootSequenceManager
                     Console.WriteLine("    ♡ (っ◔◡◔)っ Auto-configuring Nginx reverse proxy...");
                     Console.ResetColor();
                     
-                    // Use environment variable only for initial setup, fallback to 5000
-                    var portEnv = Environment.GetEnvironmentVariable("RACORE_PORT") ?? "5000";
+                    // Use environment variable only for initial setup, fallback to 80
+                    var portEnv = Environment.GetEnvironmentVariable("RACORE_PORT") ?? "80";
                     var initialPort = int.Parse(portEnv);
                     
                     var nginxManager = new NginxManager("", 8080);
@@ -441,16 +441,16 @@ public class BootSequenceManager
                     }
                     else
                     {
-                        // If we can't detect port from Nginx, fall back to default 5000
+                        // If we can't detect port from Nginx, fall back to default 80
                         Console.ForegroundColor = ConsoleColor.Yellow;
                         Console.WriteLine("    (´･ω･`) Could not detect port from Nginx config");
-                        Console.WriteLine("    🔧 Using default port 5000");
+                        Console.WriteLine("    🔧 Using default port 80");
                         Console.ResetColor();
                         
-                        Environment.SetEnvironmentVariable("RACORE_DETECTED_PORT", "5000");
+                        Environment.SetEnvironmentVariable("RACORE_DETECTED_PORT", "80");
                         
                         // Store default configuration to Ra_Memory database
-                        StoreConfig("nginx.port", "5000");
+                        StoreConfig("nginx.port", "80");
                     }
                 }
             }

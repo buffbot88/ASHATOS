@@ -49,7 +49,7 @@ public class GameClientPackage
 public class ClientConfiguration
 {
     public string ServerUrl { get; set; } = string.Empty;
-    public int ServerPort { get; set; } = 5000;
+    public int ServerPort { get; set; } = 80;
     public string GameTitle { get; set; } = "RaCore Game";
     public string Theme { get; set; } = "fantasy";
     public Dictionary<string, string> CustomSettings { get; set; } = new();

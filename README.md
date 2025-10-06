@@ -23,9 +23,11 @@ dotnet run
 ```
 
 ### Default Configuration
-- **RaCore Server Port:** 5000 (configurable via `RACORE_PORT` environment variable)
+- **RaCore Server Port:** 80 (configurable via `RACORE_PORT` environment variable)
 - **CMS PHP Server Port:** 8080 (auto-started on first run)
 - **Default Admin:** username: `admin`, password: `admin123` ⚠️ **Change this immediately!**
+
+**Note:** Port 80 requires administrator/root privileges. If you don't have these privileges or port 80 is in use, set a different port using the `RACORE_PORT` environment variable (e.g., 5000, 8080).
 
 ### Custom Port Configuration
 
@@ -49,9 +51,9 @@ On first run, RaCore automatically:
 4. Creates default admin user
 
 **Default Entry Points:**
-- **Main CMS Homepage:** `http://localhost:5000/` (redirects to CMS on port 8080)
+- **Main CMS Homepage:** `http://localhost:80/` (redirects to CMS on port 8080)
 - **CMS Direct Access:** `http://localhost:8080/`
-- **Control Panel:** `http://localhost:5000/control-panel.html`
+- **Control Panel:** `http://localhost:80/control-panel.html`
 
 The CMS homepage provides navigation to:
 - **Home** - Landing/welcome page
