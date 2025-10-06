@@ -23,6 +23,7 @@ public class ApacheManager
     /// </summary>
     public static bool IsApacheAvailable()
     {
+        // Try common command-line commands first (Linux/Unix/Mac)
         var apacheCommands = new[] { "apache2", "httpd", "apachectl" };
         
         foreach (var cmd in apacheCommands)
@@ -50,6 +51,55 @@ public class ApacheManager
                 }
             }
             catch { continue; }
+        }
+        
+        // Try common Windows Apache installation paths
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            var windowsPaths = new[]
+            {
+                @"C:\Apache\bin\httpd.exe",
+                @"C:\Apache24\bin\httpd.exe",
+                @"C:\Apache2\bin\httpd.exe",
+                @"D:\Apache\bin\httpd.exe",
+                @"D:\Apache24\bin\httpd.exe",
+                @"E:\Apache\bin\httpd.exe",
+                @"E:\Apache24\bin\httpd.exe",
+                @"C:\Program Files\Apache Software Foundation\Apache2.4\bin\httpd.exe",
+                @"C:\xampp\apache\bin\httpd.exe"
+            };
+            
+            foreach (var path in windowsPaths)
+            {
+                try
+                {
+                    if (!File.Exists(path))
+                    {
+                        continue;
+                    }
+                    
+                    var startInfo = new ProcessStartInfo
+                    {
+                        FileName = path,
+                        Arguments = "-v",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+                    
+                    using var process = Process.Start(startInfo);
+                    if (process != null)
+                    {
+                        process.WaitForExit(3000);
+                        if (process.ExitCode == 0)
+                        {
+                            return true;
+                        }
+                    }
+                }
+                catch { continue; }
+            }
         }
         
         return false;

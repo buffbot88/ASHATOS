@@ -179,19 +179,51 @@ public class FirstRunManager
     
     private string? FindPhpExecutable()
     {
-        string[] possiblePaths = 
+        // Try local php folder first (same directory as RaCore.exe server root)
+        var serverRoot = Directory.GetCurrentDirectory();
+        var localPhpFolder = Path.Combine(serverRoot, "php");
+        
+        // Build list of possible paths
+        var possiblePaths = new List<string>
         {
-            "php",
-            "/usr/bin/php",
-            "/usr/local/bin/php",
-            "C:\\php\\php.exe",
-            "C:\\xampp\\php\\php.exe"
+            Path.Combine(localPhpFolder, "php.exe"),     // Local Windows
+            Path.Combine(localPhpFolder, "php"),         // Local Linux/macOS
+            "php",                                        // In PATH
+            "/usr/bin/php",                               // Linux
+            "/usr/local/bin/php",                         // Linux/macOS
         };
+        
+        // Add Windows-specific paths with multiple drive letters
+        if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+        {
+            var driveLetters = new[] { "C", "D", "E", "F" };
+            var phpPaths = new[]
+            {
+                @"\php\php.exe",
+                @"\php8\php.exe",
+                @"\xampp\php\php.exe",
+                @"\Program Files\php\php.exe"
+            };
+            
+            foreach (var drive in driveLetters)
+            {
+                foreach (var phpPath in phpPaths)
+                {
+                    possiblePaths.Add($"{drive}:{phpPath}");
+                }
+            }
+        }
 
         foreach (var path in possiblePaths)
         {
             try
             {
+                // Check if file exists for absolute paths
+                if (Path.IsPathRooted(path) && !File.Exists(path))
+                {
+                    continue;
+                }
+
                 var startInfo = new System.Diagnostics.ProcessStartInfo
                 {
                     FileName = path,
@@ -208,11 +240,25 @@ public class FirstRunManager
                     process.WaitForExit(5000);
                     if (process.ExitCode == 0)
                     {
+                        Console.WriteLine($"[FirstRunManager] Found PHP at: {path}");
                         return path;
                     }
                 }
             }
             catch { continue; }
+        }
+
+        // Provide helpful diagnostic message
+        Console.WriteLine("[FirstRunManager] PHP not found in standard locations:");
+        Console.WriteLine($"  - Local folder: {localPhpFolder}");
+        Console.WriteLine("  - System PATH");
+        if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+        {
+            Console.WriteLine("  - Common Windows paths (C:\\php, D:\\php, E:\\php, etc.)");
+        }
+        else
+        {
+            Console.WriteLine("  - /usr/bin/php, /usr/local/bin/php");
         }
 
         return null;
