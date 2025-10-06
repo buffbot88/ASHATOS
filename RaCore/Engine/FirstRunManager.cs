@@ -64,7 +64,7 @@ public class FirstRunManager
         
         try
         {
-            // Find SiteBuilder module (formerly CMSSpawner)
+            // Find SiteBuilder module
             var siteBuilderModule = _moduleManager.Modules
                 .Select(m => m.Instance)
                 .OfType<SiteBuilderModule>()

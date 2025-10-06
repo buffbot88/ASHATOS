@@ -2,7 +2,11 @@
 
 ## Overview
 
-The CMSSpawner module has been refactored into the SiteBuilder module with a modular architecture. This guide explains the changes and migration path.
+The CMSSpawner module has been **completely removed** and replaced with the SiteBuilder module with a modular architecture. This guide explains the changes and migration path.
+
+## ⚠️ IMPORTANT: CMSSpawner Removed
+
+**CMSSpawner has been completely removed from the codebase.** All functionality is now in SiteBuilder.
 
 ## Why the Refactoring?
 
@@ -71,33 +75,20 @@ All old `cms` commands still work:
 
 ## For Users
 
-### No Action Required
+### Action Required
 
-The refactoring is **100% backward compatible**. All your existing commands and workflows continue to work without changes.
+The old CMSSpawner module has been **completely removed**. You must now use `site` commands:
 
-### Recommended Actions
+### Required Command Changes
 
-1. **Update commands**: Start using `site` instead of `cms` commands
-2. **Update documentation**: Reference SiteBuilder in your docs
-3. **Update scripts**: Replace `cms` with `site` in automation scripts
-
-### Example Migration
-
-**Before:**
-```bash
-# Old way (still works)
-cms spawn integrated
-cms status
-cms detect php
-```
-
-**After:**
-```bash
-# New way (recommended)
-site spawn integrated
-site status
-site detect php
-```
+| Old Command (Removed) | New Command (Use This) | Status |
+|-------------|----------------|--------|
+| `cms spawn` | `site spawn` | ✅ Use now |
+| `cms spawn home` | `site spawn home` | ✅ Use now |
+| `cms spawn control` | `site spawn control` | ✅ Use now |
+| `cms spawn integrated` | `site spawn integrated` | ✅ Use now |
+| `cms status` | `site status` | ✅ Use now |
+| `cms detect php` | `site detect php` | ✅ Use now |
 
 ## For Developers
 
@@ -239,14 +230,13 @@ if (command == "site spawn blog")
 
 ### Questions?
 
-- Check [SiteBuilder README](SiteBuilder/README.md)
-- Review [CMSSpawner README](CMSSpawner/README.md) (legacy)
+- Check [SiteBuilder README](RaCore/Modules/Extensions/SiteBuilder/README.md)
 - Submit issues on GitHub
 
 ### Issues?
 
-Both modules work identically. If you encounter issues:
-1. Try the equivalent `site` command
+CMSSpawner has been completely removed. Use `site` commands instead:
+1. Use `site` commands instead of `cms`
 2. Check PHP detection: `site detect php`
 3. Review logs for detailed error messages
 4. Verify file permissions and paths

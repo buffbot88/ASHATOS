@@ -36,7 +36,7 @@ SiteBuilder/
 
 ## Commands
 
-### New Commands (Preferred)
+### SiteBuilder Commands
 
 ```bash
 site spawn            # Generate CMS homepage
@@ -45,18 +45,6 @@ site spawn control    # Generate control panel
 site spawn integrated # Generate complete integrated site
 site status           # Show deployment status
 site detect php       # Detect PHP runtime
-```
-
-### Legacy Commands (Backward Compatible)
-
-All `cms` commands still work:
-
-```bash
-cms spawn            # Works, same as 'site spawn'
-cms spawn control    # Works, same as 'site spawn control'
-cms spawn integrated # Works, same as 'site spawn integrated'
-cms status           # Works, same as 'site status'
-cms detect php       # Works, same as 'site detect php'
 ```
 
 ## Benefits of Refactoring
@@ -166,17 +154,18 @@ Assert.NotNull(phpPath);
 
 ## Migration from CMSSpawner
 
-The old `CMSSpawner` module has been preserved for reference but is deprecated. All functionality is now in `SiteBuilder`.
+The CMSSpawner module has been **completely removed**. All functionality is now in `SiteBuilder`.
 
 ### For Users
 
-- No action needed - all `cms` commands still work
-- Recommended: Start using `site` commands instead
-- Behavior is identical
+- **Action Required:** Use `site` commands instead of `cms`
+- All `cms` commands have been removed
+- Use `site spawn`, `site status`, etc.
 
 ### For Developers
 
-- Import `RaCore.Modules.Extensions.SiteBuilder` instead of `CMSSpawner`
+- Import `RaCore.Modules.Extensions.SiteBuilder`
+- CMSSpawner no longer exists in the codebase
 - Use component classes for specific functionality
 - Extend by adding new generator components
 
@@ -220,9 +209,8 @@ Planned additions:
 ---
 
 **Module**: SiteBuilder  
-**Formerly**: CMSSpawner  
 **Status**: ✅ Production Ready  
-**Version**: 2.0 (Refactored)  
+**Version**: 2.0 (CMSSpawner Removed)  
 **Lines of Code**: ~1,500 (was 4,747)  
 **Components**: 7  
 **Last Updated**: 2025-01-05

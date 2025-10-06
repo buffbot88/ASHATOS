@@ -7,7 +7,6 @@ namespace RaCore.Modules.Extensions.SiteBuilder;
 /// <summary>
 /// SiteBuilder Module - Unified website building system.
 /// Generates and manages CMS, Control Panels, Forums, and Profile systems.
-/// Refactored from CMSSpawner for better maintainability.
 /// </summary>
 [RaModule(Category = "extensions")]
 public sealed class SiteBuilderModule : ModuleBase
@@ -40,7 +39,7 @@ public sealed class SiteBuilderModule : ModuleBase
         _integratedSiteGenerator = new IntegratedSiteGenerator(
             this, _cmsRootPath, _cmsGenerator, _controlPanelGenerator, _forumGenerator, _profileGenerator);
         
-        LogInfo("SiteBuilder module initialized (formerly CMSSpawner)");
+        LogInfo("SiteBuilder module initialized");
     }
 
     public override string Process(string input)
@@ -57,31 +56,29 @@ public sealed class SiteBuilderModule : ModuleBase
             return GetHelp();
         }
 
-        // Support both old 'cms' and new 'site' commands for backward compatibility
         var command = text.ToLowerInvariant();
         
-        if (command == "cms spawn" || command == "cms spawn home" || 
-            command == "site spawn" || command == "site spawn home")
+        if (command == "site spawn" || command == "site spawn home")
         {
             return SpawnHomepage();
         }
 
-        if (command == "cms spawn control" || command == "site spawn control")
+        if (command == "site spawn control")
         {
             return SpawnControlPanel();
         }
 
-        if (command == "cms spawn integrated" || command == "site spawn integrated")
+        if (command == "site spawn integrated")
         {
             return SpawnIntegratedSite();
         }
 
-        if (command == "cms status" || command == "site status")
+        if (command == "site status")
         {
             return GetSiteStatus();
         }
 
-        if (command == "cms detect php" || command == "site detect php")
+        if (command == "site detect php")
         {
             return _phpDetector?.DetectPHP() ?? "PHP detector not initialized";
         }
@@ -92,16 +89,14 @@ public sealed class SiteBuilderModule : ModuleBase
     private string GetHelp()
     {
         return string.Join(Environment.NewLine,
-            "SiteBuilder commands (formerly CMSSpawner):",
+            "SiteBuilder commands:",
             "  site spawn           - Create PHP CMS homepage with SQLite database",
             "  site spawn home      - Same as 'site spawn'",
             "  site spawn control   - Create standalone Control Panel",
             "  site spawn integrated - Create CMS with integrated Control Panel (first-run)",
             "  site status          - Show site deployment status",
             "  site detect php      - Detect PHP runtime version",
-            "  help                 - Show this help message",
-            "",
-            "Backward compatibility: 'cms' commands still work (e.g., 'cms spawn')"
+            "  help                 - Show this help message"
         );
     }
 
