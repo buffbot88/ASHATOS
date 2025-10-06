@@ -134,6 +134,9 @@ class ControlPanelUI {
             case 'game':
                 this.renderGameServerConfig();
                 break;
+            case 'forum':
+                this.renderForumModeration();
+                break;
             default:
                 this.renderDashboard();
         }
@@ -395,6 +398,115 @@ class ControlPanelUI {
             `;
         } catch (error) {
             this.showError(content, error.message);
+        }
+    }
+
+    /**
+     * Render forum moderation section
+     */
+    async renderForumModeration() {
+        const content = document.getElementById('content');
+        content.innerHTML = `
+            <h2>Forum Moderation</h2>
+            <div id="forumStats" class="stats-grid"></div>
+            <div id="forumPosts"></div>
+        `;
+        
+        try {
+            // Load forum stats
+            const statsData = await this.api.get('/api/control/forum/stats');
+            const statsGrid = document.getElementById('forumStats');
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <h4>Total Posts</h4>
+                    <p class="stat-value">${statsData.stats.totalPosts}</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Active Threads</h4>
+                    <p class="stat-value">${statsData.stats.activeThreads}</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Locked Threads</h4>
+                    <p class="stat-value">${statsData.stats.lockedThreads}</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Banned Users</h4>
+                    <p class="stat-value">${statsData.stats.bannedUsers}</p>
+                </div>
+            `;
+            
+            // Load forum posts
+            const postsData = await this.api.get('/api/control/forum/posts');
+            const postsContainer = document.getElementById('forumPosts');
+            
+            if (postsData.posts && postsData.posts.length > 0) {
+                postsContainer.innerHTML = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Author</th>
+                                <th>Replies</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${postsData.posts.map(post => `
+                                <tr>
+                                    <td>${post.title}</td>
+                                    <td>${post.username}</td>
+                                    <td>${post.replyCount}</td>
+                                    <td>
+                                        ${post.isDeleted ? '<span class="badge badge-error">Deleted</span>' : ''}
+                                        ${post.isLocked ? '<span class="badge badge-warning">Locked</span>' : ''}
+                                        ${!post.isDeleted && !post.isLocked ? '<span class="badge badge-success">Active</span>' : ''}
+                                    </td>
+                                    <td>
+                                        ${!post.isDeleted ? `
+                                            <button onclick="ui.deleteForumPost('${post.id}')">Delete</button>
+                                            <button onclick="ui.toggleLockPost('${post.id}', ${!post.isLocked})">${post.isLocked ? 'Unlock' : 'Lock'}</button>
+                                        ` : ''}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } else {
+                postsContainer.innerHTML = '<p>No posts found.</p>';
+            }
+        } catch (error) {
+            this.showError(content, error.message);
+        }
+    }
+    
+    /**
+     * Delete a forum post
+     */
+    async deleteForumPost(postId) {
+        const reason = prompt('Enter reason for deletion:');
+        if (!reason) return;
+        
+        try {
+            await this.api.delete(`/api/control/forum/posts/${postId}`, { reason });
+            this.showSuccess('Post deleted successfully');
+            this.renderForumModeration(); // Refresh
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    }
+    
+    /**
+     * Toggle post lock status
+     */
+    async toggleLockPost(postId, locked) {
+        try {
+            await this.api.put(`/api/control/forum/posts/${postId}/lock`, { locked });
+            this.showSuccess(locked ? 'Thread locked' : 'Thread unlocked');
+            this.renderForumModeration(); // Refresh
+        } catch (error) {
+            alert('Error: ' + error.message);
         }
     }
 

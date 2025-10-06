@@ -1068,6 +1068,304 @@ app.MapGet("/api/control/game/stats", async (HttpContext context) =>
     }
 });
 
+// ============================================================================
+// Forum Moderation API Endpoints
+// ============================================================================
+
+app.MapGet("/api/control/forum/posts", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null || !authModule!.HasPermission(user, "Forum", UserRole.ForumModerator))
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "Insufficient permissions. ForumModerator role required." });
+    }
+    
+    var forumModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<IForumModule>()
+        .FirstOrDefault();
+    
+    if (forumModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Forum module not available" });
+    }
+    
+    var posts = await forumModule.GetPostsAsync();
+    return Results.Json(new { posts });
+});
+
+app.MapDelete("/api/control/forum/posts/{postId}", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null || !authModule!.HasPermission(user, "Forum", UserRole.ForumModerator))
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "Insufficient permissions" });
+    }
+    
+    var postId = context.Request.RouteValues["postId"]?.ToString();
+    if (string.IsNullOrEmpty(postId))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Post ID required" });
+    }
+    
+    var body = await context.Request.ReadFromJsonAsync<ForumPostActionRequest>();
+    if (body == null || string.IsNullOrEmpty(body.Reason))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Reason required" });
+    }
+    
+    var forumModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<IForumModule>()
+        .FirstOrDefault();
+    
+    if (forumModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Forum module not available" });
+    }
+    
+    var success = await forumModule.DeletePostAsync(postId, user.Id.ToString(), body.Reason);
+    return Results.Json(new { success, message = success ? "Post deleted" : "Post not found" });
+});
+
+app.MapPut("/api/control/forum/posts/{postId}/lock", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null || !authModule!.HasPermission(user, "Forum", UserRole.ForumModerator))
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "Insufficient permissions" });
+    }
+    
+    var postId = context.Request.RouteValues["postId"]?.ToString();
+    if (string.IsNullOrEmpty(postId))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Post ID required" });
+    }
+    
+    var body = await context.Request.ReadFromJsonAsync<ForumLockRequest>();
+    if (body == null)
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Lock status required" });
+    }
+    
+    var forumModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<IForumModule>()
+        .FirstOrDefault();
+    
+    if (forumModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Forum module not available" });
+    }
+    
+    var success = await forumModule.LockThreadAsync(postId, body.Locked, user.Id.ToString());
+    return Results.Json(new { success, message = success ? (body.Locked ? "Thread locked" : "Thread unlocked") : "Post not found" });
+});
+
+app.MapGet("/api/control/forum/users/{userId}/warnings", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null || !authModule!.HasPermission(user, "Forum", UserRole.ForumModerator))
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "Insufficient permissions" });
+    }
+    
+    var userId = context.Request.RouteValues["userId"]?.ToString();
+    if (string.IsNullOrEmpty(userId))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "User ID required" });
+    }
+    
+    var forumModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<IForumModule>()
+        .FirstOrDefault();
+    
+    if (forumModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Forum module not available" });
+    }
+    
+    var warnings = await forumModule.GetUserWarningsAsync(userId);
+    return Results.Json(new { warnings });
+});
+
+app.MapPost("/api/control/forum/users/{userId}/warnings", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null || !authModule!.HasPermission(user, "Forum", UserRole.ForumModerator))
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "Insufficient permissions" });
+    }
+    
+    var userId = context.Request.RouteValues["userId"]?.ToString();
+    if (string.IsNullOrEmpty(userId))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "User ID required" });
+    }
+    
+    var body = await context.Request.ReadFromJsonAsync<ForumWarningRequest>();
+    if (body == null || string.IsNullOrEmpty(body.Reason))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Reason required" });
+    }
+    
+    var forumModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<IForumModule>()
+        .FirstOrDefault();
+    
+    if (forumModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Forum module not available" });
+    }
+    
+    var success = await forumModule.IssueWarningAsync(userId, body.Reason, user.Id.ToString());
+    return Results.Json(new { success, message = "Warning issued" });
+});
+
+app.MapPut("/api/control/forum/users/{userId}/ban", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null || !authModule!.HasPermission(user, "Forum", UserRole.ForumModerator))
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "Insufficient permissions" });
+    }
+    
+    var userId = context.Request.RouteValues["userId"]?.ToString();
+    if (string.IsNullOrEmpty(userId))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "User ID required" });
+    }
+    
+    var body = await context.Request.ReadFromJsonAsync<ForumBanRequest>();
+    if (body == null)
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Ban request required" });
+    }
+    
+    var forumModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<IForumModule>()
+        .FirstOrDefault();
+    
+    if (forumModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Forum module not available" });
+    }
+    
+    var success = await forumModule.BanUserAsync(userId, body.Banned, body.Reason ?? "", user.Id.ToString());
+    return Results.Json(new { success, message = body.Banned ? "User banned" : "User unbanned" });
+});
+
+app.MapGet("/api/control/forum/stats", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null || !authModule!.HasPermission(user, "Forum", UserRole.Admin))
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "Insufficient permissions" });
+    }
+    
+    var forumModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<IForumModule>()
+        .FirstOrDefault();
+    
+    if (forumModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Forum module not available" });
+    }
+    
+    var stats = await forumModule.GetStatsAsync();
+    return Results.Json(new { stats });
+});
+
+// ============================================================================
+// System Health & Monitoring API Endpoints
+// ============================================================================
+
+app.MapGet("/api/control/system/health", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null || !authModule!.HasPermission(user, "System", UserRole.Admin))
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "Insufficient permissions" });
+    }
+    
+    var process = System.Diagnostics.Process.GetCurrentProcess();
+    var health = new
+    {
+        status = "healthy",
+        uptime = DateTime.UtcNow - process.StartTime.ToUniversalTime(),
+        memory_mb = process.WorkingSet64 / 1024 / 1024,
+        cpu_time_seconds = process.TotalProcessorTime.TotalSeconds,
+        threads = process.Threads.Count,
+        modules_loaded = moduleManager.Modules.Count,
+        timestamp = DateTime.UtcNow
+    };
+    
+    return await Task.FromResult(Results.Json(new { health }));
+});
+
+// ============================================================================
+// Audit Logs API Endpoints
+// ============================================================================
+
+app.MapGet("/api/control/audit/logs", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null || !authModule!.HasPermission(user, "Audit", UserRole.SuperAdmin))
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "Insufficient permissions. SuperAdmin role required." });
+    }
+    
+    var events = await authModule!.GetSecurityEventsAsync(limit: 100);
+    return Results.Json(new { logs = events });
+});
+
 app.Run();
 
 // Request models for API endpoints
@@ -1075,6 +1373,31 @@ public class CreateSceneRequest
 {
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+}
+
+// ============================================================================
+// Request Models for Forum/Control Panel
+// ============================================================================
+
+public class ForumPostActionRequest
+{
+    public string Reason { get; set; } = string.Empty;
+}
+
+public class ForumLockRequest
+{
+    public bool Locked { get; set; }
+}
+
+public class ForumWarningRequest
+{
+    public string Reason { get; set; } = string.Empty;
+}
+
+public class ForumBanRequest
+{
+    public bool Banned { get; set; }
+    public string? Reason { get; set; }
 }
 
 public class CreateAdminInstanceRequest
@@ -1088,3 +1411,4 @@ public class SetupConfigRequest
     public string LicenseNumber { get; set; } = string.Empty;
     public string Username { get; set; } = string.Empty;
 }
+
