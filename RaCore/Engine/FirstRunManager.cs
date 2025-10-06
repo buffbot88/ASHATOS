@@ -16,8 +16,10 @@ public class FirstRunManager
     public FirstRunManager(ModuleManager moduleManager)
     {
         _moduleManager = moduleManager;
-        _firstRunMarkerPath = Path.Combine(AppContext.BaseDirectory, ".racore_initialized");
-        _cmsPath = Path.Combine(AppContext.BaseDirectory, "racore_cms");
+        // Use GetCurrentDirectory() to get the RaCore.exe server root directory (where the executable runs)
+        var serverRoot = Directory.GetCurrentDirectory();
+        _firstRunMarkerPath = Path.Combine(serverRoot, ".racore_initialized");
+        _cmsPath = Path.Combine(serverRoot, "racore_cms");
     }
     
     /// <summary>

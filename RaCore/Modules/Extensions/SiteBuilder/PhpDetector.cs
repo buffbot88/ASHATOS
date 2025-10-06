@@ -43,9 +43,9 @@ public class PhpDetector
             return _cachedPhpPath;
         }
 
-        // Try local php folder first (same directory as RaCore.exe)
-        var baseDirectory = AppContext.BaseDirectory;
-        var localPhpFolder = Path.Combine(baseDirectory, "php");
+        // Try local php folder first (same directory as RaCore.exe server root)
+        var serverRoot = Directory.GetCurrentDirectory();
+        var localPhpFolder = Path.Combine(serverRoot, "php");
         
         // Try common PHP locations, prioritizing local folder
         string[] possiblePaths = 
@@ -128,8 +128,8 @@ public class PhpDetector
 
     public string GetPhpNotFoundMessage()
     {
-        var baseDirectory = AppContext.BaseDirectory;
-        var localPhpFolder = Path.Combine(baseDirectory, "php");
+        var serverRoot = Directory.GetCurrentDirectory();
+        var localPhpFolder = Path.Combine(serverRoot, "php");
         
         return "PHP runtime not found. Please install PHP 8.0 or higher.\n" +
                "Recommended: Place PHP in the local 'php' folder:\n" +

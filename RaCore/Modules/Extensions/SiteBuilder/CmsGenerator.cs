@@ -32,8 +32,8 @@ public class CmsGenerator
                 _module.Log($"Created CMS directory: {_cmsRootPath}");
             }
 
-            // Initialize SQLite database
-            var dbPath = Path.Combine(AppContext.BaseDirectory, "Databases", "cms_database.sqlite");
+            // Initialize SQLite database - use GetCurrentDirectory() for server root
+            var dbPath = Path.Combine(Directory.GetCurrentDirectory(), "Databases", "cms_database.sqlite");
             var databasesFolder = Path.GetDirectoryName(dbPath);
             if (databasesFolder != null && !Directory.Exists(databasesFolder))
             {

@@ -29,25 +29,11 @@ public sealed class SiteBuilderModule : ModuleBase
     {
         base.Initialize(manager);
         _manager = manager as ModuleManager;
-        _cmsRootPath = Path.Combine(AppContext.BaseDirectory, "racore_cms");
         
-        // For wwwroot, use the project source directory to work with ASP.NET's static files
-        // When running from bin/Debug, we need to go up to the source directory
-        var baseDir = AppContext.BaseDirectory;
-        var sourceDir = baseDir;
-        
-        // Navigate up from bin/Debug/net9.0 to project root if we're in a build output directory
-        if (baseDir.Contains(Path.Combine("bin", "Debug")) || baseDir.Contains(Path.Combine("bin", "Release")))
-        {
-            var parts = baseDir.Split(Path.DirectorySeparatorChar);
-            var binIndex = Array.FindIndex(parts, p => p == "bin");
-            if (binIndex > 0)
-            {
-                sourceDir = string.Join(Path.DirectorySeparatorChar.ToString(), parts.Take(binIndex));
-            }
-        }
-        
-        var wwwrootPath = Path.Combine(sourceDir, "wwwroot");
+        // Use GetCurrentDirectory() to get the RaCore.exe server root directory (where the executable runs)
+        var serverRoot = Directory.GetCurrentDirectory();
+        _cmsRootPath = Path.Combine(serverRoot, "racore_cms");
+        var wwwrootPath = Path.Combine(serverRoot, "wwwroot");
         
         // Initialize components
         _phpDetector = new PhpDetector(this);
