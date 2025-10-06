@@ -687,4 +687,12 @@ public sealed class GameEngineModule : ModuleBase, IGameEngineModule
         public Dictionary<string, object> Metadata { get; set; } = new();
         public DateTime LoadedAt { get; set; }
     }
+    
+    /// <summary>
+    /// Get all scenes (Admin+).
+    /// </summary>
+    public List<GameScene> GetAllScenes()
+    {
+        return _scenes.Values.ToList();
+    }
 }

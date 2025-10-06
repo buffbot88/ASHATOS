@@ -418,4 +418,23 @@ public sealed class LicenseModule : ModuleBase, ILicenseModule
             });
         }
     }
+    
+    /// <summary>
+    /// Get all licenses in the system (Admin+).
+    /// </summary>
+    public IEnumerable<Abstractions.License> GetAllLicenses()
+    {
+        lock (_lock)
+        {
+            return _licenses.Values.ToList();
+        }
+    }
+    
+    /// <summary>
+    /// Create a new license (synonym for CreateAndAssignLicense).
+    /// </summary>
+    public Abstractions.License CreateLicense(Guid userId, string instanceName, LicenseType type, int durationYears = 1)
+    {
+        return CreateAndAssignLicense(userId, instanceName, type, durationYears);
+    }
 }

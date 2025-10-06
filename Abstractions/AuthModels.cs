@@ -24,7 +24,10 @@ public enum UserRole
 {
     User = 0,
     Admin = 1,
-    SuperAdmin = 2
+    SuperAdmin = 2,
+    GameMaster = 3,
+    GameMonitor = 4,
+    ForumModerator = 5
 }
 
 /// <summary>

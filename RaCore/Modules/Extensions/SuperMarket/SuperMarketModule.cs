@@ -132,22 +132,36 @@ public sealed class SuperMarketModule : ModuleBase
         lock (_lock)
         {
             // Add default products if none exist
+            // USD to RaCoin Ratio: 1:1000 (e.g., $20 USD = 20,000 RaCoins)
             if (_products.Count == 0)
             {
+                // Reseller Pricing (AGPStudios Licensed Products)
+                AddProductInternal("Forum Script License", 20000m, ProductCategory.License, 
+                    "1-year Forum Script license - Full-featured forum system ($20 USD)");
+                AddProductInternal("CMS Script License", 20000m, ProductCategory.License, 
+                    "1-year CMS Script license - Complete content management system ($20 USD)");
+                AddProductInternal("Custom Game Server License", 1000000m, ProductCategory.License, 
+                    "1-year Custom Game Server license - Unified client with server-side assets ($1000 USD)");
+                
+                // Standard License Tiers
                 AddProductInternal("Standard License", 100m, ProductCategory.License, 
                     "1-year standard license with basic features");
                 AddProductInternal("Professional License", 500m, ProductCategory.License, 
                     "1-year professional license with advanced features");
                 AddProductInternal("Enterprise License", 2000m, ProductCategory.License, 
                     "1-year enterprise license with unlimited features");
+                
+                // Additional Products
                 AddProductInternal("Premium Theme Pack", 50m, ProductCategory.Theme, 
                     "Collection of premium UI themes");
                 AddProductInternal("AI Language Module", 150m, ProductCategory.Module, 
                     "Advanced AI language processing capabilities");
                 AddProductInternal("Game Engine Module", 300m, ProductCategory.Module, 
                     "Complete game development engine");
+                AddProductInternal("AI Content Generation", 500m, ProductCategory.Module,
+                    "AI-powered game asset and content generation system");
                 
-                LogInfo("Initialized default SuperMarket products");
+                LogInfo("Initialized default SuperMarket products with AGPStudios reseller pricing");
             }
         }
     }

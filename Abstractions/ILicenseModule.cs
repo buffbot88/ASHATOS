@@ -29,4 +29,14 @@ public interface ILicenseModule : IDisposable
     /// Log a license validation event.
     /// </summary>
     Task LogLicenseEventAsync(Guid userId, string action, string details, bool success);
+    
+    /// <summary>
+    /// Get all licenses in the system (Admin+).
+    /// </summary>
+    IEnumerable<License> GetAllLicenses();
+    
+    /// <summary>
+    /// Create a new license (synonym for CreateAndAssignLicense).
+    /// </summary>
+    License CreateLicense(Guid userId, string instanceName, LicenseType type, int durationYears = 1);
 }

@@ -483,6 +483,38 @@ Default Admin:
 ".Trim();
 
     #endregion
+    
+    #region Control Panel Methods
+    
+    /// <summary>
+    /// Get all users in the system (Admin+).
+    /// </summary>
+    public IEnumerable<User> GetAllUsers()
+    {
+        lock (_lock)
+        {
+            return _users.Values.ToList();
+        }
+    }
+    
+    /// <summary>
+    /// Update a user's role (SuperAdmin only).
+    /// </summary>
+    public bool UpdateUserRole(Guid userId, UserRole newRole)
+    {
+        lock (_lock)
+        {
+            if (_users.TryGetValue(userId, out var user))
+            {
+                user.Role = newRole;
+                LogInfo($"User {user.Username} role updated to {newRole}");
+                return true;
+            }
+            return false;
+        }
+    }
+    
+    #endregion
 
     public override void Dispose()
     {

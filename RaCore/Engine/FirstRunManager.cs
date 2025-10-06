@@ -1,5 +1,5 @@
 using RaCore.Engine.Manager;
-using RaCore.Modules.Extensions.CMSSpawner;
+using RaCore.Modules.Extensions.SiteBuilder;
 using System.Text.Json;
 
 namespace RaCore.Engine;
@@ -64,25 +64,25 @@ public class FirstRunManager
         
         try
         {
-            // Find CMSSpawner module
-            var cmsModule = _moduleManager.Modules
+            // Find SiteBuilder module
+            var siteBuilderModule = _moduleManager.Modules
                 .Select(m => m.Instance)
-                .OfType<CMSSpawnerModule>()
+                .OfType<SiteBuilderModule>()
                 .FirstOrDefault();
             
-            if (cmsModule == null)
+            if (siteBuilderModule == null)
             {
-                Console.WriteLine("[FirstRunManager] Warning: CMSSpawner module not found");
-                Console.WriteLine("[FirstRunManager] Skipping CMS initialization");
+                Console.WriteLine("[FirstRunManager] Warning: SiteBuilder module not found");
+                Console.WriteLine("[FirstRunManager] Skipping site initialization");
                 MarkAsInitialized();
                 return false;
             }
             
-            Console.WriteLine("[FirstRunManager] Step 1/3: Spawning CMS with Integrated Control Panel...");
+            Console.WriteLine("[FirstRunManager] Step 1/3: Spawning site with Integrated Control Panel...");
             Console.WriteLine();
             
-            // Spawn the CMS with integrated control panel
-            var result = cmsModule.Process("cms spawn integrated");
+            // Spawn the site with integrated control panel
+            var result = siteBuilderModule.Process("site spawn integrated");
             Console.WriteLine(result);
             Console.WriteLine();
             
