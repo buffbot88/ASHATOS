@@ -17,7 +17,7 @@ public sealed class LanguageModelProcessorModule : ModuleBase
     private ModuleManager? _manager;
     private readonly List<ModelInfo> _loadedModels = new();
     private readonly List<ModelFailure> _modelFailures = new();
-    private string _modelsDirectory = Path.Combine("llama.cpp", "models");
+    private string _modelsDirectory = "models";
     private bool _initialized = false;
     
     public override void Initialize(object? manager)

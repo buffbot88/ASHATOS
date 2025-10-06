@@ -560,9 +560,54 @@ public class BootSequenceManager
             }
             else
             {
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine("    (•ᴗ•) No php.ini found - using defaults!");
+                // No php.ini found - generate one
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("    ⚠️  No php.ini found - generating default configuration...");
                 Console.ResetColor();
+                
+                var suggestedPath = NginxManager.GetSuggestedPhpIniPath(phpPath);
+                if (suggestedPath != null)
+                {
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.WriteLine($"    (っ◔◡◔)っ Creating php.ini at: {suggestedPath}");
+                    Console.ResetColor();
+                    
+                    var generateSuccess = NginxManager.GeneratePhpIni(suggestedPath);
+                    
+                    if (generateSuccess)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine("    ✨ PHP configuration generated successfully!");
+                        Console.ResetColor();
+                        
+                        // Now configure the newly generated file
+                        var phpConfigSuccess = NginxManager.ConfigurePhpIni(suggestedPath);
+                        
+                        if (phpConfigSuccess)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine("    ✨ PHP configuration settings applied!");
+                            Console.ResetColor();
+                        }
+                        
+                        // Persist PHP configuration to Ra_Memory database
+                        StoreConfig("php.configured", "true");
+                        StoreConfig("php.ini_path", suggestedPath);
+                        StoreConfig("php.ini_generated", "true");
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("    (╥﹏╥) Failed to generate php.ini - PHP will use defaults");
+                        Console.ResetColor();
+                    }
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine("    (´･ω･`) Could not determine php.ini location - using defaults!");
+                    Console.ResetColor();
+                }
             }
             
             Console.WriteLine();
