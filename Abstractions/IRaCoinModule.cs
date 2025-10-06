@@ -39,4 +39,19 @@ public interface IRaCoinModule : IDisposable
     /// Refund a transaction.
     /// </summary>
     Task<RaCoinResponse> RefundAsync(Guid transactionId);
+    
+    /// <summary>
+    /// Get total RaCoins in the system across all wallets.
+    /// </summary>
+    decimal GetTotalSystemRaCoins();
+    
+    /// <summary>
+    /// Get balance asynchronously for a user.
+    /// </summary>
+    Task<decimal> GetBalanceAsync(Guid userId);
+    
+    /// <summary>
+    /// Add RaCoins to a user's wallet (admin function).
+    /// </summary>
+    Task<RaCoinResponse> AddAsync(Guid userId, decimal amount, string reason);
 }

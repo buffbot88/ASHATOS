@@ -65,6 +65,11 @@ public interface IGameEngineModule
     /// Broadcasts a game event to connected clients.
     /// </summary>
     Task BroadcastEventAsync(GameEvent gameEvent);
+    
+    /// <summary>
+    /// Get all scenes (Admin+).
+    /// </summary>
+    List<GameScene> GetAllScenes();
 }
 
 /// <summary>

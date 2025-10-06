@@ -49,4 +49,14 @@ public interface IAuthenticationModule : IDisposable
     /// Log a security event.
     /// </summary>
     Task LogSecurityEventAsync(SecurityEvent securityEvent);
+    
+    /// <summary>
+    /// Get all users in the system (Admin+).
+    /// </summary>
+    IEnumerable<User> GetAllUsers();
+    
+    /// <summary>
+    /// Update a user's role (SuperAdmin only).
+    /// </summary>
+    bool UpdateUserRole(Guid userId, UserRole newRole);
 }

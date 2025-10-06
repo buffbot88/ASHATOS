@@ -427,4 +427,31 @@ public sealed class RaCoinModule : ModuleBase, IRaCoinModule
             };
         }
     }
+    
+    /// <summary>
+    /// Get total RaCoins in the system across all wallets.
+    /// </summary>
+    public decimal GetTotalSystemRaCoins()
+    {
+        lock (_lock)
+        {
+            return _wallets.Values.Sum(w => w.Balance);
+        }
+    }
+    
+    /// <summary>
+    /// Get balance asynchronously for a user.
+    /// </summary>
+    public Task<decimal> GetBalanceAsync(Guid userId)
+    {
+        return Task.FromResult(GetBalance(userId));
+    }
+    
+    /// <summary>
+    /// Add RaCoins to a user's wallet (admin function).
+    /// </summary>
+    public async Task<RaCoinResponse> AddAsync(Guid userId, decimal amount, string reason)
+    {
+        return await TopUpAsync(userId, amount, reason);
+    }
 }

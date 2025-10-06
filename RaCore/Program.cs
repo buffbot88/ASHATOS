@@ -698,6 +698,376 @@ app.MapGet("/", (HttpContext context) =>
     return Task.CompletedTask;
 });
 
+// ============================================================================
+// CONTROL PANEL API ENDPOINTS
+// ============================================================================
+
+// Get RaCoin module if present
+IRaCoinModule? racoinModule = moduleManager.Modules
+    .Select(m => m.Instance)
+    .OfType<IRaCoinModule>()
+    .FirstOrDefault();
+
+// Get License module if present
+ILicenseModule? licenseModule = moduleManager.Modules
+    .Select(m => m.Instance)
+    .OfType<ILicenseModule>()
+    .FirstOrDefault();
+
+// Control Panel: Get Dashboard Stats
+app.MapGet("/api/control/stats", async (HttpContext context) =>
+{
+    try
+    {
+        if (authModule == null)
+        {
+            context.Response.StatusCode = 503;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Authentication not available" });
+            return;
+        }
+
+        var authHeader = context.Request.Headers["Authorization"].ToString();
+        var token = authHeader.StartsWith("Bearer ") ? authHeader[7..] : authHeader;
+        var user = await authModule.GetUserByTokenAsync(token);
+
+        if (user == null || user.Role < UserRole.Admin)
+        {
+            context.Response.StatusCode = 403;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Insufficient permissions" });
+            return;
+        }
+
+        // Get stats from various modules
+        var stats = new
+        {
+            totalUsers = authModule.GetAllUsers().Count(),
+            activeLicenses = licenseModule?.GetAllLicenses().Count(l => l.Status == LicenseStatus.Active) ?? 0,
+            totalRaCoins = racoinModule?.GetTotalSystemRaCoins() ?? 0,
+            activeServers = gameEngineModule?.GetAllScenes().Count() ?? 0,
+            timestamp = DateTime.UtcNow
+        };
+
+        await context.Response.WriteAsJsonAsync(new { success = true, stats });
+    }
+    catch (Exception ex)
+    {
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+    }
+});
+
+// Control Panel: Get All Users (Admin+)
+app.MapGet("/api/control/users", async (HttpContext context) =>
+{
+    try
+    {
+        if (authModule == null)
+        {
+            context.Response.StatusCode = 503;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Authentication not available" });
+            return;
+        }
+
+        var authHeader = context.Request.Headers["Authorization"].ToString();
+        var token = authHeader.StartsWith("Bearer ") ? authHeader[7..] : authHeader;
+        var user = await authModule.GetUserByTokenAsync(token);
+
+        if (user == null || user.Role < UserRole.Admin)
+        {
+            context.Response.StatusCode = 403;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Insufficient permissions" });
+            return;
+        }
+
+        var users = authModule.GetAllUsers().Select(u => new
+        {
+            u.Id,
+            u.Username,
+            Role = u.Role.ToString(),
+            u.CreatedAtUtc
+        });
+
+        await context.Response.WriteAsJsonAsync(new { success = true, users });
+    }
+    catch (Exception ex)
+    {
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+    }
+});
+
+// Control Panel: Create User (Admin+)
+app.MapPost("/api/control/users", async (HttpContext context) =>
+{
+    try
+    {
+        if (authModule == null)
+        {
+            context.Response.StatusCode = 503;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Authentication not available" });
+            return;
+        }
+
+        var authHeader = context.Request.Headers["Authorization"].ToString();
+        var token = authHeader.StartsWith("Bearer ") ? authHeader[7..] : authHeader;
+        var user = await authModule.GetUserByTokenAsync(token);
+
+        if (user == null || user.Role < UserRole.Admin)
+        {
+            context.Response.StatusCode = 403;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Insufficient permissions" });
+            return;
+        }
+
+        var request = await context.Request.ReadFromJsonAsync<RegisterRequest>();
+        if (request == null)
+        {
+            context.Response.StatusCode = 400;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Invalid request" });
+            return;
+        }
+
+        var ipAddress = context.Connection.RemoteIpAddress?.ToString() ?? "";
+        var response = await authModule.RegisterAsync(request, ipAddress);
+        await context.Response.WriteAsJsonAsync(response);
+    }
+    catch (Exception ex)
+    {
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+    }
+});
+
+// Control Panel: Update User Role (SuperAdmin only)
+app.MapPut("/api/control/users/{userId}/role", async (HttpContext context) =>
+{
+    try
+    {
+        if (authModule == null)
+        {
+            context.Response.StatusCode = 503;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Authentication not available" });
+            return;
+        }
+
+        var authHeader = context.Request.Headers["Authorization"].ToString();
+        var token = authHeader.StartsWith("Bearer ") ? authHeader[7..] : authHeader;
+        var user = await authModule.GetUserByTokenAsync(token);
+
+        if (user == null || user.Role < UserRole.SuperAdmin)
+        {
+            context.Response.StatusCode = 403;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Only SuperAdmin can change roles" });
+            return;
+        }
+
+        var userId = Guid.Parse(context.Request.RouteValues["userId"]?.ToString() ?? "");
+        var request = await context.Request.ReadFromJsonAsync<JsonElement>();
+        var newRole = (UserRole)request.GetProperty("role").GetInt32();
+
+        var result = authModule.UpdateUserRole(userId, newRole);
+        await context.Response.WriteAsJsonAsync(new { success = result, message = result ? "Role updated" : "Update failed" });
+    }
+    catch (Exception ex)
+    {
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+    }
+});
+
+// Control Panel: Get All Licenses (Admin+)
+app.MapGet("/api/control/licenses", async (HttpContext context) =>
+{
+    try
+    {
+        if (authModule == null || licenseModule == null)
+        {
+            context.Response.StatusCode = 503;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Required modules not available" });
+            return;
+        }
+
+        var authHeader = context.Request.Headers["Authorization"].ToString();
+        var token = authHeader.StartsWith("Bearer ") ? authHeader[7..] : authHeader;
+        var user = await authModule.GetUserByTokenAsync(token);
+
+        if (user == null || user.Role < UserRole.Admin)
+        {
+            context.Response.StatusCode = 403;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Insufficient permissions" });
+            return;
+        }
+
+        var licenses = licenseModule.GetAllLicenses().Select(l => new
+        {
+            l.Id,
+            l.LicenseKey,
+            l.InstanceName,
+            Status = l.Status.ToString(),
+            Type = l.Type.ToString(),
+            l.CreatedAtUtc,
+            l.ExpiresAtUtc
+        });
+
+        await context.Response.WriteAsJsonAsync(new { success = true, licenses });
+    }
+    catch (Exception ex)
+    {
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+    }
+});
+
+// Control Panel: Assign License (Admin+)
+app.MapPost("/api/control/licenses", async (HttpContext context) =>
+{
+    try
+    {
+        if (authModule == null || licenseModule == null)
+        {
+            context.Response.StatusCode = 503;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Required modules not available" });
+            return;
+        }
+
+        var authHeader = context.Request.Headers["Authorization"].ToString();
+        var token = authHeader.StartsWith("Bearer ") ? authHeader[7..] : authHeader;
+        var user = await authModule.GetUserByTokenAsync(token);
+
+        if (user == null || user.Role < UserRole.Admin)
+        {
+            context.Response.StatusCode = 403;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Insufficient permissions" });
+            return;
+        }
+
+        var request = await context.Request.ReadFromJsonAsync<JsonElement>();
+        var userId = Guid.Parse(request.GetProperty("userId").GetString() ?? "");
+        var instanceName = request.GetProperty("instanceName").GetString() ?? "";
+        var licenseType = (LicenseType)request.GetProperty("licenseType").GetInt32();
+        var duration = request.GetProperty("durationYears").GetInt32();
+
+        var license = licenseModule.CreateLicense(userId, instanceName, licenseType, duration);
+        await context.Response.WriteAsJsonAsync(new { success = true, license });
+    }
+    catch (Exception ex)
+    {
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+    }
+});
+
+// Control Panel: RaCoin Top Up (Admin+)
+app.MapPost("/api/control/racoin/topup", async (HttpContext context) =>
+{
+    try
+    {
+        if (authModule == null || racoinModule == null)
+        {
+            context.Response.StatusCode = 503;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Required modules not available" });
+            return;
+        }
+
+        var authHeader = context.Request.Headers["Authorization"].ToString();
+        var token = authHeader.StartsWith("Bearer ") ? authHeader[7..] : authHeader;
+        var user = await authModule.GetUserByTokenAsync(token);
+
+        if (user == null || user.Role < UserRole.Admin)
+        {
+            context.Response.StatusCode = 403;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Insufficient permissions" });
+            return;
+        }
+
+        var request = await context.Request.ReadFromJsonAsync<JsonElement>();
+        var userId = Guid.Parse(request.GetProperty("userId").GetString() ?? "");
+        var amount = request.GetProperty("amount").GetDecimal();
+        var reason = request.GetProperty("reason").GetString() ?? "Admin top-up";
+
+        var result = await racoinModule.AddAsync(userId, amount, reason);
+        await context.Response.WriteAsJsonAsync(result);
+    }
+    catch (Exception ex)
+    {
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+    }
+});
+
+// Control Panel: Get RaCoin Balances (Admin+)
+app.MapGet("/api/control/racoin/balances", async (HttpContext context) =>
+{
+    try
+    {
+        if (authModule == null || racoinModule == null)
+        {
+            context.Response.StatusCode = 503;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Required modules not available" });
+            return;
+        }
+
+        var authHeader = context.Request.Headers["Authorization"].ToString();
+        var token = authHeader.StartsWith("Bearer ") ? authHeader[7..] : authHeader;
+        var user = await authModule.GetUserByTokenAsync(token);
+
+        if (user == null || user.Role < UserRole.Admin)
+        {
+            context.Response.StatusCode = 403;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Insufficient permissions" });
+            return;
+        }
+
+        var users = authModule.GetAllUsers();
+        var balances = users.Select(u => new
+        {
+            userId = u.Id,
+            username = u.Username,
+            balance = racoinModule.GetBalanceAsync(u.Id).Result
+        });
+
+        await context.Response.WriteAsJsonAsync(new { success = true, balances });
+    }
+    catch (Exception ex)
+    {
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+    }
+});
+
+// Control Panel: Get Game Server Stats (GameMaster/GameMonitor+)
+app.MapGet("/api/control/game/stats", async (HttpContext context) =>
+{
+    try
+    {
+        if (authModule == null || gameEngineModule == null)
+        {
+            context.Response.StatusCode = 503;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Required modules not available" });
+            return;
+        }
+
+        var authHeader = context.Request.Headers["Authorization"].ToString();
+        var token = authHeader.StartsWith("Bearer ") ? authHeader[7..] : authHeader;
+        var user = await authModule.GetUserByTokenAsync(token);
+
+        if (user == null || (user.Role != UserRole.GameMaster && user.Role != UserRole.GameMonitor && user.Role < UserRole.Admin))
+        {
+            context.Response.StatusCode = 403;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Requires GameMaster, GameMonitor, or Admin role" });
+            return;
+        }
+
+        var stats = await gameEngineModule.GetStatsAsync();
+        await context.Response.WriteAsJsonAsync(new { success = true, stats });
+    }
+    catch (Exception ex)
+    {
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+    }
+});
+
 app.Run();
 
 // Request models for API endpoints
