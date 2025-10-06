@@ -23,6 +23,14 @@ public class ApacheManager
     /// </summary>
     public static bool IsApacheAvailable()
     {
+        return FindApacheExecutable() != null;
+    }
+    
+    /// <summary>
+    /// Finds the Apache executable path
+    /// </summary>
+    public static string? FindApacheExecutable()
+    {
         // Try common command-line commands first (Linux/Unix/Mac)
         var apacheCommands = new[] { "apache2", "httpd", "apachectl" };
         
@@ -46,7 +54,7 @@ public class ApacheManager
                     process.WaitForExit(3000);
                     if (process.ExitCode == 0)
                     {
-                        return true;
+                        return cmd;
                     }
                 }
             }
@@ -94,7 +102,7 @@ public class ApacheManager
                         process.WaitForExit(3000);
                         if (process.ExitCode == 0)
                         {
-                            return true;
+                            return path;
                         }
                     }
                 }
@@ -102,7 +110,236 @@ public class ApacheManager
             }
         }
         
-        return false;
+        return null;
+    }
+    
+    /// <summary>
+    /// Finds the Apache httpd.conf configuration file path
+    /// </summary>
+    public static string? FindApacheConfigPath()
+    {
+        var apachePath = FindApacheExecutable();
+        if (apachePath == null)
+        {
+            return null;
+        }
+        
+        // Try to get config path from Apache itself
+        try
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = apachePath,
+                Arguments = "-V",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            
+            using var process = Process.Start(startInfo);
+            if (process != null)
+            {
+                var output = process.StandardOutput.ReadToEnd();
+                process.WaitForExit(3000);
+                
+                // Look for SERVER_CONFIG_FILE in output
+                var lines = output.Split('\n');
+                foreach (var line in lines)
+                {
+                    if (line.Contains("SERVER_CONFIG_FILE"))
+                    {
+                        var match = System.Text.RegularExpressions.Regex.Match(line, "\"(.+?)\"");
+                        if (match.Success)
+                        {
+                            var configPath = match.Groups[1].Value;
+                            
+                            // If relative path, combine with HTTPD_ROOT
+                            if (!Path.IsPathRooted(configPath))
+                            {
+                                foreach (var rootLine in lines)
+                                {
+                                    if (rootLine.Contains("HTTPD_ROOT"))
+                                    {
+                                        var rootMatch = System.Text.RegularExpressions.Regex.Match(rootLine, "\"(.+?)\"");
+                                        if (rootMatch.Success)
+                                        {
+                                            var root = rootMatch.Groups[1].Value;
+                                            configPath = Path.Combine(root, configPath);
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            if (File.Exists(configPath))
+                            {
+                                return configPath;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch { }
+        
+        // Fallback: try common config locations
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            var configPaths = new[]
+            {
+                @"C:\Apache\conf\httpd.conf",
+                @"C:\Apache24\conf\httpd.conf",
+                @"C:\Apache2\conf\httpd.conf",
+                @"D:\Apache\conf\httpd.conf",
+                @"D:\Apache24\conf\httpd.conf",
+                @"E:\Apache\conf\httpd.conf",
+                @"E:\Apache24\conf\httpd.conf",
+                @"C:\Program Files\Apache Software Foundation\Apache2.4\conf\httpd.conf",
+                @"C:\xampp\apache\conf\httpd.conf"
+            };
+            
+            foreach (var path in configPaths)
+            {
+                if (File.Exists(path))
+                {
+                    return path;
+                }
+            }
+        }
+        else
+        {
+            var configPaths = new[]
+            {
+                "/etc/apache2/httpd.conf",
+                "/etc/httpd/conf/httpd.conf",
+                "/usr/local/apache2/conf/httpd.conf",
+                "/opt/apache2/conf/httpd.conf"
+            };
+            
+            foreach (var path in configPaths)
+            {
+                if (File.Exists(path))
+                {
+                    return path;
+                }
+            }
+        }
+        
+        return null;
+    }
+    
+    /// <summary>
+    /// Configures Apache as a reverse proxy for RaCore on Windows
+    /// </summary>
+    public bool ConfigureReverseProxy(int racorePort = 5000, string domain = "localhost")
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            Console.WriteLine("[ApacheManager] Reverse proxy auto-configuration currently only supported on Windows");
+            return false;
+        }
+        
+        var configPath = FindApacheConfigPath();
+        if (configPath == null)
+        {
+            Console.WriteLine("[ApacheManager] Could not find Apache httpd.conf");
+            return false;
+        }
+        
+        try
+        {
+            Console.WriteLine($"[ApacheManager] Found Apache config: {configPath}");
+            
+            // Read existing config
+            var config = File.ReadAllText(configPath);
+            
+            // Check if proxy modules are already enabled
+            var proxyModuleEnabled = config.Contains("LoadModule proxy_module") && 
+                                     !config.Contains("#LoadModule proxy_module");
+            var proxyHttpModuleEnabled = config.Contains("LoadModule proxy_http_module") && 
+                                         !config.Contains("#LoadModule proxy_http_module");
+            
+            var modified = false;
+            
+            // Enable proxy modules if not already enabled
+            if (!proxyModuleEnabled)
+            {
+                config = System.Text.RegularExpressions.Regex.Replace(
+                    config,
+                    @"#\s*LoadModule\s+proxy_module\s+modules/mod_proxy\.so",
+                    "LoadModule proxy_module modules/mod_proxy.so"
+                );
+                Console.WriteLine("[ApacheManager] Enabled mod_proxy");
+                modified = true;
+            }
+            
+            if (!proxyHttpModuleEnabled)
+            {
+                config = System.Text.RegularExpressions.Regex.Replace(
+                    config,
+                    @"#\s*LoadModule\s+proxy_http_module\s+modules/mod_proxy_http\.so",
+                    "LoadModule proxy_http_module modules/mod_proxy_http.so"
+                );
+                Console.WriteLine("[ApacheManager] Enabled mod_proxy_http");
+                modified = true;
+            }
+            
+            // Check if RaCore reverse proxy is already configured
+            var racoreProxyMarker = "# RaCore Reverse Proxy Configuration";
+            if (!config.Contains(racoreProxyMarker))
+            {
+                // Add reverse proxy configuration at the end
+                var proxyConfig = $@"
+
+# RaCore Reverse Proxy Configuration
+# Auto-generated by RaCore ApacheManager
+<VirtualHost *:80>
+    ServerName {domain}
+    
+    ProxyPreserveHost On
+    ProxyPass / http://localhost:{racorePort}/
+    ProxyPassReverse / http://localhost:{racorePort}/
+    
+    # WebSocket support
+    ProxyPass /ws ws://localhost:{racorePort}/ws
+    ProxyPassReverse /ws ws://localhost:{racorePort}/ws
+    
+    ErrorLog ""logs/racore_proxy_error.log""
+    CustomLog ""logs/racore_proxy_access.log"" combined
+</VirtualHost>
+";
+                config += proxyConfig;
+                Console.WriteLine($"[ApacheManager] Added reverse proxy configuration for {domain}:{racorePort}");
+                modified = true;
+            }
+            else
+            {
+                Console.WriteLine("[ApacheManager] RaCore reverse proxy already configured");
+            }
+            
+            if (modified)
+            {
+                // Create backup
+                var backupPath = configPath + ".racore_backup_" + DateTime.Now.ToString("yyyyMMddHHmmss");
+                File.Copy(configPath, backupPath);
+                Console.WriteLine($"[ApacheManager] Backup created: {backupPath}");
+                
+                // Write modified config
+                File.WriteAllText(configPath, config);
+                Console.WriteLine($"[ApacheManager] Apache configuration updated: {configPath}");
+                Console.WriteLine("[ApacheManager] Please restart Apache for changes to take effect");
+                
+                return true;
+            }
+            
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ApacheManager] Error configuring reverse proxy: {ex.Message}");
+            return false;
+        }
     }
     
     /// <summary>
@@ -300,6 +537,180 @@ Options -Indexes
             {
                 Console.WriteLine($"[ApacheManager] Error stopping PHP server: {ex.Message}");
             }
+        }
+    }
+    
+    /// <summary>
+    /// Finds PHP executable in common locations
+    /// </summary>
+    public static string? FindPhpExecutable()
+    {
+        // Try local php folder first
+        var serverRoot = Directory.GetCurrentDirectory();
+        var localPhpFolder = Path.Combine(serverRoot, "php");
+        
+        var possiblePaths = new List<string>
+        {
+            Path.Combine(localPhpFolder, "php.exe"),     // Local Windows
+            Path.Combine(localPhpFolder, "php"),         // Local Linux/macOS
+            "php",                                        // In PATH
+            "/usr/bin/php",                               // Linux
+            "/usr/local/bin/php",                         // Linux/macOS
+        };
+        
+        // Add Windows-specific paths
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            var driveLetters = new[] { "C", "D", "E", "F" };
+            var phpPaths = new[]
+            {
+                @"\php\php.exe",
+                @"\php8\php.exe",
+                @"\xampp\php\php.exe",
+                @"\Program Files\php\php.exe"
+            };
+            
+            foreach (var drive in driveLetters)
+            {
+                foreach (var phpPath in phpPaths)
+                {
+                    possiblePaths.Add($"{drive}:{phpPath}");
+                }
+            }
+        }
+
+        foreach (var path in possiblePaths)
+        {
+            try
+            {
+                if (Path.IsPathRooted(path) && !File.Exists(path))
+                {
+                    continue;
+                }
+
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = path,
+                    Arguments = "--version",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                using var process = Process.Start(startInfo);
+                if (process != null)
+                {
+                    process.WaitForExit(5000);
+                    if (process.ExitCode == 0)
+                    {
+                        return path;
+                    }
+                }
+            }
+            catch { continue; }
+        }
+
+        return null;
+    }
+    
+    /// <summary>
+    /// Finds PHP configuration file (php.ini)
+    /// </summary>
+    public static string? FindPhpIniPath(string? phpPath = null)
+    {
+        phpPath ??= FindPhpExecutable();
+        if (phpPath == null)
+        {
+            return null;
+        }
+        
+        try
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = phpPath,
+                Arguments = "--ini",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using var process = Process.Start(startInfo);
+            if (process != null)
+            {
+                var output = process.StandardOutput.ReadToEnd();
+                process.WaitForExit(5000);
+                
+                // Look for "Loaded Configuration File" in output
+                var lines = output.Split('\n');
+                foreach (var line in lines)
+                {
+                    if (line.Contains("Loaded Configuration File:"))
+                    {
+                        var path = line.Split(':')[1].Trim();
+                        if (File.Exists(path))
+                        {
+                            return path;
+                        }
+                    }
+                }
+            }
+        }
+        catch { }
+        
+        return null;
+    }
+    
+    /// <summary>
+    /// Generates a basic PHP configuration file
+    /// </summary>
+    public static bool GeneratePhpIni(string outputPath)
+    {
+        try
+        {
+            var phpIni = @"; PHP Configuration
+; Auto-generated by RaCore ApacheManager
+
+[PHP]
+engine = On
+short_open_tag = Off
+precision = 14
+output_buffering = 4096
+zlib.output_compression = Off
+implicit_flush = Off
+serialize_precision = -1
+disable_functions =
+disable_classes =
+max_execution_time = 60
+max_input_time = 60
+memory_limit = 256M
+error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT
+display_errors = On
+display_startup_errors = On
+log_errors = On
+post_max_size = 10M
+file_uploads = On
+upload_max_filesize = 10M
+max_file_uploads = 20
+default_socket_timeout = 60
+
+[Date]
+date.timezone = UTC
+
+[SQLite3]
+sqlite3.extension_dir =
+";
+            
+            File.WriteAllText(outputPath, phpIni);
+            Console.WriteLine($"[ApacheManager] PHP configuration generated: {outputPath}");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ApacheManager] Error generating PHP config: {ex.Message}");
+            return false;
         }
     }
 }

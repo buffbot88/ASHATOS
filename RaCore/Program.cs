@@ -67,7 +67,11 @@ moduleManager.RegisterBuiltInModule(memoryModule);
 // 3. Load other modules (plugins, etc.)
 moduleManager.LoadModules();
 
-// 4. Check for first run and auto-spawn CMS + Apache
+// 4. Run boot sequence with self-healing checks and configuration verification
+var bootSequence = new RaCore.Engine.BootSequenceManager(moduleManager);
+await bootSequence.ExecuteBootSequenceAsync();
+
+// 5. Check for first run and auto-spawn CMS + Apache
 var firstRunManager = new RaCore.Engine.FirstRunManager(moduleManager);
 if (firstRunManager.IsFirstRun())
 {
