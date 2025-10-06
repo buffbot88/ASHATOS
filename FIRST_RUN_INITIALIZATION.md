@@ -2,7 +2,7 @@
 
 ## Overview
 
-RaCore now features automatic first-run initialization that spawns a fully functional SuperAdmin Control Panel with PHP 8+ and SQLite database, requiring zero manual setup from users. This Control Panel is restricted to SuperAdmin accounts only and serves as the central management hub for all CMS/server operations.
+RaCore now features automatic first-run initialization that spawns a fully functional CMS with integrated Control Panel, using PHP 8+ and SQLite database, requiring zero manual setup from users. The CMS homepage serves as the default entry point with navigation to all major features including Blogs, Forums, DigiChat, Social (MySpace-like profiles), and Settings (Control Panel).
 
 ## What Happens on First Run?
 
@@ -11,29 +11,47 @@ When you run RaCore for the first time:
 ```
 ========================================
    RaCore First-Run Initialization
-   SuperAdmin Control Panel Setup
+   CMS + Integrated Control Panel
 ========================================
 
-[FirstRunManager] Step 1/3: Spawning SuperAdmin Control Panel...
-✅ SuperAdmin Control Panel generated successfully!
+[FirstRunManager] Step 1/4: Generating wwwroot control panel...
+✅ Control panel files created in wwwroot
 
-[FirstRunManager] Step 2/3: Configuring Apache...
+[FirstRunManager] Step 2/4: Spawning CMS with Integrated Control Panel...
+✅ CMS homepage generated successfully!
+
+[FirstRunManager] Step 3/4: Configuring Apache...
 [ApacheManager] Apache configuration files created
 
-[FirstRunManager] Step 3/3: Starting web server...
+[FirstRunManager] Step 4/4: Starting web server...
 [ApacheManager] PHP server started successfully on http://localhost:8080
 
-✅ SuperAdmin Control Panel is now running!
-   Access it at: http://localhost:8080
-   Login: admin / admin123 (SuperAdmin only)
+✅ RaCore CMS is now running!
+   Homepage: http://localhost:8080
+   Control Panel: http://localhost:8080/control (or http://localhost:5000/control-panel.html)
+   Default login: admin / admin123
 
-⚠️  SECURITY: Only SuperAdmin accounts can access the Control Panel
-   Change the default password immediately!
+🎛️  ROLE-BASED ACCESS:
+   - SuperAdmin: Full control panel + user panel
+   - Admin: Admin control panel + user panel
+   - User: User panel only
+
+⚠️  Change the default password immediately!
 
 ========================================
    First-Run Initialization Complete
 ========================================
 ```
+
+The CMS homepage includes navigation to:
+- **Home** - Welcome page with site overview
+- **Blogs** - Community blogging platform (coming soon)
+- **Forums** - Discussion forums (coming soon)
+- **DigiChat** - Real-time chat room (coming soon)
+- **Social** - MySpace-style user profiles (coming soon)
+- **Settings** - Control Panel for personal and admin settings
+
+**Default Entry Point**: When you visit `http://localhost:5000/`, you are automatically redirected to the CMS homepage at `http://localhost:8080/`.
 
 ## SuperAdmin Control Panel Features
 
