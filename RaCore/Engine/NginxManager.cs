@@ -4,14 +4,16 @@ using System.Runtime.InteropServices;
 namespace RaCore.Engine;
 
 /// <summary>
-/// Manages Nginx web server configuration and lifecycle for RaCore CMS
+/// Manages Nginx web server configuration for RaCore CMS
 /// Also manages PHP configuration independently of web server
+/// 
+/// NOTE: This manager only CONFIGURES Nginx and PHP, it does NOT manage their lifecycle.
+/// Nginx and PHP must be installed and managed externally by the user/system administrator.
 /// </summary>
 public class NginxManager
 {
     private readonly string _cmsPath;
     private readonly int _port;
-    private Process? _nginxProcess;
     
     public NginxManager(string cmsPath, int port = 8080)
     {
@@ -347,26 +349,24 @@ public class NginxManager
                     File.WriteAllText(configPath, config);
                     Console.WriteLine($"[NginxManager] ✅ Added reverse proxy configuration for {domain}:{racorePort}");
                     Console.WriteLine($"[NginxManager] ✅ Server names configured for: {domain}, agpstudios.online, www.agpstudios.online");
-                    
-                    // Attempt to restart Nginx
-                    Console.WriteLine("[NginxManager] 🔄 Attempting to restart Nginx...");
-                    var (success, message) = RestartNginx();
-                    
-                    if (success)
-                    {
-                        Console.WriteLine("[NginxManager] ✅ Nginx restarted successfully!");
-                        Console.WriteLine($"[NginxManager] 🌐 Access RaCore at:");
-                        Console.WriteLine($"[NginxManager]   - http://{domain}");
-                        Console.WriteLine($"[NginxManager]   - http://agpstudios.online");
-                        Console.WriteLine($"[NginxManager]   - http://www.agpstudios.online");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"[NginxManager] ⚠️  {message}");
-                        Console.WriteLine("[NginxManager] Please restart Nginx manually:");
-                        Console.WriteLine("[NginxManager]   Windows: nginx -s reload");
-                        Console.WriteLine("[NginxManager]   Linux: sudo systemctl restart nginx");
-                    }
+                    Console.WriteLine();
+                    Console.WriteLine("[NginxManager] ⚠️  IMPORTANT: Nginx configuration has been updated!");
+                    Console.WriteLine("[NginxManager] You must manually start/restart Nginx for changes to take effect:");
+                    Console.WriteLine();
+                    Console.WriteLine("[NginxManager]   Windows:");
+                    Console.WriteLine("[NginxManager]     - Start: cd C:\\nginx && start nginx");
+                    Console.WriteLine("[NginxManager]     - Reload: nginx -s reload");
+                    Console.WriteLine("[NginxManager]     - Stop: nginx -s stop");
+                    Console.WriteLine();
+                    Console.WriteLine("[NginxManager]   Linux/Mac:");
+                    Console.WriteLine("[NginxManager]     - Start: sudo systemctl start nginx");
+                    Console.WriteLine("[NginxManager]     - Reload: sudo systemctl reload nginx");
+                    Console.WriteLine("[NginxManager]     - Restart: sudo systemctl restart nginx");
+                    Console.WriteLine();
+                    Console.WriteLine($"[NginxManager] 🌐 After starting Nginx, access RaCore at:");
+                    Console.WriteLine($"[NginxManager]   - http://{domain}");
+                    Console.WriteLine($"[NginxManager]   - http://agpstudios.online");
+                    Console.WriteLine($"[NginxManager]   - http://www.agpstudios.online");
                     
                     return true;
                 }
@@ -493,56 +493,34 @@ server {{
     }
     
     /// <summary>
-    /// Starts PHP-FPM server for processing PHP files
+    /// [DEPRECATED] This method should not be used. PHP should be managed externally.
+    /// Starts PHP built-in web server (for legacy compatibility only)
     /// </summary>
+    [Obsolete("RaOS should not manage PHP lifecycle. Install and run PHP/PHP-FPM externally.")]
     public bool StartPhpServer(string phpPath)
     {
-        try
-        {
-            Console.WriteLine($"[NginxManager] Starting PHP-FPM server...");
-            
-            // Note: This is a simplified version. In production, PHP-FPM should be configured separately
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = phpPath,
-                Arguments = $"-S localhost:{_port} -t \"{_cmsPath}\"",
-                WorkingDirectory = _cmsPath,
-                UseShellExecute = false,
-                CreateNoWindow = false
-            };
-            
-            _nginxProcess = Process.Start(startInfo);
-            
-            if (_nginxProcess != null)
-            {
-                Console.WriteLine($"[NginxManager] PHP server started on port {_port}");
-                return true;
-            }
-            
-            return false;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[NginxManager] Error starting PHP server: {ex.Message}");
-            return false;
-        }
+        Console.WriteLine("[NginxManager] ⚠️  WARNING: StartPhpServer is deprecated!");
+        Console.WriteLine("[NginxManager] PHP should be installed and managed externally.");
+        Console.WriteLine("[NginxManager] To run PHP manually:");
+        Console.WriteLine($"[NginxManager]   cd {_cmsPath} && php -S localhost:{_port}");
+        return false;
     }
     
     /// <summary>
-    /// Stops the running PHP server
+    /// [DEPRECATED] This method should not be used. PHP should be managed externally.
+    /// Stops the running PHP server (for legacy compatibility only)
     /// </summary>
+    [Obsolete("RaOS should not manage PHP lifecycle. Install and run PHP/PHP-FPM externally.")]
     public void Stop()
     {
-        if (_nginxProcess != null && !_nginxProcess.HasExited)
-        {
-            _nginxProcess.Kill();
-            _nginxProcess = null;
-            Console.WriteLine("[NginxManager] PHP server stopped");
-        }
+        Console.WriteLine("[NginxManager] ⚠️  WARNING: Stop is deprecated!");
+        Console.WriteLine("[NginxManager] PHP should be installed and managed externally.");
     }
     
     /// <summary>
     /// Restarts the Nginx web server
+    /// NOTE: This method is kept for the manual restart API endpoint only.
+    /// RaOS does not automatically restart Nginx during configuration.
     /// </summary>
     /// <returns>Tuple with success status and message</returns>
     public static (bool success, string message) RestartNginx()

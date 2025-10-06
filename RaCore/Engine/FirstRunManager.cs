@@ -147,40 +147,49 @@ public class FirstRunManager
             }
             
             Console.WriteLine();
-            Console.WriteLine("[FirstRunManager] Step 4/4: Starting web server...");
+            Console.WriteLine("[FirstRunManager] Step 4/4: CMS Setup Instructions");
             Console.WriteLine();
             
-            // Try to start PHP server
+            // Check if PHP is available but don't start it
             var phpPath = FindPhpExecutable();
             if (phpPath != null)
             {
-                var started = nginxManager.StartPhpServer(phpPath);
-                if (started)
-                {
-                    Console.WriteLine();
-                    Console.WriteLine("✅ RaCore CMS is now running!");
-                    Console.WriteLine($"   Homepage: http://localhost:8080");
-                    Console.WriteLine($"   Control Panel: http://localhost:8080/control");
-                    Console.WriteLine($"   Default login: admin / admin123");
-                    Console.WriteLine();
-                    Console.WriteLine("🎛️  ROLE-BASED ACCESS:");
-                    Console.WriteLine("   - SuperAdmin: Full control panel + user panel");
-                    Console.WriteLine("   - Admin: Admin control panel + user panel");
-                    Console.WriteLine("   - User: User panel only");
-                    Console.WriteLine();
-                    Console.WriteLine("⚠️  Change the default password immediately!");
-                    Console.WriteLine();
-                }
-                else
-                {
-                    Console.WriteLine("[FirstRunManager] Warning: Could not start PHP server automatically");
-                    Console.WriteLine($"[FirstRunManager] You can start it manually: cd {_cmsPath} && php -S localhost:8080");
-                    Console.WriteLine();
-                }
+                Console.WriteLine("✅ CMS files have been generated!");
+                Console.WriteLine($"   Location: {_cmsPath}");
+                Console.WriteLine();
+                Console.WriteLine("📋 To run the CMS, you have two options:");
+                Console.WriteLine();
+                Console.WriteLine("Option 1: Use PHP built-in server (for testing):");
+                Console.WriteLine($"   cd {_cmsPath}");
+                Console.WriteLine("   php -S localhost:8080");
+                Console.WriteLine();
+                Console.WriteLine("Option 2: Use Nginx + PHP-FPM (recommended for production):");
+                Console.WriteLine("   1. Ensure Nginx is running (see instructions above)");
+                Console.WriteLine("   2. Configure Nginx to serve the CMS directory");
+                Console.WriteLine("   3. Start PHP-FPM service");
+                Console.WriteLine();
+                Console.WriteLine("🎛️  Default CMS Access:");
+                Console.WriteLine("   Homepage: http://localhost:8080 (or your configured domain)");
+                Console.WriteLine("   Control Panel: http://localhost:8080/control");
+                Console.WriteLine("   Default login: admin / admin123");
+                Console.WriteLine();
+                Console.WriteLine("🎛️  ROLE-BASED ACCESS:");
+                Console.WriteLine("   - SuperAdmin: Full control panel + user panel");
+                Console.WriteLine("   - Admin: Admin control panel + user panel");
+                Console.WriteLine("   - User: User panel only");
+                Console.WriteLine();
+                Console.WriteLine("⚠️  Change the default password immediately!");
+                Console.WriteLine();
             }
             else
             {
-                Console.WriteLine("[FirstRunManager] PHP not found. Install PHP 8+ to run the CMS");
+                Console.WriteLine("✅ CMS files have been generated!");
+                Console.WriteLine($"   Location: {_cmsPath}");
+                Console.WriteLine();
+                Console.WriteLine("⚠️  PHP not found. Please install PHP 8+ to run the CMS");
+                Console.WriteLine("   - Windows: Download from https://windows.php.net/download/");
+                Console.WriteLine("   - Linux: sudo apt install php8.1 (or your distro's package manager)");
+                Console.WriteLine("   - macOS: brew install php");
                 Console.WriteLine();
             }
             

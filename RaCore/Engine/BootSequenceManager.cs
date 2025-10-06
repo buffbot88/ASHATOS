@@ -393,10 +393,16 @@ public class BootSequenceManager
                     {
                         Console.ForegroundColor = ConsoleColor.Green;
                         Console.WriteLine($"    ✨ Nginx reverse proxy configured for {domain}!");
-                        Console.WriteLine($"    ♡ Access RaCore at:");
+                        Console.WriteLine($"    ♡ Configuration is ready for:");
                         Console.WriteLine($"       - http://{domain}");
                         Console.WriteLine($"       - http://agpstudios.online");
                         Console.WriteLine($"       - http://www.agpstudios.online");
+                        Console.ResetColor();
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine();
+                        Console.WriteLine("    ⚠️  IMPORTANT: You must manually start/restart Nginx!");
+                        Console.WriteLine("       Windows: cd C:\\nginx && start nginx  (or: nginx -s reload)");
+                        Console.WriteLine("       Linux/Mac: sudo systemctl start nginx  (or: sudo systemctl reload nginx)");
                         Console.ResetColor();
                         
                         // Store detected port for RaCore to use
