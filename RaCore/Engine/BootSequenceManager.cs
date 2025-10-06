@@ -1,5 +1,6 @@
 using Abstractions;
 using RaCore.Engine.Manager;
+using RaCore.Engine.Memory;
 using RaCore.Modules.Core.SelfHealing;
 
 namespace RaCore.Engine;
@@ -14,6 +15,64 @@ public class BootSequenceManager
     public BootSequenceManager(ModuleManager moduleManager)
     {
         _moduleManager = moduleManager;
+    }
+    
+    /// <summary>
+    /// Stores a server configuration setting in Ra_Memory for persistence
+    /// </summary>
+    private void StoreConfig(string key, string value)
+    {
+        try
+        {
+            var memoryModule = _moduleManager.Modules
+                .Select(m => m.Instance)
+                .OfType<MemoryModule>()
+                .FirstOrDefault();
+            
+            if (memoryModule != null)
+            {
+                // Store in Memory database for persistence across restarts
+                memoryModule.RememberAsync($"server.config.{key}", value, 
+                    new Dictionary<string, string> 
+                    { 
+                        { "type", "server_config" },
+                        { "updated", DateTime.UtcNow.ToString("o") }
+                    }).Wait();
+            }
+        }
+        catch (Exception ex)
+        {
+            // Don't fail boot if memory storage fails
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine($"    (´･ω･`) Could not persist config to Ra_Memory: {ex.Message}");
+            Console.ResetColor();
+        }
+    }
+    
+    /// <summary>
+    /// Retrieves a server configuration setting from Ra_Memory
+    /// </summary>
+    private string? GetConfig(string key)
+    {
+        try
+        {
+            var memoryModule = _moduleManager.Modules
+                .Select(m => m.Instance)
+                .OfType<MemoryModule>()
+                .FirstOrDefault();
+            
+            if (memoryModule != null)
+            {
+                var items = memoryModule.GetAllItems();
+                var item = items.FirstOrDefault(i => i.Key == $"server.config.{key}");
+                return item?.Value;
+            }
+        }
+        catch
+        {
+            // Silently fail and return null
+        }
+        return null;
     }
     
     /// <summary>
@@ -37,7 +96,7 @@ public class BootSequenceManager
         Console.ResetColor();
         Console.WriteLine();
         Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine("    ✧･ﾟ: *✧･ﾟ:* Welcome to Ra OS v.4.7 *:･ﾟ✧*:･ﾟ✧");
+        Console.WriteLine("    ✧･ﾟ: *✧･ﾟ:* Welcome to Ra OS v.4.9 *:･ﾟ✧*:･ﾟ✧");
         Console.ResetColor();
         Console.WriteLine();
         Console.ForegroundColor = ConsoleColor.Magenta;
@@ -279,6 +338,11 @@ public class BootSequenceManager
                         
                         // Store detected port for RaCore to use
                         Environment.SetEnvironmentVariable("RACORE_DETECTED_PORT", initialPort.ToString());
+                        
+                        // Persist configuration to Ra_Memory database
+                        StoreConfig("apache.port", initialPort.ToString());
+                        StoreConfig("apache.domain", domain);
+                        StoreConfig("apache.configured", "true");
                     }
                     else
                     {
@@ -306,6 +370,10 @@ public class BootSequenceManager
                         
                         // Store detected port for RaCore to use
                         Environment.SetEnvironmentVariable("RACORE_DETECTED_PORT", configuredPort.Value.ToString());
+                        
+                        // Persist configuration to Ra_Memory database
+                        StoreConfig("apache.port", configuredPort.Value.ToString());
+                        StoreConfig("apache.configured", "true");
                     }
                     else
                     {
@@ -314,6 +382,9 @@ public class BootSequenceManager
                         Console.WriteLine("    Using default port 5000");
                         Console.ResetColor();
                         Environment.SetEnvironmentVariable("RACORE_DETECTED_PORT", "5000");
+                        
+                        // Store default configuration to Ra_Memory database
+                        StoreConfig("apache.port", "5000");
                     }
                 }
             }
@@ -409,6 +480,10 @@ public class BootSequenceManager
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine("    ✨ PHP configuration updated successfully!");
                     Console.ResetColor();
+                    
+                    // Persist PHP configuration to Ra_Memory database
+                    StoreConfig("php.configured", "true");
+                    StoreConfig("php.ini_path", phpIniPath);
                 }
                 else
                 {
