@@ -275,10 +275,6 @@ public class BootSequenceManager
                         Console.WriteLine($"       - http://{domain}");
                         Console.WriteLine($"       - http://agpstudios.online");
                         Console.WriteLine($"       - http://www.agpstudios.online");
-                        Console.WriteLine($"    (after Apache restart)");
-                        Console.ResetColor();
-                        Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.WriteLine("    ⚠️  Please restart Apache for changes to take effect");
                         Console.ResetColor();
                         
                         // Store detected port for RaCore to use
