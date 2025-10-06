@@ -11,6 +11,11 @@ public interface IForumModule
     Task<List<ForumPost>> GetPostsAsync(int page = 1, int perPage = 20, bool includeDeleted = false);
     
     /// <summary>
+    /// Get age-appropriate forum posts for a user.
+    /// </summary>
+    Task<List<ForumPost>> GetPostsForUserAsync(string userId, int page = 1, int perPage = 20);
+    
+    /// <summary>
     /// Create a new forum post (with content moderation).
     /// </summary>
     Task<(bool success, string message, string? postId)> CreatePostAsync(string userId, string username, string title, string content);
@@ -66,6 +71,7 @@ public class ForumPost
     public bool IsLocked { get; set; }
     public int ReplyCount { get; set; }
     public int ViewCount { get; set; }
+    public ContentRating ContentRating { get; set; } = ContentRating.Everyone; // Age rating
 }
 
 public class ForumWarning

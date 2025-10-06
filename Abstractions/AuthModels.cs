@@ -15,6 +15,12 @@ public class User
     public DateTime? LastLoginUtc { get; set; }
     public bool IsActive { get; set; } = true;
     public Dictionary<string, string> Metadata { get; set; } = new();
+    
+    // Age and parental control fields
+    public DateTime? DateOfBirth { get; set; }
+    public bool IsMinor { get; set; } = false;
+    public string? ParentGuardianUserId { get; set; }
+    public bool ParentalControlsEnabled { get; set; } = false;
 }
 
 /// <summary>
