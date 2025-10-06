@@ -251,19 +251,20 @@ public class BootSequenceManager
                     Console.ResetColor();
                 }
                 
-                // Auto-configure Apache reverse proxy if not already configured
+                // Get the expected port from environment variable or default
+                var portEnv = Environment.GetEnvironmentVariable("RACORE_PORT") ?? "5000";
+                var domain = Environment.GetEnvironmentVariable("RACORE_PROXY_DOMAIN") ?? "localhost";
+                var expectedPort = int.Parse(portEnv);
+                
+                // Check if RaCore reverse proxy is already configured
                 if (!hasRaCoreProxy)
                 {
                     Console.ForegroundColor = ConsoleColor.Magenta;
                     Console.WriteLine("    ♡ (っ◔◡◔)っ Auto-configuring Apache reverse proxy...");
                     Console.ResetColor();
                     
-                    var port = Environment.GetEnvironmentVariable("RACORE_PORT") ?? "5000";
-                    var domain = Environment.GetEnvironmentVariable("RACORE_PROXY_DOMAIN") ?? "localhost";
-                    var racorePort = int.Parse(port);
-                    
                     var apacheManager = new ApacheManager("", 8080);
-                    var success = apacheManager.ConfigureReverseProxy(racorePort, domain);
+                    var success = apacheManager.ConfigureReverseProxy(expectedPort, domain);
                     
                     if (success)
                     {
@@ -285,9 +286,58 @@ public class BootSequenceManager
                 }
                 else
                 {
+                    // RaCore proxy is already configured - check for port mismatch
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine("    ♡ (◕‿◕✿) RaCore reverse proxy already configured!");
                     Console.ResetColor();
+                    
+                    // Detect configured port in Apache
+                    var configuredPort = ApacheManager.GetConfiguredRaCorePort();
+                    if (configuredPort.HasValue)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.WriteLine($"    📋 Apache is configured to proxy to port {configuredPort.Value}");
+                        Console.ResetColor();
+                        
+                        // Check for mismatch between Apache config and environment variable
+                        if (configuredPort.Value != expectedPort)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Yellow;
+                            Console.WriteLine($"    ⚠️  Port mismatch detected!");
+                            Console.WriteLine($"       Apache config: {configuredPort.Value}");
+                            Console.WriteLine($"       Expected (RACORE_PORT): {expectedPort}");
+                            Console.ResetColor();
+                            
+                            Console.ForegroundColor = ConsoleColor.Magenta;
+                            Console.WriteLine($"    ♡ Syncing Apache config to match RaCore port {expectedPort}...");
+                            Console.ResetColor();
+                            
+                            // Update Apache configuration to match the expected port
+                            var updated = ApacheManager.UpdateRaCoreProxyPort(expectedPort, domain);
+                            if (updated)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Green;
+                                Console.WriteLine($"    ✨ Apache config synchronized!");
+                                Console.ResetColor();
+                                Console.ForegroundColor = ConsoleColor.Yellow;
+                                Console.WriteLine("    ⚠️  Please restart Apache for changes to take effect");
+                                Console.ResetColor();
+                            }
+                            else
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.WriteLine("    (╥﹏╥) Could not update Apache config automatically");
+                                Console.WriteLine($"    Please manually update httpd.conf to use port {expectedPort}");
+                                Console.ResetColor();
+                            }
+                        }
+                        else
+                        {
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine($"    ✓ Port configuration is synchronized ({expectedPort})");
+                            Console.ResetColor();
+                        }
+                    }
                 }
             }
             else
