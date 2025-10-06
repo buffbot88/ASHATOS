@@ -20,7 +20,7 @@ public sealed class UpdateModule : ModuleBase, IUpdateModule
     
     private ILicenseModule? _licenseModule;
     private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
-    private const string CurrentVersion = "4.3.0"; // Phase 4.3 completed
+    private const string CurrentVersion = "4.6.0"; // Phase 4.6 completed
 
     public UpdateModule()
     {

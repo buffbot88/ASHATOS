@@ -11,6 +11,11 @@ public interface IForumModule
     Task<List<ForumPost>> GetPostsAsync(int page = 1, int perPage = 20, bool includeDeleted = false);
     
     /// <summary>
+    /// Create a new forum post (with content moderation).
+    /// </summary>
+    Task<(bool success, string message, string? postId)> CreatePostAsync(string userId, string username, string title, string content);
+    
+    /// <summary>
     /// Delete a forum post.
     /// </summary>
     Task<bool> DeletePostAsync(string postId, string moderatorId, string reason);
