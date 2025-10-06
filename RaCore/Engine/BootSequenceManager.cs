@@ -236,6 +236,7 @@ public class BootSequenceManager
                 var config = File.ReadAllText(configPath);
                 var hasProxyModule = config.Contains("LoadModule proxy_module");
                 var hasProxyHttpModule = config.Contains("LoadModule proxy_http_module");
+                var hasRaCoreProxy = config.Contains("# RaCore Reverse Proxy Configuration");
                 
                 if (hasProxyModule && hasProxyHttpModule)
                 {
@@ -247,6 +248,45 @@ public class BootSequenceManager
                 {
                     Console.ForegroundColor = ConsoleColor.Cyan;
                     Console.WriteLine("    (•ᴗ•) Proxy modules not enabled yet - no worries!");
+                    Console.ResetColor();
+                }
+                
+                // Auto-configure Apache reverse proxy if not already configured
+                if (!hasRaCoreProxy)
+                {
+                    Console.ForegroundColor = ConsoleColor.Magenta;
+                    Console.WriteLine("    ♡ (っ◔◡◔)っ Auto-configuring Apache reverse proxy...");
+                    Console.ResetColor();
+                    
+                    var port = Environment.GetEnvironmentVariable("RACORE_PORT") ?? "5000";
+                    var domain = Environment.GetEnvironmentVariable("RACORE_PROXY_DOMAIN") ?? "localhost";
+                    var racorePort = int.Parse(port);
+                    
+                    var apacheManager = new ApacheManager("", 8080);
+                    var success = apacheManager.ConfigureReverseProxy(racorePort, domain);
+                    
+                    if (success)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine($"    ✨ Apache reverse proxy configured for {domain}!");
+                        Console.WriteLine($"    ♡ Access RaCore at: http://{domain} (after Apache restart)");
+                        Console.ResetColor();
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine("    ⚠️  Please restart Apache for changes to take effect");
+                        Console.ResetColor();
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine("    (´･ω･`) Could not auto-configure Apache");
+                        Console.WriteLine("    No worries! You can configure it manually later.");
+                        Console.ResetColor();
+                    }
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("    ♡ (◕‿◕✿) RaCore reverse proxy already configured!");
                     Console.ResetColor();
                 }
             }

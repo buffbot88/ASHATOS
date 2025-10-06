@@ -111,10 +111,34 @@ public class FirstRunManager
             
             if (ApacheManager.IsApacheAvailable())
             {
+                // First, configure the CMS-specific Apache config (for Linux)
                 apacheManager.ConfigureApache();
                 Console.WriteLine();
                 Console.WriteLine("[FirstRunManager] Apache configuration files created");
-                Console.WriteLine("[FirstRunManager] See instructions above to enable Apache");
+                Console.WriteLine("[FirstRunManager] See instructions above to enable Apache for CMS");
+                
+                // Also configure reverse proxy for RaCore if not already done
+                var configPath = ApacheManager.FindApacheConfigPath();
+                if (configPath != null)
+                {
+                    var config = File.ReadAllText(configPath);
+                    if (!config.Contains("# RaCore Reverse Proxy Configuration"))
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine("[FirstRunManager] Configuring Apache reverse proxy for RaCore...");
+                        
+                        var port = Environment.GetEnvironmentVariable("RACORE_PORT") ?? "5000";
+                        var domain = Environment.GetEnvironmentVariable("RACORE_PROXY_DOMAIN") ?? "localhost";
+                        var racorePort = int.Parse(port);
+                        
+                        var proxyManager = new ApacheManager("", 8080);
+                        if (proxyManager.ConfigureReverseProxy(racorePort, domain))
+                        {
+                            Console.WriteLine($"[FirstRunManager] ✅ Apache reverse proxy configured for {domain}");
+                            Console.WriteLine($"[FirstRunManager] After Apache restart, access RaCore at: http://{domain}");
+                        }
+                    }
+                }
             }
             else
             {
