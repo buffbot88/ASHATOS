@@ -504,6 +504,193 @@ if (gameEngineModule != null)
     Console.WriteLine("  GET    /api/gameengine/stats - Get engine statistics");
 }
 
+// ServerSetup API endpoints - Folder discovery and admin instance management
+IServerSetupModule? serverSetupModule = moduleManager.Modules
+    .Select(m => m.Instance)
+    .OfType<IServerSetupModule>()
+    .FirstOrDefault();
+
+if (serverSetupModule != null && authModule != null)
+{
+    // Discover server folders (Databases, php, Apache, Admins)
+    app.MapGet("/api/serversetup/discover", async (HttpContext context) =>
+    {
+        try
+        {
+            var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Replace("Bearer ", "");
+            if (string.IsNullOrEmpty(token))
+            {
+                context.Response.StatusCode = 401;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Unauthorized" });
+                return;
+            }
+
+            var user = await authModule.GetUserByTokenAsync(token);
+            if (user == null)
+            {
+                context.Response.StatusCode = 401;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Invalid token" });
+                return;
+            }
+
+            var result = await serverSetupModule.DiscoverServerFoldersAsync();
+            await context.Response.WriteAsJsonAsync(new { success = true, data = result });
+        }
+        catch (Exception ex)
+        {
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+        }
+    });
+
+    // Create admin instance
+    app.MapPost("/api/serversetup/admin", async (HttpContext context) =>
+    {
+        try
+        {
+            var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Replace("Bearer ", "");
+            if (string.IsNullOrEmpty(token))
+            {
+                context.Response.StatusCode = 401;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Unauthorized" });
+                return;
+            }
+
+            var user = await authModule.GetUserByTokenAsync(token);
+            if (user == null || !authModule.HasPermission(user, "ServerSetup", UserRole.Admin))
+            {
+                context.Response.StatusCode = 403;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Admin role required" });
+                return;
+            }
+
+            var request = await context.Request.ReadFromJsonAsync<CreateAdminInstanceRequest>();
+            if (request == null || string.IsNullOrEmpty(request.LicenseNumber) || string.IsNullOrEmpty(request.Username))
+            {
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Invalid request: licenseNumber and username required" });
+                return;
+            }
+
+            var result = await serverSetupModule.CreateAdminFolderStructureAsync(request.LicenseNumber, request.Username);
+            if (result.Success)
+            {
+                await context.Response.WriteAsJsonAsync(new { success = true, message = result.Message, data = result.Details });
+            }
+            else
+            {
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = result.Message });
+            }
+        }
+        catch (Exception ex)
+        {
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+        }
+    });
+
+    // Setup Apache configuration
+    app.MapPost("/api/serversetup/apache", async (HttpContext context) =>
+    {
+        try
+        {
+            var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Replace("Bearer ", "");
+            if (string.IsNullOrEmpty(token))
+            {
+                context.Response.StatusCode = 401;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Unauthorized" });
+                return;
+            }
+
+            var user = await authModule.GetUserByTokenAsync(token);
+            if (user == null || !authModule.HasPermission(user, "ServerSetup", UserRole.Admin))
+            {
+                context.Response.StatusCode = 403;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Admin role required" });
+                return;
+            }
+
+            var request = await context.Request.ReadFromJsonAsync<SetupConfigRequest>();
+            if (request == null || string.IsNullOrEmpty(request.LicenseNumber) || string.IsNullOrEmpty(request.Username))
+            {
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Invalid request: licenseNumber and username required" });
+                return;
+            }
+
+            var result = await serverSetupModule.SetupApacheConfigAsync(request.LicenseNumber, request.Username);
+            if (result.Success)
+            {
+                await context.Response.WriteAsJsonAsync(new { success = true, message = result.Message, data = result.Details });
+            }
+            else
+            {
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = result.Message });
+            }
+        }
+        catch (Exception ex)
+        {
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+        }
+    });
+
+    // Setup PHP configuration
+    app.MapPost("/api/serversetup/php", async (HttpContext context) =>
+    {
+        try
+        {
+            var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Replace("Bearer ", "");
+            if (string.IsNullOrEmpty(token))
+            {
+                context.Response.StatusCode = 401;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Unauthorized" });
+                return;
+            }
+
+            var user = await authModule.GetUserByTokenAsync(token);
+            if (user == null || !authModule.HasPermission(user, "ServerSetup", UserRole.Admin))
+            {
+                context.Response.StatusCode = 403;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Admin role required" });
+                return;
+            }
+
+            var request = await context.Request.ReadFromJsonAsync<SetupConfigRequest>();
+            if (request == null || string.IsNullOrEmpty(request.LicenseNumber) || string.IsNullOrEmpty(request.Username))
+            {
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Invalid request: licenseNumber and username required" });
+                return;
+            }
+
+            var result = await serverSetupModule.SetupPhpConfigAsync(request.LicenseNumber, request.Username);
+            if (result.Success)
+            {
+                await context.Response.WriteAsJsonAsync(new { success = true, message = result.Message, data = result.Details });
+            }
+            else
+            {
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = result.Message });
+            }
+        }
+        catch (Exception ex)
+        {
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+        }
+    });
+
+    Console.WriteLine("ServerSetup API endpoints registered:");
+    Console.WriteLine("  GET    /api/serversetup/discover - Discover server folders");
+    Console.WriteLine("  POST   /api/serversetup/admin - Create admin instance (admin only)");
+    Console.WriteLine("  POST   /api/serversetup/apache - Setup Apache config (admin only)");
+    Console.WriteLine("  POST   /api/serversetup/php - Setup PHP config (admin only)");
+}
+
 // Redirect root to login page
 app.MapGet("/", (HttpContext context) =>
 {
@@ -518,4 +705,16 @@ public class CreateSceneRequest
 {
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+}
+
+public class CreateAdminInstanceRequest
+{
+    public string LicenseNumber { get; set; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
+}
+
+public class SetupConfigRequest
+{
+    public string LicenseNumber { get; set; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
 }
