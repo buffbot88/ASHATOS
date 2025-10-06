@@ -383,5 +383,5 @@ VALUES (hex(randomblob(16)), 'user-id-here', 'license-id-here', datetime('now'),
 
 **RaCore License Management System**  
 **Version**: 1.0  
-**Last Updated**: 2025-01-05  
+**Last Updated**: 2025-10-06  
 **Status**: Phase 3 - In Progress
