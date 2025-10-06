@@ -107,6 +107,7 @@ public sealed class UpdateModule : ModuleBase, IUpdateModule
 
     public async Task<UpdateInfo?> CheckForUpdatesAsync(string currentVersion, string licenseKey)
     {
+        await Task.CompletedTask;
         // Verify license is valid
         if (_licenseModule != null)
         {
@@ -217,6 +218,7 @@ public sealed class UpdateModule : ModuleBase, IUpdateModule
 
     private async Task<string> ComputeChecksumAsync(byte[] data)
     {
+        await Task.CompletedTask;
         using var sha256 = SHA256.Create();
         var hash = sha256.ComputeHash(data);
         return Convert.ToHexString(hash);
@@ -239,8 +241,9 @@ public sealed class UpdateModule : ModuleBase, IUpdateModule
         return 0;
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
         // Cleanup if needed
+        base.Dispose();
     }
 }

@@ -232,6 +232,7 @@ RaCore AI Mainframe - $20/year with updates from the Mainframe
 
     public async Task<string?> GetDownloadUrlAsync(string licenseKey)
     {
+        await Task.CompletedTask;
         lock (_lock)
         {
             if (_licenseToPackage.TryGetValue(licenseKey, out var packageId))
@@ -294,8 +295,9 @@ RaCore AI Mainframe - $20/year with updates from the Mainframe
         return false;
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
         // Cleanup if needed
+        base.Dispose();
     }
 }

@@ -37,6 +37,11 @@ public sealed class TestRunnerModule : ModuleBase, IDisposable
     {
         base.Initialize(manager);
         _manager = manager as ModuleManager;
+        if (_manager == null)
+        {
+            LogError("Initialize called with null or invalid manager.");
+            return;
+        }
         _thoughtProcessor = new ThoughtProcessor(_manager);
         LogInfo("TestRunner initialized. Commands: start | start fast | start json | start seed <n> | start verify | clean | status | help");
     }

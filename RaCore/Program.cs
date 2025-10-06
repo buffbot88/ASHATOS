@@ -71,6 +71,7 @@ app.UseStaticFiles();
 // URL redirects for cleaner access
 app.MapGet("/control-panel", async context =>
 {
+    await Task.CompletedTask;
     context.Response.Redirect("/control-panel.html");
 });
 
@@ -2019,6 +2020,7 @@ if (distributionModule != null)
     // Download distribution package (requires valid license)
     app.MapGet("/api/distribution/download/{licenseKey}", async (HttpContext context) =>
     {
+        await Task.CompletedTask;
         var licenseKey = context.Request.RouteValues["licenseKey"]?.ToString();
         if (string.IsNullOrEmpty(licenseKey))
         {
@@ -2103,6 +2105,7 @@ if (updateModule != null)
     // Download update package (requires valid license)
     app.MapGet("/api/updates/download/{version}", async (HttpContext context) =>
     {
+        await Task.CompletedTask;
         var version = context.Request.RouteValues["version"]?.ToString();
         var licenseKey = context.Request.Query["license"].ToString();
         
@@ -2206,6 +2209,7 @@ if (gameClientModule != null)
     // Serve game client files
     app.MapGet("/clients/{packageId}/{*file}", async (HttpContext context) =>
     {
+        await Task.CompletedTask;
         var packageId = context.Request.RouteValues["packageId"]?.ToString();
         var file = context.Request.RouteValues["file"]?.ToString() ?? "index.html";
         

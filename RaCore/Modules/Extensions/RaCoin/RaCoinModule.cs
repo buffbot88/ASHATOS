@@ -195,6 +195,7 @@ public sealed class RaCoinModule : ModuleBase, IRaCoinModule
 
     public async Task<RaCoinResponse> TopUpAsync(Guid userId, decimal amount, string description)
     {
+        await Task.CompletedTask;
         if (amount <= 0)
         {
             return new RaCoinResponse
@@ -237,6 +238,7 @@ public sealed class RaCoinModule : ModuleBase, IRaCoinModule
 
     public async Task<RaCoinResponse> DeductAsync(Guid userId, decimal amount, string description, string? referenceId = null)
     {
+        await Task.CompletedTask;
         if (amount <= 0)
         {
             return new RaCoinResponse
@@ -290,6 +292,7 @@ public sealed class RaCoinModule : ModuleBase, IRaCoinModule
 
     public async Task<RaCoinResponse> TransferAsync(Guid fromUserId, Guid toUserId, decimal amount, string description)
     {
+        await Task.CompletedTask;
         if (amount <= 0)
         {
             return new RaCoinResponse
@@ -377,6 +380,7 @@ public sealed class RaCoinModule : ModuleBase, IRaCoinModule
 
     public async Task<RaCoinResponse> RefundAsync(Guid transactionId)
     {
+        await Task.CompletedTask;
         lock (_lock)
         {
             if (!_transactions.TryGetValue(transactionId, out var originalTransaction))

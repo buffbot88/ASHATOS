@@ -16,7 +16,7 @@ public partial class ConsciousModule
         LogInfo("OnMemoryReady: bound to IMemory.");
     }
 
-    public void OnSystemEvent(string name, object? payload)
+    public override void OnSystemEvent(string name, object? payload)
     {
         if (string.Equals(name, "MemoryReady", StringComparison.OrdinalIgnoreCase))
         {
