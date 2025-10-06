@@ -12,6 +12,7 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
     private int _contextSize = 2048;
     private int _maxTokens = 128;
     private ModuleManager? _manager;
+    private LlamaCppDetector? _detector;
 
     public static string Description => AILanguageConstants.Description;
     public static IReadOnlyList<string> SupportedCommands => AILanguageConstants.SupportedCommands;
@@ -27,10 +28,17 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
 
     public override string Name => "AILanguage";
 
+    // Public logging methods for LlamaCppDetector
+    public void LogInfoPublic(string msg) => LogInfo(msg);
+    public void LogWarnPublic(string msg) => LogWarn(msg);
+    public void LogErrorPublic(string msg) => LogError(msg);
+
     public override void Initialize(object? manager)
     {
         base.Initialize(manager);
         _manager = (ModuleManager?)manager;
+        _detector = new LlamaCppDetector(this);
+        
         _modelPath ??= Path.Combine("llama.cpp", "models", "llama-2-7b-chat.Q4_K_M.gguf");
         try 
         { 
@@ -40,6 +48,20 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
         catch (Exception ex)
         { 
             LogError($"Failed to resolve model path: {ex.Message}");
+        }
+        
+        // Auto-detect llama.cpp executable if not manually configured or if default path doesn't exist
+        if (_llamaExePath == "llama.cpp\\main.exe" && !File.Exists(_llamaExePath))
+        {
+            LogInfo("Attempting to auto-detect llama.cpp executable...");
+            var detectedPath = _detector.FindLlamaCppExecutable();
+            if (detectedPath != null)
+            {
+                _llamaExePath = detectedPath;
+                var version = _detector.GetLlamaCppVersion(detectedPath);
+                LogInfo($"Auto-detected llama.cpp: {detectedPath}");
+                LogInfo($"Version: {version}");
+            }
         }
         
         // Validate configuration
@@ -219,6 +241,7 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
             if (!string.IsNullOrWhiteSpace(arg) && File.Exists(arg))
             {
                 _llamaExePath = arg;
+                _detector?.ClearCache(); // Clear cache so auto-detection can find this path next time
                 LogInfo($"llama.cpp executable path set to {_llamaExePath}.");
                 if (Status == "ready")
                 {
