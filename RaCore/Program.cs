@@ -1411,6 +1411,272 @@ app.MapGet("/api/control/audit/logs", async (HttpContext context) =>
     return Results.Json(new { logs = events });
 });
 
+// ============================================================================
+// Distribution API Endpoints (Phase 4.5)
+// ============================================================================
+
+var distributionModule = moduleManager.Modules
+    .Select(m => m.Instance)
+    .OfType<IDistributionModule>()
+    .FirstOrDefault();
+
+if (distributionModule != null)
+{
+    // Create distribution package (Admin only)
+    app.MapPost("/api/distribution/create", async (HttpContext context) =>
+    {
+        var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+        var user = await authModule?.GetUserByTokenAsync(token)!;
+        
+        if (user == null || !authModule!.HasPermission(user, "Distribution", UserRole.Admin))
+        {
+            context.Response.StatusCode = 403;
+            return Results.Json(new { error = "Insufficient permissions" });
+        }
+        
+        var request = await context.Request.ReadFromJsonAsync<CreateDistributionRequest>();
+        if (request == null)
+        {
+            context.Response.StatusCode = 400;
+            return Results.Json(new { error = "Invalid request" });
+        }
+        
+        try
+        {
+            var package = await distributionModule.CreatePackageAsync(user.Id, request.LicenseKey, request.Version);
+            return Results.Json(new { success = true, package });
+        }
+        catch (Exception ex)
+        {
+            context.Response.StatusCode = 400;
+            return Results.Json(new { error = ex.Message });
+        }
+    });
+
+    // Download distribution package (requires valid license)
+    app.MapGet("/api/distribution/download/{licenseKey}", async (HttpContext context) =>
+    {
+        var licenseKey = context.Request.RouteValues["licenseKey"]?.ToString();
+        if (string.IsNullOrEmpty(licenseKey))
+        {
+            context.Response.StatusCode = 400;
+            return Results.Json(new { error = "License key required" });
+        }
+        
+        if (!distributionModule.IsAuthorizedForDownload(licenseKey))
+        {
+            context.Response.StatusCode = 403;
+            return Results.Json(new { error = "Unauthorized - invalid or expired license" });
+        }
+        
+        var packages = distributionModule.GetAllPackages()
+            .Where(p => p.LicenseKey.Equals(licenseKey, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(p => p.CreatedAt)
+            .FirstOrDefault();
+        
+        if (packages == null || !File.Exists(packages.PackagePath))
+        {
+            context.Response.StatusCode = 404;
+            return Results.Json(new { error = "Package not found" });
+        }
+        
+        return Results.File(packages.PackagePath, "application/zip", Path.GetFileName(packages.PackagePath));
+    });
+
+    // List all distribution packages (Admin only)
+    app.MapGet("/api/distribution/packages", async (HttpContext context) =>
+    {
+        var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+        var user = await authModule?.GetUserByTokenAsync(token)!;
+        
+        if (user == null || !authModule!.HasPermission(user, "Distribution", UserRole.Admin))
+        {
+            context.Response.StatusCode = 403;
+            return Results.Json(new { error = "Insufficient permissions" });
+        }
+        
+        var packages = distributionModule.GetAllPackages();
+        return Results.Json(new { packages });
+    });
+
+    Console.WriteLine("[RaCore] Distribution API endpoints registered");
+}
+
+// ============================================================================
+// Update API Endpoints (Phase 4.5)
+// ============================================================================
+
+var updateModule = moduleManager.Modules
+    .Select(m => m.Instance)
+    .OfType<IUpdateModule>()
+    .FirstOrDefault();
+
+if (updateModule != null)
+{
+    // Check for updates (requires valid license)
+    app.MapGet("/api/updates/check", async (HttpContext context) =>
+    {
+        var currentVersion = context.Request.Query["version"].ToString();
+        var licenseKey = context.Request.Query["license"].ToString();
+        
+        if (string.IsNullOrEmpty(currentVersion) || string.IsNullOrEmpty(licenseKey))
+        {
+            context.Response.StatusCode = 400;
+            return Results.Json(new { error = "Version and license key required" });
+        }
+        
+        try
+        {
+            var updateInfo = await updateModule.CheckForUpdatesAsync(currentVersion, licenseKey);
+            return Results.Json(new { success = true, update = updateInfo });
+        }
+        catch (Exception ex)
+        {
+            context.Response.StatusCode = 400;
+            return Results.Json(new { error = ex.Message });
+        }
+    });
+
+    // Download update package (requires valid license)
+    app.MapGet("/api/updates/download/{version}", async (HttpContext context) =>
+    {
+        var version = context.Request.RouteValues["version"]?.ToString();
+        var licenseKey = context.Request.Query["license"].ToString();
+        
+        if (string.IsNullOrEmpty(version) || string.IsNullOrEmpty(licenseKey))
+        {
+            context.Response.StatusCode = 400;
+            return Results.Json(new { error = "Version and license key required" });
+        }
+        
+        var package = updateModule.GetUpdatePackage(version);
+        if (package == null || !File.Exists(package.PackagePath))
+        {
+            context.Response.StatusCode = 404;
+            return Results.Json(new { error = "Update package not found" });
+        }
+        
+        return Results.File(package.PackagePath, "application/zip", Path.GetFileName(package.PackagePath));
+    });
+
+    // List all updates (Admin only)
+    app.MapGet("/api/updates/list", async (HttpContext context) =>
+    {
+        var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+        var user = await authModule?.GetUserByTokenAsync(token)!;
+        
+        if (user == null || !authModule!.HasPermission(user, "Updates", UserRole.Admin))
+        {
+            context.Response.StatusCode = 403;
+            return Results.Json(new { error = "Insufficient permissions" });
+        }
+        
+        var updates = updateModule.GetAllUpdates();
+        return Results.Json(new { updates });
+    });
+
+    Console.WriteLine("[RaCore] Update API endpoints registered");
+}
+
+// ============================================================================
+// GameClient API Endpoints (Phase 4.5)
+// ============================================================================
+
+var gameClientModule = moduleManager.Modules
+    .Select(m => m.Instance)
+    .OfType<IGameClientModule>()
+    .FirstOrDefault();
+
+if (gameClientModule != null)
+{
+    // Generate game client (User+)
+    app.MapPost("/api/gameclient/generate", async (HttpContext context) =>
+    {
+        var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+        var user = await authModule?.GetUserByTokenAsync(token)!;
+        
+        if (user == null)
+        {
+            context.Response.StatusCode = 401;
+            return Results.Json(new { error = "Authentication required" });
+        }
+        
+        var request = await context.Request.ReadFromJsonAsync<GenerateClientRequest>();
+        if (request == null)
+        {
+            context.Response.StatusCode = 400;
+            return Results.Json(new { error = "Invalid request" });
+        }
+        
+        try
+        {
+            var clientPackage = await gameClientModule.GenerateClientAsync(
+                user.Id, 
+                request.LicenseKey, 
+                request.Platform, 
+                request.Configuration);
+            return Results.Json(new { success = true, client = clientPackage });
+        }
+        catch (Exception ex)
+        {
+            context.Response.StatusCode = 400;
+            return Results.Json(new { error = ex.Message });
+        }
+    });
+
+    // Get user's game clients
+    app.MapGet("/api/gameclient/list", async (HttpContext context) =>
+    {
+        var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+        var user = await authModule?.GetUserByTokenAsync(token)!;
+        
+        if (user == null)
+        {
+            context.Response.StatusCode = 401;
+            return Results.Json(new { error = "Authentication required" });
+        }
+        
+        var clients = gameClientModule.GetUserClientPackages(user.Id);
+        return Results.Json(new { clients });
+    });
+
+    // Serve game client files
+    app.MapGet("/clients/{packageId}/{*file}", async (HttpContext context) =>
+    {
+        var packageId = context.Request.RouteValues["packageId"]?.ToString();
+        var file = context.Request.RouteValues["file"]?.ToString() ?? "index.html";
+        
+        if (!Guid.TryParse(packageId, out var id))
+        {
+            context.Response.StatusCode = 400;
+            return Results.Json(new { error = "Invalid package ID" });
+        }
+        
+        var clientPackage = gameClientModule.GetClientPackage(id);
+        if (clientPackage == null)
+        {
+            context.Response.StatusCode = 404;
+            return Results.Json(new { error = "Client not found" });
+        }
+        
+        var filePath = Path.Combine(clientPackage.PackagePath, file);
+        if (!File.Exists(filePath))
+        {
+            context.Response.StatusCode = 404;
+            return Results.Json(new { error = "File not found" });
+        }
+        
+        var contentType = file.EndsWith(".html") ? "text/html" :
+                         file.EndsWith(".js") ? "application/javascript" :
+                         file.EndsWith(".css") ? "text/css" :
+                         "application/octet-stream";
+        
+        return Results.File(filePath, contentType);
+    });
+
+    Console.WriteLine("[RaCore] GameClient API endpoints registered");
+}
+
 // Display startup information
 Console.WriteLine();
 Console.WriteLine("========================================");
@@ -1470,5 +1736,22 @@ public class SetupConfigRequest
 {
     public string LicenseNumber { get; set; } = string.Empty;
     public string Username { get; set; } = string.Empty;
+}
+
+// ============================================================================
+// Request Models for Phase 4.5 (Distribution, Updates, GameClient)
+// ============================================================================
+
+public class CreateDistributionRequest
+{
+    public string LicenseKey { get; set; } = string.Empty;
+    public string Version { get; set; } = string.Empty;
+}
+
+public class GenerateClientRequest
+{
+    public string LicenseKey { get; set; } = string.Empty;
+    public ClientPlatform Platform { get; set; } = ClientPlatform.WebGL;
+    public ClientConfiguration Configuration { get; set; } = new();
 }
 
