@@ -52,7 +52,7 @@ public class CmsGenerator
             // Generate new feature pages
             GenerateBlogsFile();
             GenerateForumsFile();
-            GenerateDigiChatFile();
+            GenerateChatFile();
             GenerateProfileFile();
 
             return $"✅ CMS homepage generated successfully at: {_cmsRootPath}";
@@ -210,7 +210,7 @@ $page = $pages[0] ?? ['title' => 'Welcome', 'content' => 'No content'];
                 <a href='index.php'>Home</a>
                 <a href='blogs.php'>Blogs</a>
                 <a href='forums.php'>Forums</a>
-                <a href='digichat.php'>DigiChat</a>
+                <a href='chat.php'>Chat</a>
                 <a href='profile.php?user=<?php echo urlencode($currentUser); ?>'>Social</a>
                 <a href='/control-panel.html' target='_blank'>Settings</a>
             </div>
@@ -226,7 +226,7 @@ $page = $pages[0] ?? ['title' => 'Welcome', 'content' => 'No content'];
 </html>";
 
         File.WriteAllText(Path.Combine(_cmsRootPath, "index.php"), content);
-        _module.Log("Generated index.php with full CMS navigation (Home, Blogs, Forums, DigiChat, Social, Settings)");
+        _module.Log("Generated index.php with full CMS navigation (Home, Blogs, Forums, Chat, Social, Settings)");
     }
 
     private void GenerateAdminFile()
@@ -560,7 +560,7 @@ try {
                 <a href='index.php'>Home</a>
                 <a href='blogs.php'>Blogs</a>
                 <a href='forums.php'>Forums</a>
-                <a href='digichat.php'>DigiChat</a>
+                <a href='chat.php'>Chat</a>
                 <a href='profile.php?user=<?php echo urlencode($currentUser); ?>'>Social</a>
                 <a href='/control-panel.html' target='_blank'>Settings</a>
             </div>
@@ -647,7 +647,7 @@ $currentUser = $_SESSION['username'] ?? 'guest';
                 <a href='index.php'>Home</a>
                 <a href='blogs.php'>Blogs</a>
                 <a href='forums.php'>Forums</a>
-                <a href='digichat.php'>DigiChat</a>
+                <a href='chat.php'>Chat</a>
                 <a href='profile.php?user=<?php echo urlencode($currentUser); ?>'>Social</a>
                 <a href='/control-panel.html' target='_blank'>Settings</a>
             </div>
@@ -671,7 +671,7 @@ $currentUser = $_SESSION['username'] ?? 'guest';
         _module.Log("Generated forums.php");
     }
 
-    private void GenerateDigiChatFile()
+    private void GenerateChatFile()
     {
         var content = @"<?php
 require_once 'config.php';
@@ -697,7 +697,7 @@ try {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>DigiChat - <?php echo SITE_NAME; ?></title>
+    <title>Chat - <?php echo SITE_NAME; ?></title>
     <link rel='stylesheet' href='styles.css'>
     <style>
         .chat-container {
@@ -787,13 +787,13 @@ try {
                 <a href='index.php'>Home</a>
                 <a href='blogs.php'>Blogs</a>
                 <a href='forums.php'>Forums</a>
-                <a href='digichat.php'>DigiChat</a>
+                <a href='chat.php'>Chat</a>
                 <a href='profile.php?user=<?php echo urlencode($currentUser); ?>'>Social</a>
                 <a href='/control-panel.html' target='_blank'>Settings</a>
             </div>
         </nav>
         <div class='content'>
-            <h1>DigiChat</h1>
+            <h1>Chat</h1>
             <p>Real-time chat room for instant communication.</p>
             
             <?php if (!$isLoggedIn): ?>
@@ -918,8 +918,8 @@ try {
 </body>
 </html>";
 
-        File.WriteAllText(Path.Combine(_cmsRootPath, "digichat.php"), content);
-        _module.Log("Generated digichat.php");
+        File.WriteAllText(Path.Combine(_cmsRootPath, "chat.php"), content);
+        _module.Log("Generated chat.php");
     }
 
     private void GenerateProfileFile()
@@ -1074,7 +1074,7 @@ try {
                 <a href='index.php'>Home</a>
                 <a href='blogs.php'>Blogs</a>
                 <a href='forums.php'>Forums</a>
-                <a href='digichat.php'>DigiChat</a>
+                <a href='chat.php'>Chat</a>
                 <a href='profile.php?user=<?php echo urlencode($currentUser); ?>'>Social</a>
                 <a href='/control-panel.html' target='_blank'>Settings</a>
             </div>

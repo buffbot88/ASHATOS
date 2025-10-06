@@ -57,7 +57,7 @@ The CMS homepage provides navigation to:
 - **Home** - Landing/welcome page
 - **Blogs** - Share thoughts and stories
 - **Forums** - Community discussions
-- **DigiChat** - Real-time chat room
+- **Chat** - Real-time chat room
 - **Social** - MySpace-like user profiles
 - **Settings** - Control Panel for admin/user settings
 

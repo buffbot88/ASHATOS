@@ -64,7 +64,7 @@ This document summarizes the implementation of full blogging system, forum enhan
 - `POST /api/chat/rooms/{roomId}/join` - Join room (authenticated)
 
 **Frontend (PHP):**
-- Updated `digichat.php` with:
+- Updated `chat.php` with:
   - Two-panel layout (rooms list + chat area)
   - Room selection
   - Message display with timestamps
@@ -156,7 +156,7 @@ Each module includes example data for demonstration:
    - Verify content moderation on inappropriate content
 
 2. **Chat System:**
-   - Navigate to `/digichat.php` to see chat rooms
+   - Navigate to `/chat.php` to see chat rooms
    - Select a room to view messages
    - Test message sending (requires authentication)
 
