@@ -14,7 +14,9 @@ Extensions/
 ├── Safety/
 │   ├── ConsentRegistryModule.cs          # Consent management & registry (async agentic)
 │   ├── EthicsGuardModule.cs              # Ethics guard, risk and consent analysis (async agentic)
-│   ├── ContentModerationModule.cs        # Real-time content moderation & harm detection (NEW in v4.6)
+│   ├── ContentModerationModule.cs        # Real-time content moderation & harm detection (Phase 4.6)
+│   ├── ParentalControlModule.cs          # Parental controls & content filtering (NEW in Phase 4.8)
+│   ├── ComplianceModule.cs               # COPPA, GDPR, CCPA compliance (NEW in Phase 4.8)
 │   ├── SafetyPolicy.cs                   # Safety policies, harm types, skill defaults
 │   ├── RiskScorer.cs                     # Risk scoring engine for skill/plan steps
 │   ├── README.md                         # Documentation for contributors/extension
@@ -24,7 +26,13 @@ Extensions/
 
 ## Key Components
 
-- **ContentModerationModule.cs** (NEW in v4.6):  
+- **ParentalControlModule.cs** (NEW in Phase 4.8):  
+  Complete parental control system with content rating (E, E10+, T, M, AO), profanity/violence/sexual content filtering, time-based usage restrictions, and parental approval workflows. ESRB/PEGI-aligned content descriptors.
+
+- **ComplianceModule.cs** (NEW in Phase 4.8):  
+  Regulatory compliance framework supporting COPPA, GDPR, and CCPA. Age verification (5 methods), parental consent management (6 verification methods), compliance incident tracking, and automated reporting.
+
+- **ContentModerationModule.cs** (Phase 4.6):  
   Real-time content scanning and harm detection across all interactive modules (forums, blogs, games, etc.). Automatically detects and blocks harmful content, suspends violating users, and maintains audit trails.
 
 - **ConsentRegistryModule.cs**:  
@@ -144,5 +152,5 @@ Document new skills, policy extensions, and diagnostics here.
 
 ---
 
-**Last Updated:** 2025-01-05  
-**Version:** 4.6 (Phase 4.6 - Real-Time Content Moderation)
+**Last Updated:** 2025-01-13  
+**Version:** v4.8.9 (Phase 4.8 - All-Age Compliance & Parental Controls)
