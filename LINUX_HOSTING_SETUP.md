@@ -581,6 +581,35 @@ server {
 }
 ```
 
+### CloudFlare Proxy & SSL (Recommended for Production)
+
+For enhanced security, DDoS protection, and free SSL certificates, consider using CloudFlare as a reverse proxy:
+
+**✅ Phase 9.3.7 CloudFlare Integration:**
+- RaCore now includes built-in support for CloudFlare proxy detection
+- Automatic real IP restoration from CloudFlare headers
+- Homepage bot filtering to allow only search engine crawlers
+- Comprehensive CloudFlare configuration helpers
+
+**📚 Complete CloudFlare Setup Guide:**
+See [CLOUDFLARE_SETUP.md](CLOUDFLARE_SETUP.md) for:
+- Step-by-step CloudFlare account setup
+- SSL/TLS configuration (Full Strict mode)
+- CloudFlare Origin CA certificate installation
+- Nginx configuration optimized for CloudFlare
+- Page Rules for API and WebSocket endpoints
+- Security settings (WAF, DDoS protection, rate limiting)
+- Performance optimizations
+- Testing and troubleshooting
+
+**Quick CloudFlare Benefits:**
+- ✅ Free SSL certificates (CloudFlare Origin CA)
+- ✅ DDoS protection and WAF (Web Application Firewall)
+- ✅ Global CDN for faster content delivery
+- ✅ Automatic HTTPS redirects and HSTS
+- ✅ Bot protection and rate limiting
+- ✅ Real-time analytics and monitoring
+
 ---
 
 ## Part 9: Monitoring and Maintenance
