@@ -20,7 +20,7 @@ public sealed class UpdateModule : ModuleBase, IUpdateModule
     
     private ILicenseModule? _licenseModule;
     private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
-    private const string CurrentVersion = "4.9.0"; // Phase 4.9 completed - Advanced AI-Driven Game Server
+    private static string CurrentVersion => RaVersion.Current; // Unified version from RaVersion class
 
     public UpdateModule()
     {

@@ -14,7 +14,7 @@ namespace LegendaryClientBuilder.Core;
 public sealed class LegendaryClientBuilderModule : ModuleBase, ILegendaryClientBuilderModule
 {
     public override string Name => "LegendaryClientBuilder";
-    public string Version => "9.1.0";
+    public string Version => "9.3.9"; // Managed by unified version system
 
     private readonly Dictionary<Guid, GameClientPackage> _clients = new();
     private readonly Dictionary<Guid, List<Guid>> _userClients = new();
@@ -41,7 +41,7 @@ public sealed class LegendaryClientBuilderModule : ModuleBase, ILegendaryClientB
 
         try
         {
-            LogInfo("Initializing Legendary Client Builder Suite v9.1.0...");
+            LogInfo("Initializing Legendary Client Builder Suite v9.3.9...");
 
             // Setup configuration
             var configPath = Path.Combine(Directory.GetCurrentDirectory(), "clientbuilder-config.json");
@@ -138,7 +138,7 @@ public sealed class LegendaryClientBuilderModule : ModuleBase, ILegendaryClientB
     private string GetHelp()
     {
         return string.Join(Environment.NewLine,
-            "Legendary Client Builder Suite v9.1.0 - Commands:",
+            "Legendary Client Builder Suite v9.3.9 - Commands:",
             "",
             "  clientbuilder stats (or cb stats)              - Show client generation statistics",
             "  clientbuilder list <user-id> (or cb list)      - List clients for a user",

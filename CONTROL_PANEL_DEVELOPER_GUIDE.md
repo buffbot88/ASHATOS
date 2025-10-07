@@ -1,6 +1,6 @@
 # Control Panel Developer Guide
 
-**Version:** 9.3.4  
+**Version:** 9.3.9  
 **Last Updated:** January 2025  
 **Target Audience:** Third-Party Developers
 
