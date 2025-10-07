@@ -11,6 +11,8 @@
 
 **🐧 Running on Linux?** See our comprehensive [Linux Hosting Setup Guide](LINUX_HOSTING_SETUP.md) for production deployment instructions.
 
+**🤔 Windows vs Linux?** Check our [comparison guide](WINDOWS_VS_LINUX.md) to help decide (TL;DR: Linux is recommended for production).
+
 ### Running RaCore
 
 **Development (Windows/Mac/Linux):**
