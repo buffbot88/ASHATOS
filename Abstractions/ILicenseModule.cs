@@ -39,4 +39,19 @@ public interface ILicenseModule : IDisposable
     /// Create a new license (synonym for CreateAndAssignLicense).
     /// </summary>
     License CreateLicense(Guid userId, string instanceName, LicenseType type, int durationYears = 1);
+    
+    /// <summary>
+    /// Set failsafe password for a license (SuperAdmin only).
+    /// </summary>
+    bool SetFailsafePassword(Guid licenseId, string passwordHash);
+    
+    /// <summary>
+    /// Validate failsafe password for a license.
+    /// </summary>
+    bool ValidateFailsafePassword(Guid licenseId, string passwordHash);
+    
+    /// <summary>
+    /// Get the server license (first license with Lifetime type).
+    /// </summary>
+    License? GetServerLicense();
 }

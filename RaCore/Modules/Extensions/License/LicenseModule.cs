@@ -437,4 +437,51 @@ public sealed class LicenseModule : ModuleBase, ILicenseModule
     {
         return CreateAndAssignLicense(userId, instanceName, type, durationYears);
     }
+    
+    /// <summary>
+    /// Set failsafe password for a license (SuperAdmin only).
+    /// </summary>
+    public bool SetFailsafePassword(Guid licenseId, string passwordHash)
+    {
+        lock (_lock)
+        {
+            if (_licenses.TryGetValue(licenseId, out var license))
+            {
+                license.FailsafePasswordHash = passwordHash;
+                license.FailsafePasswordSetAtUtc = DateTime.UtcNow;
+                LogInfo($"Failsafe password set for license {license.LicenseKey}");
+                return true;
+            }
+            return false;
+        }
+    }
+    
+    /// <summary>
+    /// Validate failsafe password for a license.
+    /// </summary>
+    public bool ValidateFailsafePassword(Guid licenseId, string passwordHash)
+    {
+        lock (_lock)
+        {
+            if (_licenses.TryGetValue(licenseId, out var license))
+            {
+                return license.FailsafePasswordHash == passwordHash;
+            }
+            return false;
+        }
+    }
+    
+    /// <summary>
+    /// Get the server license (first license with Lifetime type).
+    /// </summary>
+    public Abstractions.License? GetServerLicense()
+    {
+        lock (_lock)
+        {
+            // Return the first lifetime/enterprise license as the server license
+            return _licenses.Values.FirstOrDefault(l => 
+                l.Type == LicenseType.Lifetime || 
+                (l.Status == LicenseStatus.Active && l.ExpiresAtUtc == null));
+        }
+    }
 }

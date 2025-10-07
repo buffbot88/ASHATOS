@@ -139,6 +139,10 @@ public class License
     public DateTime? ExpiresAtUtc { get; set; }
     public int MaxUsers { get; set; } = 1;
     public Dictionary<string, string> Metadata { get; set; } = new();
+    
+    // Failsafe backup system
+    public string? FailsafePasswordHash { get; set; }
+    public DateTime? FailsafePasswordSetAtUtc { get; set; }
 }
 
 /// <summary>

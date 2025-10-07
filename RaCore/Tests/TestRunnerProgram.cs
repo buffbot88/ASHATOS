@@ -18,6 +18,16 @@ public class TestRunner
         // Run LegendaryCMS tests
         LegendaryCMSTest.RunTests();
 
+        // Run Failsafe tests if requested
+        if (args.Length > 0 && args[0].ToLowerInvariant() == "failsafe")
+        {
+            Console.WriteLine("\n\n╔════════════════════════════════════════════════════════╗");
+            Console.WriteLine("║   Failsafe Backup System Test Suite                   ║");
+            Console.WriteLine("╚════════════════════════════════════════════════════════╝\n");
+            
+            FailsafeTest.RunTests();
+        }
+
         // Run ServerSetup FTP tests if requested
         if (args.Length > 0 && args[0].ToLowerInvariant() == "ftp")
         {
