@@ -2454,6 +2454,220 @@ app.MapGet("/api/social/profile/{userId}/activity", async (HttpContext context) 
 });
 
 // ============================================================================
+// Legendary Supermarket API Endpoints
+// ============================================================================
+
+app.MapGet("/api/market/catalog", async (HttpContext context) =>
+{
+    var marketModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .FirstOrDefault(m => m.GetType().Name == "LegendarySupermarketModule");
+    
+    if (marketModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Legendary Supermarket module not available" });
+    }
+    
+    var result = marketModule.Process("market catalog");
+    return Results.Content(result, "application/json");
+});
+
+app.MapGet("/api/market/listings", async (HttpContext context) =>
+{
+    await Task.CompletedTask;
+    var currencyType = context.Request.Query["currency"].ToString();
+    var category = context.Request.Query["category"].ToString();
+    
+    var marketModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .FirstOrDefault(m => m.GetType().Name == "LegendarySupermarketModule");
+    
+    if (marketModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Legendary Supermarket module not available" });
+    }
+    
+    var command = string.IsNullOrEmpty(category) 
+        ? $"market filter {currencyType}"
+        : $"market filter {currencyType} {category}";
+    
+    var result = marketModule.Process(command);
+    return Results.Content(result, "application/json");
+});
+
+app.MapGet("/api/market/search", async (HttpContext context) =>
+{
+    await Task.CompletedTask;
+    var searchTerm = context.Request.Query["q"].ToString();
+    
+    if (string.IsNullOrEmpty(searchTerm))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Search term required" });
+    }
+    
+    var marketModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .FirstOrDefault(m => m.GetType().Name == "LegendarySupermarketModule");
+    
+    if (marketModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Legendary Supermarket module not available" });
+    }
+    
+    var result = marketModule.Process($"market search {searchTerm}");
+    return Results.Content(result, "application/json");
+});
+
+app.MapGet("/api/market/seller/{sellerId}", async (HttpContext context) =>
+{
+    await Task.CompletedTask;
+    var sellerId = context.Request.RouteValues["sellerId"]?.ToString();
+    
+    if (string.IsNullOrEmpty(sellerId))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Seller ID required" });
+    }
+    
+    var marketModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .FirstOrDefault(m => m.GetType().Name == "LegendarySupermarketModule");
+    
+    if (marketModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Legendary Supermarket module not available" });
+    }
+    
+    var result = marketModule.Process($"market seller {sellerId}");
+    return Results.Content(result, "application/json");
+});
+
+app.MapPost("/api/market/list", async (HttpContext context) =>
+{
+    var body = await context.Request.ReadFromJsonAsync<MarketListingRequest>();
+    
+    if (body == null)
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Invalid request body" });
+    }
+    
+    var marketModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .FirstOrDefault(m => m.GetType().Name == "LegendarySupermarketModule");
+    
+    if (marketModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Legendary Supermarket module not available" });
+    }
+    
+    var command = $"market list {body.SellerId} {body.ItemName} {body.CurrencyType} {body.Price} {body.Quantity} {body.Category} {body.Description}";
+    var result = marketModule.Process(command);
+    return Results.Content(result, "application/json");
+});
+
+app.MapPost("/api/market/purchase", async (HttpContext context) =>
+{
+    var body = await context.Request.ReadFromJsonAsync<MarketPurchaseRequest>();
+    
+    if (body == null)
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Invalid request body" });
+    }
+    
+    var marketModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .FirstOrDefault(m => m.GetType().Name == "LegendarySupermarketModule");
+    
+    if (marketModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Legendary Supermarket module not available" });
+    }
+    
+    var command = body.IsMarketplaceListing
+        ? $"market purchase {body.BuyerId} {body.ListingId} {body.Quantity}"
+        : $"market buy {body.BuyerId} {body.ProductId}";
+    
+    var result = marketModule.Process(command);
+    return Results.Content(result, "application/json");
+});
+
+app.MapPost("/api/market/review", async (HttpContext context) =>
+{
+    var body = await context.Request.ReadFromJsonAsync<MarketReviewRequest>();
+    
+    if (body == null)
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Invalid request body" });
+    }
+    
+    var marketModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .FirstOrDefault(m => m.GetType().Name == "LegendarySupermarketModule");
+    
+    if (marketModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Legendary Supermarket module not available" });
+    }
+    
+    var command = $"market review {body.ReviewerId} {body.SellerId} {body.PurchaseId} {body.Rating} {body.Comment}";
+    var result = marketModule.Process(command);
+    return Results.Content(result, "application/json");
+});
+
+app.MapGet("/api/market/stats", async (HttpContext context) =>
+{
+    await Task.CompletedTask;
+    var marketModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .FirstOrDefault(m => m.GetType().Name == "LegendarySupermarketModule");
+    
+    if (marketModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Legendary Supermarket module not available" });
+    }
+    
+    var result = marketModule.Process("market stats");
+    return Results.Content(result, "application/json");
+});
+
+app.MapGet("/api/market/history/{userId}", async (HttpContext context) =>
+{
+    await Task.CompletedTask;
+    var userId = context.Request.RouteValues["userId"]?.ToString();
+    
+    if (string.IsNullOrEmpty(userId))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "User ID required" });
+    }
+    
+    var marketModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .FirstOrDefault(m => m.GetType().Name == "LegendarySupermarketModule");
+    
+    if (marketModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Legendary Supermarket module not available" });
+    }
+    
+    var result = marketModule.Process($"market history {userId}");
+    return Results.Content(result, "application/json");
+});
+
+// ============================================================================
 // System Health & Monitoring API Endpoints
 // ============================================================================
 
@@ -3109,3 +3323,33 @@ public class GameExportRequest
 {
     public ExportFormat Format { get; set; } = ExportFormat.Complete;
 }
+
+public class MarketListingRequest
+{
+    public string SellerId { get; set; } = string.Empty;
+    public string ItemName { get; set; } = string.Empty;
+    public string CurrencyType { get; set; } = string.Empty;
+    public decimal Price { get; set; }
+    public int Quantity { get; set; }
+    public string Category { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+}
+
+public class MarketPurchaseRequest
+{
+    public string BuyerId { get; set; } = string.Empty;
+    public string ProductId { get; set; } = string.Empty;
+    public string ListingId { get; set; } = string.Empty;
+    public int Quantity { get; set; } = 1;
+    public bool IsMarketplaceListing { get; set; } = false;
+}
+
+public class MarketReviewRequest
+{
+    public string ReviewerId { get; set; } = string.Empty;
+    public string SellerId { get; set; } = string.Empty;
+    public string PurchaseId { get; set; } = string.Empty;
+    public int Rating { get; set; }
+    public string Comment { get; set; } = string.Empty;
+}
+
