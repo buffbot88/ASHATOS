@@ -503,6 +503,9 @@ http {
                     Console.WriteLine("[NginxManager]     - Reload: sudo systemctl reload nginx");
                     Console.WriteLine("[NginxManager]     - Restart: sudo systemctl restart nginx");
                     Console.WriteLine();
+                    Console.WriteLine("[NginxManager]   💡 Configure passwordless sudo for automatic management:");
+                    Console.WriteLine("[NginxManager]      See NGINX_MANAGEMENT_UBUNTU.md for setup instructions");
+                    Console.WriteLine();
                     Console.WriteLine($"[NginxManager] 🌐 After starting Nginx, access RaCore at:");
                     foreach (var serverName in serverNames)
                     {
@@ -718,16 +721,17 @@ server {{
                 
                 return (false, "Failed to start Nginx reload process");
             }
-            // Linux/Unix: Use systemctl or service command
+            // Linux/Unix: Use systemctl or service command with sudo
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 // Try systemctl first (most modern Linux distributions)
+                // Using sudo allows passwordless execution if configured via /etc/sudoers.d/
                 try
                 {
                     var startInfo = new ProcessStartInfo
                     {
-                        FileName = "systemctl",
-                        Arguments = "restart nginx",
+                        FileName = "sudo",
+                        Arguments = "systemctl restart nginx",
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
                         UseShellExecute = false,
@@ -745,21 +749,25 @@ server {{
                             Console.WriteLine("[NginxManager] ✅ Nginx restarted successfully via systemctl");
                             return (true, "Nginx restarted successfully");
                         }
+                        else if (error.Contains("password") || error.Contains("sudo:"))
+                        {
+                            return (false, "Nginx restart requires sudo privileges. Please configure passwordless sudo for Nginx management. See NGINX_MANAGEMENT_UBUNTU.md for setup instructions.");
+                        }
                         else if (error.Contains("Permission denied") || error.Contains("access denied"))
                         {
-                            return (false, "Permission denied. Please run RaCore with sudo or grant appropriate permissions.");
+                            return (false, "Permission denied. Please configure sudo permissions for Nginx management. See NGINX_MANAGEMENT_UBUNTU.md");
                         }
                     }
                 }
                 catch { }
                 
-                // Fallback to service command
+                // Fallback to service command with sudo
                 try
                 {
                     var startInfo = new ProcessStartInfo
                     {
-                        FileName = "service",
-                        Arguments = "nginx restart",
+                        FileName = "sudo",
+                        Arguments = "service nginx restart",
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
                         UseShellExecute = false,
@@ -777,15 +785,19 @@ server {{
                             Console.WriteLine("[NginxManager] ✅ Nginx restarted successfully via service");
                             return (true, "Nginx restarted successfully");
                         }
+                        else if (error.Contains("password") || error.Contains("sudo:"))
+                        {
+                            return (false, "Nginx restart requires sudo privileges. Please configure passwordless sudo for Nginx management. See NGINX_MANAGEMENT_UBUNTU.md");
+                        }
                         else if (error.Contains("Permission denied") || error.Contains("access denied"))
                         {
-                            return (false, "Permission denied. Please run RaCore with sudo or grant appropriate permissions.");
+                            return (false, "Permission denied. Please configure sudo permissions for Nginx management. See NGINX_MANAGEMENT_UBUNTU.md");
                         }
                     }
                 }
                 catch { }
                 
-                return (false, "Nginx restart requires sudo privileges. Please restart manually with: sudo systemctl restart nginx");
+                return (false, "Nginx restart requires sudo privileges. Please configure passwordless sudo: See NGINX_MANAGEMENT_UBUNTU.md for setup instructions.");
             }
             // macOS: Use nginx -s reload
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
@@ -1252,16 +1264,17 @@ sqlite3.extension_dir =
                     return (false, "Nginx process did not start. Check logs for errors.");
                 }
             }
-            // Linux/Unix: Use systemctl or service command
+            // Linux/Unix: Use systemctl or service command with sudo
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 // Try systemctl first (most modern Linux distributions)
+                // Using sudo allows passwordless execution if configured via /etc/sudoers.d/
                 try
                 {
                     var startInfo = new ProcessStartInfo
                     {
-                        FileName = "systemctl",
-                        Arguments = "start nginx",
+                        FileName = "sudo",
+                        Arguments = "systemctl start nginx",
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
                         UseShellExecute = false,
@@ -1279,21 +1292,25 @@ sqlite3.extension_dir =
                             Console.WriteLine("[NginxManager] ✅ Nginx started successfully via systemctl");
                             return (true, "Nginx started successfully");
                         }
+                        else if (error.Contains("password") || error.Contains("sudo:"))
+                        {
+                            return (false, "Nginx start requires sudo privileges. Please configure passwordless sudo for Nginx management. See NGINX_MANAGEMENT_UBUNTU.md for setup instructions.");
+                        }
                         else if (error.Contains("Permission denied") || error.Contains("access denied"))
                         {
-                            return (false, "Permission denied. Please run RaCore with sudo or grant appropriate permissions.");
+                            return (false, "Permission denied. Please configure sudo permissions for Nginx management. See NGINX_MANAGEMENT_UBUNTU.md");
                         }
                     }
                 }
                 catch { }
                 
-                // Fallback to service command
+                // Fallback to service command with sudo
                 try
                 {
                     var startInfo = new ProcessStartInfo
                     {
-                        FileName = "service",
-                        Arguments = "nginx start",
+                        FileName = "sudo",
+                        Arguments = "service nginx start",
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
                         UseShellExecute = false,
@@ -1311,15 +1328,19 @@ sqlite3.extension_dir =
                             Console.WriteLine("[NginxManager] ✅ Nginx started successfully via service");
                             return (true, "Nginx started successfully");
                         }
+                        else if (error.Contains("password") || error.Contains("sudo:"))
+                        {
+                            return (false, "Nginx start requires sudo privileges. Please configure passwordless sudo for Nginx management. See NGINX_MANAGEMENT_UBUNTU.md");
+                        }
                         else if (error.Contains("Permission denied") || error.Contains("access denied"))
                         {
-                            return (false, "Permission denied. Please run RaCore with sudo or grant appropriate permissions.");
+                            return (false, "Permission denied. Please configure sudo permissions for Nginx management. See NGINX_MANAGEMENT_UBUNTU.md");
                         }
                     }
                 }
                 catch { }
                 
-                return (false, "Nginx start requires sudo privileges. Please start manually with: sudo systemctl start nginx");
+                return (false, "Nginx start requires sudo privileges. Please configure passwordless sudo: See NGINX_MANAGEMENT_UBUNTU.md for setup instructions.");
             }
             // macOS: Start Nginx directly
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))

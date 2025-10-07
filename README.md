@@ -41,6 +41,8 @@
 
 **🐧 Running on Linux?** See our comprehensive [Linux Hosting Setup Guide](LINUX_HOSTING_SETUP.md) for production deployment instructions.
 
+**🔧 Nginx Management:** RaOS can fully manage Nginx automatically! See [NGINX_MANAGEMENT_UBUNTU.md](NGINX_MANAGEMENT_UBUNTU.md) for setup instructions.
+
 **🤔 Windows vs Linux?** Check our [comparison guide](WINDOWS_VS_LINUX.md) to help decide (TL;DR: Linux is recommended for production).
 
 ### Running RaCore

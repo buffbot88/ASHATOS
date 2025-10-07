@@ -11,10 +11,13 @@ Quick navigation for all Linux hosting documentation for RaCore.
 | [WINDOWS_VS_LINUX.md](WINDOWS_VS_LINUX.md) | 8KB | Decision guide with performance comparison | 5 min |
 | [LINUX_QUICKREF.md](LINUX_QUICKREF.md) | 4KB | One-page cheat sheet for daily operations | 2 min |
 | [LINUX_HOSTING_SETUP.md](LINUX_HOSTING_SETUP.md) | 17KB | Complete setup guide from scratch | 15 min |
+| [NGINX_MANAGEMENT_UBUNTU.md](NGINX_MANAGEMENT_UBUNTU.md) | 11KB | Configure RaOS to manage Nginx automatically | 5 min |
 | [LINUX_IMPLEMENTATION_SUMMARY.md](LINUX_IMPLEMENTATION_SUMMARY.md) | 11KB | This implementation's deliverables | 5 min |
 | **Build Scripts** | | | |
 | [build-linux.sh](build-linux.sh) | 4KB | Basic build script | Executable |
 | [build-linux-production.sh](build-linux-production.sh) | 11KB | Production build + packaging | Executable |
+| **Setup Scripts** | | | |
+| [setup/setup-nginx-permissions.sh](setup/setup-nginx-permissions.sh) | 5KB | Configure Ubuntu for Nginx management | Executable |
 
 **Total:** 53KB of documentation + 15KB of build scripts
 
@@ -38,7 +41,12 @@ Quick navigation for all Linux hosting documentation for RaCore.
    - Set up systemd service
    - Configure SSL, firewall, monitoring
 
-4. **Build it:** Use the build scripts
+4. **Configure Nginx Management:** [NGINX_MANAGEMENT_UBUNTU.md](NGINX_MANAGEMENT_UBUNTU.md)
+   - Allow RaOS to manage Nginx automatically
+   - Run the setup script (1 command)
+   - Enable API-based Nginx control
+
+5. **Build it:** Use the build scripts
    ```bash
    ./build-linux-production.sh
    ```
@@ -101,7 +109,7 @@ Quick navigation for all Linux hosting documentation for RaCore.
 - **Part 1:** Initial system setup (Ubuntu, tools)
 - **Part 2:** .NET 9.0 installation (SDK and Runtime options)
 - **Part 3:** PHP 8+ installation and configuration
-- **Part 4:** Nginx installation and configuration
+- **Part 4:** Nginx installation and configuration (includes Nginx management setup)
 - **Part 5:** FTP server setup (vsftpd)
 - **Part 6:** RaCore deployment and systemd service
 - **Part 7:** Firewall configuration (UFW)
@@ -114,7 +122,24 @@ Quick navigation for all Linux hosting documentation for RaCore.
 
 ---
 
-### 4. LINUX_IMPLEMENTATION_SUMMARY.md - Implementation Details
+### 4. NGINX_MANAGEMENT_UBUNTU.md - Nginx Automation Setup
+**Purpose:** Configure Ubuntu to allow RaOS to manage Nginx automatically
+
+**Covers:**
+- Why automated Nginx management is safe
+- Quick setup (1 command script)
+- Manual setup instructions
+- How RaOS uses the configuration
+- Security model explanation
+- Troubleshooting permission issues
+- Advanced configurations (multiple users, polkit)
+- Uninstallation
+
+**Best for:** Enabling automatic Nginx management without terminal intervention
+
+---
+
+### 5. LINUX_IMPLEMENTATION_SUMMARY.md - Implementation Details
 **Purpose:** Understand what was built and delivered
 
 **Covers:**
