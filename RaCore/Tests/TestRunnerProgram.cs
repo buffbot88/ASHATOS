@@ -1,5 +1,6 @@
 using RaCore.Tests;
 using System;
+using System.Threading.Tasks;
 
 namespace RaCore;
 
@@ -8,7 +9,7 @@ namespace RaCore;
 /// </summary>
 public class TestRunner
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         Console.WriteLine("╔════════════════════════════════════════════════════════╗");
         Console.WriteLine("║   Legendary CMS Suite - Phase 8 Verification Test     ║");
@@ -16,6 +17,16 @@ public class TestRunner
 
         // Run LegendaryCMS tests
         LegendaryCMSTest.RunTests();
+
+        // Run ServerSetup FTP tests if requested
+        if (args.Length > 0 && args[0].ToLowerInvariant() == "ftp")
+        {
+            Console.WriteLine("\n\n╔════════════════════════════════════════════════════════╗");
+            Console.WriteLine("║   ServerSetup FTP Management Test Suite               ║");
+            Console.WriteLine("╚════════════════════════════════════════════════════════╝\n");
+            
+            await ServerSetupFtpTest.RunTests();
+        }
 
         Console.WriteLine("\nPress any key to exit...");
         Console.ReadKey();
