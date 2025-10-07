@@ -317,7 +317,7 @@ You can turn any old computer into RaAI or use RaAI client to access RaAI's main
 
 ---
 
-**Last Updated:** 2025-01-XX  
+**Last Updated:** 2025-10-07  
 **Current Version:** v9.3.1 (Phase 9.3.1 Complete)
 
 ---
