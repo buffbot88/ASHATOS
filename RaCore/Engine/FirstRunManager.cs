@@ -107,8 +107,8 @@ public class FirstRunManager
             Console.WriteLine("[FirstRunManager] Step 3/4: Configuring Nginx...");
             Console.WriteLine();
             
-            // Configure Nginx
-            var nginxManager = new NginxManager(_cmsPath, 8080);
+            // Configure Nginx - use port 80 for the integrated CMS
+            var nginxManager = new NginxManager(_cmsPath, 80);
             
             if (NginxManager.IsNginxAvailable())
             {

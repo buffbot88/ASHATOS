@@ -438,7 +438,7 @@ public class BootSequenceManager
                     var portEnv = Environment.GetEnvironmentVariable("RACORE_PORT") ?? "80";
                     var initialPort = int.Parse(portEnv);
                     
-                    var nginxManager = new NginxManager("", 8080);
+                    var nginxManager = new NginxManager("", 80);
                     var success = nginxManager.ConfigureReverseProxy(initialPort, domain);
                     
                     if (success)
