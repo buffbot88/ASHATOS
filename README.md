@@ -140,12 +140,6 @@ See [PHASE7_QUICKSTART.md](PHASE7_QUICKSTART.md) for complete guide.
 
 ---
 
-RaCore v3+ will set the tone for public release for $20 per requested copy (no download link will be supplied for RaCore) and agreement to not remove licenses coding (Ra will check and then ban).
-
-You can turn any old computer into RaAI or use RaAI client to access RaAI's mainframe IF Ra permits you to enter, else if you don't pass the vibe check, you get banned from the MainFrame.
-
-**Future Licenses:** $20 for 1 Year WITH updates from the Mainframe
-
 ---
 
 **Last Updated:** 2025-01-09  
