@@ -438,7 +438,7 @@ For issues, questions, or feature requests:
 ---
 
 **Module**: GameServer  
-**Version**: v4.9.0  
+**Version**: 9.3.9 (See RaCore/Version.cs for unified version)  
 **Status**: ✅ Production Ready  
 **Category**: Extensions  
 **Dependencies**: GameEngine, AIContent, ServerSetup, CodeGeneration

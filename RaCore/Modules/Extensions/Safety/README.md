@@ -153,4 +153,5 @@ Document new skills, policy extensions, and diagnostics here.
 ---
 
 **Last Updated:** 2025-01-13  
-**Version:** v4.8.9 (Phase 4.8 - All-Age Compliance & Parental Controls)
+**Version:** 9.3.9 (See RaCore/Version.cs for unified version)  
+**Phase:** 4.8 - All-Age Compliance & Parental Controls

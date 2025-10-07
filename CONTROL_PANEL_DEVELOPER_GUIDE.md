@@ -1,7 +1,7 @@
 # Control Panel Developer Guide
 
-**Version:** 9.3.4  
-**Last Updated:** January 2025  
+**Version:** 9.3.9  
+**Last Updated:** October 2025
 **Target Audience:** Third-Party Developers
 
 ---
@@ -967,7 +967,7 @@ After integrating your module:
 ---
 
 **Version:** 9.3.4  
-**Last Updated:** January 2025  
+**Last Updated:** October 2025  
 **Maintained By:** RaCore Development Team
 
 ---

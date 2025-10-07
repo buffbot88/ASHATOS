@@ -1,7 +1,7 @@
 # 📚 RaOS Documentation Index
 
-**Version:** 9.3.4  
-**Last Updated:** January 2025  
+**Version:** 9.3.9  
+**Last Updated:** October 2025  
 **Status:** Production Ready
 
 ---
@@ -17,7 +17,7 @@ dotnet run
 # Then in the console:
 Learn RaOS courses User        # Beginner Classes (2 courses, 8 lessons)
 Learn RaOS courses Admin       # Advanced Classes (3 courses, 15 lessons)
-Learn RaOS courses SuperAdmin  # Master Classes (4 courses, 28 lessons)
+Learn RaOS courses SuperAdmin  # Master Classes (4 courses, 29 lessons)
                                # Includes optional History course (8 lessons)
 ```
 
@@ -68,7 +68,7 @@ Learn RaOS courses SuperAdmin  # Master Classes (4 courses, 28 lessons)
 | Document | Description | Audience |
 |----------|-------------|----------|
 | [README.md](README.md) | Main project overview and quick start | All Users |
-| **LULmodule** | Interactive learning with 9 courses, 51 lessons | All Users |
+| **LULmodule** | Interactive learning with 9 courses, 52 lessons | All Users |
 | [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md) | Development setup and workflow | Developers |
 | [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) | Production deployment guide | System Admins |
 

@@ -710,8 +710,8 @@ Configure family-friendly features:
             Description = "Master the RaOS architecture and development practices",
             PermissionLevel = "SuperAdmin",
             Category = "Master",
-            LessonCount = 8,
-            EstimatedMinutes = 120,
+            LessonCount = 9,
+            EstimatedMinutes = 135,
             CreatedAt = DateTime.UtcNow,
             IsActive = true
         };
@@ -801,6 +801,40 @@ RaOS development roadmap:
 - Cloud deployment
 
 Documentation auto-updates with new features.", 8, 10, LessonType.Reading);
+        
+        AddLesson(course1Id, "lesson-sa-arch-9", "Phase 9.3.5-9.3.9 Recent Enhancements", @"
+Recent RaOS enhancements (Oct 2025):
+
+Phase 9.3.5: Payment & Economy
+- LegendaryPay payment processing (dev mode)
+- Universal currency exchange (10:1,000 ratio)
+- Marketplace fee automation (3%)
+
+Phase 9.3.6: Asset Security
+- Watermark detection for imported assets
+- Ownership verification system
+- Attribution tracking
+- Security scanning before import
+
+Phase 9.3.7: CloudFlare & SEO
+- Bot detection for search engines
+- Homepage filtering for SEO optimization
+- CloudFlare integration helpers
+- SSL/TLS configuration guides
+
+Phase 9.3.8: Ashat AI Assistant
+- Interactive AI coding helper
+- Approval-based workflow
+- Module knowledge base
+- Session management
+
+Phase 9.3.9: Documentation & Version Management
+- Unified version system (RaVersion.cs)
+- LULModule course updates
+- Full documentation audit
+- Production readiness verification
+
+These enhancements ensure RaOS is secure, scalable, and production-ready.", 9, 15, LessonType.Reading);
         
         // Course: System Administration
         var course2Id = "course-superadmin-sysadmin";
@@ -948,7 +982,7 @@ AI is a tool, not a replacement.", 5, 15, LessonType.Reading);
         {
             Id = course4Id,
             Title = "RaOS Development History (Optional)",
-            Description = "Learn the rapid evolution of RaOS from v1.0 (mid-Sept 2025) through v9.2 (Oct 7, 2025)",
+            Description = "Learn the rapid evolution of RaOS from v1.0 (mid-Sept 2025) through Phase 9.3.9 (Oct 2025)",
             PermissionLevel = "SuperAdmin",
             Category = "History",
             LessonCount = 8,
@@ -1064,7 +1098,7 @@ Key Achievements:
 RaOS became a complete CMS platform.", 7, 15, LessonType.Reading);
         
         AddLesson(course4Id, "lesson-history-8", "Phase 9: Control Panel & Polish (Oct 6-7, 2025)", @"
-Phase 9 added modern control panel and refined the platform.
+Phase 9 added modern control panel and refined the platform through multiple subphases.
 
 Phase 9.1: Game Engine Enhancements
 - ✅ Quest system improvements
@@ -1079,12 +1113,41 @@ Phase 9.3: Control Panel Integration (Oct 6, 2025)
 - ✅ Module integration API
 - ✅ Real-time monitoring
 
-Phase 9.4: Documentation & Learning (Oct 7, 2025)
+Phase 9.3.4: Documentation & Learning (Oct 7, 2025)
 - ✅ LegendaryUserLearningModule (LULmodule)
 - ✅ Documentation consolidation
 - ✅ Self-paced learning system
 
-RaOS is now production-ready with comprehensive tooling.", 8, 20, LessonType.Reading);
+Phase 9.3.5: Payment & Economy (Oct 2025)
+- ✅ LegendaryPay payment module (dev mode)
+- ✅ Currency exchange system (10:1,000 ratio)
+- ✅ Marketplace fee system (3%)
+
+Phase 9.3.6: Asset Security (Oct 2025)
+- ✅ Watermark detection system
+- ✅ Ownership verification for assets
+- ✅ Security scanning for imports
+- ✅ Attribution tracking
+
+Phase 9.3.7: CloudFlare Integration (Oct 2025)
+- ✅ Bot detection system for SEO
+- ✅ CloudFlare configuration helpers
+- ✅ Homepage bot filtering
+- ✅ SSL/TLS optimization guides
+
+Phase 9.3.8: Ashat AI Assistant (Oct 2025)
+- ✅ AI coding assistant module (""Face of RaOS"")
+- ✅ Interactive session management
+- ✅ Approval-based workflow
+- ✅ Module knowledge base
+
+Phase 9.3.9: Documentation Audit (Oct 2025)
+- ✅ Full LULModule course audit
+- ✅ Unified version management system
+- ✅ Documentation updates for all phases
+- ✅ Production readiness verification
+
+RaOS is now production-ready with comprehensive tooling and AI assistance.", 8, 25, LessonType.Reading);
     }
     
     private void AddLesson(string courseId, string lessonId, string title, string content, 
