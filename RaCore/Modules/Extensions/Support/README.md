@@ -236,6 +236,6 @@ For issues or questions:
 
 ---
 
-**Version:** v4.8.9  
+**Version:** 9.3.9 (See RaCore/Version.cs for unified version)  
 **Phase:** 4.7 - Complete ✅  
 **Last Updated:** 2025-01-13
