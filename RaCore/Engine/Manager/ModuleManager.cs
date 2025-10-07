@@ -47,6 +47,11 @@ namespace RaCore.Engine.Manager
             TryAddSearchPath(AppContext.BaseDirectory);
             TryAddSearchPath(Path.Combine(AppContext.BaseDirectory));
 
+            // Add root directory for comprehensive scanning
+            var rootDir = Directory.GetCurrentDirectory();
+            TryAddSearchPath(rootDir);
+            TryAddSearchPath(Path.Combine(rootDir, "Modules"));
+
             foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
             {
                 var name = asm.GetName().Name;
@@ -461,10 +466,263 @@ namespace RaCore.Engine.Manager
             return null;
         }
 
+        /// <summary>
+        /// Scans the entire application root directory and subdirectories for discoverable content.
+        /// Returns information about modules, configurations, and external resources.
+        /// </summary>
+        public EnvironmentDiscoveryResult DiscoverEnvironment()
+        {
+            var result = new EnvironmentDiscoveryResult
+            {
+                RootDirectory = Directory.GetCurrentDirectory(),
+                AppBaseDirectory = AppContext.BaseDirectory,
+                DiscoveryTime = DateTime.UtcNow
+            };
+
+            try
+            {
+                // Discover module folders
+                result.ModuleFolders = DiscoverModuleFolders(result.RootDirectory);
+
+                // Discover external resources (Nginx, PHP, Databases, etc.)
+                result.ExternalResources = DiscoverExternalResources(result.RootDirectory);
+
+                // Discover configuration files
+                result.ConfigurationFiles = DiscoverConfigurationFiles(result.RootDirectory);
+
+                // Discover admin instances
+                result.AdminInstances = DiscoverAdminInstances(result.RootDirectory);
+
+                if (DebugLoggingEnabled)
+                {
+                    Console.WriteLine($"[ModuleManager] Environment Discovery Complete:");
+                    Console.WriteLine($"  Root: {result.RootDirectory}");
+                    Console.WriteLine($"  Module Folders: {result.ModuleFolders.Count}");
+                    Console.WriteLine($"  External Resources: {result.ExternalResources.Count}");
+                    Console.WriteLine($"  Configuration Files: {result.ConfigurationFiles.Count}");
+                    Console.WriteLine($"  Admin Instances: {result.AdminInstances.Count}");
+                }
+            }
+            catch (Exception ex)
+            {
+                if (DebugLoggingEnabled)
+                    Console.WriteLine($"[ModuleManager] Environment discovery error: {ex.Message}");
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Scans specified folders for changes and returns update information.
+        /// Useful for detecting modifications in Nginx, PHP, admin instances, and module folders.
+        /// </summary>
+        public FolderUpdateResult ScanForUpdates(string[] foldersToScan)
+        {
+            var result = new FolderUpdateResult
+            {
+                ScanTime = DateTime.UtcNow,
+                ScannedFolders = new List<string>(foldersToScan)
+            };
+
+            foreach (var folder in foldersToScan)
+            {
+                try
+                {
+                    if (!Directory.Exists(folder)) continue;
+
+                    var folderInfo = new FolderInfo
+                    {
+                        Path = folder,
+                        Name = Path.GetFileName(folder) ?? folder,
+                        LastModified = Directory.GetLastWriteTimeUtc(folder)
+                    };
+
+                    // Count files recursively
+                    folderInfo.FileCount = Directory.EnumerateFiles(folder, "*.*", SearchOption.AllDirectories).Count();
+
+                    // Get subdirectories
+                    folderInfo.Subdirectories = Directory.EnumerateDirectories(folder, "*", SearchOption.TopDirectoryOnly)
+                        .Select(d => Path.GetFileName(d) ?? d)
+                        .ToList();
+
+                    result.FolderDetails.Add(folderInfo);
+
+                    if (DebugLoggingEnabled)
+                        Console.WriteLine($"[ModuleManager] Scanned folder: {folder} ({folderInfo.FileCount} files)");
+                }
+                catch (Exception ex)
+                {
+                    if (DebugLoggingEnabled)
+                        Console.WriteLine($"[ModuleManager] Error scanning folder {folder}: {ex.Message}");
+                }
+            }
+
+            return result;
+        }
+
+        private List<string> DiscoverModuleFolders(string rootDir)
+        {
+            var moduleFolders = new List<string>();
+
+            try
+            {
+                // Check standard module locations
+                var standardLocations = new[]
+                {
+                    Path.Combine(rootDir, "Modules"),
+                    Path.Combine(rootDir, "RaCore", "Modules"),
+                    Path.Combine(rootDir, "RaCore", "Modules", "Core"),
+                    Path.Combine(rootDir, "RaCore", "Modules", "Extensions")
+                };
+
+                foreach (var location in standardLocations)
+                {
+                    if (Directory.Exists(location))
+                    {
+                        moduleFolders.Add(location);
+
+                        // Add subdirectories as potential module folders
+                        var subdirs = Directory.EnumerateDirectories(location, "*", SearchOption.TopDirectoryOnly);
+                        moduleFolders.AddRange(subdirs);
+                    }
+                }
+            }
+            catch { }
+
+            return moduleFolders;
+        }
+
+        private List<ExternalResource> DiscoverExternalResources(string rootDir)
+        {
+            var resources = new List<ExternalResource>();
+
+            try
+            {
+                // Check for common external resources
+                var resourceMappings = new Dictionary<string, string>
+                {
+                    { "Nginx", "Web Server" },
+                    { "nginx", "Web Server" },
+                    { "Apache", "Web Server" },
+                    { "php", "Runtime" },
+                    { "PHP", "Runtime" },
+                    { "Databases", "Data Storage" },
+                    { "wwwroot", "Web Content" },
+                    { "Admins", "Admin Instances" }
+                };
+
+                foreach (var kvp in resourceMappings)
+                {
+                    var path = Path.Combine(rootDir, kvp.Key);
+                    if (Directory.Exists(path))
+                    {
+                        resources.Add(new ExternalResource
+                        {
+                            Name = kvp.Key,
+                            Type = kvp.Value,
+                            Path = path,
+                            Exists = true
+                        });
+                    }
+                }
+            }
+            catch { }
+
+            return resources;
+        }
+
+        private List<string> DiscoverConfigurationFiles(string rootDir)
+        {
+            var configFiles = new List<string>();
+
+            try
+            {
+                // Search for common configuration file patterns
+                var patterns = new[] { "*.json", "*.conf", "*.config", "*.ini", "appsettings*.json" };
+
+                foreach (var pattern in patterns)
+                {
+                    var files = Directory.EnumerateFiles(rootDir, pattern, SearchOption.AllDirectories)
+                        .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}") &&
+                                   !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}"))
+                        .Take(100); // Limit to avoid excessive results
+
+                    configFiles.AddRange(files);
+                }
+            }
+            catch { }
+
+            return configFiles;
+        }
+
+        private List<string> DiscoverAdminInstances(string rootDir)
+        {
+            var instances = new List<string>();
+
+            try
+            {
+                var adminsPath = Path.Combine(rootDir, "Admins");
+                if (Directory.Exists(adminsPath))
+                {
+                    instances.AddRange(Directory.EnumerateDirectories(adminsPath, "*", SearchOption.TopDirectoryOnly));
+                }
+            }
+            catch { }
+
+            return instances;
+        }
+
         public void Dispose()
         {
             UnloadAllModules();
             GC.SuppressFinalize(this);
         }
+    }
+
+    /// <summary>
+    /// Result of environment discovery scan
+    /// </summary>
+    public class EnvironmentDiscoveryResult
+    {
+        public string RootDirectory { get; set; } = string.Empty;
+        public string AppBaseDirectory { get; set; } = string.Empty;
+        public DateTime DiscoveryTime { get; set; }
+        public List<string> ModuleFolders { get; set; } = new();
+        public List<ExternalResource> ExternalResources { get; set; } = new();
+        public List<string> ConfigurationFiles { get; set; } = new();
+        public List<string> AdminInstances { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Information about an external resource (Nginx, PHP, etc.)
+    /// </summary>
+    public class ExternalResource
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
+        public string Path { get; set; } = string.Empty;
+        public bool Exists { get; set; }
+    }
+
+    /// <summary>
+    /// Result of folder update scan
+    /// </summary>
+    public class FolderUpdateResult
+    {
+        public DateTime ScanTime { get; set; }
+        public List<string> ScannedFolders { get; set; } = new();
+        public List<FolderInfo> FolderDetails { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Information about a scanned folder
+    /// </summary>
+    public class FolderInfo
+    {
+        public string Path { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public DateTime LastModified { get; set; }
+        public int FileCount { get; set; }
+        public List<string> Subdirectories { get; set; } = new();
     }
 }
