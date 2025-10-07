@@ -187,6 +187,10 @@ DocProject/Help/html
 # Click-Once directory
 publish/
 
+# Linux build output directories
+publish-production/
+publish-runtime-only/
+
 # Publish Web Output
 *.[Pp]ublish.xml
 *.azurePubxml

@@ -7,10 +7,13 @@
 ### Prerequisites
 - .NET 9.0 SDK
 - Optional: PHP 8+ for CMS features
-- Optional: Apache for production CMS deployment
+- Optional: Nginx for production CMS deployment (recommended for Linux)
+
+**🐧 Running on Linux?** See our comprehensive [Linux Hosting Setup Guide](LINUX_HOSTING_SETUP.md) for production deployment instructions.
 
 ### Running RaCore
 
+**Development (Windows/Mac/Linux):**
 ```bash
 # Clone the repository
 git clone https://github.com/buffbot88/TheRaProject.git
@@ -20,6 +23,15 @@ cd TheRaProject
 cd RaCore
 dotnet build
 dotnet run
+```
+
+**Production (Linux Ubuntu 22.04 LTS):**
+```bash
+# Use the build script for optimized production builds
+./build-linux.sh              # Basic build
+./build-linux-production.sh   # Self-contained with full deployment package
+
+# See LINUX_HOSTING_SETUP.md for complete setup instructions
 ```
 
 ### Default Configuration
