@@ -58,6 +58,16 @@ public class TestRunner
             ServerModesTests.RunTests();
         }
 
+        // Run Under Construction tests if requested (Phase 9.3.8)
+        if (args.Length > 0 && args[0].ToLowerInvariant() == "underconstruction")
+        {
+            Console.WriteLine("\n\n╔════════════════════════════════════════════════════════╗");
+            Console.WriteLine("║   Under Construction Mode Test Suite (Phase 9.3.8)    ║");
+            Console.WriteLine("╚════════════════════════════════════════════════════════╝\n");
+            
+            UnderConstructionTests.RunTests();
+        }
+
         Console.WriteLine("\nPress any key to exit...");
         Console.ReadKey();
     }

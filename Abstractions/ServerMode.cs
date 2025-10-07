@@ -105,6 +105,23 @@ public class ServerConfiguration
     /// Main server URL for license validation (default: US-Omega)
     /// </summary>
     public string MainServerUrl { get; set; } = "https://us-omega.raos.io";
+    
+    /// <summary>
+    /// Indicates if the site is in "Under Construction" mode
+    /// When enabled, non-admin users see a friendly Under Construction page
+    /// </summary>
+    public bool UnderConstruction { get; set; } = false;
+    
+    /// <summary>
+    /// Custom message for the Under Construction page
+    /// </summary>
+    public string? UnderConstructionMessage { get; set; }
+    
+    /// <summary>
+    /// Custom robot image URL for the Under Construction page
+    /// If null, uses default cute robot face
+    /// </summary>
+    public string? UnderConstructionRobotImage { get; set; }
 }
 
 /// <summary>

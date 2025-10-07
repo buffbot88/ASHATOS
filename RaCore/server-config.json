@@ -1,0 +1,19 @@
+{
+  "Mode": 4,
+  "IsFirstRun": false,
+  "InitializationCompleted": true,
+  "InitializedAt": "2025-10-07T21:31:12.1263288Z",
+  "Version": "1.0",
+  "LicenseKey": null,
+  "LicenseType": null,
+  "AdminPasswordChanged": false,
+  "AdminUsernameChanged": false,
+  "AshatEnabled": false,
+  "SystemRequirementsMet": true,
+  "SystemWarnings": [],
+  "CmsPath": "/home/runner/work/TheRaProject/TheRaProject/RaCore/wwwroot",
+  "MainServerUrl": "https://us-omega.raos.io",
+  "UnderConstruction": false,
+  "UnderConstructionMessage": null,
+  "UnderConstructionRobotImage": null
+}
