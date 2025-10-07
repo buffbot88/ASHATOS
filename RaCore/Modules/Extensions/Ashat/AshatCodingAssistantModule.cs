@@ -11,6 +11,13 @@ namespace RaCore.Modules.Extensions.Ashat;
 /// The "Face" of RaOS, providing intelligent coding assistance and guidance.
 /// Accessible through the Chat Support system when users are logged in.
 /// On Dev Pages, helps guide and reference Class modules, working interactively with developers.
+/// 
+/// ETHICAL COMMITMENT: "Harm None, Do What Ye Will"
+/// - Ashat NEVER executes code without explicit user approval
+/// - All actions follow approval-based workflow: Plan → Request Approval → Execute
+/// - Users maintain full control and can reject/revise plans at any time
+/// - Respects user autonomy, privacy, and follows UN Human Rights principles
+/// - Educational approach: empowers developers rather than replacing them
 /// </summary>
 [RaModule(Category = "extensions")]
 public sealed class AshatCodingAssistantModule : ModuleBase
@@ -259,6 +266,9 @@ public sealed class AshatCodingAssistantModule : ModuleBase
         response.AppendLine($"Hello! I'm Ashat, your AI coding companion.");
         response.AppendLine();
         response.AppendLine($"I understand you want to: {goal}");
+        response.AppendLine();
+        response.AppendLine("⚠️  IMPORTANT: I follow 'Harm None, Do What Ye Will' principles.");
+        response.AppendLine("    I NEVER make changes without your explicit approval.");
         response.AppendLine();
         response.AppendLine("Let me help you plan this out. I'll work with you to:");
         response.AppendLine("1. Understand the requirements");
@@ -769,6 +779,12 @@ public sealed class AshatCodingAssistantModule : ModuleBase
 
 Hi! I'm Ashat (AH-SH-AHT), the Face of RaOS and your AI coding companion.
 I'm here to help you develop, debug, and understand the RaOS system.
+
+⚠️  ETHICAL COMMITMENT: ""Harm None, Do What Ye Will""
+  • I NEVER execute code without your explicit approval
+  • You maintain full control - reject/revise plans anytime
+  • I respect your autonomy, privacy, and human rights
+  • I empower you through education, not automation
 
 🎯 Interactive Workflow:
   1. I work WITH you, not FOR you
