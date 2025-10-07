@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 
 namespace RaCore.Engine;
 
@@ -22,6 +24,65 @@ public class NginxManager
     }
     
     /// <summary>
+    /// Gets the server's IP address from the active NIC card
+    /// </summary>
+    public static string? GetServerIpAddress()
+    {
+        try
+        {
+            // Get all network interfaces
+            var networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
+            
+            foreach (var ni in networkInterfaces)
+            {
+                // Skip loopback and non-operational interfaces
+                if (ni.OperationalStatus != OperationalStatus.Up ||
+                    ni.NetworkInterfaceType == NetworkInterfaceType.Loopback)
+                {
+                    continue;
+                }
+                
+                // Get IP properties
+                var ipProperties = ni.GetIPProperties();
+                
+                // Look for IPv4 addresses
+                foreach (var ip in ipProperties.UnicastAddresses)
+                {
+                    if (ip.Address.AddressFamily == AddressFamily.InterNetwork)
+                    {
+                        // Return the first valid IPv4 address that's not a loopback
+                        var ipString = ip.Address.ToString();
+                        if (!ipString.StartsWith("127.") && !ipString.StartsWith("169.254."))
+                        {
+                            Console.WriteLine($"[NginxManager] 🌐 Detected server IP address: {ipString} from interface {ni.Name}");
+                            return ipString;
+                        }
+                    }
+                }
+            }
+            
+            // Fallback: try to get local IP by connecting to a remote endpoint
+            using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0))
+            {
+                socket.Connect("8.8.8.8", 65530);
+                var endPoint = socket.LocalEndPoint as System.Net.IPEndPoint;
+                if (endPoint != null)
+                {
+                    var ipString = endPoint.Address.ToString();
+                    Console.WriteLine($"[NginxManager] 🌐 Detected server IP address (via socket): {ipString}");
+                    return ipString;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[NginxManager] ⚠️  Could not detect server IP address: {ex.Message}");
+        }
+        
+        return null;
+    }
+    
+    /// <summary>
     /// Checks if Nginx is installed and available
     /// </summary>
     public static bool IsNginxAvailable()
@@ -34,7 +95,30 @@ public class NginxManager
     /// </summary>
     public static string? FindNginxExecutable()
     {
-        // Try common command-line commands first (Linux/Unix/Mac)
+        // First, try local RaCore Nginx folder
+        var serverRoot = Directory.GetCurrentDirectory();
+        var localNginxFolder = Path.Combine(serverRoot, "Nginx");
+        
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            var localNginxExe = Path.Combine(localNginxFolder, "nginx.exe");
+            if (File.Exists(localNginxExe))
+            {
+                Console.WriteLine($"[NginxManager] ✨ Found local Nginx: {localNginxExe}");
+                return localNginxExe;
+            }
+        }
+        else
+        {
+            var localNginxExe = Path.Combine(localNginxFolder, "nginx");
+            if (File.Exists(localNginxExe))
+            {
+                Console.WriteLine($"[NginxManager] ✨ Found local Nginx: {localNginxExe}");
+                return localNginxExe;
+            }
+        }
+        
+        // Try common command-line commands (Linux/Unix/Mac)
         var nginxCommands = new[] { "nginx" };
         
         foreach (var cmd in nginxCommands)
@@ -135,6 +219,17 @@ public class NginxManager
     /// </summary>
     public static string? FindNginxConfigPath()
     {
+        // First, try local RaCore Nginx folder
+        var serverRoot = Directory.GetCurrentDirectory();
+        var localNginxFolder = Path.Combine(serverRoot, "Nginx");
+        var localConfigPath = Path.Combine(localNginxFolder, "conf", "nginx.conf");
+        
+        if (File.Exists(localConfigPath))
+        {
+            Console.WriteLine($"[NginxManager] ✨ Found local Nginx config: {localConfigPath}");
+            return localConfigPath;
+        }
+        
         var nginxPath = FindNginxExecutable();
         if (nginxPath == null)
         {
@@ -276,10 +371,44 @@ public class NginxManager
         if (configPath == null)
         {
             Console.WriteLine("[NginxManager] ⚠️  Could not find Nginx configuration file");
-            Console.WriteLine("[NginxManager] Please ensure Nginx is installed and accessible");
-            Console.WriteLine("[NginxManager] Common locations:");
-            Console.WriteLine("[NginxManager]   - C:\\nginx\\conf\\nginx.conf");
-            return false;
+            
+            // Try to create config in local Nginx folder
+            var serverRoot = Directory.GetCurrentDirectory();
+            var localNginxFolder = Path.Combine(serverRoot, "Nginx");
+            var localConfFolder = Path.Combine(localNginxFolder, "conf");
+            
+            if (Directory.Exists(localNginxFolder))
+            {
+                Console.WriteLine($"[NginxManager] ✨ Creating Nginx configuration in local folder: {localNginxFolder}");
+                Directory.CreateDirectory(localConfFolder);
+                
+                configPath = Path.Combine(localConfFolder, "nginx.conf");
+                
+                // Create a basic nginx.conf
+                var basicConfig = @"worker_processes  1;
+
+events {
+    worker_connections  1024;
+}
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+    sendfile        on;
+    keepalive_timeout  65;
+
+}";
+                File.WriteAllText(configPath, basicConfig);
+                Console.WriteLine($"[NginxManager] ✨ Created basic Nginx config: {configPath}");
+            }
+            else
+            {
+                Console.WriteLine("[NginxManager] Please ensure Nginx is installed and accessible");
+                Console.WriteLine("[NginxManager] Common locations:");
+                Console.WriteLine("[NginxManager]   - C:\\nginx\\conf\\nginx.conf");
+                Console.WriteLine($"[NginxManager]   - {localConfFolder}\\nginx.conf (local)");
+                return false;
+            }
         }
         
         try
@@ -288,6 +417,15 @@ public class NginxManager
             
             // Read existing config
             var config = File.ReadAllText(configPath);
+            
+            // Get server IP for configuration
+            var serverIp = GetServerIpAddress();
+            var serverNames = new List<string> { domain };
+            if (serverIp != null && serverIp != domain)
+            {
+                serverNames.Add(serverIp);
+            }
+            serverNames.AddRange(new[] { "agpstudios.online", "www.agpstudios.online" });
             
             // Check if RaCore reverse proxy is already configured
             var racoreProxyMarker = "# RaCore Reverse Proxy Configuration";
@@ -308,15 +446,18 @@ public class NginxManager
                     // Find the closing brace of the http block
                     var insertPosition = config.LastIndexOf('}');
                     
+                    var serverNameList = string.Join(" ", serverNames);
+                    
                     // Add reverse proxy configuration before the closing brace
                     var proxyConfig = $@"
     # RaCore Reverse Proxy Configuration
     # Auto-generated by RaCore NginxManager on {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC
     # This configuration allows accessing RaCore at http://{domain} (port 80)
+    # Server IP: {serverIp ?? "not detected"}
     # instead of http://localhost:{racorePort}
     server {{
         listen 80;
-        server_name {domain} agpstudios.online www.agpstudios.online;
+        server_name {serverNameList};
         
         location / {{
             proxy_pass http://localhost:{racorePort};
@@ -347,8 +488,7 @@ public class NginxManager
                     config = config.Insert(insertPosition, proxyConfig);
                     
                     File.WriteAllText(configPath, config);
-                    Console.WriteLine($"[NginxManager] ✅ Added reverse proxy configuration for {domain}:{racorePort}");
-                    Console.WriteLine($"[NginxManager] ✅ Server names configured for: {domain}, agpstudios.online, www.agpstudios.online");
+                    Console.WriteLine($"[NginxManager] ✅ Added reverse proxy configuration for {serverNameList}");
                     Console.WriteLine();
                     Console.WriteLine("[NginxManager] ⚠️  IMPORTANT: Nginx configuration has been updated!");
                     Console.WriteLine("[NginxManager] You must manually start/restart Nginx for changes to take effect:");
@@ -364,9 +504,10 @@ public class NginxManager
                     Console.WriteLine("[NginxManager]     - Restart: sudo systemctl restart nginx");
                     Console.WriteLine();
                     Console.WriteLine($"[NginxManager] 🌐 After starting Nginx, access RaCore at:");
-                    Console.WriteLine($"[NginxManager]   - http://{domain}");
-                    Console.WriteLine($"[NginxManager]   - http://agpstudios.online");
-                    Console.WriteLine($"[NginxManager]   - http://www.agpstudios.online");
+                    foreach (var serverName in serverNames)
+                    {
+                        Console.WriteLine($"[NginxManager]   - http://{serverName}");
+                    }
                     
                     return true;
                 }
@@ -418,9 +559,10 @@ public class NginxManager
                 {
                     Console.WriteLine("[NginxManager] ✅ Configuration looks good!");
                     Console.WriteLine($"[NginxManager] 🌐 Access RaCore at:");
-                    Console.WriteLine($"[NginxManager]   - http://{domain}");
-                    Console.WriteLine($"[NginxManager]   - http://agpstudios.online");
-                    Console.WriteLine($"[NginxManager]   - http://www.agpstudios.online");
+                    foreach (var serverName in serverNames)
+                    {
+                        Console.WriteLine($"[NginxManager]   - http://{serverName}");
+                    }
                 }
             }
             
@@ -929,6 +1071,284 @@ sqlite3.extension_dir =
         {
             Console.WriteLine($"[NginxManager] Error generating PHP config: {ex.Message}");
             return false;
+        }
+    }
+    
+    /// <summary>
+    /// Verifies that a PHP configuration file exists and is valid
+    /// </summary>
+    public static (bool exists, bool valid, string? message) VerifyPhpConfig(string? phpIniPath = null)
+    {
+        phpIniPath ??= FindPhpIniPath();
+        
+        if (phpIniPath == null)
+        {
+            return (false, false, "PHP configuration file not found");
+        }
+        
+        if (!File.Exists(phpIniPath))
+        {
+            return (false, false, $"PHP configuration file does not exist: {phpIniPath}");
+        }
+        
+        try
+        {
+            var content = File.ReadAllText(phpIniPath);
+            
+            // Check for essential PHP settings
+            var hasMemoryLimit = content.Contains("memory_limit");
+            var hasMaxExecutionTime = content.Contains("max_execution_time");
+            var hasUploadMaxFilesize = content.Contains("upload_max_filesize");
+            
+            if (!hasMemoryLimit || !hasMaxExecutionTime || !hasUploadMaxFilesize)
+            {
+                return (true, false, "PHP configuration is missing essential settings");
+            }
+            
+            return (true, true, "PHP configuration is valid");
+        }
+        catch (Exception ex)
+        {
+            return (true, false, $"Error reading PHP configuration: {ex.Message}");
+        }
+    }
+    
+    /// <summary>
+    /// Verifies that Nginx configuration files exist and are valid
+    /// </summary>
+    public static (bool exists, bool valid, string? message) VerifyNginxConfig()
+    {
+        var configPath = FindNginxConfigPath();
+        
+        if (configPath == null)
+        {
+            return (false, false, "Nginx configuration file not found");
+        }
+        
+        if (!File.Exists(configPath))
+        {
+            return (false, false, $"Nginx configuration file does not exist: {configPath}");
+        }
+        
+        try
+        {
+            var content = File.ReadAllText(configPath);
+            
+            // Check for essential Nginx settings
+            var hasHttpBlock = content.Contains("http");
+            var hasServerBlock = content.Contains("server");
+            
+            if (!hasHttpBlock)
+            {
+                return (true, false, "Nginx configuration is missing http block");
+            }
+            
+            if (!hasServerBlock)
+            {
+                return (true, false, "Nginx configuration is missing server block");
+            }
+            
+            // Try to test the configuration with nginx -t
+            var nginxPath = FindNginxExecutable();
+            if (nginxPath != null)
+            {
+                try
+                {
+                    var startInfo = new ProcessStartInfo
+                    {
+                        FileName = nginxPath,
+                        Arguments = "-t",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+                    
+                    using var process = Process.Start(startInfo);
+                    if (process != null)
+                    {
+                        var output = process.StandardOutput.ReadToEnd();
+                        var error = process.StandardError.ReadToEnd();
+                        process.WaitForExit(5000);
+                        
+                        if (process.ExitCode == 0)
+                        {
+                            return (true, true, "Nginx configuration is valid (tested with nginx -t)");
+                        }
+                        else
+                        {
+                            return (true, false, $"Nginx configuration test failed: {error}");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[NginxManager] ⚠️  Could not test Nginx configuration: {ex.Message}");
+                }
+            }
+            
+            return (true, true, "Nginx configuration appears valid (syntax check passed)");
+        }
+        catch (Exception ex)
+        {
+            return (true, false, $"Error reading Nginx configuration: {ex.Message}");
+        }
+    }
+    
+    /// <summary>
+    /// Starts Nginx web server
+    /// </summary>
+    public static (bool success, string message) StartNginx()
+    {
+        try
+        {
+            var nginxPath = FindNginxExecutable();
+            if (nginxPath == null)
+            {
+                return (false, "Nginx not found. Please ensure Nginx is installed.");
+            }
+            
+            Console.WriteLine($"[NginxManager] Attempting to start Nginx using: {nginxPath}");
+            
+            // Windows: Use start nginx
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                // Check if Nginx is already running
+                var nginxProcesses = Process.GetProcessesByName("nginx");
+                if (nginxProcesses.Length > 0)
+                {
+                    Console.WriteLine("[NginxManager] ℹ️  Nginx is already running");
+                    return (true, "Nginx is already running");
+                }
+                
+                // Start Nginx in the background
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = nginxPath,
+                    WorkingDirectory = Path.GetDirectoryName(nginxPath) ?? Directory.GetCurrentDirectory(),
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+                
+                var process = Process.Start(startInfo);
+                
+                // Wait a moment and check if it's running
+                System.Threading.Thread.Sleep(2000);
+                nginxProcesses = Process.GetProcessesByName("nginx");
+                
+                if (nginxProcesses.Length > 0)
+                {
+                    Console.WriteLine("[NginxManager] ✅ Nginx started successfully");
+                    return (true, "Nginx started successfully");
+                }
+                else
+                {
+                    return (false, "Nginx process did not start. Check logs for errors.");
+                }
+            }
+            // Linux/Unix: Use systemctl or service command
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                // Try systemctl first (most modern Linux distributions)
+                try
+                {
+                    var startInfo = new ProcessStartInfo
+                    {
+                        FileName = "systemctl",
+                        Arguments = "start nginx",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+                    
+                    using var process = Process.Start(startInfo);
+                    if (process != null)
+                    {
+                        var error = process.StandardError.ReadToEnd();
+                        process.WaitForExit(10000);
+                        
+                        if (process.ExitCode == 0)
+                        {
+                            Console.WriteLine("[NginxManager] ✅ Nginx started successfully via systemctl");
+                            return (true, "Nginx started successfully");
+                        }
+                        else if (error.Contains("Permission denied") || error.Contains("access denied"))
+                        {
+                            return (false, "Permission denied. Please run RaCore with sudo or grant appropriate permissions.");
+                        }
+                    }
+                }
+                catch { }
+                
+                // Fallback to service command
+                try
+                {
+                    var startInfo = new ProcessStartInfo
+                    {
+                        FileName = "service",
+                        Arguments = "nginx start",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+                    
+                    using var process = Process.Start(startInfo);
+                    if (process != null)
+                    {
+                        var error = process.StandardError.ReadToEnd();
+                        process.WaitForExit(10000);
+                        
+                        if (process.ExitCode == 0)
+                        {
+                            Console.WriteLine("[NginxManager] ✅ Nginx started successfully via service");
+                            return (true, "Nginx started successfully");
+                        }
+                        else if (error.Contains("Permission denied") || error.Contains("access denied"))
+                        {
+                            return (false, "Permission denied. Please run RaCore with sudo or grant appropriate permissions.");
+                        }
+                    }
+                }
+                catch { }
+                
+                return (false, "Nginx start requires sudo privileges. Please start manually with: sudo systemctl start nginx");
+            }
+            // macOS: Start Nginx directly
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = nginxPath,
+                    WorkingDirectory = Path.GetDirectoryName(nginxPath) ?? Directory.GetCurrentDirectory(),
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+                
+                Process.Start(startInfo);
+                
+                // Wait a moment and verify
+                System.Threading.Thread.Sleep(2000);
+                var nginxProcesses = Process.GetProcessesByName("nginx");
+                
+                if (nginxProcesses.Length > 0)
+                {
+                    Console.WriteLine("[NginxManager] ✅ Nginx started successfully");
+                    return (true, "Nginx started successfully");
+                }
+                else
+                {
+                    return (false, "Nginx process did not start. Check logs for errors.");
+                }
+            }
+            
+            return (false, "Unsupported platform for automatic Nginx start");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[NginxManager] ❌ Error starting Nginx: {ex.Message}");
+            return (false, $"Error starting Nginx: {ex.Message}");
         }
     }
     

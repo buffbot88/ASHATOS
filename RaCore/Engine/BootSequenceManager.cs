@@ -341,6 +341,16 @@ public class BootSequenceManager
         Console.ResetColor();
         Console.WriteLine();
         
+        // Display server IP address
+        var serverIp = NginxManager.GetServerIpAddress();
+        if (serverIp != null)
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"    🌐 Server IP Address: {serverIp}");
+            Console.ResetColor();
+            StoreConfig("server.ip_address", serverIp);
+        }
+        
         try
         {
             var nginxPath = NginxManager.FindNginxExecutable();
@@ -378,6 +388,28 @@ public class BootSequenceManager
             Console.WriteLine($"    ✨ Nginx found: {nginxPath}");
             Console.ResetColor();
             
+            // Verify Nginx configuration
+            var (configExists, configValid, configMessage) = NginxManager.VerifyNginxConfig();
+            
+            if (!configExists)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine($"    ⚠️  {configMessage}");
+                Console.ResetColor();
+            }
+            else if (!configValid)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine($"    ⚠️  {configMessage}");
+                Console.ResetColor();
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"    ✅ {configMessage}");
+                Console.ResetColor();
+            }
+            
             var configPath = NginxManager.FindNginxConfigPath();
             if (configPath != null)
             {
@@ -393,7 +425,7 @@ public class BootSequenceManager
                 Console.WriteLine("    (◕‿◕✿) Nginx is ready for reverse proxy configuration!");
                 Console.ResetColor();
                 
-                var domain = Environment.GetEnvironmentVariable("RACORE_PROXY_DOMAIN") ?? "localhost";
+                var domain = Environment.GetEnvironmentVariable("RACORE_PROXY_DOMAIN") ?? serverIp ?? "localhost";
                 
                 // Check if RaCore reverse proxy is already configured
                 if (!hasRaCoreProxy)
@@ -415,6 +447,10 @@ public class BootSequenceManager
                         Console.WriteLine($"    ✨ Nginx reverse proxy configured for {domain}!");
                         Console.WriteLine($"    ♡ Configuration is ready for:");
                         Console.WriteLine($"       - http://{domain}");
+                        if (serverIp != null && serverIp != domain)
+                        {
+                            Console.WriteLine($"       - http://{serverIp}");
+                        }
                         Console.WriteLine($"       - http://agpstudios.online");
                         Console.WriteLine($"       - http://www.agpstudios.online");
                         Console.ResetColor();
@@ -561,43 +597,15 @@ public class BootSequenceManager
             }
             catch { }
             
-            // Check for php.ini
-            var phpIniPath = NginxManager.FindPhpIniPath(phpPath);
-            if (phpIniPath != null)
-            {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine($"    ♡ Config found: {phpIniPath}");
-                Console.ResetColor();
-                
-                // Auto-configure PHP settings
-                Console.ForegroundColor = ConsoleColor.Magenta;
-                Console.WriteLine("    ♡ (っ◔◡◔)っ Auto-configuring PHP settings...");
-                Console.ResetColor();
-                
-                var phpConfigSuccess = NginxManager.ConfigurePhpIni(phpIniPath);
-                
-                if (phpConfigSuccess)
-                {
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine("    ✨ PHP configuration updated successfully!");
-                    Console.ResetColor();
-                    
-                    // Persist PHP configuration to Ra_Memory database
-                    StoreConfig("php.configured", "true");
-                    StoreConfig("php.ini_path", phpIniPath);
-                }
-                else
-                {
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine("    (´･ω･`) PHP configuration update had issues");
-                    Console.ResetColor();
-                }
-            }
-            else
+            // Verify PHP configuration
+            var (configExists, configValid, configMessage) = NginxManager.VerifyPhpConfig();
+            
+            if (!configExists)
             {
                 // No php.ini found - generate one
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("    ⚠️  No php.ini found - generating default configuration...");
+                Console.WriteLine($"    ⚠️  {configMessage}");
+                Console.WriteLine("    ⚠️  Generating default configuration...");
                 Console.ResetColor();
                 
                 var suggestedPath = NginxManager.GetSuggestedPhpIniPath(phpPath);
@@ -629,6 +637,15 @@ public class BootSequenceManager
                         StoreConfig("php.configured", "true");
                         StoreConfig("php.ini_path", suggestedPath);
                         StoreConfig("php.ini_generated", "true");
+                        
+                        // Verify the newly created config
+                        var (verifyExists, verifyValid, verifyMessage) = NginxManager.VerifyPhpConfig(suggestedPath);
+                        if (verifyValid)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine($"    ✅ {verifyMessage}");
+                            Console.ResetColor();
+                        }
                     }
                     else
                     {
@@ -642,6 +659,66 @@ public class BootSequenceManager
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.WriteLine("    (´･ω･`) Could not determine php.ini location - using defaults!");
                     Console.ResetColor();
+                }
+            }
+            else if (!configValid)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine($"    ⚠️  {configMessage}");
+                Console.ResetColor();
+                
+                var phpIniPath = NginxManager.FindPhpIniPath(phpPath);
+                if (phpIniPath != null)
+                {
+                    Console.ForegroundColor = ConsoleColor.Magenta;
+                    Console.WriteLine("    ♡ (っ◔◡◔)っ Auto-configuring PHP settings...");
+                    Console.ResetColor();
+                    
+                    var phpConfigSuccess = NginxManager.ConfigurePhpIni(phpIniPath);
+                    
+                    if (phpConfigSuccess)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine("    ✨ PHP configuration updated successfully!");
+                        Console.ResetColor();
+                        
+                        // Persist PHP configuration to Ra_Memory database
+                        StoreConfig("php.configured", "true");
+                        StoreConfig("php.ini_path", phpIniPath);
+                        
+                        // Re-verify the config
+                        var (reVerifyExists, reVerifyValid, reVerifyMessage) = NginxManager.VerifyPhpConfig(phpIniPath);
+                        if (reVerifyValid)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine($"    ✅ {reVerifyMessage}");
+                            Console.ResetColor();
+                        }
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine("    (´･ω･`) PHP configuration update had issues");
+                        Console.ResetColor();
+                    }
+                }
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"    ✅ {configMessage}");
+                Console.ResetColor();
+                
+                var phpIniPath = NginxManager.FindPhpIniPath(phpPath);
+                if (phpIniPath != null)
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine($"    ♡ Config found: {phpIniPath}");
+                    Console.ResetColor();
+                    
+                    // Persist PHP configuration to Ra_Memory database
+                    StoreConfig("php.configured", "true");
+                    StoreConfig("php.ini_path", phpIniPath);
                 }
             }
             
