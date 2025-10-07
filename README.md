@@ -184,6 +184,12 @@ help                 # Show command help
 - **[Summary](PHASE8_SUMMARY.md)** - Executive overview (16,000+ words)
 - **[Project Structure](PHASE8_STRUCTURE.md)** - File organization (12,000+ words)
 
+### Phase 9.3 Documentation (New!)
+
+- **[System Architecture](ARCHITECTURE.md)** - Complete architectural overview (40,000+ words)
+- **[Development Roadmap](ROADMAP.md)** - Future phases and features (24,000+ words)
+- **[Module Development Guide](MODULE_DEVELOPMENT_GUIDE.md)** - Create your own modules (36,000+ words)
+
 ### Historical Documentation
 
 - **[Development History](HISTORY.md)** - Complete archive of Phases 2-7
