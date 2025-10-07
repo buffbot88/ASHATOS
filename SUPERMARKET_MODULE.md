@@ -1,28 +1,38 @@
-# SuperMarket Module
+# Legendary Supermarket Module
 
 ## 🏪 Overview
 
-The SuperMarket Module is RaCore's e-commerce platform for purchasing licenses, modules, themes, and premium features using RaCoins. It extends the functionality of the CMSSpawner module to provide an integrated shopping experience.
+The Legendary Supermarket Module is RaCore's unified central marketplace with **dual currency support**:
+- **RaCoin Side (Premium Tier)**: Official store for subscriptions, licensing, and premium items
+- **Gold Side (Free Tier)**: User-to-user marketplace for in-game items and player trading
 
-## ✅ Status: IMPLEMENTED
+Features advanced search, seller profiles with ratings, and seamless integration with both currencies.
 
-SuperMarket is fully operational and integrated with RaCoin and License modules.
+## ✅ Status: IMPLEMENTED (Phase 9.2)
+
+Legendary Supermarket is fully operational with dual-currency support and advanced marketplace features.
 
 ## 🎯 Key Features
 
-### Product Management
-- **Product Catalog**: Browse available products by category
-- **Digital Products**: Instant delivery of licenses, modules, and features
-- **Pricing in RaCoins**: All prices in native cryptocurrency
-- **Stock Management**: Unlimited stock for digital products
-- **Category Organization**: Products organized by type
+### Dual Currency System
+- **RaCoin Market**: Premium subscriptions, official licenses, modules, and features
+- **Gold Market**: Free-tier in-game items, player-to-player trading
+- Seamless currency conversion via RaCoin module
+- Separate catalogs and filtering by currency type
 
-### Purchase System
-- **One-Click Purchase**: Simple buying process
-- **Balance Validation**: Automatic balance checking
-- **Instant Delivery**: Immediate product access
+### Official Store (RaCoin Side)
+- **Product Catalog**: Browse official products by category
+- **Digital Products**: Instant delivery of licenses, modules, and features
+- **Pricing in RaCoins**: All official items priced in native cryptocurrency
 - **License Integration**: Automatic license creation and assignment
 - **Purchase History**: Complete transaction tracking
+
+### User Marketplace (Both Currencies)
+- **Player-to-Player Trading**: List and sell items to other players
+- **Dual Currency Listings**: Accept either RaCoins or Gold
+- **15% Marketplace Fee**: Automatic fee deduction on sales
+- **Stock Management**: Track inventory and availability
+- **Transaction History**: Separate tracking for purchases and sales
 
 ### Product Categories
 1. **License** - Software licenses (Standard, Professional, Enterprise)
@@ -33,37 +43,81 @@ SuperMarket is fully operational and integrated with RaCoin and License modules.
 6. **Service** - Premium services and support
 7. **Other** - Miscellaneous products
 
-## 🛒 SuperMarket Commands
+### Advanced Search & Discovery
+- **Text Search**: Search by item name or description
+- **Currency Filter**: Filter listings by RaCoin or Gold
+- **Category Filter**: Browse by product category
+- **Real-time Results**: Instant search capabilities
 
-### Product Browsing
+### Seller Profiles & Ratings
+- **Seller Information**: Basic profile from UserProfile module
+- **Display Name & Bio**: Rich seller information
+- **Total Sales**: Transaction count and active listings
+- **5-Star Reviews**: Standard 1-5 star rating system
+- **Review Comments**: Written feedback on transactions
+- **Average Rating**: Calculated seller reputation
+
+## 🛒 Legendary Supermarket Commands
+
+### Official Store (RaCoin Side)
 
 ```bash
-# View all products
+# View official products catalog
 market catalog
 market products
 
+# Purchase official product with RaCoins
+market buy <user-id> <product-id>
+```
+
+### User Marketplace (RaCoin & Gold)
+
+```bash
+# List item for sale
+market list <seller-id> <item-name> <currency> <price> <quantity> <category> <description>
+
+# Example: List a sword for Gold
+market list abc123 "Fire Sword" Gold 5000 1 Other "Legendary fire sword"
+
+# Example: List premium mod for RaCoins
+market list abc123 "Premium Mod Pack" RaCoin 50 10 Module "Advanced modding tools"
+
+# Purchase from marketplace
+market purchase <buyer-id> <listing-id> <quantity>
+
+# Search marketplace
+market search <search-term>
+
+# Filter by currency and optionally category
+market filter <currency-type> [category]
+market filter Gold
+market filter RaCoin License
+```
+
+### Seller Information & Reviews
+
+```bash
+# View seller profile and ratings
+market seller <seller-id>
+
+# Leave a review (rating 1-5)
+market review <reviewer-id> <seller-id> <purchase-id> <rating> <comment>
+
+# Example
+market review user123 seller456 purchase789 5 "Great seller, fast delivery!"
+```
+
+### General Commands
+
+```bash
 # View marketplace statistics
 market stats
-```
 
-### Making Purchases
-
-```bash
-# Purchase a product
-market buy <user-id> <product-id>
-
-# View purchase history
+# View purchase and sales history
 market history <user-id>
-```
 
-### Product Management (Admin)
-
-```bash
-# Add new product
-market add <name> <price> <category> <description>
-
-# Example: Add a custom module
-market add "Custom Dashboard" 150 Module "Advanced analytics dashboard"
+# Get help
+help
 ```
 
 ## 📦 Default Products
@@ -174,7 +228,7 @@ $ market history 123e4567-e89b-12d3-a456-426614174000
 
 ## 📊 Data Models
 
-### SuperMarketProduct
+### SuperMarketProduct (Extended)
 
 ```csharp
 public class SuperMarketProduct
@@ -189,23 +243,78 @@ public class SuperMarketProduct
     public DateTime CreatedAtUtc { get; set; }
     public string? ImageUrl { get; set; }
     public Dictionary<string, string> Metadata { get; set; }
+    
+    // Legendary Supermarket extensions
+    public decimal? PriceInGold { get; set; }  // Optional Gold pricing
+    public CurrencyType PrimaryCurrency { get; set; } = CurrencyType.RaCoin;
+    public Guid? SellerId { get; set; }  // For user-listed items
 }
 ```
 
-### SuperMarketPurchase
+### MarketplaceListing
 
 ```csharp
-public class SuperMarketPurchase
+public class MarketplaceListing
 {
     public Guid Id { get; set; }
-    public Guid UserId { get; set; }
-    public Guid ProductId { get; set; }
-    public string ProductName { get; set; }
-    public decimal PricePaid { get; set; }
-    public DateTime PurchasedAtUtc { get; set; }
-    public Guid TransactionId { get; set; }
-    public PurchaseStatus Status { get; set; }
+    public Guid SellerId { get; set; }
+    public string SellerName { get; set; }
+    public string ItemName { get; set; }
+    public string Description { get; set; }
+    public CurrencyType CurrencyType { get; set; }
+    public decimal Price { get; set; }
+    public int Quantity { get; set; }
+    public ProductCategory Category { get; set; }
+    public bool IsAvailable { get; set; }
+    public DateTime ListedAtUtc { get; set; }
+    public DateTime? ExpiresAtUtc { get; set; }
+    public string? ImageUrl { get; set; }
     public Dictionary<string, string> Metadata { get; set; }
+    public List<string> Tags { get; set; }
+}
+```
+
+### SellerInfo
+
+```csharp
+public class SellerInfo
+{
+    public Guid UserId { get; set; }
+    public string Username { get; set; }
+    public string? DisplayName { get; set; }
+    public string? Bio { get; set; }
+    public string? AvatarUrl { get; set; }
+    public decimal Rating { get; set; }
+    public int TotalSales { get; set; }
+    public int ActiveListings { get; set; }
+    public DateTime MemberSince { get; set; }
+    public List<SellerReview> Reviews { get; set; }
+}
+```
+
+### SellerReview
+
+```csharp
+public class SellerReview
+{
+    public Guid Id { get; set; }
+    public Guid ReviewerId { get; set; }
+    public string ReviewerName { get; set; }
+    public Guid SellerId { get; set; }
+    public Guid PurchaseId { get; set; }
+    public int Rating { get; set; } // 1-5 stars
+    public string Comment { get; set; }
+    public DateTime CreatedAtUtc { get; set; }
+}
+```
+
+### CurrencyType Enum
+
+```csharp
+public enum CurrencyType
+{
+    RaCoin,  // Premium tier - subscriptions, licensing, premium items
+    Gold     // Free tier - in-game items, player-to-player trading
 }
 ```
 
@@ -223,6 +332,114 @@ public enum ProductCategory
     Other       // Miscellaneous
 }
 ```
+
+## 🌐 API Endpoints
+
+### Official Store Endpoints
+
+#### GET /api/market/catalog
+Get all official RaCoin products
+
+**Response:**
+```json
+{
+  "Store": "Official RaCoin Store",
+  "Currency": "RaCoin",
+  "TotalProducts": 10,
+  "AvailableProducts": 10,
+  "Products": [...]
+}
+```
+
+#### POST /api/market/purchase
+Purchase official product or marketplace listing
+
+**Request Body:**
+```json
+{
+  "BuyerId": "user-guid",
+  "ProductId": "product-guid",
+  "ListingId": "listing-guid",
+  "Quantity": 1,
+  "IsMarketplaceListing": false
+}
+```
+
+### Marketplace Endpoints
+
+#### GET /api/market/listings?currency=Gold&category=Other
+Filter marketplace listings by currency and category
+
+**Query Parameters:**
+- `currency`: RaCoin or Gold
+- `category`: Optional product category
+
+#### GET /api/market/search?q=sword
+Search marketplace by name or description
+
+**Query Parameters:**
+- `q`: Search term
+
+#### POST /api/market/list
+Create new marketplace listing
+
+**Request Body:**
+```json
+{
+  "SellerId": "user-guid",
+  "ItemName": "Fire Sword",
+  "CurrencyType": "Gold",
+  "Price": 5000,
+  "Quantity": 1,
+  "Category": "Other",
+  "Description": "Legendary fire sword"
+}
+```
+
+### Seller Endpoints
+
+#### GET /api/market/seller/{sellerId}
+Get seller profile, ratings, and active listings
+
+**Response:**
+```json
+{
+  "Seller": {
+    "UserId": "...",
+    "Username": "...",
+    "Rating": 4.8,
+    "TotalSales": 42,
+    "ActiveListings": 5
+  },
+  "ActiveListings": [...],
+  "RecentReviews": [...],
+  "AverageRating": 4.8
+}
+```
+
+#### POST /api/market/review
+Leave seller review
+
+**Request Body:**
+```json
+{
+  "ReviewerId": "user-guid",
+  "SellerId": "seller-guid",
+  "PurchaseId": "purchase-guid",
+  "Rating": 5,
+  "Comment": "Great seller!"
+}
+```
+
+### General Endpoints
+
+#### GET /api/market/stats
+Get marketplace statistics
+
+#### GET /api/market/history/{userId}
+Get user's purchase and sales history
+
+## 📊 Data Models
 
 ## 🔌 Integration with Other Modules
 
@@ -474,8 +691,9 @@ The SuperMarket Module provides a complete e-commerce solution for RaCore, enabl
 
 ---
 
-**Module**: SuperMarket  
+**Module**: Legendary Supermarket  
 **Status**: ✅ IMPLEMENTED  
-**Version**: v4.8.9  
-**Category**: Extension of CMSSpawner  
-**Last Updated**: 2025-01-13
+**Version**: v9.2.0  
+**Category**: Unified Marketplace with Dual Currency Support  
+**Last Updated**: Phase 9.2
+**Previous Version**: SuperMarket v4.8.9
