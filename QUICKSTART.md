@@ -90,21 +90,25 @@ WebSocket: ws://localhost:80/ws
 **Local Development:**
 Open your browser to:
 - **Homepage:** `http://localhost` (or `http://localhost:PORT` if you configured a custom port)
-- **Control Panel:** `http://localhost/control`
+  - **Before Setup**: Shows "Under Construction" page by default
+  - **After Setup**: Shows the homepage you configure in SiteBuilder
+- **Control Panel:** `http://localhost/control-panel.html`
 - **API Documentation:** Available through the Control Panel
 
 **Remote Server (Ubuntu/SSH):**
 If you're running RaOS on a remote server (e.g., via PuTTY/SSH):
 - Replace `localhost` with your server's IP address or hostname
 - **Homepage:** `http://YOUR_SERVER_IP` or `http://YOUR_DOMAIN`
-- **Control Panel:** `http://YOUR_SERVER_IP/control`
-- Example: `http://192.168.1.100/control`
+- **Control Panel:** `http://YOUR_SERVER_IP/control-panel.html`
+- Example: `http://192.168.1.100/control-panel.html`
 
 **Default Login:**
 - Username: `admin`
 - Password: `admin123`
 
 **⚠️ Change the default password immediately in production!**
+
+**Note:** The homepage serves content from wwwroot/ and can be customized using the SiteBuilder module. Until you configure your homepage, visitors will see an "Under Construction" page (admins can still access the Control Panel).
 
 ---
 
@@ -133,13 +137,15 @@ Role: SuperAdmin
 ## 7. Optional: Enable CMS Features
 
 If you have PHP 8.0+ installed, RaCore will automatically:
-- Generate a CMS homepage with SQLite database
-- Start the PHP built-in server on port 8080
-- Integrate with the Control Panel
+- Generate advanced CMS features with SQLite database
+- Enable the PHP-based CMS on port 8080
+- Provide additional content management capabilities
 
-**Access the CMS:**
+**Access the PHP CMS:**
 - Local: `http://localhost:8080`
 - Remote Server: `http://YOUR_SERVER_IP:8080`
+
+**Note:** The main RaCore homepage (port 80) works with or without PHP. The PHP CMS on port 8080 provides additional advanced features for content management.
 
 ---
 
