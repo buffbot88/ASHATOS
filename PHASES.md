@@ -183,7 +183,7 @@ Following Phase 8's pattern of modularizing CMS into a separate DLL, Phase 9 ext
 
 **Key Achievement:** Game Engine is now a separate, independently deployable DLL (LegendaryGameEngine.dll) that can be hot-swapped, versioned independently, and extended without touching RaCore mainframe. Complete documentation suite (100KB+) prepared for Phase 10+ development.
 
-**Version:** 9.0.0  
+**Version:** 9.3.1  
 **Module:** LegendaryGameEngine  
 **Status:** ✅ Production Ready
 
@@ -318,4 +318,8 @@ You can turn any old computer into RaAI or use RaAI client to access RaAI's main
 ---
 
 **Last Updated:** 2025-01-XX  
-**Current Version:** v7.5.0 (Phase 7.5 Complete, Phase 8 Planned)
+**Current Version:** v9.3.1 (Phase 9.3.1 Complete)
+
+---
+
+**Copyright © 2025 AGP Studios, INC. All rights reserved.**

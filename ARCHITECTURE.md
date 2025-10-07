@@ -1,8 +1,12 @@
 # 🏛️ RaOS System Architecture
 
-**Version:** 9.0.0  
+**Version:** 9.3.1  
 **Last Updated:** January 2025  
 **Status:** Production Ready
+
+---
+
+**Copyright © 2025 AGP Studios, INC. All rights reserved.**
 
 ---
 
@@ -1277,6 +1281,10 @@ For more information:
 ---
 
 **Last Updated**: January 2025  
-**Version**: 9.0.0  
+**Version**: 9.3.1  
 **Maintained By**: GitHub Copilot (AI Assistant)  
 **Repository**: https://github.com/buffbot88/TheRaProject
+
+---
+
+**Copyright © 2025 AGP Studios, INC. All rights reserved.**

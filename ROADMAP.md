@@ -1,8 +1,12 @@
 # 🗺️ RaOS Development Roadmap
 
 **Last Updated:** January 2025  
-**Current Version:** 9.0.0 (Phase 9.3 Complete)  
+**Current Version:** 9.3.1 (Phase 9.3.1 Complete)  
 **Status:** Production Ready
+
+---
+
+**Copyright © 2025 AGP Studios, INC. All rights reserved.**
 
 ---
 
@@ -745,5 +749,9 @@ We welcome community input on this roadmap! Here's how you can contribute:
 
 **Note**: This roadmap is a living document and subject to change based on community feedback, technical discoveries, and market conditions. Dates are estimates and may shift based on development progress.
 
-**Last Major Update**: January 2025 (Phase 9.3 Completion)  
+**Last Major Update**: January 2025 (Phase 9.3.1 Completion)  
 **Next Review**: April 2025
+
+---
+
+**Copyright © 2025 AGP Studios, INC. All rights reserved.**

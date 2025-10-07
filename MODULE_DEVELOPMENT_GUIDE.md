@@ -6,6 +6,10 @@
 
 ---
 
+**Copyright © 2025 AGP Studios, INC. All rights reserved.**
+
+---
+
 ## 📋 Table of Contents
 
 1. [Introduction](#introduction)
@@ -1456,3 +1460,7 @@ Happy coding! 🚀
 **Repository**: https://github.com/buffbot88/TheRaProject
 
 **Questions?** Open an issue on GitHub or check the documentation.
+
+---
+
+**Copyright © 2025 AGP Studios, INC. All rights reserved.**
