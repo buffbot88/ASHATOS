@@ -201,6 +201,7 @@ help                 # Show command help
 
 - **[Linux Hosting Setup](LINUX_HOSTING_SETUP.md)** - Production deployment on Ubuntu 22.04 LTS
 - **[Windows vs Linux](WINDOWS_VS_LINUX.md)** - Platform comparison guide
+- **[FTP Management](FTP_MANAGEMENT.md)** - FTP server management for RaOS (Linux)
 
 ### Historical Documentation
 
