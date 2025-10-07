@@ -6,13 +6,38 @@
 
 ---
 
+## 🎓 **Start Here: LegendaryUserLearningModule (LULmodule)**
+
+**The primary way to learn RaOS is through the interactive learning module!**
+
+```bash
+cd RaCore
+dotnet run
+
+# Then in the console:
+Learn RaOS courses User        # Beginner Classes (2 courses, 8 lessons)
+Learn RaOS courses Admin       # Advanced Classes (3 courses, 15 lessons)
+Learn RaOS courses SuperAdmin  # Master Classes (3 courses, 20 lessons)
+```
+
+📖 **LULmodule Features:**
+- 🎯 Self-paced learning with progress tracking
+- 🏆 Trophy system (Bronze to Diamond)
+- ⭐ Achievement system with points
+- 🔄 Real-time updates when features added
+- 🤖 AI agent training data
+
+**See:** [RaCore/Modules/Extensions/Learning/README.md](RaCore/Modules/Extensions/Learning/README.md)  
+**Organization Guide:** [DOCS_ORGANIZATION.md](DOCS_ORGANIZATION.md)
+
+---
+
 ## 🎯 Quick Navigation
 
-- **New Users?** Start with [Getting Started](#-getting-started)
-- **Developers?** See [Development Guides](#-development-guides)
-- **Module Developers?** Check [Control Panel Integration](#-control-panel-integration-phase-934)
-- **Contributing?** Check [Contributing Guidelines](#-contributing)
-- **Issues?** Visit [Troubleshooting](#-troubleshooting)
+- **New Users?** Complete LULmodule "User" courses, then see [Getting Started](#-getting-started)
+- **Developers?** Complete all LULmodule courses, then see [Development Guides](#-development-guides)
+- **Contributing?** Complete SuperAdmin courses, then check [Contributing Guidelines](#-contributing)
+- **Issues?** Visit [Troubleshooting](#-troubleshooting) or User course "Getting Help"
 
 ---
 
