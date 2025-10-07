@@ -21,6 +21,7 @@
 	  <ProjectReference Include="..\Abstractions\Abstractions.csproj" />
 	  <ProjectReference Include="..\LegendaryCMS\LegendaryCMS.csproj" />
 	  <ProjectReference Include="..\LegendaryGameEngine\LegendaryGameEngine.csproj" />
+	  <ProjectReference Include="..\LegendaryClientBuilder\LegendaryClientBuilder.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 	  <Compile Update="Engine\Manager\ModuleManager.cs">
