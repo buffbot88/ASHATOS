@@ -78,6 +78,31 @@ app.MapGet("/control-panel", async context =>
 
 // 5. Check for first run and auto-spawn CMS with Nginx
 var firstRunManager = new RaCore.Engine.FirstRunManager(moduleManager);
+
+// 6. Wire up FirstRunManager to ServerConfig and License modules
+var serverConfigModule = moduleManager.Modules
+    .Select(m => m.Instance)
+    .FirstOrDefault(m => m.Name == "ServerConfig");
+
+if (serverConfigModule != null)
+{
+    var setFirstRunManagerMethod = serverConfigModule.GetType().GetMethod("SetFirstRunManager");
+    setFirstRunManagerMethod?.Invoke(serverConfigModule, new object[] { firstRunManager });
+    Console.WriteLine("[RaCore] FirstRunManager wired to ServerConfig module");
+}
+
+var licenseModuleInstance = moduleManager.Modules
+    .Select(m => m.Instance)
+    .OfType<Abstractions.ILicenseModule>()
+    .FirstOrDefault();
+
+if (licenseModuleInstance != null)
+{
+    var setFirstRunManagerMethod = licenseModuleInstance.GetType().GetMethod("SetFirstRunManager");
+    setFirstRunManagerMethod?.Invoke(licenseModuleInstance, new object[] { firstRunManager });
+    Console.WriteLine("[RaCore] FirstRunManager wired to License module");
+}
+
 if (firstRunManager.IsFirstRun())
 {
     Console.WriteLine("[RaCore] First run detected - initializing CMS homepage...");

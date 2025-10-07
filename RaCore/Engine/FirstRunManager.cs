@@ -27,6 +27,9 @@ public class FirstRunManager
         
         // Load or create server configuration
         _serverConfig = LoadServerConfiguration();
+        
+        // Sync Dev mode with modules on startup
+        SyncDevModeWithModules();
     }
     
     /// <summary>
@@ -100,8 +103,43 @@ public class FirstRunManager
     public void SetServerMode(ServerMode mode)
     {
         _serverConfig.Mode = mode;
+        
+        // Automatically enable license validation bypass for Dev mode
+        _serverConfig.SkipLicenseValidation = (mode == ServerMode.Dev);
+        
         SaveServerConfiguration();
         Console.WriteLine($"[FirstRunManager] Server mode set to: {mode}");
+        
+        if (mode == ServerMode.Dev)
+        {
+            Console.WriteLine($"[FirstRunManager] Dev mode enabled - License validation will be bypassed for initial setup");
+        }
+        
+        // Sync Dev mode with LegendaryPay module if available
+        SyncDevModeWithModules();
+    }
+    
+    /// <summary>
+    /// Sync Dev mode setting with modules that need it (e.g., LegendaryPay)
+    /// </summary>
+    private void SyncDevModeWithModules()
+    {
+        var isDevMode = _serverConfig.Mode == ServerMode.Dev;
+        
+        // Find LegendaryPay module and sync Dev mode
+        var legendaryPayModule = _moduleManager.Modules
+            .Select(m => m.Instance)
+            .FirstOrDefault(m => m.Name == "LegendaryPay");
+        
+        if (legendaryPayModule != null)
+        {
+            var setDevModeMethod = legendaryPayModule.GetType().GetMethod("SetDevModeFromServer");
+            if (setDevModeMethod != null)
+            {
+                setDevModeMethod.Invoke(legendaryPayModule, new object[] { isDevMode });
+                Console.WriteLine($"[FirstRunManager] Synced Dev mode ({isDevMode}) with LegendaryPay module");
+            }
+        }
     }
     
     /// <summary>

@@ -20,9 +20,66 @@ public class ServerModesTests
         TestServerModeEnum();
         TestServerConfiguration();
         TestFirstRunManager();
+        TestDevModeFeatures();
         
         Console.WriteLine();
         Console.WriteLine("=== All Server Modes Tests Passed ===");
+    }
+    
+    private static void TestDevModeFeatures()
+    {
+        Console.WriteLine("Test 4: Dev Mode Features");
+        
+        // Create a temporary directory for testing
+        var testDir = Path.Combine(Path.GetTempPath(), "racore_devmode_test_" + Guid.NewGuid().ToString());
+        Directory.CreateDirectory(testDir);
+        
+        try
+        {
+            // Save current directory
+            var originalDir = Directory.GetCurrentDirectory();
+            
+            // Change to test directory
+            Directory.SetCurrentDirectory(testDir);
+            
+            // Create module manager
+            var moduleManager = new ModuleManager();
+            
+            // Create FirstRunManager
+            var firstRunManager = new FirstRunManager(moduleManager);
+            
+            // Test Dev mode sets SkipLicenseValidation
+            firstRunManager.SetServerMode(ServerMode.Dev);
+            var config = firstRunManager.GetServerConfiguration();
+            Assert(config.Mode == ServerMode.Dev, "Mode should be Dev");
+            Assert(config.SkipLicenseValidation == true, "SkipLicenseValidation should be true in Dev mode");
+            
+            // Test non-Dev mode doesn't set SkipLicenseValidation
+            firstRunManager.SetServerMode(ServerMode.Production);
+            config = firstRunManager.GetServerConfiguration();
+            Assert(config.Mode == ServerMode.Production, "Mode should be Production");
+            Assert(config.SkipLicenseValidation == false, "SkipLicenseValidation should be false in Production mode");
+            
+            // Restore original directory
+            Directory.SetCurrentDirectory(originalDir);
+            
+            Console.WriteLine("  ✓ Dev mode features work correctly");
+        }
+        finally
+        {
+            // Clean up test directory
+            if (Directory.Exists(testDir))
+            {
+                try
+                {
+                    Directory.Delete(testDir, true);
+                }
+                catch
+                {
+                    // Ignore cleanup errors
+                }
+            }
+        }
     }
     
     private static void TestServerModeEnum()
@@ -31,8 +88,9 @@ public class ServerModesTests
         
         // Test enum values
         var modes = Enum.GetValues<ServerMode>();
-        Assert(modes.Length == 5, "Should have 5 server modes");
+        Assert(modes.Length == 6, "Should have 6 server modes");
         
+        Assert(ServerMode.Dev.ToString() == "Dev", "Dev mode should be named Dev");
         Assert(ServerMode.Alpha.ToString() == "Alpha", "Alpha mode should be named Alpha");
         Assert(ServerMode.Beta.ToString() == "Beta", "Beta mode should be named Beta");
         Assert(ServerMode.Omega.ToString() == "Omega", "Omega mode should be named Omega");
@@ -54,8 +112,15 @@ public class ServerModesTests
         Assert(config.InitializationCompleted == false, "InitializationCompleted should default to false");
         Assert(config.Version == "1.0", "Version should default to 1.0");
         Assert(config.MainServerUrl == "https://us-omega.raos.io", "MainServerUrl should have default value");
+        Assert(config.SkipLicenseValidation == false, "SkipLicenseValidation should default to false");
         
         // Test property modifications
+        config.Mode = ServerMode.Dev;
+        Assert(config.Mode == ServerMode.Dev, "Mode should be changeable to Dev");
+        
+        config.SkipLicenseValidation = true;
+        Assert(config.SkipLicenseValidation == true, "SkipLicenseValidation should be settable");
+        
         config.Mode = ServerMode.Alpha;
         Assert(config.Mode == ServerMode.Alpha, "Mode should be changeable");
         

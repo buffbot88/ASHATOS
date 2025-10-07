@@ -6,6 +6,12 @@ namespace Abstractions;
 public enum ServerMode
 {
     /// <summary>
+    /// Dev mode - Development mode with testing features enabled, bypasses external validations.
+    /// Note: This mode may be renamed or removed in future versions.
+    /// </summary>
+    Dev,
+    
+    /// <summary>
     /// Alpha mode - Early development and testing with full logging
     /// </summary>
     Alpha,
@@ -105,6 +111,11 @@ public class ServerConfiguration
     /// Main server URL for license validation (default: US-Omega)
     /// </summary>
     public string MainServerUrl { get; set; } = "https://us-omega.raos.io";
+    
+    /// <summary>
+    /// Skip license server validation in Dev mode for Super Admin setup
+    /// </summary>
+    public bool SkipLicenseValidation { get; set; } = false;
     
     /// <summary>
     /// Indicates if the site is in "Under Construction" mode
