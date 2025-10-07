@@ -8,13 +8,14 @@ This document describes the implementation of the universal RaCoin to Gold excha
 
 ### ✅ Completed Features
 
-#### 1. Universal Exchange Ratio (1000:400,000)
+#### 1. Universal Exchange Ratio (10:1,000) - Phase 9.3.7
 - **File**: `Abstractions/CurrencyExchangeModels.cs`
 - **Constants Defined**:
-  - `StandardRaCoinAmount = 1000m`
-  - `StandardGoldAmount = 400000m`
-  - `GoldPerRaCoin = 400m` (1 RaCoin = 400 Gold)
-  - `RaCoinPerGold = 0.0025m` (1 Gold = 0.0025 RaCoin)
+  - `StandardRaCoinAmount = 10m`
+  - `StandardGoldAmount = 1000m`
+  - `GoldPerRaCoin = 100m` (1 RaCoin = 100 Gold)
+  - `RaCoinPerGold = 0.01m` (1 Gold = 0.01 RaCoin)
+- **USD Exchange**: 1 USD = 100 RaCoin
 - **Helper Methods**: `RaCoinToGold()`, `GoldToRaCoin()`
 
 #### 2. Currency Exchange Models
@@ -71,16 +72,16 @@ market alert resolve - Resolve specific alert
 
 ### Standard Exchange Ratio Enforcement
 
-The system enforces the 1000:400,000 ratio at all exchange points:
+The system enforces the 10:1,000 ratio at all exchange points:
 
 ```csharp
-// Example: Exchanging 1000 RaCoin
-var goldAmount = CurrencyExchangeConstants.RaCoinToGold(1000m);
-// Result: 400,000 Gold
+// Example: Exchanging 10 RaCoin
+var goldAmount = CurrencyExchangeConstants.RaCoinToGold(10m);
+// Result: 1,000 Gold
 
-// Example: Exchanging 400,000 Gold
-var racoinAmount = CurrencyExchangeConstants.GoldToRaCoin(400000m);
-// Result: 1000 RaCoin
+// Example: Exchanging 1,000 Gold
+var racoinAmount = CurrencyExchangeConstants.GoldToRaCoin(1000m);
+// Result: 10 RaCoin
 ```
 
 ### Market Monitoring Flow
@@ -113,26 +114,26 @@ The system actively prevents:
 
 ### Player Exchange (RaCoin to Gold)
 ```bash
-# Player has 5000 RaCoin, wants to exchange 1000 for Gold
-racoin exchange racoin-to-gold <user-id> 1000
+# Player has 500 RaCoin, wants to exchange 10 for Gold
+racoin exchange racoin-to-gold <user-id> 10
 
 # Result:
-# - RaCoin balance: 5000 → 4000
-# - Gold balance: 0 → 400,000
-# - Exchange rate: 400 Gold per RaCoin
+# - RaCoin balance: 500 → 490
+# - Gold balance: 0 → 1,000
+# - Exchange rate: 100 Gold per RaCoin
 # - Transaction recorded
 # - Market monitor notified
 ```
 
 ### Player Exchange (Gold to RaCoin)
 ```bash
-# Player has 800,000 Gold, wants to exchange 400,000 for RaCoin
-racoin exchange gold-to-racoin <user-id> 400000
+# Player has 5,000 Gold, wants to exchange 1,000 for RaCoin
+racoin exchange gold-to-racoin <user-id> 1000
 
 # Result:
-# - Gold balance: 800,000 → 400,000
-# - RaCoin balance: 0 → 1000
-# - Exchange rate: 0.0025 RaCoin per Gold
+# - Gold balance: 5,000 → 4,000
+# - RaCoin balance: 0 → 10
+# - Exchange rate: 0.01 RaCoin per Gold
 # - Transaction recorded
 # - Market monitor notified
 ```

@@ -4,6 +4,21 @@
 
 RaCoin is the native cryptocurrency of the RaCore ecosystem. It provides a unified virtual currency system for purchasing licenses, modules, themes, and other premium features throughout the platform.
 
+### Currency Exchange Rates (Phase 9.3.7)
+
+**USD to RaCoin Exchange:**
+- 1 USD = 100 RaCoin
+
+**RaCoin to Gold Exchange:**
+- 10 RaCoin = 1,000 Gold
+- 1 RaCoin = 100 Gold
+- 1 Gold = 0.01 RaCoin
+
+**Three-Tier Currency System:**
+1. **USD (Base Currency)** - Real-world currency for purchasing RaCoins
+2. **RaCoin (Intermediate Currency)** - Premium currency for licenses and features
+3. **Gold (In-Game Currency)** - Free-tier currency for in-game items and trading
+
 ## ✅ Status: IMPLEMENTED
 
 RaCoin system is fully operational and integrated with the SuperMarket module.
