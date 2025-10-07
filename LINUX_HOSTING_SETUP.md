@@ -207,7 +207,7 @@ server {
     listen [::]:8080;
     server_name localhost;
     
-    root /home/racore/TheRaProject/cms_homepage;
+    root /home/racore/TheRaProject/wwwroot;
     index index.php index.html;
     
     location / {
@@ -598,7 +598,7 @@ mkdir -p $BACKUP_DIR
 cp -r /home/racore/TheRaProject/RaCore/Data $BACKUP_DIR/data_$DATE
 
 # Backup CMS database
-cp /home/racore/TheRaProject/cms_homepage/cms_database.sqlite $BACKUP_DIR/cms_$DATE.sqlite
+cp /home/racore/TheRaProject/Databases/cms_database.sqlite $BACKUP_DIR/cms_$DATE.sqlite
 
 # Backup configuration
 cp -r /etc/nginx/sites-available $BACKUP_DIR/nginx_$DATE
@@ -715,8 +715,8 @@ ftp localhost
 ### Database Permission Issues
 ```bash
 # Fix SQLite permissions
-sudo chown racore:racore /home/racore/TheRaProject/cms_homepage/cms_database.sqlite
-sudo chmod 664 /home/racore/TheRaProject/cms_homepage/cms_database.sqlite
+sudo chown racore:racore /home/racore/TheRaProject/Databases/cms_database.sqlite
+sudo chmod 664 /home/racore/TheRaProject/Databases/cms_database.sqlite
 ```
 
 ---
