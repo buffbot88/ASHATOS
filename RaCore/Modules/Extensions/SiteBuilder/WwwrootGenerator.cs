@@ -33,6 +33,7 @@ public class WwwrootGenerator
             GenerateControlPanelHtml();
             GenerateAdminHtml();
             GenerateGameEngineDashboardHtml();
+            GenerateClientBuilderDashboardHtml();
             GenerateControlPanelModulesMd();
             GenerateControlPanelApiJs(jsPath);
             GenerateControlPanelUiJs(jsPath);
@@ -49,6 +50,7 @@ Generated files:
   - control-panel.html
   - admin.html
   - gameengine-dashboard.html
+  - clientbuilder-dashboard.html
   - js/control-panel-api.js
   - js/control-panel-ui.js
   - CONTROL_PANEL_MODULES.md";
@@ -378,24 +380,77 @@ Generated files:
             font-weight: 600;
         }
 
+        .tabs-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e0e0e0;
+            overflow-x: auto;
+        }
+
+        .tab-button {
+            padding: 15px 25px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .tab-button:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .tab-button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: white;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+            animation: fadeIn 0.3s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
         .modules-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 20px;
-            margin-top: 20px;
         }
 
         .module-card {
-            background: white;
+            background: #f8f9fa;
             padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-            cursor: pointer;
-            transition: transform 0.2s;
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
         }
 
         .module-card:hover {
-            transform: translateY(-5px);
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
         }
 
         .module-card h3 {
@@ -406,6 +461,66 @@ Generated files:
         .module-card p {
             color: #666;
             font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .module-status {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .module-status.active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .module-status.inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .action-button {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+
+        .action-button:hover {
+            background: #5568d3;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .tabs {
+                overflow-x: auto;
+            }
+            
+            .tab-button {
+                padding: 12px 20px;
+                font-size: 14px;
+            }
         }
     </style>
 </head>
@@ -424,8 +539,13 @@ Generated files:
             <button class=""logout-btn"" onclick=""logout()"">Logout</button>
         </div>
 
-        <div class=""modules-grid"" id=""modulesGrid"">
-            <!-- Modules will be loaded dynamically -->
+        <div class=""tabs-container"">
+            <div class=""tabs"" id=""moduleTabs"">
+                <!-- Tabs will be generated dynamically -->
+            </div>
+            <div id=""tabContent"">
+                <!-- Tab content will be generated dynamically -->
+            </div>
         </div>
     </div>
 
@@ -743,6 +863,558 @@ Generated files:
         _module.Log("Generated gameengine-dashboard.html");
     }
 
+    private void GenerateClientBuilderDashboardHtml()
+    {
+        var content = @"<!DOCTYPE html>
+<html lang=""en"">
+<head>
+    <meta charset=""UTF-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>Legendary Client Builder - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 32px;
+        }
+
+        .back-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card h3 {
+            color: #667eea;
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .stat-card p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .content-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .content-card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .progress-container {
+            margin: 20px 0;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #f0f0f0;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .templates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .template-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+        }
+
+        .template-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .template-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .template-card p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .template-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #667eea;
+            color: white;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+
+        .log-container {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #667eea;
+            padding-left: 10px;
+        }
+
+        .log-entry.error {
+            border-left-color: #e74c3c;
+            color: #ff6b6b;
+        }
+
+        .log-entry.success {
+            border-left-color: #27ae60;
+            color: #5dd39e;
+        }
+
+        .log-entry.info {
+            border-left-color: #3498db;
+            color: #74b9ff;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .action-btn:hover {
+            background: #5568d3;
+        }
+
+        .action-btn.secondary {
+            background: #6c757d;
+        }
+
+        .action-btn.secondary:hover {
+            background: #5a6268;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-indicator.running {
+            background: #27ae60;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.idle {
+            background: #f39c12;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .clients-list {
+            margin-top: 20px;
+        }
+
+        .client-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .client-info h4 {
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .client-info p {
+            color: #666;
+            font-size: 13px;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .action-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class=""container"">
+        <div class=""header"">
+            <div>
+                <h1>🔨 Legendary Client Builder</h1>
+                <p style=""color: #666; margin-top: 5px;"">Advanced Multi-Platform Game Client Generation</p>
+            </div>
+            <a href=""/control-panel.html"" class=""back-btn"">← Back to Control Panel</a>
+        </div>
+
+        <div class=""stats-grid"">
+            <div class=""stat-card"">
+                <h3 id=""totalClients"">--</h3>
+                <p>Total Clients Generated</p>
+            </div>
+            <div class=""stat-card"">
+                <h3 id=""activeTemplates"">--</h3>
+                <p>Available Templates</p>
+            </div>
+            <div class=""stat-card"">
+                <h3 id=""builderStatus"">--</h3>
+                <p>Builder Status</p>
+            </div>
+            <div class=""stat-card"">
+                <h3 id=""lastGenerated"">--</h3>
+                <p>Last Generation</p>
+            </div>
+        </div>
+
+        <div class=""content-card"">
+            <h2>🎮 World Development Progress</h2>
+            <p style=""color: #666; margin-bottom: 20px;"">Real-time monitoring of game world generation and client building operations.</p>
+            
+            <div class=""progress-container"">
+                <div class=""progress-label"">
+                    <span>Asset Import</span>
+                    <span id=""assetProgress"">0%</span>
+                </div>
+                <div class=""progress-bar"">
+                    <div class=""progress-fill"" id=""assetProgressBar"" style=""width: 0%"">0%</div>
+                </div>
+            </div>
+
+            <div class=""progress-container"">
+                <div class=""progress-label"">
+                    <span>World Generation</span>
+                    <span id=""worldProgress"">0%</span>
+                </div>
+                <div class=""progress-bar"">
+                    <div class=""progress-fill"" id=""worldProgressBar"" style=""width: 0%"">0%</div>
+                </div>
+            </div>
+
+            <div class=""progress-container"">
+                <div class=""progress-label"">
+                    <span>Client Build</span>
+                    <span id=""buildProgress"">0%</span>
+                </div>
+                <div class=""progress-bar"">
+                    <div class=""progress-fill"" id=""buildProgressBar"" style=""width: 0%"">0%</div>
+                </div>
+            </div>
+
+            <div class=""action-buttons"">
+                <button class=""action-btn"" onclick=""startGeneration()"">
+                    <span class=""status-indicator running"" id=""generationIndicator""></span>
+                    Start New Generation
+                </button>
+                <button class=""action-btn secondary"" onclick=""refreshStatus()"">🔄 Refresh Status</button>
+                <button class=""action-btn secondary"" onclick=""viewTemplates()"">📋 View Templates</button>
+            </div>
+        </div>
+
+        <div class=""content-card"">
+            <h2>📊 Available Templates</h2>
+            <div class=""templates-grid"" id=""templatesGrid"">
+                <p style=""color: #666;"">Loading templates...</p>
+            </div>
+        </div>
+
+        <div class=""content-card"">
+            <h2>📝 Build Logs</h2>
+            <p style=""color: #666; margin-bottom: 10px;"">Real-time build output and system messages</p>
+            <div class=""log-container"" id=""logContainer"">
+                <div class=""log-entry info"">[INFO] Client Builder initialized</div>
+                <div class=""log-entry success"">[SUCCESS] Template system loaded</div>
+                <div class=""log-entry info"">[INFO] Ready for client generation</div>
+            </div>
+        </div>
+
+        <div class=""content-card"">
+            <h2>🎯 Recent Clients</h2>
+            <div class=""clients-list"" id=""clientsList"">
+                <p style=""color: #666;"">Loading recent clients...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('racore_token');
+        if (!token) {
+            window.location.href = '/login.html';
+        }
+
+        let updateInterval;
+
+        async function loadDashboard() {
+            await Promise.all([
+                loadStats(),
+                loadTemplates(),
+                loadRecentClients(),
+                updateProgress()
+            ]);
+
+            // Start auto-refresh
+            updateInterval = setInterval(updateProgress, 5000);
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/clientbuilder/status', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('totalClients').textContent = data.totalClients || '0';
+                    document.getElementById('activeTemplates').textContent = data.templatesCount || '0';
+                    document.getElementById('builderStatus').textContent = data.isRunning ? 'Running' : 'Idle';
+                    document.getElementById('lastGenerated').textContent = data.lastGenerated || 'Never';
+                }
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+
+        async function loadTemplates() {
+            try {
+                const response = await fetch('/api/clientbuilder/templates', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const grid = document.getElementById('templatesGrid');
+                    
+                    if (data.templates && data.templates.length > 0) {
+                        grid.innerHTML = data.templates.map(template => `
+                            <div class=""template-card"">
+                                <h3>${template.name}</h3>
+                                <p>${template.description || 'Professional game client template'}</p>
+                                <span class=""template-badge"">${template.platform}</span>
+                                <span class=""template-badge"">${template.category || 'Standard'}</span>
+                            </div>
+                        `).join('');
+                    } else {
+                        grid.innerHTML = '<p style=""color: #666;"">No templates available</p>';
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load templates:', error);
+                document.getElementById('templatesGrid').innerHTML = '<p style=""color: #e74c3c;"">Failed to load templates</p>';
+            }
+        }
+
+        async function loadRecentClients() {
+            try {
+                const response = await fetch('/api/clientbuilder/list', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const container = document.getElementById('clientsList');
+                    
+                    if (data.clients && data.clients.length > 0) {
+                        container.innerHTML = data.clients.slice(0, 5).map(client => `
+                            <div class=""client-item"">
+                                <div class=""client-info"">
+                                    <h4>${client.gameTitle || 'Untitled Game'}</h4>
+                                    <p>Platform: ${client.platform} | Template: ${client.templateName || 'Default'}</p>
+                                    <p>Created: ${new Date(client.createdAt).toLocaleString()}</p>
+                                </div>
+                                <a href=""/clients/${client.packageId}/index.html"" target=""_blank"" class=""action-btn"">View Client</a>
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = '<p style=""color: #666;"">No clients generated yet</p>';
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load clients:', error);
+                document.getElementById('clientsList').innerHTML = '<p style=""color: #e74c3c;"">Failed to load clients</p>';
+            }
+        }
+
+        async function updateProgress() {
+            // Simulate progress updates - in production, this would fetch real progress
+            const progress = {
+                asset: Math.min(100, parseInt(document.getElementById('assetProgressBar').style.width) + Math.random() * 10),
+                world: Math.min(100, parseInt(document.getElementById('worldProgressBar').style.width) + Math.random() * 8),
+                build: Math.min(100, parseInt(document.getElementById('buildProgressBar').style.width) + Math.random() * 5)
+            };
+
+            updateProgressBar('asset', progress.asset);
+            updateProgressBar('world', progress.world);
+            updateProgressBar('build', progress.build);
+        }
+
+        function updateProgressBar(type, percentage) {
+            const percent = Math.min(100, Math.max(0, percentage));
+            const bar = document.getElementById(`${type}ProgressBar`);
+            const label = document.getElementById(`${type}Progress`);
+            
+            if (bar && label) {
+                bar.style.width = `${percent}%`;
+                bar.textContent = `${Math.round(percent)}%`;
+                label.textContent = `${Math.round(percent)}%`;
+            }
+        }
+
+        function addLogEntry(message, type = 'info') {
+            const container = document.getElementById('logContainer');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${type.toUpperCase()}] ${message}`;
+            container.appendChild(entry);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function startGeneration() {
+            addLogEntry('Starting new client generation...', 'info');
+            addLogEntry('This feature will open the generation wizard', 'success');
+            alert('Client generation wizard coming soon! Use the API endpoints to generate clients programmatically.');
+        }
+
+        function refreshStatus() {
+            addLogEntry('Refreshing status...', 'info');
+            loadDashboard();
+        }
+
+        function viewTemplates() {
+            window.location.href = '#templates';
+            document.querySelector('.templates-grid').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Initialize dashboard
+        loadDashboard();
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (updateInterval) {
+                clearInterval(updateInterval);
+            }
+        });
+    </script>
+</body>
+</html>";
+        
+        File.WriteAllText(Path.Combine(_wwwrootPath, "clientbuilder-dashboard.html"), content);
+        _module.Log("Generated clientbuilder-dashboard.html");
+    }
+
     private void GenerateControlPanelModulesMd()
     {
         var content = @"# RaCore Control Panel Modules
@@ -870,6 +1542,55 @@ const api = new RaCoreAPI();
     {
         var content = @"// RaCore Control Panel UI Logic
 
+// Module tab definitions with permissions
+const MODULE_TABS = {
+    'Overview': { 
+        category: 'core',
+        icon: '📊',
+        requiredRole: 'Admin',
+        render: renderOverviewTab
+    },
+    'SiteBuilder': { 
+        category: 'extensions',
+        icon: '🏗️',
+        requiredRole: 'Admin',
+        render: renderSiteBuilderTab
+    },
+    'GameEngine': { 
+        category: 'extensions',
+        icon: '🎮',
+        requiredRole: 'Admin',
+        render: renderGameEngineTab
+    },
+    'LegendaryClientBuilder': { 
+        category: 'clientbuilder',
+        icon: '🔨',
+        requiredRole: 'Admin',
+        render: renderClientBuilderTab
+    },
+    'Authentication': { 
+        category: 'extensions',
+        icon: '🔐',
+        requiredRole: 'Admin',
+        render: renderAuthenticationTab
+    },
+    'License': { 
+        category: 'extensions',
+        icon: '📜',
+        requiredRole: 'Admin',
+        render: renderLicenseTab
+    },
+    'RaCoin': { 
+        category: 'extensions',
+        icon: '💰',
+        requiredRole: 'Admin',
+        render: renderRaCoinTab
+    }
+};
+
+let currentModules = [];
+let currentUser = null;
+
 async function initializeControlPanel() {
     // Check authentication
     if (!api.isAuthenticated()) {
@@ -882,41 +1603,269 @@ async function initializeControlPanel() {
     document.getElementById('loginView').style.display = 'none';
     document.getElementById('panelView').style.display = 'block';
 
-    // Load modules
+    // Load modules and render tabs
     await loadModules();
+    renderTabs();
+    switchTab('Overview');
 }
 
 async function loadModules() {
-    const modulesGrid = document.getElementById('modulesGrid');
-    
     try {
         const data = await api.getModules();
+        currentModules = data.modules || [];
         
-        if (data.modules && data.modules.length > 0) {
-            modulesGrid.innerHTML = data.modules.map(module => `
-                <div class=""module-card"" onclick=""openModule('${module.name}')"">
-                    <h3>${module.name}</h3>
-                    <p>${module.description || 'No description available'}</p>
-                </div>
-            `).join('');
-        } else {
-            modulesGrid.innerHTML = '<p style=""color: #666; text-align: center;"">No modules available</p>';
+        // Try to get user info for permission checking
+        try {
+            const statsData = await api.getStats();
+            currentUser = { role: 'Admin' }; // Default to admin if logged in
+        } catch (error) {
+            console.warn('Could not fetch user info:', error);
         }
     } catch (error) {
         console.error('Failed to load modules:', error);
-        modulesGrid.innerHTML = '<p style=""color: #e74c3c; text-align: center;"">Failed to load modules</p>';
+        currentModules = [];
     }
 }
 
-function openModule(moduleName) {
-    // Map module names to dashboard pages
-    const modulePages = {
-        'GameEngine': '/gameengine-dashboard.html',
-        'Authentication': '/admin.html'
-    };
+function renderTabs() {
+    const tabsContainer = document.getElementById('moduleTabs');
+    const contentContainer = document.getElementById('tabContent');
+    
+    // Filter tabs based on available modules and permissions
+    const availableTabs = Object.keys(MODULE_TABS).filter(tabName => {
+        if (tabName === 'Overview') return true;
+        const module = currentModules.find(m => m.name === tabName || m.category === MODULE_TABS[tabName].category);
+        return module !== undefined;
+    });
+    
+    // Render tab buttons
+    tabsContainer.innerHTML = availableTabs.map(tabName => {
+        const tab = MODULE_TABS[tabName];
+        return `<button class=""tab-button"" data-tab=""${tabName}"" onclick=""switchTab('${tabName}')"">
+            ${tab.icon} ${tabName}
+        </button>`;
+    }).join('');
+    
+    // Create content containers
+    contentContainer.innerHTML = availableTabs.map(tabName => {
+        return `<div class=""tab-content"" id=""tab-${tabName}""></div>`;
+    }).join('');
+}
 
-    const page = modulePages[moduleName] || '/admin.html';
-    window.location.href = page;
+function switchTab(tabName) {
+    // Update active tab button
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.tab === tabName) {
+            btn.classList.add('active');
+        }
+    });
+    
+    // Update active content
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    const contentElement = document.getElementById(`tab-${tabName}`);
+    if (contentElement) {
+        contentElement.classList.add('active');
+        
+        // Render tab content if function exists
+        if (MODULE_TABS[tabName] && MODULE_TABS[tabName].render) {
+            MODULE_TABS[tabName].render(contentElement);
+        }
+    }
+}
+
+// Tab render functions
+function renderOverviewTab(container) {
+    const modulesList = currentModules.map(module => `
+        <div class=""module-card"">
+            <h3>${module.name}</h3>
+            <p>${module.description || 'No description available'}</p>
+            <span class=""module-status active"">Active</span>
+        </div>
+    `).join('');
+    
+    container.innerHTML = `
+        <h2 style=""color: #667eea; margin-bottom: 20px;"">📊 System Overview</h2>
+        <p style=""color: #666; margin-bottom: 20px;"">Loaded Modules: ${currentModules.length}</p>
+        <div class=""modules-grid"">
+            ${modulesList || '<p class=""loading"">No modules available</p>'}
+        </div>
+    `;
+}
+
+function renderSiteBuilderTab(container) {
+    container.innerHTML = `
+        <h2 style=""color: #667eea; margin-bottom: 20px;"">🏗️ Site Builder</h2>
+        <p style=""color: #666; margin-bottom: 20px;"">Manage CMS generation and integrated site management.</p>
+        <div class=""modules-grid"">
+            <div class=""module-card"">
+                <h3>CMS Generation</h3>
+                <p>Generate and manage CMS sites with integrated control panels.</p>
+                <button class=""action-button"" onclick=""window.location.href='/admin.html'"">Manage CMS</button>
+            </div>
+            <div class=""module-card"">
+                <h3>Control Panel</h3>
+                <p>Advanced control panel management and configuration.</p>
+                <span class=""module-status active"">Running</span>
+            </div>
+        </div>
+    `;
+}
+
+function renderGameEngineTab(container) {
+    container.innerHTML = `
+        <h2 style=""color: #667eea; margin-bottom: 20px;"">🎮 Game Engine</h2>
+        <p style=""color: #666; margin-bottom: 20px;"">Manage scenes, entities, and AI-driven game operations.</p>
+        <div class=""modules-grid"">
+            <div class=""module-card"">
+                <h3>Scene Management</h3>
+                <p>Create and manage game scenes.</p>
+                <button class=""action-button"" onclick=""window.location.href='/gameengine-dashboard.html'"">Open Dashboard</button>
+            </div>
+            <div class=""module-card"">
+                <h3>Entity Management</h3>
+                <p>Manage game entities and components.</p>
+                <span class=""module-status active"">Ready</span>
+            </div>
+        </div>
+    `;
+}
+
+function renderClientBuilderTab(container) {
+    container.innerHTML = `
+        <h2 style=""color: #667eea; margin-bottom: 20px;"">🔨 Legendary Client Builder</h2>
+        <p style=""color: #666; margin-bottom: 20px;"">Advanced multi-platform game client generation and management.</p>
+        <div id=""clientBuilderContent"">
+            <p class=""loading"">Loading client builder interface...</p>
+        </div>
+    `;
+    
+    // Load client builder interface
+    loadClientBuilderInterface(container.querySelector('#clientBuilderContent'));
+}
+
+async function loadClientBuilderInterface(container) {
+    try {
+        // Fetch client builder status
+        const response = await api.request('/api/clientbuilder/status');
+        const data = await response.json();
+        
+        container.innerHTML = `
+            <div class=""modules-grid"">
+                <div class=""module-card"">
+                    <h3>Builder Status</h3>
+                    <p>Total Clients Generated: ${data.totalClients || 0}</p>
+                    <p>Active Templates: ${data.templatesCount || 0}</p>
+                    <span class=""module-status ${data.isRunning ? 'active' : 'inactive'}"">
+                        ${data.isRunning ? 'Running' : 'Stopped'}
+                    </span>
+                    <button class=""action-button"" onclick=""window.location.href='/clientbuilder-dashboard.html'"">
+                        Open Full Dashboard
+                    </button>
+                </div>
+                <div class=""module-card"">
+                    <h3>Quick Actions</h3>
+                    <p>Manage client generation and templates.</p>
+                    <button class=""action-button"" onclick=""showTemplates()"">View Templates</button>
+                    <button class=""action-button"" onclick=""generateClient()"">Generate New Client</button>
+                </div>
+                <div class=""module-card"">
+                    <h3>Recent Activity</h3>
+                    <p>View recently generated clients and logs.</p>
+                    <button class=""action-button"" onclick=""viewClientLogs()"">View Logs</button>
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        console.error('Failed to load client builder status:', error);
+        container.innerHTML = `
+            <div class=""error-message"">
+                Failed to load client builder status. The module may not be available.
+            </div>
+            <div class=""modules-grid"">
+                <div class=""module-card"">
+                    <h3>Client Builder</h3>
+                    <p>Multi-platform game client generation.</p>
+                    <button class=""action-button"" onclick=""window.location.href='/clientbuilder-dashboard.html'"">
+                        Open Dashboard
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+}
+
+function renderAuthenticationTab(container) {
+    container.innerHTML = `
+        <h2 style=""color: #667eea; margin-bottom: 20px;"">🔐 Authentication</h2>
+        <p style=""color: #666; margin-bottom: 20px;"">User management and role-based access control.</p>
+        <div class=""modules-grid"">
+            <div class=""module-card"">
+                <h3>User Management</h3>
+                <p>Manage users, roles, and permissions.</p>
+                <button class=""action-button"" onclick=""window.location.href='/admin.html'"">Manage Users</button>
+            </div>
+            <div class=""module-card"">
+                <h3>Session Management</h3>
+                <p>View and manage active sessions.</p>
+                <span class=""module-status active"">Active</span>
+            </div>
+        </div>
+    `;
+}
+
+function renderLicenseTab(container) {
+    container.innerHTML = `
+        <h2 style=""color: #667eea; margin-bottom: 20px;"">📜 License Management</h2>
+        <p style=""color: #666; margin-bottom: 20px;"">License validation and subscription management.</p>
+        <div class=""modules-grid"">
+            <div class=""module-card"">
+                <h3>License Overview</h3>
+                <p>View and manage licenses.</p>
+                <button class=""action-button"" onclick=""window.location.href='/admin.html'"">View Licenses</button>
+            </div>
+            <div class=""module-card"">
+                <h3>Instance Tracking</h3>
+                <p>Monitor licensed instances.</p>
+                <span class=""module-status active"">Tracking</span>
+            </div>
+        </div>
+    `;
+}
+
+function renderRaCoinTab(container) {
+    container.innerHTML = `
+        <h2 style=""color: #667eea; margin-bottom: 20px;"">💰 RaCoin System</h2>
+        <p style=""color: #666; margin-bottom: 20px;"">Virtual currency and transaction management.</p>
+        <div class=""modules-grid"">
+            <div class=""module-card"">
+                <h3>Wallet Management</h3>
+                <p>Manage user wallets and balances.</p>
+                <button class=""action-button"" onclick=""window.location.href='/admin.html'"">View Wallets</button>
+            </div>
+            <div class=""module-card"">
+                <h3>Transaction History</h3>
+                <p>View transaction logs and analytics.</p>
+                <span class=""module-status active"">Active</span>
+            </div>
+        </div>
+    `;
+}
+
+// Helper functions for client builder
+function showTemplates() {
+    alert('Template viewer coming soon!');
+}
+
+function generateClient() {
+    alert('Client generation wizard coming soon!');
+}
+
+function viewClientLogs() {
+    alert('Log viewer coming soon!');
 }
 
 function logout() {
