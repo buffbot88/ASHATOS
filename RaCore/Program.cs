@@ -1199,12 +1199,36 @@ if (gameServerModule != null && authModule != null)
 // Root endpoint - show welcome/status page
 app.MapGet("/", async (HttpContext context) =>
 {
+    context.Response.ContentType = "text/html";
+    
+    // Phase 9.3.8: Check for Under Construction mode first
+    var serverConfig = firstRunManager.GetServerConfiguration();
+    if (serverConfig.UnderConstruction)
+    {
+        // Check if user is an admin - admins can still access during construction
+        var authHeader = context.Request.Headers["Authorization"].ToString();
+        var token = authHeader.StartsWith("Bearer ") ? authHeader[7..] : authHeader;
+        
+        User? user = null;
+        if (!string.IsNullOrWhiteSpace(token) && authModule != null)
+        {
+            user = await authModule.GetUserByTokenAsync(token);
+        }
+        
+        // Non-admins see Under Construction page
+        if (user == null || user.Role < UserRole.Admin)
+        {
+            await context.Response.WriteAsync(UnderConstructionHandler.GenerateUnderConstructionPage(serverConfig));
+            return Task.CompletedTask;
+        }
+        
+        // Admins can access normally - fall through to normal homepage logic
+    }
+    
     // Phase 9.3.7: Homepage bot filtering
     // Only allow search engine bots to access homepage for SEO indexing
     var userAgent = context.Request.Headers["User-Agent"].ToString();
     var isBot = BotDetector.IsSearchEngineBot(userAgent);
-    
-    context.Response.ContentType = "text/html";
     
     if (!isBot)
     {
@@ -1507,10 +1531,113 @@ app.MapGet("/api/control/server/modes", async (HttpContext context) =>
     }
 });
 
+// Under Construction Mode API endpoints (Phase 9.3.8)
+app.MapPost("/api/control/server/underconstruction", async (HttpContext context) =>
+{
+    try
+    {
+        if (authModule == null)
+        {
+            context.Response.StatusCode = 503;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Authentication not available" });
+            return;
+        }
+
+        var authHeader = context.Request.Headers["Authorization"].ToString();
+        var token = authHeader.StartsWith("Bearer ") ? authHeader[7..] : authHeader;
+        var user = await authModule.GetUserByTokenAsync(token);
+
+        if (user == null || user.Role < UserRole.Admin)
+        {
+            context.Response.StatusCode = 403;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Admin role required" });
+            return;
+        }
+
+        var request = await context.Request.ReadFromJsonAsync<UnderConstructionRequest>();
+        if (request == null)
+        {
+            context.Response.StatusCode = 400;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Invalid request" });
+            return;
+        }
+
+        var config = firstRunManager.GetServerConfiguration();
+        config.UnderConstruction = request.Enabled;
+        
+        if (request.Message != null)
+        {
+            config.UnderConstructionMessage = request.Message;
+        }
+        
+        if (request.RobotImage != null)
+        {
+            config.UnderConstructionRobotImage = request.RobotImage;
+        }
+
+        // Save the configuration
+        firstRunManager.SaveConfiguration();
+
+        await context.Response.WriteAsJsonAsync(new 
+        { 
+            success = true, 
+            message = request.Enabled ? "Under Construction mode enabled" : "Under Construction mode disabled",
+            underConstruction = config.UnderConstruction,
+            customMessage = config.UnderConstructionMessage,
+            customRobotImage = config.UnderConstructionRobotImage
+        });
+    }
+    catch (Exception ex)
+    {
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+    }
+});
+
+app.MapGet("/api/control/server/underconstruction", async (HttpContext context) =>
+{
+    try
+    {
+        if (authModule == null)
+        {
+            context.Response.StatusCode = 503;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Authentication not available" });
+            return;
+        }
+
+        var authHeader = context.Request.Headers["Authorization"].ToString();
+        var token = authHeader.StartsWith("Bearer ") ? authHeader[7..] : authHeader;
+        var user = await authModule.GetUserByTokenAsync(token);
+
+        if (user == null || user.Role < UserRole.Admin)
+        {
+            context.Response.StatusCode = 403;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Admin role required" });
+            return;
+        }
+
+        var config = firstRunManager.GetServerConfiguration();
+        await context.Response.WriteAsJsonAsync(new 
+        { 
+            success = true,
+            underConstruction = config.UnderConstruction,
+            message = config.UnderConstructionMessage,
+            robotImage = config.UnderConstructionRobotImage
+        });
+    }
+    catch (Exception ex)
+    {
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+    }
+});
+
 Console.WriteLine("[RaCore] Server Configuration API endpoints registered:");
 Console.WriteLine("  GET  /api/control/server/config - Get server configuration (Admin+)");
 Console.WriteLine("  POST /api/control/server/mode - Change server mode (SuperAdmin only)");
 Console.WriteLine("  GET  /api/control/server/modes - List available server modes (Admin+)");
+Console.WriteLine("  POST /api/control/server/underconstruction - Toggle Under Construction mode (Admin+)");
+Console.WriteLine("  GET  /api/control/server/underconstruction - Get Under Construction status (Admin+)");
 
 
 // Control Panel: Get Dashboard Stats
@@ -3623,5 +3750,16 @@ public class MarketReviewRequest
     public string PurchaseId { get; set; } = string.Empty;
     public int Rating { get; set; }
     public string Comment { get; set; } = string.Empty;
+}
+
+// ============================================================================
+// Request Models for Phase 9.3.8 (Under Construction Mode)
+// ============================================================================
+
+public class UnderConstructionRequest
+{
+    public bool Enabled { get; set; }
+    public string? Message { get; set; }
+    public string? RobotImage { get; set; }
 }
 

@@ -79,6 +79,14 @@ public class FirstRunManager
     }
     
     /// <summary>
+    /// Save server configuration to disk (public method for API access)
+    /// </summary>
+    public void SaveConfiguration()
+    {
+        SaveServerConfiguration();
+    }
+    
+    /// <summary>
     /// Get the current server configuration
     /// </summary>
     public ServerConfiguration GetServerConfiguration()
