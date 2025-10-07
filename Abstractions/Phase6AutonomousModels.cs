@@ -430,7 +430,7 @@ public interface IEconomySimulatorModule : IDisposable
     /// <summary>
     /// Get market trends
     /// </summary>
-    Task<IEnumerable<MarketTrend>> GetMarketTrendsAsync(Guid worldId);
+    Task<IEnumerable<EconomyMarketTrend>> GetMarketTrendsAsync(Guid worldId);
     
     /// <summary>
     /// Suggest balance adjustments to prevent economic collapse
@@ -483,7 +483,7 @@ public class EconomicReport
     public float InflationRate { get; set; }
     public int TotalTransactionsToday { get; set; }
     public decimal TotalTradeVolume { get; set; }
-    public List<TopTradedItem> MostTradedItems { get; set; } = new();
+    public List<EconomyMarketTrend> MostTradedItems { get; set; } = new();
     public EconomicHealth Health { get; set; }
     public DateTime GeneratedAt { get; set; }
 }
@@ -496,7 +496,8 @@ public class TopTradedItem
     public decimal TotalVolume { get; set; }
 }
 
-public class MarketTrend
+// MarketTrend type renamed to avoid conflict
+public class EconomyMarketTrend
 {
     public Guid ItemId { get; set; }
     public string ItemName { get; set; } = string.Empty;
@@ -712,12 +713,13 @@ public class GeneratedQuest
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public QuestType Type { get; set; }
-    public List<QuestObjective> Objectives { get; set; } = new();
+    public List<Phase6QuestObjective> Objectives { get; set; } = new();
     public Dictionary<string, int> Rewards { get; set; } = new();
     public QuestDifficulty Difficulty { get; set; }
 }
 
-public class QuestObjective
+// QuestObjective class is already defined in IGameEngineQuests.cs - using Phase6QuestObjective instead
+public class Phase6QuestObjective
 {
     public string Description { get; set; } = string.Empty;
     public ObjectiveType Type { get; set; }

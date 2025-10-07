@@ -312,7 +312,7 @@ public class ServerInstance
     public EdgeLocation Location { get; set; }
     public int MaxCapacity { get; set; }
     public int CurrentPlayers { get; set; }
-    public ServerStatus Status { get; set; }
+    public Phase6ServerStatus Status { get; set; }
     public DateTime RegisteredAt { get; set; }
 }
 
@@ -348,7 +348,8 @@ public enum BalancingStrategy
     Hybrid
 }
 
-public enum ServerStatus
+// ServerStatus enum renamed to avoid conflict
+public enum Phase6ServerStatus
 {
     Online,
     Starting,
