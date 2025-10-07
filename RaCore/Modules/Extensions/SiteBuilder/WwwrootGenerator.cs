@@ -1421,37 +1421,75 @@ Generated files:
 
 This document describes the available modules in the RaCore Control Panel.
 
-## Available Modules
+## Phase 9.3.3: Modular Tabbed Control Panel
 
-### Authentication
+The control panel now features a modern, tabbed interface that dynamically discovers and displays available modules.
+
+### Available Module Tabs
+
+#### Overview Tab (📊)
+- System overview with all loaded modules
+- Real-time module status indicators
+- Quick access to module information
+
+#### SiteBuilder Tab (🏗️)
+- CMS generation and management
+- Control panel configuration
+- Integrated site management tools
+
+#### GameEngine Tab (🎮)
+- Scene management
+- Entity management
+- AI-driven game operations
+- Direct access to GameEngine dashboard
+
+#### LegendaryClientBuilder Tab (🔨)
+- Multi-platform client generation
+- Real-time build progress tracking
+- Template management
+- Client builder dashboard access
+
+#### Authentication Tab (🔐)
 - User management
 - Role-based access control
 - Session management
 
-### Game Engine
-- Scene management
-- Entity management
-- AI-driven game operations
-
-### License Management
+#### License Tab (📜)
 - License validation
 - Subscription management
 - Instance tracking
 
-### RaCoin System
+#### RaCoin Tab (💰)
 - Virtual currency management
 - Transaction tracking
 - Balance management
 
-### Server Setup
-- Nginx configuration
-- PHP configuration
-- Database management
+## Legendary Client Builder Dashboard
 
-### Site Builder
-- CMS generation
-- Control panel generation
-- Integrated site management
+Access the dedicated Client Builder dashboard at: `http://localhost:5000/clientbuilder-dashboard.html`
+
+Features:
+- Real-time world development progress monitoring
+- Interactive progress bars for asset import, world generation, and client builds
+- Live build logs and system messages
+- Template browser
+- Recent clients list with quick access
+- One-click client generation
+
+## API Endpoints
+
+### Client Builder Status
+```
+GET /api/clientbuilder/status
+Authorization: Bearer <token>
+```
+
+Returns:
+- Total clients generated
+- Available templates count
+- Builder running status
+- Last generation timestamp
+- Version information
 
 ## Usage
 
@@ -1462,6 +1500,15 @@ Default credentials:
 - Password: `admin123`
 
 ⚠️ **Change the default password immediately!**
+
+## Extensibility
+
+The tabbed control panel is designed to be extensible. New modules can register their own tabs by:
+1. Adding module category metadata
+2. Implementing module-specific render functions
+3. Defining permission requirements
+
+The system automatically discovers modules and creates appropriate tabs based on the module registry.
 ";
         
         File.WriteAllText(Path.Combine(_wwwrootPath, "CONTROL_PANEL_MODULES.md"), content);
