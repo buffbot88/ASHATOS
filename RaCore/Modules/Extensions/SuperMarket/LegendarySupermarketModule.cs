@@ -693,8 +693,8 @@ public sealed class LegendarySupermarketModule : ModuleBase
                     return JsonSerializer.Serialize(deductTask.Result, _jsonOptions);
                 }
 
-                // Credit seller (85% after 15% marketplace fee)
-                var sellerAmount = totalPrice * 0.85m;
+                // Credit seller (97% after 3% marketplace fee - Phase 9.3.7 dev adjustment)
+                var sellerAmount = totalPrice * 0.97m;
                 var creditTask = _racoinModule.TopUpAsync(listing.SellerId, sellerAmount, 
                     $"Marketplace sale: {listing.ItemName}");
                 creditTask.Wait();
@@ -723,8 +723,8 @@ public sealed class LegendarySupermarketModule : ModuleBase
                         buyerWallet.Balance -= totalPrice;
                         buyerWallet.LastUpdatedUtc = DateTime.UtcNow;
 
-                        // Credit seller (85% after 15% marketplace fee)
-                        var sellerAmount = totalPrice * 0.85m;
+                        // Credit seller (97% after 3% marketplace fee - Phase 9.3.7 dev adjustment)
+                        var sellerAmount = totalPrice * 0.97m;
                         if (!wallets.TryGetValue(listing.SellerId, out var sellerWallet))
                         {
                             sellerWallet = new GoldWallet { UserId = listing.SellerId };
@@ -784,7 +784,7 @@ public sealed class LegendarySupermarketModule : ModuleBase
                     transaction.Price,
                     transaction.CurrencyType,
                     transaction.TransactionAtUtc,
-                    SellerFee = "15%"
+                    SellerFee = "3%"
                 }
             }, _jsonOptions);
         }
@@ -1003,11 +1003,11 @@ public sealed class LegendarySupermarketModule : ModuleBase
                 {
                     t.Id,
                     ItemName = t.ItemName,
-                    SaleAmount = t.Price * 0.85m, // After 15% fee
+                    SaleAmount = t.Price * 0.97m, // After 3% fee (Phase 9.3.7)
                     Currency = t.CurrencyType.ToString(),
                     SoldAtUtc = t.TransactionAtUtc,
                     Quantity = t.Quantity,
-                    MarketplaceFee = "15%"
+                    MarketplaceFee = "3%"
                 });
 
             return JsonSerializer.Serialize(new
