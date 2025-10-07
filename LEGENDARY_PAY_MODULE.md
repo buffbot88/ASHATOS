@@ -4,7 +4,7 @@
 
 LegendaryPay is the next-generation payment system for RaOS and generated content platforms. It provides a unified, modular payment infrastructure designed for future extensibility and testing.
 
-## ✅ Status: IMPLEMENTED (Phase 9.3.7)
+## ✅ Status: IMPLEMENTED (Phase 9.3.5)
 
 LegendaryPay module is operational and set to **Dev Mode** for development and testing.
 
@@ -17,9 +17,11 @@ LegendaryPay module is operational and set to **Dev Mode** for development and t
 - **Approval Workflow**: Manual approval system for payment actions
 
 ### Platform Integration
-- **LegendarySiteBuilder**: Integrated payment actions
-- **AGP Studios, INC Homepage**: Main homepage payment support
-- **Generated Content**: Applies to all RaOS-generated platforms
+- **Forums**: User activity on forum systems
+- **Chat Rooms**: User activity in chat/messaging systems
+- **Blogs**: User activity on blog platforms
+- **Game Servers**: User activity on game servers
+- **Note**: Does NOT apply to site-wide homepages (LegendarySiteBuilder/AGP Studios, INC Homepage)
 
 ### Action Management
 - **Create Actions**: Users can create payment action requests
@@ -84,10 +86,15 @@ pay stats
 ### Supported Actions
 
 Payment actions apply to:
-- LegendarySiteBuilder interactions
-- AGP Studios, INC Homepage activities
-- Generated content platform usage
-- Any approved user action on RaOS platforms
+- User activity on Forums
+- User activity on Chat Rooms
+- User activity on Blogs
+- User activity on Game Servers
+
+**Does NOT apply to:**
+- Site-wide homepages
+- LegendarySiteBuilder homepage
+- AGP Studios, INC Homepage
 
 ### Rewards in Dev Mode
 
@@ -142,15 +149,22 @@ LegendaryPay works within the broader currency ecosystem:
 {
   "Module": "LegendaryPay",
   "Version": "1.0.0",
-  "Phase": "9.3.7",
+  "Phase": "9.3.5",
   "Mode": "Development",
   "DevModeSettings": {
     "Enabled": true,
     "RewardPerAction": "1 Gold",
     "AppliesTo": [
-      "LegendarySiteBuilder",
-      "AGP Studios INC Homepage",
-      "Generated Content Platforms"
+      "User Activity on Forums",
+      "User Activity on Chat Rooms",
+      "User Activity on Blogs",
+      "User Activity on Game Servers"
+    ],
+    "DoesNotApplyTo": [
+      "Site-Wide Homepages",
+      "LegendarySiteBuilder Homepage",
+      "AGP Studios INC Homepage"
+    ]
     ]
   },
   "Statistics": {
@@ -236,7 +250,7 @@ public class PaymentAction
 
 LegendaryPay is designed to replace the existing payment system:
 
-1. **Phase 9.3.7**: LegendaryPay in Dev Mode (Current)
+1. **Phase 9.3.5**: LegendaryPay in Dev Mode (Current)
 2. **Phase 9.4**: Gradual migration of features to LegendaryPay
 3. **Phase 9.5**: Production Mode implementation
 4. **Phase 10**: Complete deprecation of old payment system
@@ -354,5 +368,5 @@ LegendaryPay provides a modern, modular payment system for the RaCore ecosystem.
 **Status**: ✅ IMPLEMENTED (Dev Mode)  
 **Version**: v1.0.0  
 **Category**: Payment System  
-**Phase**: 9.3.7  
-**Last Updated**: Phase 9.3.7
+**Phase**: 9.3.5  
+**Last Updated**: Phase 9.3.5

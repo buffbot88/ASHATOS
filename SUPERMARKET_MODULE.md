@@ -30,7 +30,7 @@ Legendary Supermarket is fully operational with dual-currency support and advanc
 ### User Marketplace (Both Currencies)
 - **Player-to-Player Trading**: List and sell items to other players
 - **Dual Currency Listings**: Accept either RaCoins or Gold
-- **3% Marketplace Fee**: Automatic fee deduction on sales (Phase 9.3.7 - Development Rate)
+- **3% Marketplace Fee**: Automatic fee deduction on sales (Phase 9.3.5 - Development Rate)
 - **Stock Management**: Track inventory and availability
 - **Transaction History**: Separate tracking for purchases and sales
 

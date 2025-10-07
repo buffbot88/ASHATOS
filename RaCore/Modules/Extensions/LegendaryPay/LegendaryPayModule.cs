@@ -7,7 +7,7 @@ namespace RaCore.Modules.Extensions.LegendaryPay;
 
 /// <summary>
 /// LegendaryPay Module - Next-generation payment system for RaOS and generated content platforms.
-/// Phase 9.3.7: Initial implementation with Dev Mode for testing and development.
+/// Phase 9.3.5: Initial implementation with Dev Mode for testing and development.
 /// </summary>
 [RaModule(Category = "extensions")]
 public sealed class LegendaryPayModule : ModuleBase
@@ -19,7 +19,7 @@ public sealed class LegendaryPayModule : ModuleBase
     private readonly object _lock = new();
     
     // Dev Mode settings
-    private bool _isDevMode = true; // Default to Dev Mode for Phase 9.3.7
+    private bool _isDevMode = true; // Default to Dev Mode for Phase 9.3.5
     private readonly decimal _devModeRewardAmount = 1m; // 1 Gold per approved action in Dev Mode
     
     // Payment action tracking
@@ -44,7 +44,7 @@ public sealed class LegendaryPayModule : ModuleBase
         if (_isDevMode)
         {
             LogInfo($"Dev Mode Active: All approved actions generate {_devModeRewardAmount} Gold per user");
-            LogInfo("Applies to: LegendarySiteBuilder/AGP Studios, INC Homepage and generated content");
+            LogInfo("Applies to: User Activity on Forums, Chat Rooms, Blogs, and Game Servers");
         }
     }
 
@@ -150,11 +150,11 @@ public sealed class LegendaryPayModule : ModuleBase
         sb.AppendLine();
         sb.AppendLine("Dev Mode Features:");
         sb.AppendLine($"  - All approved actions generate {_devModeRewardAmount} Gold per user");
-        sb.AppendLine("  - Applies to LegendarySiteBuilder/AGP Studios, INC Homepage");
-        sb.AppendLine("  - Applies to all generated content platforms");
+        sb.AppendLine("  - Applies to User Activity on Forums, Chat Rooms, Blogs, and Game Servers");
+        sb.AppendLine("  - Does NOT apply to site-wide homepages");
         sb.AppendLine();
         sb.AppendLine("Module Category: extensions");
-        sb.AppendLine("Status: Active (Phase 9.3.7)");
+        sb.AppendLine("Status: Active (Phase 9.3.5)");
         
         return sb.ToString();
     }
@@ -167,7 +167,7 @@ public sealed class LegendaryPayModule : ModuleBase
             {
                 Module = "LegendaryPay",
                 Version = "1.0.0",
-                Phase = "9.3.7",
+                Phase = "9.3.5",
                 Mode = _isDevMode ? "Development" : "Production",
                 DevModeSettings = new
                 {
@@ -175,9 +175,16 @@ public sealed class LegendaryPayModule : ModuleBase
                     RewardPerAction = $"{_devModeRewardAmount} Gold",
                     AppliesTo = new[]
                     {
-                        "LegendarySiteBuilder",
-                        "AGP Studios INC Homepage",
-                        "Generated Content Platforms"
+                        "User Activity on Forums",
+                        "User Activity on Chat Rooms",
+                        "User Activity on Blogs",
+                        "User Activity on Game Servers"
+                    },
+                    DoesNotApplyTo = new[]
+                    {
+                        "Site-Wide Homepages",
+                        "LegendarySiteBuilder Homepage",
+                        "AGP Studios INC Homepage"
                     }
                 },
                 Statistics = new

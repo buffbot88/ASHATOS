@@ -8,14 +8,14 @@ public static class CurrencyExchangeConstants
 {
     /// <summary>
     /// Standard RaCoin amount for exchange operations.
-    /// 10 RaCoin = 1,000 Gold (Phase 9.3.7 - Updated Universal Ratio)
+    /// 10 RaCoin = 1,000 Gold (Phase 9.3.5 - Updated Universal Ratio)
     /// USD Exchange: 1 USD = 100 RaCoin
     /// </summary>
     public const decimal StandardRaCoinAmount = 10m;
     
     /// <summary>
     /// Standard Gold amount for exchange operations.
-    /// 10 RaCoin = 1,000 Gold (Phase 9.3.7 - Updated Universal Ratio)
+    /// 10 RaCoin = 1,000 Gold (Phase 9.3.5 - Updated Universal Ratio)
     /// </summary>
     public const decimal StandardGoldAmount = 1000m;
     

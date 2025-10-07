@@ -4,7 +4,7 @@
 
 RaCoin is the native cryptocurrency of the RaCore ecosystem. It provides a unified virtual currency system for purchasing licenses, modules, themes, and other premium features throughout the platform.
 
-### Currency Exchange Rates (Phase 9.3.7)
+### Currency Exchange Rates (Phase 9.3.5)
 
 **USD to RaCoin Exchange:**
 - 1 USD = 100 RaCoin
