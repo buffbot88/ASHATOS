@@ -90,24 +90,32 @@ Development history and migration guides:
 Historical and superseded documentation:
 
 ```bash
-# Phase implementation files (completed work)
-PHASE4_*.md
-PHASE6_*.md
-PHASE7_*.md
-PHASE8_*.md
-PHASE9_*.md
+# Phase implementation files (completed work) - ✅ ARCHIVED
+PHASE4_*.md → docs/archive/phases/
+PHASE6_*.md → docs/archive/phases/
+PHASE7_*.md → docs/archive/phases/
+PHASE8_*.md → docs/archive/phases/
+PHASE9_*.md → docs/archive/phases/
 
-# Verification and test results (historical)
-*_VERIFICATION.md
-*_TEST_RESULTS.md
+# Verification and test results (historical) - ✅ ARCHIVED
+*_VERIFICATION.md → docs/archive/verification/
+*_TEST_RESULTS.md → docs/archive/demos/
 
-# Migration guides (completed migrations)
-APACHE_*.md  # Superseded by NGINX
-NGINX_MIGRATION_*.md  # Migration complete
+# Migration guides (completed migrations) - ✅ ARCHIVED
+APACHE_*.md → docs/archive/migrations/
+NGINX_MIGRATION_*.md → docs/archive/migrations/
+SITEBUILDER_MIGRATION.md → docs/archive/migrations/
 
-# Implementation summaries (historical)
-*_IMPLEMENTATION_SUMMARY.md
-*_COMPLETE_SUMMARY.md
+# Implementation summaries (historical) - ✅ ARCHIVED
+*_IMPLEMENTATION_SUMMARY.md → docs/archive/summaries/
+*_COMPLETE_SUMMARY.md → docs/archive/summaries/
+*_SUMMARY.md → docs/archive/summaries/
+HISTORY.md → docs/archive/summaries/ (replaced by LULmodule History course)
+BOOT_SEQUENCE.md → docs/archive/summaries/
+FIRST_RUN_INITIALIZATION.md → docs/archive/summaries/
+
+# Demo files - ✅ ARCHIVED
+*_DEMO.md → docs/archive/demos/
 ```
 
 ### Files to Keep in Root
@@ -148,32 +156,18 @@ DEPLOYMENT_GUIDE.md
 ├── CONTRIBUTING.md
 │
 ├── docs/
-│   ├── user/
-│   │   ├── quickstarts/
-│   │   ├── features/
-│   │   └── gaming/
-│   │
-│   ├── admin/
-│   │   ├── site-builder/
-│   │   ├── cms/
-│   │   ├── moderation/
-│   │   └── hosting/
-│   │
-│   ├── superadmin/
-│   │   ├── architecture/
-│   │   ├── development/
-│   │   ├── modules/
-│   │   └── ai-integration/
-│   │
-│   └── archive/
-│       ├── phases/
-│       ├── migrations/
-│       └── historical/
+│   └── archive/                 ← Historical documentation
+│       ├── phases/              ← PHASE*.md files
+│       ├── migrations/          ← Migration guides
+│       ├── summaries/           ← Implementation summaries
+│       ├── verification/        ← Verification reports
+│       └── demos/               ← Demo and test files
 │
 └── RaCore/
     └── Modules/
         └── Extensions/
             └── Learning/
+                ├── LegendaryUserLearningModule.cs
                 └── README.md  ← Primary learning resource
 ```
 
@@ -260,10 +254,11 @@ await learningModule.UpdateLessonAsync(newLesson);
 
 ## 📊 Current Statistics
 
-- **Total Documentation Files**: ~150
-- **Root-Level Markdown Files**: 108
-- **LULmodule Courses**: 8
-- **LULmodule Lessons**: 43
+- **Total Documentation Files**: ~160
+- **Root-Level Markdown Files**: 45 (after cleanup)
+- **Archived Documentation Files**: 73+ (in docs/archive/)
+- **LULmodule Courses**: 9 (including optional History course)
+- **LULmodule Lessons**: 51 (43 + 8 history lessons)
 - **Permission Levels**: 3 (User, Admin, SuperAdmin)
 - **Trophy Tiers**: 5 (Bronze to Diamond)
 
@@ -271,9 +266,9 @@ await learningModule.UpdateLessonAsync(newLesson);
 
 ## 🚀 Next Steps
 
-1. ✅ **LULmodule Created** - Complete with 8 courses, 43 lessons
-2. ⏳ **Archive Historical Docs** - Move completed phase docs to archive
-3. ⏳ **Organize by Category** - Create `/docs/` structure
+1. ✅ **LULmodule Created** - Complete with 9 courses, 51 lessons (including History)
+2. ✅ **Archive Historical Docs** - Moved 73+ completed phase docs to docs/archive/
+3. ✅ **Organize by Category** - Created `/docs/archive/` structure with phases, migrations, summaries, verification, demos
 4. ⏳ **Update Index** - Refresh `DOCUMENTATION_INDEX.md`
 5. ⏳ **AI Agent Guide** - Document how AI should use LULmodule
 6. ⏳ **Course Expansion** - Add more lessons as features grow
