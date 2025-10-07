@@ -1419,7 +1419,10 @@ Generated files:
     {
         var content = @"# RaCore Control Panel Modules
 
-This document describes the available modules in the RaCore Control Panel.
+**Version:** 9.3.4  
+**Last Updated:** January 2025
+
+This document describes the available modules in the RaCore Control Panel and how to extend it.
 
 ## Phase 9.3.3: Modular Tabbed Control Panel
 
@@ -1478,6 +1481,14 @@ Features:
 
 ## API Endpoints
 
+### Control Panel Modules
+```
+GET /api/control/modules
+Authorization: Bearer <token>
+```
+
+Returns list of available modules with name, description, and category.
+
 ### Client Builder Status
 ```
 GET /api/clientbuilder/status
@@ -1501,14 +1512,148 @@ Default credentials:
 
 ⚠️ **Change the default password immediately!**
 
-## Extensibility
+## Extensibility (Phase 9.3.4)
 
-The tabbed control panel is designed to be extensible. New modules can register their own tabs by:
-1. Adding module category metadata
-2. Implementing module-specific render functions
-3. Defining permission requirements
+The tabbed control panel is designed to be fully extensible, allowing third-party and custom modules to integrate seamlessly.
 
-The system automatically discovers modules and creates appropriate tabs based on the module registry.
+### How to Add Your Module Tab
+
+#### Step 1: Create Your Module
+
+Your module must be decorated with the `[RaModule]` attribute:
+
+```csharp
+[RaModule(Category = ""extensions"")]
+public class MyCustomModule : ModuleBase
+{
+    public override string Name => ""MyCustomModule"";
+    public override string Version => ""1.0.0"";
+    
+    // Module implementation...
+}
+```
+
+#### Step 2: Add Tab Definition
+
+Modify `WwwrootGenerator.cs` to add your tab:
+
+```csharp
+'MyCustomModule': { 
+    category: 'extensions',
+    icon: '🎮',
+    requiredRole: 'Admin',
+    render: renderMyCustomModuleTab
+}
+```
+
+#### Step 3: Add Render Function
+
+Implement your tab's render function:
+
+```javascript
+async function renderMyCustomModuleTab(container) {
+    container.innerHTML = `
+        <h2 style=""color: #667eea;"">🎮 My Custom Module</h2>
+        <p>Module content goes here...</p>
+    `;
+}
+```
+
+#### Step 4: Create API Endpoints
+
+Add endpoints in `Program.cs` for your module:
+
+```csharp
+app.MapGet(""/api/mycustommodule/status"", async (HttpContext context) =>
+{
+    // Authenticate, authorize, and return module data
+});
+```
+
+### Tab Configuration Properties
+
+- **category**: Module category (`core`, `extensions`, `clientbuilder`, `custom`)
+- **icon**: Emoji icon for the tab
+- **requiredRole**: Minimum role required (`User`, `Admin`, `SuperAdmin`)
+- **render**: Function to render tab content
+
+### UI/UX Guidelines
+
+#### Standard Components
+
+Use these built-in CSS classes for consistency:
+
+- `.module-card` - Card container for features
+- `.stat-card` - Statistics display card
+- `.modules-grid` - Responsive grid layout
+- `.stats-grid` - Statistics grid layout
+- `.module-status` - Status badge (active/inactive)
+- `.loading` - Loading state indicator
+- `.error-message` - Error message container
+
+#### Color Scheme
+
+```css
+Primary: #667eea (Purple)
+Success: #10b981 (Green)
+Warning: #f59e0b (Orange)
+Error: #ef4444 (Red)
+Text: #1a202c (Dark)
+Background: #f7fafc (Light)
+```
+
+#### Responsive Design
+
+The control panel uses a mobile-first responsive grid:
+- Mobile: 1 column
+- Tablet: 2 columns
+- Desktop: 3 columns
+
+### Permission System
+
+The control panel supports role-based access:
+
+```javascript
+// User roles (in order of privilege)
+'User'       // Basic authenticated users
+'Admin'      // Administrative users
+'SuperAdmin' // Super administrators
+```
+
+Each tab can specify `requiredRole` to control visibility.
+
+### Module Discovery Flow
+
+1. Backend: Module loaded by ModuleManager with `[RaModule]` attribute
+2. API: Frontend calls `/api/control/modules` to get available modules
+3. Frontend: Available modules matched to tab definitions
+4. Rendering: Tab buttons and content containers created
+5. Content: Render function called when tab is selected
+
+### Best Practices
+
+1. **Consistent Naming**: Use PascalCase for module names
+2. **Error Handling**: Always handle errors gracefully in render functions
+3. **Loading States**: Show loading indicators for async operations
+4. **Caching**: Cache data when appropriate to reduce API calls
+5. **Responsive**: Ensure UI works on mobile, tablet, and desktop
+6. **Permissions**: Always check user permissions in API endpoints
+7. **Documentation**: Document your module's tab features
+
+### Complete Example
+
+See **CONTROL_PANEL_MODULE_API.md** for a complete, working example of integrating a custom module with the control panel.
+
+### Additional Resources
+
+- **CONTROL_PANEL_MODULE_API.md** - Complete API reference
+- **CONTROL_PANEL_DEVELOPER_GUIDE.md** - Step-by-step developer guide
+- **LEGENDARY_CLIENTBUILDER_WEB_INTERFACE.md** - Client Builder web interface docs
+- **MODULE_DEVELOPMENT_GUIDE.md** - General module development guide
+
+---
+
+**Copyright © 2025 AGP Studios, INC. All rights reserved.**
 ";
         
         File.WriteAllText(Path.Combine(_wwwrootPath, "CONTROL_PANEL_MODULES.md"), content);
