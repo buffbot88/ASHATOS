@@ -68,10 +68,11 @@ Learn RaOS courses SuperAdmin  # Master Classes (4 courses, 28 lessons)
 | Document | Description | Audience |
 |----------|-------------|----------|
 | [README.md](README.md) | Main project overview and quick start | All Users |
-| [PHASE8_QUICKSTART.md](PHASE8_QUICKSTART.md) | Get started with Legendary CMS in minutes | CMS Users |
-| [PHASE9_QUICKSTART.md](PHASE9_QUICKSTART.md) | Get started with Legendary Game Engine | Game Developers |
-| [FIRST_RUN_INITIALIZATION.md](FIRST_RUN_INITIALIZATION.md) | First-time setup and initialization | New Users |
-| [BOOT_SEQUENCE.md](BOOT_SEQUENCE.md) | Understanding the RaCore boot process | All Users |
+| **LULmodule** | Interactive learning with 9 courses, 51 lessons | All Users |
+| [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md) | Development setup and workflow | Developers |
+| [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) | Production deployment guide | System Admins |
+
+**Note:** Historical quickstart guides (PHASE8, PHASE9) have been archived. Use the LULmodule for structured learning instead.
 
 ---
 
@@ -84,9 +85,10 @@ Learn RaOS courses SuperAdmin  # Master Classes (4 courses, 28 lessons)
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Complete system design and architecture | 40,000+ words |
 | [ROADMAP.md](ROADMAP.md) | Future features and development roadmap | 24,000+ words |
 | [MODULE_DEVELOPMENT_GUIDE.md](MODULE_DEVELOPMENT_GUIDE.md) | Create your own modules | 36,000+ words |
-| [PHASES.md](PHASES.md) | Development phase roadmap and history | Core Reference |
-| [HISTORY.md](HISTORY.md) | Complete development history (Phases 2-7) | Historical |
 | [SECURITY_ARCHITECTURE.md](SECURITY_ARCHITECTURE.md) | Security implementation details | Security |
+| **LULmodule History Course** | Complete development history (Phases 2-9) | 8 lessons, interactive |
+
+**Note:** PHASES.md and HISTORY.md have been archived. Use the LULmodule History course for learning RaOS evolution.
 
 ---
 
@@ -330,13 +332,27 @@ docs/archive/
 
 ## 📊 Statistics
 
-- **Total Documentation Files:** 100+ markdown files
-- **Total Documentation:** 200,000+ words
-- **Core Guides:** 3 (Architecture, Roadmap, Module Development)
-- **Quick Start Guides:** 15+
-- **Phase Summaries:** 20+
-- **Module READMEs:** 30+
-- **API References:** Multiple
+### Documentation Metrics
+
+- **Total Documentation Files**: ~160
+- **Active Root Markdown Files**: 45 (down from 121 - 62% reduction!)
+- **Archived Documentation**: 77 files in `docs/archive/`
+- **LULmodule Courses**: 9 (includes optional History course)
+- **LULmodule Lessons**: 51 (includes 8 history lessons covering Phases 2-9)
+- **Module READMEs**: 30+ individual module documentation files
+- **Total Active Documentation**: 200,000+ words
+- **Quick Start Guides**: 15+ for various features
+
+### Archive Statistics
+
+- **Phases**: 42 historical phase documentation files
+- **Migrations**: 6 completed migration guides  
+- **Summaries**: 21 implementation summaries
+- **Verification**: 2 verification reports
+- **Demos**: 5 demo and test result files
+- **Archive Location**: `docs/archive/` with organized subdirectories
+
+**📚 To learn RaOS history**: Use the LULmodule History course instead of archived phase docs!
 
 ---
 
