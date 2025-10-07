@@ -60,7 +60,8 @@ public class FirstRunManager
         {
             Mode = ServerMode.Production,
             IsFirstRun = true,
-            CmsPath = _cmsPath
+            CmsPath = _cmsPath,
+            UnderConstruction = true  // Default to Under Construction until admin sets up the site
         };
     }
     
@@ -256,6 +257,10 @@ public class FirstRunManager
             _serverConfig.InitializedAt = DateTime.UtcNow;
             _serverConfig.CmsPath = _cmsPath;
             
+            // Keep Under Construction mode enabled by default
+            // Admin can disable it via Control Panel when ready to go live
+            // _serverConfig.UnderConstruction remains true until admin changes it
+            
             // Save configuration
             SaveServerConfiguration();
             
@@ -271,6 +276,7 @@ public class FirstRunManager
             
             File.WriteAllText(_firstRunMarkerPath, JsonSerializer.Serialize(initInfo, new JsonSerializerOptions { WriteIndented = true }));
             Console.WriteLine("[FirstRunManager] System marked as initialized");
+            Console.WriteLine("[FirstRunManager] Site remains in Under Construction mode - disable via Control Panel when ready");
         }
         catch (Exception ex)
         {

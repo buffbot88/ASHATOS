@@ -381,10 +381,11 @@ failsafe restore <backup-id>
 
 ### Getting Started
 
-1. **[Quick Start Guide](PHASE8_QUICKSTART.md)** - Installation and basic usage
-2. **[Module README](LegendaryCMS/README.md)** - Feature documentation
-3. **[API Documentation](PHASE8_LEGENDARY_CMS.md#api--integration-layer)** - REST API reference
-4. **[Plugin Guide](LegendaryCMS/README.md#plugin-development)** - Extend the CMS
+1. **[Quick Start Guide](QUICKSTART.md)** - Easy installation guide for first-time users ⭐
+2. **[Phase 8 Quick Start](PHASE8_QUICKSTART.md)** - Detailed CMS installation and usage
+3. **[Module README](LegendaryCMS/README.md)** - Feature documentation
+4. **[API Documentation](PHASE8_LEGENDARY_CMS.md#api--integration-layer)** - REST API reference
+5. **[Plugin Guide](LegendaryCMS/README.md#plugin-development)** - Extend the CMS
 
 ### Advanced Topics
 
