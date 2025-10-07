@@ -38,6 +38,16 @@ public class TestRunner
             await ServerSetupFtpTest.RunTests();
         }
 
+        // Run Phase 9.3.7 tests if requested
+        if (args.Length > 0 && args[0].ToLowerInvariant() == "phase937")
+        {
+            Console.WriteLine("\n\n╔════════════════════════════════════════════════════════╗");
+            Console.WriteLine("║   Phase 9.3.7: Bot Detection & CloudFlare Tests       ║");
+            Console.WriteLine("╚════════════════════════════════════════════════════════╝\n");
+            
+            Phase937Tests.RunTests();
+        }
+
         Console.WriteLine("\nPress any key to exit...");
         Console.ReadKey();
     }

@@ -1,4 +1,5 @@
 using Abstractions;
+using RaCore.Engine;
 using RaCore.Engine.Manager;
 using RaCore.Engine.Memory;
 using RaCore.Modules.Extensions.UserProfiles;
@@ -1198,12 +1199,31 @@ if (gameServerModule != null && authModule != null)
 // Root endpoint - show welcome/status page
 app.MapGet("/", async (HttpContext context) =>
 {
-    // Show landing page with instructions
+    // Phase 9.3.7: Homepage bot filtering
+    // Only allow search engine bots to access homepage for SEO indexing
+    var userAgent = context.Request.Headers["User-Agent"].ToString();
+    var isBot = BotDetector.IsSearchEngineBot(userAgent);
+    
     context.Response.ContentType = "text/html";
+    
+    if (!isBot)
+    {
+        // Non-bot visitors get access denied message with control panel link
+        await context.Response.WriteAsync(BotDetector.GetAccessDeniedMessage());
+        return Task.CompletedTask;
+    }
+    
+    // Search engine bots get the full homepage for indexing
+    var botName = BotDetector.GetBotName(userAgent);
+    Console.WriteLine($"[RaCore] Search engine bot detected: {botName} - Allowing homepage access");
+    
     await context.Response.WriteAsync($@"<!DOCTYPE html>
 <html>
 <head>
-    <title>RaCore - Welcome</title>
+    <title>RaCore - Advanced Modular Server Platform</title>
+    <meta name=""description"" content=""RaCore is a powerful, modular server platform with CMS, forums, game engine, and extensive plugin system."">
+    <meta name=""keywords"" content=""RaCore, CMS, modular server, game engine, forum platform, control panel"">
+    <meta name=""robots"" content=""index, follow"">
     <style>
         body {{
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -1223,20 +1243,19 @@ app.MapGet("/", async (HttpContext context) =>
             color: #667eea;
             margin-bottom: 10px;
         }}
-        .status {{
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 5px;
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-        }}
         .info {{
             background: #d1ecf1;
             border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
         }}
         .success {{
             background: #d4edda;
             border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
         }}
         code {{
             background: #f4f4f4;
@@ -1244,63 +1263,94 @@ app.MapGet("/", async (HttpContext context) =>
             border-radius: 3px;
             font-family: 'Courier New', monospace;
         }}
-        .button {{
-            display: inline-block;
-            padding: 12px 24px;
-            margin: 10px 5px;
-            background: #667eea;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            transition: background 0.3s;
-        }}
-        .button:hover {{
-            background: #5568d3;
-        }}
-        .button.secondary {{
-            background: #6c757d;
-        }}
-        .button.secondary:hover {{
-            background: #5a6268;
-        }}
         ul {{
             line-height: 1.8;
+        }}
+        .features {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }}
+        .feature {{
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 3px solid #667eea;
         }}
     </style>
 </head>
 <body>
     <div class='container'>
-        <h1>🌟 Welcome to RaCore!</h1>
-        <p>RaCore server is running successfully on port {port}.</p>
+        <h1>🌟 Welcome to RaCore</h1>
+        <p>RaCore is a powerful, modular server platform running on port {port}.</p>
         
         <div class='info'>
-            <h3>📋 About the RaCore CMS:</h3>
-            <p>The integrated CMS website is designed to run through Nginx + PHP-FPM on port 80.</p>
-            <p>The CMS includes a full-featured website with Control Panel, Forums, and User Profiles.</p>
+            <h3>📋 About RaCore:</h3>
+            <p>RaCore is an advanced, extensible server platform that combines CMS functionality, 
+            forum systems, user profiles, game engine capabilities, and a comprehensive control panel 
+            into a unified, modular architecture.</p>
+            <p>Built with .NET 9.0, RaCore provides a robust foundation for web applications, 
+            game servers, and community platforms.</p>
         </div>
         
         <div class='success'>
-            <h3>🎛️ Available Now:</h3>
+            <h3>🎯 Core Features:</h3>
+            <div class='features'>
+                <div class='feature'>
+                    <h4>🎛️ Control Panel</h4>
+                    <p>Comprehensive admin dashboard for managing all aspects of your RaCore instance.</p>
+                </div>
+                <div class='feature'>
+                    <h4>📝 CMS System</h4>
+                    <p>Full-featured content management system with SQLite database backend.</p>
+                </div>
+                <div class='feature'>
+                    <h4>💬 Forum Platform</h4>
+                    <p>Built-in forum system with categories, threads, and user moderation.</p>
+                </div>
+                <div class='feature'>
+                    <h4>👤 User Profiles</h4>
+                    <p>Rich user profile system with authentication and role-based permissions.</p>
+                </div>
+                <div class='feature'>
+                    <h4>🎮 Game Engine</h4>
+                    <p>Integrated game engine with scene management, persistence, and WebSocket support.</p>
+                </div>
+                <div class='feature'>
+                    <h4>🔌 Plugin System</h4>
+                    <p>Extensible module architecture for adding custom functionality.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class='info'>
+            <h3>🚀 Technology Stack:</h3>
             <ul>
-                <li><strong>Control Panel:</strong> Manage your RaCore instance
-                    <br><a href='/control-panel.html' class='button'>Open Control Panel</a>
-                </li>
-                <li><strong>WebSocket API:</strong> ws://localhost:{port}/ws</li>
-                <li><strong>REST API:</strong> http://localhost:{port}/api/*</li>
+                <li><strong>.NET 9.0:</strong> Modern, high-performance runtime</li>
+                <li><strong>ASP.NET Core:</strong> Web framework with WebSocket support</li>
+                <li><strong>SQLite:</strong> Embedded database for data persistence</li>
+                <li><strong>PHP + Nginx:</strong> CMS frontend delivery</li>
+                <li><strong>Modular Architecture:</strong> Plugin-based extensibility</li>
             </ul>
         </div>
         
         <div class='info'>
-            <h3>📚 Quick Links:</h3>
+            <h3>📚 Key Components:</h3>
             <ul>
-                <li><a href='/control-panel.html'>Control Panel</a> - Admin dashboard</li>
-                <li>API Documentation - Check the README.md</li>
-                <li>CMS Location: <code>wwwroot/</code> directory</li>
+                <li><strong>Authentication Module:</strong> Secure user authentication with token-based sessions</li>
+                <li><strong>SiteBuilder Module:</strong> Automated CMS and website generation</li>
+                <li><strong>RaCoin System:</strong> Integrated virtual currency platform</li>
+                <li><strong>LegendaryEngine:</strong> Game development framework</li>
+                <li><strong>Supermarket Module:</strong> E-commerce capabilities</li>
+                <li><strong>Learning Module:</strong> Educational content delivery</li>
             </ul>
         </div>
         
         <p style='margin-top: 30px; text-align: center; color: #6c757d;'>
-            <small>RaCore v1.0 | <a href='https://github.com/buffbot88/TheRaProject' target='_blank'>GitHub</a></small>
+            <small>RaCore v1.0 - Phase 9.3.7 | 
+            <a href='https://github.com/buffbot88/TheRaProject' target='_blank'>View on GitHub</a> | 
+            Bot Access Control Enabled</small>
         </p>
     </div>
 </body>
