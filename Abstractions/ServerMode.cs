@@ -120,8 +120,9 @@ public class ServerConfiguration
     /// <summary>
     /// Indicates if the site is in "Under Construction" mode
     /// When enabled, non-admin users see a friendly Under Construction page
+    /// Defaults to true until admin completes initial setup
     /// </summary>
-    public bool UnderConstruction { get; set; } = false;
+    public bool UnderConstruction { get; set; } = true;
     
     /// <summary>
     /// Custom message for the Under Construction page
