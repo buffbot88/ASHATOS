@@ -503,6 +503,12 @@ RaCore/Admins/
 RaCore/llama.cpp/models/*.gguf
 
 # Dynamically spawned modules (Phase 7 - Module Spawner)
-# Keep the README but ignore generated modules
+# Keep the README, .csproj and .sln files but ignore other generated module files
 Modules/*
 !Modules/README.md
+!Modules/*/
+Modules/*/*.cs
+Modules/*/*.md
+Modules/*/*.json
+!Modules/**/*.csproj
+!Modules/**/*.sln
