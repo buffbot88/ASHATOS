@@ -4,7 +4,7 @@ namespace Abstractions;
 
 /// <summary>
 /// Interface for server setup and configuration management.
-/// Handles Nginx, PHP, Database folders, and per-admin instance management.
+/// Handles Nginx, PHP, Database folders, FTP, and per-admin instance management.
 /// </summary>
 public interface IServerSetupModule
 {
@@ -32,6 +32,21 @@ public interface IServerSetupModule
     /// Get admin instance path
     /// </summary>
     string GetAdminInstancePath(string licenseNumber, string username);
+    
+    /// <summary>
+    /// Get FTP server status (checks if vsftpd is installed and running on Linux)
+    /// </summary>
+    Task<FtpStatusResult> GetFtpStatusAsync();
+    
+    /// <summary>
+    /// Setup FTP access for an admin instance
+    /// </summary>
+    Task<SetupResult> SetupFtpAccessAsync(string licenseNumber, string username);
+    
+    /// <summary>
+    /// Get FTP connection info for an admin
+    /// </summary>
+    Task<FtpConnectionInfo> GetFtpConnectionInfoAsync(string licenseNumber, string username);
 }
 
 /// <summary>
@@ -64,4 +79,32 @@ public class DiscoveryResult
     
     public List<string> MissingFolders { get; set; } = new();
     public List<string> CreatedFolders { get; set; } = new();
+}
+
+/// <summary>
+/// Result of FTP status check
+/// </summary>
+public class FtpStatusResult
+{
+    public bool IsInstalled { get; set; }
+    public bool IsRunning { get; set; }
+    public bool IsLinux { get; set; }
+    public string? Version { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public string? ConfigPath { get; set; }
+    public Dictionary<string, string> Details { get; set; } = new();
+}
+
+/// <summary>
+/// FTP connection information for an admin
+/// </summary>
+public class FtpConnectionInfo
+{
+    public bool Success { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public string? Host { get; set; }
+    public int Port { get; set; } = 21;
+    public string? Username { get; set; }
+    public string? FtpPath { get; set; }
+    public Dictionary<string, string> Details { get; set; } = new();
 }

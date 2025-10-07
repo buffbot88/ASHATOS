@@ -233,6 +233,7 @@ Learn RaOS courses SuperAdmin  # Master Classes (4 courses, 28 lessons)
 | [LINUX_QUICKREF.md](LINUX_QUICKREF.md) | Linux quick reference |
 | [LINUX_DOCS_INDEX.md](LINUX_DOCS_INDEX.md) | Linux documentation index |
 | [LINUX_IMPLEMENTATION_SUMMARY.md](LINUX_IMPLEMENTATION_SUMMARY.md) | Linux implementation details |
+| [FTP_MANAGEMENT.md](FTP_MANAGEMENT.md) | FTP server management for RaOS (Linux) |
 
 ### Platform Comparison
 

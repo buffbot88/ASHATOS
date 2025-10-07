@@ -251,6 +251,10 @@ sudo systemctl status nginx
 
 ## Part 5: Install and Configure FTP Server
 
+> **✨ New in RaOS:** RaOS now includes built-in FTP management through the ServerSetup module!  
+> After installing vsftpd, you can use RaOS console commands to manage FTP access.  
+> See [FTP_MANAGEMENT.md](FTP_MANAGEMENT.md) for complete documentation.
+
 ### Step 1: Install vsftpd (Very Secure FTP Daemon)
 ```bash
 sudo apt install -y vsftpd
@@ -341,6 +345,23 @@ sudo ufw allow 80/tcp
 sudo ufw allow 8080/tcp
 sudo ufw reload
 ```
+
+### Managing FTP with RaOS ServerSetup Module
+
+Once RaCore is running, you can manage FTP access directly through the console:
+
+```bash
+# Check FTP server status
+serversetup ftp status
+
+# Setup FTP access for an admin instance
+serversetup ftp setup license=12345 username=admin1
+
+# Get FTP connection information
+serversetup ftp info license=12345 username=admin1
+```
+
+**See [FTP_MANAGEMENT.md](FTP_MANAGEMENT.md) for complete FTP management documentation.**
 
 ---
 

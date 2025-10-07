@@ -5,7 +5,7 @@ using Abstractions;
 namespace RaCore.Modules.Extensions.ServerSetup;
 
 /// <summary>
-/// Server Setup Module - Manages Nginx, PHP, Database folders, and per-admin instance configurations.
+/// Server Setup Module - Manages Nginx, PHP, Database folders, FTP, and per-admin instance configurations.
 /// Creates discoverable folder structure for RaAI to enhance on-the-go.
 /// </summary>
 [RaModule(Category = "extensions")]
@@ -16,6 +16,7 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
     private readonly string _phpFolder;
     private readonly string _nginxFolder;
     private readonly string _adminsFolder;
+    private readonly string _ftpFolder;
 
     public override string Name => "ServerSetup";
 
@@ -27,6 +28,7 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
         _phpFolder = Path.Combine(_baseDirectory, "php");
         _nginxFolder = Path.Combine(_baseDirectory, "Nginx");
         _adminsFolder = Path.Combine(_baseDirectory, "Admins");
+        _ftpFolder = Path.Combine(_baseDirectory, "ftp");
     }
 
     public override void Initialize(object? manager)
@@ -46,6 +48,21 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
         LogInfo($"  PHP folder: {_phpFolder}");
         LogInfo($"  Nginx folder: {_nginxFolder}");
         LogInfo($"  Admins folder: {_adminsFolder}");
+        LogInfo($"  FTP folder: {_ftpFolder}");
+        
+        // Check FTP status on Linux systems
+        if (OperatingSystem.IsLinux())
+        {
+            var ftpStatus = GetFtpStatusAsync().GetAwaiter().GetResult();
+            if (ftpStatus.IsInstalled)
+            {
+                LogInfo($"  FTP Server: {(ftpStatus.IsRunning ? "✓ Running" : "✗ Stopped")}");
+            }
+            else
+            {
+                LogInfo("  FTP Server: Not installed (optional)");
+            }
+        }
     }
 
     public override string Process(string input)
@@ -160,13 +177,86 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
             };
         }
 
+        if (lower.StartsWith("serversetup ftp status"))
+        {
+            var result = await GetFtpStatusAsync();
+            return new ModuleResponse
+            {
+                Text = FormatFtpStatusResult(result),
+                Status = result.IsInstalled ? "success" : "info"
+            };
+        }
+
+        if (lower.StartsWith("serversetup ftp setup"))
+        {
+            var parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            string? license = null, username = null;
+            
+            foreach (var part in parts)
+            {
+                if (part.StartsWith("license="))
+                    license = part.Substring("license=".Length);
+                if (part.StartsWith("username="))
+                    username = part.Substring("username=".Length);
+            }
+
+            if (string.IsNullOrEmpty(license) || string.IsNullOrEmpty(username))
+            {
+                return new ModuleResponse
+                {
+                    Text = "Usage: serversetup ftp setup license=<number> username=<name>",
+                    Status = "error"
+                };
+            }
+
+            var result = await SetupFtpAccessAsync(license, username);
+            return new ModuleResponse
+            {
+                Text = result.Message,
+                Status = result.Success ? "success" : "error"
+            };
+        }
+
+        if (lower.StartsWith("serversetup ftp info"))
+        {
+            var parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            string? license = null, username = null;
+            
+            foreach (var part in parts)
+            {
+                if (part.StartsWith("license="))
+                    license = part.Substring("license=".Length);
+                if (part.StartsWith("username="))
+                    username = part.Substring("username=".Length);
+            }
+
+            if (string.IsNullOrEmpty(license) || string.IsNullOrEmpty(username))
+            {
+                return new ModuleResponse
+                {
+                    Text = "Usage: serversetup ftp info license=<number> username=<name>",
+                    Status = "error"
+                };
+            }
+
+            var result = await GetFtpConnectionInfoAsync(license, username);
+            return new ModuleResponse
+            {
+                Text = result.Message,
+                Status = result.Success ? "success" : "error"
+            };
+        }
+
         return new ModuleResponse
         {
             Text = @"ServerSetup Module Commands:
   serversetup discover - Discover and validate server folders
   serversetup admin create license=<number> username=<name> - Create admin instance
   serversetup nginx setup license=<number> username=<name> - Setup Nginx config
-  serversetup php setup license=<number> username=<name> - Setup PHP config",
+  serversetup php setup license=<number> username=<name> - Setup PHP config
+  serversetup ftp status - Check FTP server status
+  serversetup ftp setup license=<number> username=<name> - Setup FTP access for admin
+  serversetup ftp info license=<number> username=<name> - Get FTP connection info",
             Status = "success"
         };
     }
@@ -569,5 +659,345 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
         }
 
         return sb.ToString();
+    }
+
+    public async Task<FtpStatusResult> GetFtpStatusAsync()
+    {
+        var result = new FtpStatusResult
+        {
+            IsLinux = OperatingSystem.IsLinux()
+        };
+
+        if (!result.IsLinux)
+        {
+            result.Message = "FTP management is only available on Linux systems with vsftpd.";
+            return result;
+        }
+
+        try
+        {
+            // Check if vsftpd is installed
+            var checkInstalled = await ExecuteCommandAsync("which", "vsftpd");
+            result.IsInstalled = checkInstalled.ExitCode == 0 && !string.IsNullOrWhiteSpace(checkInstalled.Output);
+
+            if (result.IsInstalled)
+            {
+                result.Details["vsftpd_path"] = checkInstalled.Output.Trim();
+
+                // Check if vsftpd is running
+                var checkRunning = await ExecuteCommandAsync("systemctl", "is-active vsftpd");
+                result.IsRunning = checkRunning.ExitCode == 0 && checkRunning.Output.Trim() == "active";
+
+                // Get version
+                var versionCheck = await ExecuteCommandAsync("vsftpd", "-v 0>&1");
+                if (!string.IsNullOrWhiteSpace(versionCheck.Output))
+                {
+                    result.Version = versionCheck.Output.Trim();
+                }
+
+                // Check config file
+                var configPath = "/etc/vsftpd.conf";
+                if (File.Exists(configPath))
+                {
+                    result.ConfigPath = configPath;
+                    result.Details["config_path"] = configPath;
+                }
+
+                result.Message = $"vsftpd is {(result.IsRunning ? "running" : "installed but not running")}";
+            }
+            else
+            {
+                result.Message = "vsftpd is not installed. Install with: sudo apt install vsftpd";
+            }
+        }
+        catch (Exception ex)
+        {
+            result.Message = $"Error checking FTP status: {ex.Message}";
+        }
+
+        return result;
+    }
+
+    public async Task<SetupResult> SetupFtpAccessAsync(string licenseNumber, string username)
+    {
+        try
+        {
+            // Check if Linux
+            if (!OperatingSystem.IsLinux())
+            {
+                return new SetupResult
+                {
+                    Success = false,
+                    Message = "FTP setup is only available on Linux systems."
+                };
+            }
+
+            // Check if admin instance exists
+            var adminPath = GetAdminInstancePath(licenseNumber, username);
+            if (!Directory.Exists(adminPath))
+            {
+                return new SetupResult
+                {
+                    Success = false,
+                    Message = $"Admin instance does not exist: {licenseNumber}.{username}. Create it first with 'serversetup admin create'."
+                };
+            }
+
+            // Check FTP status
+            var ftpStatus = await GetFtpStatusAsync();
+            if (!ftpStatus.IsInstalled)
+            {
+                return new SetupResult
+                {
+                    Success = false,
+                    Message = "vsftpd is not installed. Please install it first: sudo apt install vsftpd"
+                };
+            }
+
+            // Create FTP directory structure
+            var ftpPath = Path.Combine(_ftpFolder, $"{licenseNumber}.{username}");
+            if (!Directory.Exists(ftpPath))
+            {
+                Directory.CreateDirectory(ftpPath);
+            }
+
+            var ftpFilesPath = Path.Combine(ftpPath, "files");
+            if (!Directory.Exists(ftpFilesPath))
+            {
+                Directory.CreateDirectory(ftpFilesPath);
+            }
+
+            // Create symlink to admin instance (if not exists)
+            var symlinkPath = Path.Combine(ftpFilesPath, "admin");
+            if (!Directory.Exists(symlinkPath) && !File.Exists(symlinkPath))
+            {
+                var symlinkResult = await ExecuteCommandAsync("ln", $"-s \"{adminPath}\" \"{symlinkPath}\"");
+                if (symlinkResult.ExitCode != 0)
+                {
+                    LogInfo($"Note: Could not create symlink: {symlinkResult.Error}");
+                }
+            }
+
+            // Create FTP configuration file for this admin
+            var ftpConfigPath = Path.Combine(ftpPath, "ftp-config.txt");
+            var ftpConfig = new StringBuilder();
+            ftpConfig.AppendLine($"# FTP Configuration for Admin: {licenseNumber}.{username}");
+            ftpConfig.AppendLine($"# Generated: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC");
+            ftpConfig.AppendLine();
+            ftpConfig.AppendLine($"FTP Root Path: {ftpPath}");
+            ftpConfig.AppendLine($"Files Directory: {ftpFilesPath}");
+            ftpConfig.AppendLine($"Admin Instance Link: {symlinkPath} -> {adminPath}");
+            ftpConfig.AppendLine();
+            ftpConfig.AppendLine("To connect via FTP:");
+            ftpConfig.AppendLine($"  Host: localhost (or server IP)");
+            ftpConfig.AppendLine($"  Port: 21");
+            ftpConfig.AppendLine($"  Username: racore (or your Linux username)");
+            ftpConfig.AppendLine($"  Path: /ftp/{licenseNumber}.{username}/files");
+            ftpConfig.AppendLine();
+            ftpConfig.AppendLine("Note: FTP access uses Linux system users.");
+            ftpConfig.AppendLine("The Super Admin can connect using their Linux credentials.");
+            await File.WriteAllTextAsync(ftpConfigPath, ftpConfig.ToString());
+
+            return new SetupResult
+            {
+                Success = true,
+                Message = $"✅ FTP access configured for {licenseNumber}.{username}\n" +
+                         $"FTP Path: {ftpPath}\n" +
+                         $"Files Directory: {ftpFilesPath}\n" +
+                         $"Admin Instance: {symlinkPath} -> {adminPath}\n" +
+                         $"Use 'serversetup ftp info license={licenseNumber} username={username}' for connection details.",
+                Path = ftpPath,
+                Details = new Dictionary<string, string>
+                {
+                    ["ftp_path"] = ftpPath,
+                    ["files_path"] = ftpFilesPath,
+                    ["admin_link"] = symlinkPath,
+                    ["config_file"] = ftpConfigPath
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            return new SetupResult
+            {
+                Success = false,
+                Message = $"Error setting up FTP access: {ex.Message}"
+            };
+        }
+    }
+
+    public async Task<FtpConnectionInfo> GetFtpConnectionInfoAsync(string licenseNumber, string username)
+    {
+        try
+        {
+            // Check if Linux
+            if (!OperatingSystem.IsLinux())
+            {
+                return new FtpConnectionInfo
+                {
+                    Success = false,
+                    Message = "FTP is only available on Linux systems."
+                };
+            }
+
+            // Check if admin instance exists
+            var adminPath = GetAdminInstancePath(licenseNumber, username);
+            if (!Directory.Exists(adminPath))
+            {
+                return new FtpConnectionInfo
+                {
+                    Success = false,
+                    Message = $"Admin instance does not exist: {licenseNumber}.{username}."
+                };
+            }
+
+            // Check if FTP is set up
+            var ftpPath = Path.Combine(_ftpFolder, $"{licenseNumber}.{username}");
+            if (!Directory.Exists(ftpPath))
+            {
+                return new FtpConnectionInfo
+                {
+                    Success = false,
+                    Message = $"FTP access not configured. Use 'serversetup ftp setup license={licenseNumber} username={username}' first."
+                };
+            }
+
+            // Get hostname
+            var hostnameResult = await ExecuteCommandAsync("hostname", "-I");
+            var hostname = hostnameResult.ExitCode == 0 && !string.IsNullOrWhiteSpace(hostnameResult.Output)
+                ? hostnameResult.Output.Split(' ')[0].Trim()
+                : "localhost";
+
+            // Get current user
+            var userResult = await ExecuteCommandAsync("whoami", "");
+            var currentUser = userResult.ExitCode == 0 && !string.IsNullOrWhiteSpace(userResult.Output)
+                ? userResult.Output.Trim()
+                : "racore";
+
+            var result = new FtpConnectionInfo
+            {
+                Success = true,
+                Host = hostname,
+                Port = 21,
+                Username = currentUser,
+                FtpPath = $"/ftp/{licenseNumber}.{username}/files",
+                Message = $"FTP Connection Info for {licenseNumber}.{username}:\n\n" +
+                         $"Host: {hostname}\n" +
+                         $"Port: 21\n" +
+                         $"Username: {currentUser} (Linux system user)\n" +
+                         $"Password: (use Linux system password)\n" +
+                         $"Remote Path: /ftp/{licenseNumber}.{username}/files\n\n" +
+                         $"The 'admin' directory in FTP links to: {adminPath}\n" +
+                         $"Super Admins can directly manage files through FTP.",
+                Details = new Dictionary<string, string>
+                {
+                    ["local_ftp_path"] = ftpPath,
+                    ["admin_instance_path"] = adminPath,
+                    ["ftp_root"] = $"/ftp/{licenseNumber}.{username}"
+                }
+            };
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            return new FtpConnectionInfo
+            {
+                Success = false,
+                Message = $"Error getting FTP connection info: {ex.Message}"
+            };
+        }
+    }
+
+    private string FormatFtpStatusResult(FtpStatusResult result)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("FTP Server Status:");
+        sb.AppendLine();
+        
+        if (!result.IsLinux)
+        {
+            sb.AppendLine("❌ FTP management is only available on Linux systems.");
+            return sb.ToString();
+        }
+
+        if (!result.IsInstalled)
+        {
+            sb.AppendLine("❌ vsftpd is not installed");
+            sb.AppendLine();
+            sb.AppendLine("To install vsftpd:");
+            sb.AppendLine("  sudo apt install vsftpd");
+            sb.AppendLine("  sudo systemctl enable vsftpd");
+            sb.AppendLine("  sudo systemctl start vsftpd");
+        }
+        else
+        {
+            sb.AppendLine($"✅ vsftpd is installed");
+            if (!string.IsNullOrWhiteSpace(result.Version))
+            {
+                sb.AppendLine($"   Version: {result.Version}");
+            }
+            sb.AppendLine($"   Status: {(result.IsRunning ? "✅ Running" : "❌ Stopped")}");
+            
+            if (!string.IsNullOrWhiteSpace(result.ConfigPath))
+            {
+                sb.AppendLine($"   Config: {result.ConfigPath}");
+            }
+
+            if (!result.IsRunning)
+            {
+                sb.AppendLine();
+                sb.AppendLine("To start vsftpd:");
+                sb.AppendLine("  sudo systemctl start vsftpd");
+            }
+        }
+
+        return sb.ToString();
+    }
+
+    private async Task<CommandResult> ExecuteCommandAsync(string command, string arguments)
+    {
+        try
+        {
+            var process = new System.Diagnostics.Process
+            {
+                StartInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = command,
+                    Arguments = arguments,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+
+            process.Start();
+            var output = await process.StandardOutput.ReadToEndAsync();
+            var error = await process.StandardError.ReadToEndAsync();
+            await process.WaitForExitAsync();
+
+            return new CommandResult
+            {
+                ExitCode = process.ExitCode,
+                Output = output,
+                Error = error
+            };
+        }
+        catch (Exception ex)
+        {
+            return new CommandResult
+            {
+                ExitCode = -1,
+                Error = ex.Message
+            };
+        }
+    }
+
+    private class CommandResult
+    {
+        public int ExitCode { get; set; }
+        public string Output { get; set; } = string.Empty;
+        public string Error { get; set; } = string.Empty;
     }
 }
