@@ -336,7 +336,7 @@ If PHP is installed but not detected:
 
 **Option 1: PHP Built-in Server (for testing):**
 ```bash
-cd /path/to/racore_cms
+cd /path/to/wwwroot
 php -S localhost:8080
 ```
 

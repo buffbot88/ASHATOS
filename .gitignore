@@ -499,7 +499,6 @@ cms_homepage/
 RaCore/wwwroot/
 
 # Server-generated folders (created on first run)
-RaCore/racore_cms/
 RaCore/Databases/
 RaCore/Apache/
 RaCore/php/
