@@ -244,11 +244,11 @@ Learn RaOS courses SuperAdmin  # Master Classes (4 courses, 28 lessons)
 
 | Document | Description |
 |----------|-------------|
-| [NGINX_MIGRATION_GUIDE.md](NGINX_MIGRATION_GUIDE.md) | Nginx setup and configuration |
-| [NGINX_MIGRATION_SUMMARY.md](NGINX_MIGRATION_SUMMARY.md) | Nginx migration summary |
-| [APACHE_AUTO_CONFIG_FLOW.md](APACHE_AUTO_CONFIG_FLOW.md) | Apache auto-configuration |
-| [APACHE_RESTART_API.md](APACHE_RESTART_API.md) | Apache control API |
+| [NGINX_MIGRATION_GUIDE.md](docs/archive/migrations/NGINX_MIGRATION_GUIDE.md) | Nginx setup and configuration |
+| [NGINX_MIGRATION_SUMMARY.md](docs/archive/migrations/NGINX_MIGRATION_SUMMARY.md) | Nginx migration summary |
 | [SERVERSETUP_IMPLEMENTATION.md](SERVERSETUP_IMPLEMENTATION.md) | Server setup details |
+
+**Note:** Apache is no longer supported. All Apache-related documentation has been archived in `docs/archive/migrations/`.
 
 ---
 
@@ -259,6 +259,7 @@ Learn RaOS courses SuperAdmin  # Master Classes (4 courses, 28 lessons)
 | Document | Description |
 |----------|-------------|
 | [SECURITY_ARCHITECTURE.md](SECURITY_ARCHITECTURE.md) | Complete security architecture |
+| [ASSET_SECURITY.md](ASSET_SECURITY.md) | Asset watermark & ownership verification (Phase 9.3.6) |
 | Compliance features documented in module-specific READMEs |
 
 ---
@@ -301,7 +302,7 @@ All historical phase documentation, verification reports, implementation summari
 ```
 docs/archive/
 ├── phases/              # PHASE*.md files (42 files)
-├── migrations/          # Migration guides (APACHE*, NGINX*, SITEBUILDER*)
+├── migrations/          # Migration guides (NGINX*, SITEBUILDER*), Apache archived
 ├── summaries/           # Implementation summaries and historical docs
 ├── verification/        # Verification reports
 └── demos/               # Demo files and test results
