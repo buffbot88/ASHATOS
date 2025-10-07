@@ -967,7 +967,7 @@ After integrating your module:
 ---
 
 **Version:** 9.3.4  
-**Last Updated:** January 2025  
+**Last Updated:** October 2025  
 **Maintained By:** RaCore Development Team
 
 ---
