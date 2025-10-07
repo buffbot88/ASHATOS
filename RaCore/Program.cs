@@ -3136,6 +3136,85 @@ if (gameClientModule != null)
         return Results.Json(new { success = true, clients });
     });
 
+    // Get client builder status - Phase 9.3.3
+    app.MapGet("/api/clientbuilder/status", async (HttpContext context) =>
+    {
+        var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+        var user = await authModule?.GetUserByTokenAsync(token)!;
+        
+        if (user == null || user.Role < UserRole.Admin)
+        {
+            context.Response.StatusCode = 401;
+            return Results.Json(new { error = "Authentication required" });
+        }
+        
+        try
+        {
+            // Get module statistics
+            var legendaryCB = gameClientModule as dynamic;
+            var totalClients = 0;
+            var templatesCount = 0;
+            var isRunning = true;
+            var lastGenerated = "Never";
+            
+            // Try to get stats from the module
+            try
+            {
+                if (legendaryCB != null && legendaryCB.GetType().Name == "LegendaryClientBuilderModule")
+                {
+                    var statsMethod = legendaryCB.GetType().GetMethod("GetStats");
+                    if (statsMethod != null)
+                    {
+                        var stats = statsMethod.Invoke(legendaryCB, null) as dynamic;
+                        if (stats != null)
+                        {
+                            totalClients = stats.totalClients ?? 0;
+                        }
+                    }
+                    
+                    var templatesMethod = legendaryCB.GetType().GetMethod("GetAvailableTemplates");
+                    if (templatesMethod != null)
+                    {
+                        var templates = templatesMethod.Invoke(legendaryCB, null) as System.Collections.IEnumerable;
+                        if (templates != null)
+                        {
+                            templatesCount = templates.Cast<object>().Count();
+                        }
+                    }
+                }
+                
+                // Get all clients to find last generated
+                var allClients = gameClientModule.GetUserClientPackages(user.Id);
+                if (allClients.Any())
+                {
+                    var latest = allClients.OrderByDescending(c => c.CreatedAt).First();
+                    lastGenerated = latest.CreatedAt.ToString("g");
+                }
+            }
+            catch
+            {
+                // Fallback to basic stats
+                totalClients = gameClientModule.GetUserClientPackages(user.Id).Count();
+            }
+            
+            return Results.Json(new
+            {
+                success = true,
+                totalClients,
+                templatesCount,
+                isRunning,
+                lastGenerated,
+                version = "9.3.3",
+                status = "Operational"
+            });
+        }
+        catch (Exception ex)
+        {
+            context.Response.StatusCode = 500;
+            return Results.Json(new { success = false, error = ex.Message });
+        }
+    });
+
     // Serve game client files
     app.MapGet("/clients/{packageId}/{*file}", async (HttpContext context) =>
     {
