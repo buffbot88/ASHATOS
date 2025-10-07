@@ -153,7 +153,6 @@ Learn RaOS courses SuperAdmin  # Master Classes (4 courses, 28 lessons)
 |----------|-------------|
 | [LANGUAGE_MODEL_PROCESSOR.md](LANGUAGE_MODEL_PROCESSOR.md) | Language model integration |
 | [MODEL_SELECTION_GUIDE.md](MODEL_SELECTION_GUIDE.md) | AI model selection guide |
-| [LLAMA_CPP_AUTO_DETECTION.md](LLAMA_CPP_AUTO_DETECTION.md) | Llama.cpp integration |
 
 ---
 

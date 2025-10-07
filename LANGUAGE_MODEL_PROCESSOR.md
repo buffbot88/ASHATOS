@@ -1,12 +1,12 @@
 # Language Model Processor Module - RaOS v5.0
 
 ## Overview
-The Language Model Processor is a new core module introduced in RaOS v5.0 that automatically detects, validates, and processes .gguf language model files during the boot sequence. It includes intelligent self-healing capabilities to recover from corrupted or failed model loads.
+The Language Model Processor is a core module introduced in RaOS v5.0 that automatically detects, validates, and processes .gguf language model files during the boot sequence. It includes intelligent self-healing capabilities to recover from corrupted or failed model loads.
 
 ## Features
 
 ### Automatic Model Detection
-- Scans the `llama.cpp/models` directory for .gguf files during boot
+- Scans the `models` directory for .gguf files during boot
 - Creates the models directory if it doesn't exist
 - Logs all discovered models with size information
 
@@ -41,7 +41,7 @@ The module supports the following commands via the module interface:
 Displays current status of loaded and failed models:
 ```
 LanguageModelProcessor Status:
-  Models Directory: llama.cpp/models
+  Models Directory: models
   Loaded Models: 2
   Failed Models: 1
 
@@ -75,7 +75,7 @@ Generates a detailed report with full model information:
 === Language Model Processor Report ===
 
 Status: Initialized
-Models Directory: llama.cpp/models
+Models Directory: models
 Total Models Found: 3
 Successfully Loaded: 2
 Failed: 1
@@ -83,7 +83,7 @@ Failed: 1
 === Successfully Loaded Models ===
 
 Model: model1.gguf
-  Path: /path/to/llama.cpp/models/model1.gguf
+  Path: /path/to/models/model1.gguf
   Size: 150.50 MB
   Loaded: 2025-10-06 21:56:43 UTC
   Checksum: a1b2c3d4e5f6g7h8...
@@ -104,15 +104,14 @@ Model: model1.gguf
 ### Valid .gguf File Format
 - Must start with "GGUF" magic number (bytes 0-3)
 - Must be readable by the system
-- Should be placed in the `llama.cpp/models` directory
+- Should be placed in the `models` directory
 
 ### Example Directory Structure
 ```
-llama.cpp/
-  └── models/
-      ├── llama-2-7b-chat.Q4_K_M.gguf
-      ├── mistral-7b-instruct.Q4_K_M.gguf
-      └── codellama-13b.Q4_K_M.gguf
+models/
+  ├── llama-2-7b-chat.Q4_K_M.gguf
+  ├── mistral-7b-instruct.Q4_K_M.gguf
+  └── codellama-13b.Q4_K_M.gguf
 ```
 
 ## Logging

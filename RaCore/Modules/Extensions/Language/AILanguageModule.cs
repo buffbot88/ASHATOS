@@ -1,6 +1,6 @@
-using System.Diagnostics;
 using Abstractions;
 using RaCore.Engine.Manager;
+using RaCore.Modules.Core.LanguageModelProcessor;
 
 namespace RaCore.Modules.Extensions.Language;
 
@@ -8,37 +8,28 @@ namespace RaCore.Modules.Extensions.Language;
 public sealed class AILanguageModule : ModuleBase, IDisposable
 {
     private string? _modelPath;
-    private string _llamaExePath = "llama.cpp\\main.exe";
     private int _contextSize = 2048;
     private int _maxTokens = 128;
     private ModuleManager? _manager;
-    private LlamaCppDetector? _detector;
     private string _modelsDirectory = "models";
 
     public static string Description => AILanguageConstants.Description;
     public static IReadOnlyList<string> SupportedCommands => AILanguageConstants.SupportedCommands;
     public static IReadOnlyList<string> SupportedLanguages => AILanguageConstants.SupportedLanguages;
-    public string Status => File.Exists(_llamaExePath) && File.Exists(_modelPath ?? "") ? "ready" : "not loaded";
+    public string Status => File.Exists(_modelPath ?? "") ? "ready" : "not loaded";
     public Dictionary<string, object> Capabilities => new()
     {
         { "contextSize", _contextSize },
         { "modelPath", _modelPath ?? "" },
-        { "llamaExePath", _llamaExePath },
         { "maxTokens", _maxTokens }
     };
 
     public override string Name => "AILanguage";
 
-    // Public logging methods for LlamaCppDetector
-    public void LogInfoPublic(string msg) => LogInfo(msg);
-    public void LogWarnPublic(string msg) => LogWarn(msg);
-    public void LogErrorPublic(string msg) => LogError(msg);
-
     public override void Initialize(object? manager)
     {
         base.Initialize(manager);
         _manager = (ModuleManager?)manager;
-        _detector = new LlamaCppDetector(this);
         
         // Try to auto-detect model if not set
         if (_modelPath == null)
@@ -66,28 +57,7 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
             LogError($"Failed to resolve model path: {ex.Message}");
         }
         
-        // Auto-detect llama.cpp executable if not manually configured or if default path doesn't exist
-        if (_llamaExePath == "llama.cpp\\main.exe" && !File.Exists(_llamaExePath))
-        {
-            LogInfo("Attempting to auto-detect llama.cpp executable...");
-            var detectedPath = _detector.FindLlamaCppExecutable();
-            if (detectedPath != null)
-            {
-                _llamaExePath = detectedPath;
-                var version = _detector.GetLlamaCppVersion(detectedPath);
-                LogInfo($"Auto-detected llama.cpp: {detectedPath}");
-                LogInfo($"Version: {version}");
-            }
-        }
-        
         // Validate configuration
-        if (!File.Exists(_llamaExePath))
-        {
-            LogWarn($"llama.cpp executable not found at: {_llamaExePath}");
-            LogWarn("AILanguage module will not be functional until llama.cpp is configured.");
-            LogInfo("Use 'set-exe <path>' to configure llama.cpp executable path.");
-        }
-        
         if (!File.Exists(_modelPath ?? ""))
         {
             LogWarn($"Model file not found at: {_modelPath}");
@@ -108,13 +78,14 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
             }
         }
         
-        if (File.Exists(_llamaExePath) && File.Exists(_modelPath ?? ""))
+        if (File.Exists(_modelPath ?? ""))
         {
             LogInfo("AILanguage module initialized successfully and ready.");
+            LogInfo("Note: This module now uses the LanguageModelProcessor system for .gguf model handling.");
         }
         else
         {
-            LogError("AILanguage module initialization incomplete - missing dependencies.");
+            LogWarn("AILanguage module initialization incomplete - missing model file.");
         }
     }
 
@@ -128,11 +99,11 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
         var text = (input ?? "").Trim();
         LogInfo($"Processing request: {(text.Length > 50 ? text.Substring(0, 50) + "..." : text)}");
 
-        if (!File.Exists(_llamaExePath) || !File.Exists(_modelPath ?? ""))
+        if (!File.Exists(_modelPath ?? ""))
         {
-            var errorMsg = $"(error: llama.cpp executable or model not found)\nExe: {_llamaExePath}\nModel: {_modelPath}";
+            var errorMsg = $"(error: model not found)\nModel: {_modelPath}";
             LogError(errorMsg);
-            LogError("Please configure AILanguage module using 'set-exe' and 'set-model' commands.");
+            LogError("Please configure AILanguage module using 'set-model' command.");
             return new ModuleResponse
             {
                 Text = errorMsg,
@@ -146,7 +117,7 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
         if (string.IsNullOrWhiteSpace(text) || text.Equals("help", StringComparison.OrdinalIgnoreCase))
             return new ModuleResponse
             {
-                Text = "Commands: help, status, reload, list-models, select-model <name-or-number>, set-model <path>, set-context <n>, set-tokens <n>, set-exe <path>",
+                Text = "Commands: help, status, reload, list-models, select-model <name-or-number>, set-model <path>, set-context <n>, set-tokens <n>\nNote: This module now uses the LanguageModelProcessor system.",
                 Type = "help",
                 Status = "ok",
                 Language = "en",
@@ -246,7 +217,7 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
         if (text.StartsWith("status", StringComparison.OrdinalIgnoreCase))
             return new ModuleResponse
             {
-                Text = $"AILanguageModule: {Status}\nModel path: {_modelPath}\nContext size: {_contextSize}\nMax tokens: {_maxTokens}\nExe: {_llamaExePath}",
+                Text = $"AILanguageModule: {Status}\nModel path: {_modelPath}\nContext size: {_contextSize}\nMax tokens: {_maxTokens}\nNote: Using LanguageModelProcessor system",
                 Type = "status",
                 Status = Status == "ready" ? "ok" : "error",
                 Language = "en",
@@ -356,57 +327,22 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
 
         if (text.StartsWith("set-exe ", StringComparison.OrdinalIgnoreCase))
         {
-            var arg = text["set-exe ".Length..].Trim();
-            if (!string.IsNullOrWhiteSpace(arg) && File.Exists(arg))
-            {
-                _llamaExePath = arg;
-                _detector?.ClearCache(); // Clear cache so auto-detection can find this path next time
-                LogInfo($"llama.cpp executable path set to {_llamaExePath}.");
-                if (Status == "ready")
-                {
-                    LogInfo("AILanguage module is now ready.");
-                }
-                else
-                {
-                    LogWarn("AILanguage module still not ready - check model path.");
-                }
-                return new ModuleResponse
-                {
-                    Text = $"llama.cpp executable path set to {_llamaExePath}.",
-                    Type = "set-exe",
-                    Status = Status == "ready" ? "ok" : "error",
-                    Language = "en",
-                    Metadata = Capabilities
-                };
-            }
-            LogWarn($"Invalid executable path: {arg}. File not found.");
+            LogWarn("set-exe command is no longer supported. The module now uses LanguageModelProcessor.");
             return new ModuleResponse
             {
-                Text = "Usage: set-exe <path-to-main.exe>",
-                Type = "error",
+                Text = "The set-exe command is deprecated. AILanguage module now uses the LanguageModelProcessor system which handles .gguf files directly without requiring llama.cpp executables.",
+                Type = "deprecated",
                 Status = "error",
                 Language = "en"
             };
         }
 
-        // Default: Run llama.cpp for generation
-        string resultText;
-        try
-        {
-            LogInfo("Running llama.cpp for text generation...");
-            resultText = await RunLlamaCppAsync(text);
-            LogInfo($"Text generation completed. Output length: {resultText.Length} characters.");
-        }
-        catch (Exception ex)
-        {
-            LogError($"Text generation failed: {ex.GetType().Name}: {ex.Message}");
-            resultText = $"(error: {ex.GetType().Name}: {ex.Message})";
-        }
-
+        // Default: Delegate to LanguageModelProcessor
+        LogInfo("AILanguage module text generation is deprecated. Please use the LanguageModelProcessor module directly.");
         return new ModuleResponse
         {
-            Text = resultText,
-            Type = "generate",
+            Text = "Text generation via AILanguage module is deprecated. This module now serves as a compatibility layer. Use the LanguageModelProcessor module for .gguf model processing.",
+            Type = "deprecated",
             Status = "ok",
             Language = "en",
             Metadata = Capabilities
@@ -416,10 +352,11 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
     public async Task<ModuleResponse> GenerateAsync(string intent, string context, string language = "en", Dictionary<string, object>? metadata = null)
     {
         LogInfo($"GenerateAsync called with intent: {intent}, language: {language}");
+        LogInfo("Note: AILanguage module generation is deprecated. Use LanguageModelProcessor instead.");
         
-        if (!File.Exists(_llamaExePath) || !File.Exists(_modelPath ?? ""))
+        if (!File.Exists(_modelPath ?? ""))
         {
-            var errorMsg = $"(error: llama.cpp executable or model not found)\nExe: {_llamaExePath}\nModel: {_modelPath}";
+            var errorMsg = $"(error: model not found)\nModel: {_modelPath}";
             LogError(errorMsg);
             return new ModuleResponse
             {
@@ -431,82 +368,15 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
             };
         }
 
-        string prompt = context;
-        
-        // Apply intent-specific prompting for better natural language responses
-        if (intent == "chat" || intent == "think" || intent == "status" || intent == "recall" || intent == "remember")
-        {
-            // The context already contains the formatted prompt from ThoughtProcessor or SpeechModule
-            prompt = context;
-        }
-        else
-        {
-            // For other intents, use the context directly
-            prompt = context;
-        }
-
-        string output;
-        try
-        {
-            LogInfo($"Generating response for intent: {intent}");
-            output = await RunLlamaCppAsync(prompt);
-            LogInfo($"Generation successful. Output length: {output.Length} characters.");
-        }
-        catch (Exception ex)
-        {
-            LogError($"Generation failed: {ex.GetType().Name}: {ex.Message}");
-            output = $"(error: {ex.GetType().Name}: {ex.Message})";
-        }
-
+        // Return deprecation notice
         return new ModuleResponse
         {
-            Text = output,
-            Type = intent,
+            Text = "Text generation via AILanguage module is deprecated. This module now serves as a compatibility layer. Use the LanguageModelProcessor module for .gguf model processing.",
+            Type = "deprecated",
             Status = "ok",
             Language = language,
             Metadata = metadata ?? Capabilities
         };
-    }
-
-    private async Task<string> RunLlamaCppAsync(string prompt)
-    {
-        LogInfo("Starting llama.cpp process...");
-        var psi = new ProcessStartInfo
-        {
-            FileName = _llamaExePath,
-            Arguments = $"-m \"{_modelPath}\" -p \"{prompt}\" -n {_maxTokens} --ctx-size {_contextSize}",
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-
-        using var process = new Process { StartInfo = psi };
-        try
-        {
-            process.Start();
-            LogInfo("llama.cpp process started successfully.");
-        }
-        catch (Exception ex)
-        {
-            LogError($"Failed to start llama.cpp process: {ex.Message}");
-            throw;
-        }
-
-        string output = await process.StandardOutput.ReadToEndAsync();
-        string error = await process.StandardError.ReadToEndAsync();
-
-        process.WaitForExit();
-        
-        LogInfo($"llama.cpp process exited with code: {process.ExitCode}");
-
-        if (!string.IsNullOrWhiteSpace(error))
-        {
-            LogWarn($"llama.cpp stderr output: {error.Substring(0, Math.Min(200, error.Length))}...");
-            output += $"\n(error log):\n{error}";
-        }
-
-        return output.Trim();
     }
 
     /// <summary>

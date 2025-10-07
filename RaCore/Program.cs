@@ -31,7 +31,7 @@ moduleManager.RegisterBuiltInModule(memoryModule);
 moduleManager.LoadModules();
 
 // 4. Run boot sequence with self-healing checks and configuration verification
-// This will detect the port from Apache configuration (MUST run before building app)
+// This will detect the port from Nginx configuration (MUST run before building app)
 var bootSequence = new RaCore.Engine.BootSequenceManager(moduleManager);
 await bootSequence.ExecuteBootSequenceAsync();
 
@@ -75,7 +75,7 @@ app.MapGet("/control-panel", async context =>
     context.Response.Redirect("/control-panel.html");
 });
 
-// 5. Check for first run and auto-spawn CMS + Apache
+// 5. Check for first run and auto-spawn CMS with Nginx
 var firstRunManager = new RaCore.Engine.FirstRunManager(moduleManager);
 if (firstRunManager.IsFirstRun())
 {
@@ -689,7 +689,7 @@ IServerSetupModule? serverSetupModule = moduleManager.Modules
 
 if (serverSetupModule != null && authModule != null)
 {
-    // Discover server folders (Databases, php, Apache, Admins)
+    // Discover server folders (Databases, php, Admins)
     app.MapGet("/api/serversetup/discover", async (HttpContext context) =>
     {
         try
@@ -767,7 +767,7 @@ if (serverSetupModule != null && authModule != null)
         }
     });
 
-    // Setup Apache configuration
+    // Setup Nginx configuration (deprecated - kept for compatibility)
     app.MapPost("/api/serversetup/apache", async (HttpContext context) =>
     {
         try
@@ -2697,7 +2697,7 @@ app.MapGet("/api/control/system/health", async (HttpContext context) =>
     return await Task.FromResult(Results.Json(new { health }));
 });
 
-// Restart Apache server (Admin only)
+// Restart web server (Admin only) - deprecated endpoint
 app.MapPost("/api/control/system/restart-apache", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
