@@ -88,6 +88,7 @@ Learn RaOS courses SuperAdmin  # Master Classes (4 courses, 28 lessons)
 | [SECURITY_ARCHITECTURE.md](SECURITY_ARCHITECTURE.md) | Security implementation details | Security |
 | [docs/SERVER_MODES_AND_INITIALIZATION.md](docs/SERVER_MODES_AND_INITIALIZATION.md) | **NEW** Server modes and first-time initialization | Setup Guide |
 | [docs/SERVER_MODES_QUICKREF.md](docs/SERVER_MODES_QUICKREF.md) | **NEW** Quick reference for server modes | Quick Ref |
+| [docs/UNDER_CONSTRUCTION_MODE.md](docs/UNDER_CONSTRUCTION_MODE.md) | **Phase 9.3.8** HTML error handling and Under Construction mode | Setup Guide |
 | **LULmodule History Course** | Complete development history (Phases 2-9) | 8 lessons, interactive |
 
 **Note:** PHASES.md and HISTORY.md have been archived. Use the LULmodule History course for learning RaOS evolution.
