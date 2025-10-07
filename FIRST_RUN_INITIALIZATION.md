@@ -24,11 +24,11 @@ When you run RaCore for the first time:
 [ApacheManager] Apache configuration files created
 
 [FirstRunManager] Step 4/4: Starting web server...
-[ApacheManager] PHP server started successfully on http://localhost:8080
+[NginxManager] CMS configured for Nginx on port 80
 
 ✅ RaCore CMS is now running!
-   Homepage: http://localhost:8080
-   Control Panel: http://localhost:8080/control (or http://localhost:80/control-panel.html)
+   Homepage: http://localhost (port 80)
+   Control Panel: http://localhost/control (or http://localhost:80/control-panel.html)
    Default login: admin / admin123
 
 🎛️  ROLE-BASED ACCESS:
@@ -51,7 +51,7 @@ The CMS homepage includes navigation to:
 - **Social** - MySpace-style user profiles (coming soon)
 - **Settings** - Control Panel for personal and admin settings
 
-**Default Entry Point**: When you visit `http://localhost:80/`, you are automatically redirected to the CMS homepage at `http://localhost:8080/`.
+**Default Entry Point**: When you visit `http://localhost:80/`, you can access the RaCore API and control panel. The CMS is configured to run through Nginx on port 80.
 
 ## SuperAdmin Control Panel Features
 
@@ -158,14 +158,9 @@ FirstRunManager.IsFirstRun() ?
     │       ├─→ index.php (Control Panel UI)
     │       └─→ styles.css (professional styling)
     ↓
-    ├─→ Step 2: ApacheManager.ConfigureApache()
-    │   ├─→ Create apache_conf/racore.conf
-    │   ├─→ Create .htaccess
-    │   └─→ Display Apache instructions
-    ↓
-    ├─→ Step 3: ApacheManager.StartPhpServer()
-    │   ├─→ Launch PHP server on port 8080
-    │   └─→ Log server output
+    ├─→ Step 3/4: NginxManager.ConfigureNginx()
+    │   ├─→ Create nginx configuration for port 80
+    │   └─→ Display Nginx setup instructions
     ↓
     └─→ MarkAsInitialized()
         └─→ Create .racore_initialized marker
@@ -299,12 +294,14 @@ WebSocket: ws://localhost:80/ws
 
 **Note:** Port 80 is used by default for seamless domain access without specifying a port. If you need to run on a non-privileged port (like 5000 or 8080), set the RACORE_PORT environment variable. When using Nginx as a reverse proxy, Nginx listens on port 80 and forwards to RaCore on the configured port.
 
-### CMS PHP Server Port Configuration
-Default: `8080`
+### CMS Port Configuration
+Default: `80` (standard HTTP port)
 
-To change:
+The integrated CMS is configured to run through Nginx on port 80, the same port as the RaCore API server. This provides a unified website experience.
+
+Configuration is handled through NginxManager:
 ```csharp
-var apacheManager = new ApacheManager(_cmsPath, 8081); // Custom port
+var nginxManager = new NginxManager(_cmsPath, 80);
 ```
 
 ### Control Panel Path Configuration
@@ -480,13 +477,13 @@ See `RaCore/Tests/` (if test infrastructure exists) for:
 3. Verify write permissions
 4. Ensure CMSSpawner module is loaded
 
-### Issue: PHP Server Not Starting
-**Symptoms**: Server shows as started but not accessible  
+### Issue: CMS Not Accessible
+**Symptoms**: Cannot access CMS website  
 **Solution**:
-1. Check if port 8080 is available: `netstat -tuln | grep 8080`
-2. Try different port: Edit `FirstRunManager.cs`
-3. Check PHP error logs
-4. Verify firewall settings
+1. Check if port 80 is available: `netstat -tuln | grep 80`
+2. Ensure Nginx is configured and running
+3. Check PHP-FPM is running
+4. Verify firewall settings allow port 80
 
 ### Issue: Repeated Initialization
 **Symptoms**: First-run runs on every startup  
@@ -558,18 +555,16 @@ public class FirstRunManager
 }
 ```
 
-### ApacheManager
+### NginxManager
 
 ```csharp
-public class ApacheManager
+public class NginxManager
 {
-    public ApacheManager(string cmsPath, int port = 8080);
-    public static bool IsApacheAvailable();
-    public void CreateApacheConfig();
-    public void CreateHtaccess();
-    public bool StartPhpServer(string phpPath);
-    public bool ConfigureApache();
-    public void Stop();
+    public NginxManager(string cmsPath, int port = 80);
+    public static bool IsNginxAvailable();
+    public void CreateNginxConfig();
+    public bool ConfigureReverseProxy(int racorePort, string domain);
+    public static int? GetConfiguredRaCorePort();
 }
 ```
 
@@ -592,7 +587,7 @@ Part of the RaCore project. See main repository for license information.
 ## Authentication Flow
 
 ### SuperAdmin Login Process
-1. User visits Control Panel at `http://localhost:8080`
+1. User visits Control Panel at `http://localhost/control`
 2. Control Panel presents login form
 3. User enters credentials (default: admin/admin123)
 4. Control Panel sends POST request to RaCore Auth API at `http://localhost:7077/api/auth/login`
