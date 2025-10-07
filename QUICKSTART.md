@@ -87,10 +87,18 @@ WebSocket: ws://localhost:80/ws
 
 ## 5. Access the Application
 
+**Local Development:**
 Open your browser to:
 - **Homepage:** `http://localhost` (or `http://localhost:PORT` if you configured a custom port)
 - **Control Panel:** `http://localhost/control`
 - **API Documentation:** Available through the Control Panel
+
+**Remote Server (Ubuntu/SSH):**
+If you're running RaOS on a remote server (e.g., via PuTTY/SSH):
+- Replace `localhost` with your server's IP address or hostname
+- **Homepage:** `http://YOUR_SERVER_IP` or `http://YOUR_DOMAIN`
+- **Control Panel:** `http://YOUR_SERVER_IP/control`
+- Example: `http://192.168.1.100/control`
 
 **Default Login:**
 - Username: `admin`
@@ -129,7 +137,9 @@ If you have PHP 8.0+ installed, RaCore will automatically:
 - Start the PHP built-in server on port 8080
 - Integrate with the Control Panel
 
-Access the CMS at: `http://localhost:8080`
+**Access the CMS:**
+- Local: `http://localhost:8080`
+- Remote Server: `http://YOUR_SERVER_IP:8080`
 
 ---
 
@@ -152,6 +162,48 @@ dotnet run
 **Windows:**
 - Run Command Prompt or PowerShell as Administrator
 - Or set `RACORE_PORT` to a higher port number
+
+### Remote Server Access (Ubuntu/SSH/PuTTY)
+
+If you're running RaOS on a remote Ubuntu server:
+
+**1. Ensure Firewall Allows Traffic:**
+```bash
+# Allow port 80 (or your custom port)
+sudo ufw allow 80/tcp
+sudo ufw allow 8080/tcp  # For CMS if using PHP
+
+# Check firewall status
+sudo ufw status
+```
+
+**2. Find Your Server IP:**
+```bash
+# Get server IP address
+ip addr show | grep inet
+# OR
+hostname -I
+```
+
+**3. Access from Your Local Machine:**
+- Open browser on your Windows machine
+- Navigate to `http://YOUR_SERVER_IP`
+- Example: `http://192.168.1.100/control`
+
+**4. Using WinSCP for File Transfers:**
+- Upload files to: `/home/your-username/TheRaProject/`
+- Ensure proper permissions: `chmod +x build-linux.sh`
+
+**5. Running as Background Service:**
+```bash
+# Keep RaCore running after SSH disconnect
+nohup dotnet run > racore.log 2>&1 &
+
+# Or use screen/tmux for better control
+screen -S racore
+dotnet run
+# Press Ctrl+A, then D to detach
+```
 
 ### PHP Not Detected
 
