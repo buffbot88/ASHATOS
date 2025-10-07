@@ -1,7 +1,7 @@
 # Control Panel Module API Reference
 
 **Version:** 9.3.9  
-**Last Updated:** January 2025  
+**Last Updated:** October 2025  
 **Target Audience:** Module Developers
 
 ---

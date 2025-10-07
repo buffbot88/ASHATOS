@@ -1,7 +1,7 @@
 # RaOS Version Management Guide
 
 **Current Version:** 9.3.9  
-**Last Updated:** January 2025
+**Last Updated:** October 2025
 
 ---
 
@@ -26,7 +26,7 @@ public static class RaVersion
     public const int Minor = 3;
     public const int Patch = 9;
     public const string Label = "Production Ready";
-    public const string LastUpdated = "January 2025";
+    public const string LastUpdated = "October 2025";
 }
 ```
 

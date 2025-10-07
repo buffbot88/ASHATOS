@@ -39,7 +39,7 @@ public static class RaVersion
     /// <summary>
     /// Last update date
     /// </summary>
-    public const string LastUpdated = "January 2025";
+    public const string LastUpdated = "October 2025";
     
     /// <summary>
     /// Gets version as a comparable tuple

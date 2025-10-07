@@ -101,7 +101,7 @@ The **LegendaryUserLearningModule** (LULmodule) is a comprehensive, self-paced l
   - Phase 9: Control Panel & Polish (Oct 6-7, 2025 + Jan 2025)
     - **UPDATED**: Now includes Phases 9.3.5-9.3.9 (Payment, Asset Security, CloudFlare, Ashat AI, Documentation)
 - **Category**: History
-- **Note**: This course chronicles the rapid development of RaOS from v1.0 (mid-September 2025) through Phase 9.3.9 (January 2025), showcasing intensive iterative development.
+- **Note**: This course chronicles the rapid development of RaOS from v1.0 (mid-September 2025) through Phase 9.3.9 (October 2025), showcasing intensive iterative development.
 
 ## Usage
 
