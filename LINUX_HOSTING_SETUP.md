@@ -168,6 +168,22 @@ nginx -v
 # Should show: nginx version: nginx/1.18.0 or higher
 ```
 
+### Step 1b: Configure RaOS Nginx Management (Recommended)
+
+To allow RaOS to manage Nginx without requiring manual sudo intervention:
+
+```bash
+# Run the automated setup script
+sudo /home/racore/TheRaProject/setup/setup-nginx-permissions.sh
+
+# Or if your RaOS user is different:
+sudo /home/racore/TheRaProject/setup/setup-nginx-permissions.sh your-username
+```
+
+This grants RaOS permission to start, stop, restart, and reload Nginx automatically through its API.
+
+**📖 For detailed information, see:** [NGINX_MANAGEMENT_UBUNTU.md](NGINX_MANAGEMENT_UBUNTU.md)
+
 ### Step 2: Configure Nginx for RaCore
 
 Create RaCore site configuration:
