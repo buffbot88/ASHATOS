@@ -32,7 +32,7 @@ public sealed class SiteBuilderModule : ModuleBase
         
         // Use GetCurrentDirectory() to get the RaCore.exe server root directory (where the executable runs)
         var serverRoot = Directory.GetCurrentDirectory();
-        _cmsRootPath = Path.Combine(serverRoot, "racore_cms");
+        _cmsRootPath = Path.Combine(serverRoot, "wwwroot");
         var wwwrootPath = Path.Combine(serverRoot, "wwwroot");
         
         // Initialize components

@@ -179,7 +179,7 @@ Start RaCore Web Server (port 7077)
 {
   "InitializedAt": "2025-10-05T04:24:00Z",
   "Version": "1.0",
-  "CmsPath": "/path/to/cms_homepage"
+  "CmsPath": "/path/to/wwwroot"
 }
 ```
 

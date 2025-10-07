@@ -1295,7 +1295,7 @@ app.MapGet("/", async (HttpContext context) =>
             <ul>
                 <li><a href='/control-panel.html'>Control Panel</a> - Admin dashboard</li>
                 <li>API Documentation - Check the README.md</li>
-                <li>CMS Location: <code>racore_cms/</code> directory</li>
+                <li>CMS Location: <code>wwwroot/</code> directory</li>
             </ul>
         </div>
         

@@ -121,7 +121,7 @@ Console.WriteLine(cms.Process("cms status"));
 ### 3. Start the PHP Server (if not auto-started)
 
 ```bash
-cd cms_homepage
+cd wwwroot
 php -S localhost:8080
 ```
 
@@ -144,7 +144,7 @@ help              - Show help message
 ## Generated Structure
 
 ```
-cms_homepage/
+wwwroot/
 ├── index.php           # Public homepage
 ├── admin.php           # Admin dashboard
 ├── config.php          # Site configuration
@@ -172,7 +172,7 @@ The marker file contains:
 {
   "InitializedAt": "2025-10-05T04:24:00Z",
   "Version": "1.0",
-  "CmsPath": "/path/to/cms_homepage"
+  "CmsPath": "/path/to/wwwroot"
 }
 ```
 
@@ -244,7 +244,7 @@ $db->createPage('About', '<h2>About Us</h2><p>Content</p>', 'about');
 
 ### Customize Styles
 
-Edit `cms_homepage/styles.css` to change colors, fonts, and layout.
+Edit `wwwroot/styles.css` to change colors, fonts, and layout.
 
 ## Production Deployment
 
@@ -263,9 +263,9 @@ Edit `cms_homepage/styles.css` to change colors, fonts, and layout.
 ```apache
 <VirtualHost *:80>
     ServerName yourdomain.com
-    DocumentRoot /path/to/cms_homepage
+    DocumentRoot /path/to/wwwroot
     
-    <Directory /path/to/cms_homepage>
+    <Directory /path/to/wwwroot>
         AllowOverride All
         Require all granted
     </Directory>
@@ -278,13 +278,13 @@ Edit `cms_homepage/styles.css` to change colors, fonts, and layout.
 
 <VirtualHost *:443>
     ServerName yourdomain.com
-    DocumentRoot /path/to/cms_homepage
+    DocumentRoot /path/to/wwwroot
     
     SSLEngine on
     SSLCertificateFile /path/to/cert.pem
     SSLCertificateKeyFile /path/to/key.pem
     
-    <Directory /path/to/cms_homepage>
+    <Directory /path/to/wwwroot>
         AllowOverride All
         Require all granted
     </Directory>
@@ -304,7 +304,7 @@ server {
     listen 443 ssl http2;
     server_name yourdomain.com;
     
-    root /path/to/cms_homepage;
+    root /path/to/wwwroot;
     index index.php;
     
     ssl_certificate /path/to/cert.pem;
@@ -343,9 +343,9 @@ php --version
 
 ```bash
 # Fix permissions
-chmod 755 cms_homepage
-chmod 644 cms_homepage/*.php
-chmod 666 cms_homepage/cms_database.sqlite
+chmod 755 wwwroot
+chmod 644 wwwroot/*.php
+chmod 666 Databases/cms_database.sqlite
 ```
 
 ### Port Already in Use
