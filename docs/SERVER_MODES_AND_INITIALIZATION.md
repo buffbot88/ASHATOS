@@ -8,30 +8,46 @@ RaOS supports multiple server modes to accommodate different deployment scenario
 
 ### Available Modes
 
-1. **Alpha Mode**
+1. **Dev Mode**
+   - Purpose: Development and testing with bypass of external validations
+   - Features: Skips license server validation during initial setup, enables development features in modules (e.g., LegendaryPay rewards)
+   - Use Case: Local development and testing environments
+   - **Note**: This mode may be renamed or removed in future versions
+   
+2. **Alpha Mode**
    - Purpose: Early development and testing
    - Features: Full logging, extended debugging, experimental features enabled
    - Use Case: Internal development teams
    
-2. **Beta Mode**
+3. **Beta Mode**
    - Purpose: Pre-release testing with selected users
    - Features: Enhanced logging, beta feature access
    - Use Case: Early adopters and beta testers
    
-3. **Omega Mode**
+4. **Omega Mode**
    - Purpose: Main server configuration (US-Omega)
    - Features: Central licensing validation, full feature set
    - Use Case: Primary RaOS deployment server
    
-4. **Demo Mode**
+5. **Demo Mode**
    - Purpose: Demonstration and evaluation
    - Features: Limited features, sample data included
    - Use Case: Product demonstrations and trials
    
-5. **Production Mode** (Default)
+6. **Production Mode** (Default)
    - Purpose: Full production deployment
    - Features: Optimized performance, production-level logging
    - Use Case: Live production environments
+
+### Dev Mode Behavior
+
+When the server is in Dev mode:
+- License validation is bypassed during initial Super Admin setup
+- Super Admin License can be freely set on first password change without server verification
+- Modules like LegendaryPay automatically enable development features (e.g., test rewards)
+- External validation calls to license servers are skipped for faster development iteration
+
+**Security Note**: Dev mode should NEVER be used in production environments as it bypasses critical security validations.
 
 ### Setting Server Mode
 
@@ -55,7 +71,29 @@ Server mode can be set during initial configuration or changed later through the
   "SystemRequirementsMet": true,
   "SystemWarnings": [],
   "CmsPath": "/path/to/wwwroot",
-  "MainServerUrl": "https://us-omega.raos.io"
+  "MainServerUrl": "https://us-omega.raos.io",
+  "SkipLicenseValidation": false
+}
+```
+
+**Dev Mode Example**:
+```json
+{
+  "Mode": "Dev",
+  "IsFirstRun": false,
+  "InitializationCompleted": true,
+  "InitializedAt": "2024-01-15T00:00:00Z",
+  "Version": "1.0",
+  "LicenseKey": "RACORE-DEV-TEST-12345678",
+  "LicenseType": "Development",
+  "AdminPasswordChanged": true,
+  "AdminUsernameChanged": true,
+  "AshatEnabled": false,
+  "SystemRequirementsMet": true,
+  "SystemWarnings": [],
+  "CmsPath": "/path/to/wwwroot",
+  "MainServerUrl": "https://us-omega.raos.io",
+  "SkipLicenseValidation": true
 }
 ```
 
@@ -150,6 +188,8 @@ After the automated initialization, administrators must complete these steps thr
 5. Features are enabled based on license package
 6. Configuration is persisted to disk
 
+**Dev Mode Exception**: When server is in Dev mode, steps 2-4 are skipped for initial Super Admin setup, allowing license to be set freely without server validation. This enables faster development iteration without license server dependencies.
+
 ### Offline Mode
 
 If the main server is unreachable:
@@ -157,6 +197,8 @@ If the main server is unreachable:
 - Server operates with limited functionality
 - Periodic retry attempts are made
 - Manual validation can be triggered
+
+**Dev Mode**: License validation failures are ignored to allow development without connectivity requirements.
 
 ## Configuration Files
 
@@ -168,6 +210,16 @@ Main configuration file containing:
 - License information
 - Security settings
 - System warnings
+- `SkipLicenseValidation`: Automatically set to `true` in Dev mode
+
+### Module Synchronization
+
+When the server mode is set to Dev:
+- LegendaryPay module automatically enables development features (e.g., test rewards)
+- License module bypasses external server validation
+- Other modules may adapt behavior based on server mode
+
+The FirstRunManager automatically synchronizes the Dev mode setting with modules that support it on startup and when the mode is changed.
 
 ### .racore_initialized
 

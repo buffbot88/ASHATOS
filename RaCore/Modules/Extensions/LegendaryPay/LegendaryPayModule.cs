@@ -18,8 +18,8 @@ public sealed class LegendaryPayModule : ModuleBase
     private IRaCoinModule? _racoinModule;
     private readonly object _lock = new();
     
-    // Dev Mode settings
-    private bool _isDevMode = true; // Default to Dev Mode for Phase 9.3.5
+    // Dev Mode settings - now tied to server-wide mode
+    private bool _isDevMode = false; // Will be set from server configuration
     private readonly decimal _devModeRewardAmount = 1m; // 1 Gold per approved action in Dev Mode
     
     // Payment action tracking
@@ -39,12 +39,30 @@ public sealed class LegendaryPayModule : ModuleBase
         }
         
         LogInfo("LegendaryPay module initialized - Next-generation payment system");
-        LogInfo($"Mode: {(_isDevMode ? "DEV MODE" : "Production")}");
+        LogInfo($"Mode: {(_isDevMode ? "DEV MODE" : "Production")} (will sync with server mode)");
         
         if (_isDevMode)
         {
             LogInfo($"Dev Mode Active: All approved actions generate {_devModeRewardAmount} Gold per user");
             LogInfo("Applies to: User Activity on Forums, Chat Rooms, Blogs, and Game Servers");
+        }
+    }
+    
+    /// <summary>
+    /// Set Dev mode from server configuration (called by FirstRunManager or ServerConfigModule)
+    /// </summary>
+    public void SetDevModeFromServer(bool isDevMode)
+    {
+        lock (_lock)
+        {
+            var oldMode = _isDevMode ? "Development" : "Production";
+            _isDevMode = isDevMode;
+            var newMode = _isDevMode ? "Development" : "Production";
+            
+            if (oldMode != newMode)
+            {
+                LogInfo($"LegendaryPay mode synced with server: {oldMode} -> {newMode}");
+            }
         }
     }
 
@@ -118,17 +136,6 @@ public sealed class LegendaryPayModule : ModuleBase
             return GetPaymentStats();
         }
 
-        if (text.StartsWith("pay mode", StringComparison.OrdinalIgnoreCase))
-        {
-            var parts = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length < 3)
-            {
-                return "Usage: pay mode <dev|production>";
-            }
-            
-            return SetMode(parts[2]);
-        }
-
         return "Unknown LegendaryPay command. Type 'help' for available commands.";
     }
 
@@ -146,12 +153,13 @@ public sealed class LegendaryPayModule : ModuleBase
         sb.AppendLine("  pay approve <action-id>             - Approve payment action (triggers reward in Dev Mode)");
         sb.AppendLine("  pay history <user-id>               - View user's payment action history");
         sb.AppendLine("  pay stats                           - Show payment system statistics");
-        sb.AppendLine("  pay mode <dev|production>           - Switch between Dev and Production modes");
         sb.AppendLine();
         sb.AppendLine("Dev Mode Features:");
         sb.AppendLine($"  - All approved actions generate {_devModeRewardAmount} Gold per user");
         sb.AppendLine("  - Applies to User Activity on Forums, Chat Rooms, Blogs, and Game Servers");
         sb.AppendLine("  - Does NOT apply to site-wide homepages");
+        sb.AppendLine();
+        sb.AppendLine("Note: Dev mode is controlled by server configuration (use 'serverconfig mode Dev')");
         sb.AppendLine();
         sb.AppendLine("Module Category: extensions");
         sb.AppendLine("Status: Active (Phase 9.3.5)");
@@ -371,49 +379,6 @@ public sealed class LegendaryPayModule : ModuleBase
                     })
                     .OrderByDescending(u => u.TotalRewards)
                     .Take(10)
-            }, _jsonOptions);
-        }
-    }
-
-    private string SetMode(string mode)
-    {
-        lock (_lock)
-        {
-            var oldMode = _isDevMode ? "Development" : "Production";
-            
-            if (mode.Equals("dev", StringComparison.OrdinalIgnoreCase) || 
-                mode.Equals("development", StringComparison.OrdinalIgnoreCase))
-            {
-                _isDevMode = true;
-            }
-            else if (mode.Equals("prod", StringComparison.OrdinalIgnoreCase) || 
-                     mode.Equals("production", StringComparison.OrdinalIgnoreCase))
-            {
-                _isDevMode = false;
-            }
-            else
-            {
-                return JsonSerializer.Serialize(new
-                {
-                    Success = false,
-                    Message = "Invalid mode. Use 'dev' or 'production'"
-                }, _jsonOptions);
-            }
-
-            var newMode = _isDevMode ? "Development" : "Production";
-            LogInfo($"LegendaryPay mode changed: {oldMode} -> {newMode}");
-
-            return JsonSerializer.Serialize(new
-            {
-                Success = true,
-                Message = $"Mode changed to {newMode}",
-                OldMode = oldMode,
-                NewMode = newMode,
-                DevModeFeatures = _isDevMode ? new
-                {
-                    RewardPerAction = $"{_devModeRewardAmount} Gold",
-                    Note = "All approved actions will now generate rewards"
-                } : null
             }, _jsonOptions);
         }
     }

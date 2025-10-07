@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Abstractions;
+using RaCore.Engine;
 using RaCore.Engine.Manager;
 
 namespace RaCore.Modules.Extensions.License;
@@ -20,6 +21,7 @@ public sealed class LicenseModule : ModuleBase, ILicenseModule
     private readonly object _lock = new();
     
     private IAuthenticationModule? _authModule;
+    private FirstRunManager? _firstRunManager;
     private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
 
     public override void Initialize(object? manager)
@@ -33,6 +35,14 @@ public sealed class LicenseModule : ModuleBase, ILicenseModule
         }
         
         LogInfo("License module initialized");
+    }
+    
+    /// <summary>
+    /// Set FirstRunManager reference for Dev mode checking
+    /// </summary>
+    public void SetFirstRunManager(FirstRunManager manager)
+    {
+        _firstRunManager = manager;
     }
 
     public override string Process(string input)
@@ -297,6 +307,9 @@ public sealed class LicenseModule : ModuleBase, ILicenseModule
     {
         lock (_lock)
         {
+            // Check if we're in Dev mode and should skip validation
+            bool isDevMode = _firstRunManager?.GetServerConfiguration()?.SkipLicenseValidation ?? false;
+            
             var license = new Abstractions.License
             {
                 Id = Guid.NewGuid(),
@@ -330,7 +343,14 @@ public sealed class LicenseModule : ModuleBase, ILicenseModule
 
             _userLicenses[userLicense.Id] = userLicense;
             
-            LogInfo($"License created and assigned: {license.LicenseKey} to user {userId}");
+            if (isDevMode)
+            {
+                LogInfo($"License created and assigned in Dev mode (no server validation): {license.LicenseKey} to user {userId}");
+            }
+            else
+            {
+                LogInfo($"License created and assigned: {license.LicenseKey} to user {userId}");
+            }
             
             return license;
         }

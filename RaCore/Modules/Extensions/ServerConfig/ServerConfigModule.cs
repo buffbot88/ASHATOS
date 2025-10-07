@@ -74,15 +74,18 @@ public sealed class ServerConfigModule : ModuleBase
             "  serverconfig mode <name>   - Change server mode (SuperAdmin only)",
             "",
             "Available Modes:",
+            "  Dev        - Development mode with testing features (bypasses validations)",
             "  Alpha      - Early development and testing with full logging",
             "  Beta       - Pre-release testing with selected users",
             "  Omega      - Main server configuration (US-Omega)",
             "  Demo       - Demonstration instance with limited features",
             "  Production - Full production deployment (default)",
             "",
+            "Note: Dev mode may be renamed or removed in future versions.",
+            "",
             "Example:",
             "  serverconfig status",
-            "  serverconfig mode Beta"
+            "  serverconfig mode Dev"
         );
     }
     
@@ -115,7 +118,9 @@ public sealed class ServerConfigModule : ModuleBase
             SystemRequirementsMet = config.SystemRequirementsMet,
             SystemWarnings = config.SystemWarnings,
             CmsPath = config.CmsPath,
-            MainServerUrl = config.MainServerUrl
+            MainServerUrl = config.MainServerUrl,
+            SkipLicenseValidation = config.SkipLicenseValidation,
+            DevModeNote = config.Mode == ServerMode.Dev ? "License validation is bypassed for initial setup" : null
         }, _jsonOptions);
     }
     
@@ -132,6 +137,7 @@ public sealed class ServerConfigModule : ModuleBase
                 Value = (int)mode,
                 Description = mode switch
                 {
+                    ServerMode.Dev => "Development mode with testing features enabled (bypasses external validations)",
                     ServerMode.Alpha => "Early development and testing with full logging",
                     ServerMode.Beta => "Pre-release testing with selected users",
                     ServerMode.Omega => "Main server configuration (US-Omega)",
