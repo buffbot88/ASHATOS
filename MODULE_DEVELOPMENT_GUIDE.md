@@ -1440,6 +1440,226 @@ Console.WriteLine($"[{Name}] Loaded from: {assembly.Location}");
 
 ---
 
+---
+
+## Control Panel Integration (Phase 9.3.4)
+
+### Overview
+
+RaCore provides an Admin Control Panel with a modular, tabbed architecture. Your module can integrate seamlessly to provide a custom administrative interface.
+
+### Benefits of Control Panel Integration
+
+- **Centralized Management**: Single interface for all modules
+- **Consistent UI/UX**: Inherit standard design patterns
+- **Authentication Built-In**: Automatic role-based access control
+- **API Integration**: Easy data exchange with backend
+- **Real-Time Updates**: Support for live data refresh
+
+### Quick Integration
+
+#### Step 1: Mark Your Module
+
+Ensure your module has the `[RaModule]` attribute:
+
+```csharp
+[RaModule(Category = "extensions")]
+public class MyModule : ModuleBase
+{
+    public override string Name => "MyModule";
+    // ...
+}
+```
+
+#### Step 2: Add Tab Definition
+
+Modify `RaCore/Modules/Extensions/SiteBuilder/WwwrootGenerator.cs`:
+
+```csharp
+// In GenerateControlPanelUiJs method, add to MODULE_TABS:
+'MyModule': { 
+    category: 'extensions',
+    icon: '🎮',
+    requiredRole: 'Admin',
+    render: renderMyModuleTab
+}
+```
+
+#### Step 3: Add Render Function
+
+In the same file, add your render function:
+
+```csharp
+async function renderMyModuleTab(container) {{
+    container.innerHTML = '<p class=\""loading\"">Loading...</p>';
+    
+    try {{
+        const response = await fetch('/api/mymodule/status', {{
+            headers: {{
+                'Authorization': `Bearer ${{localStorage.getItem('racore_token')}}`
+            }}
+        }});
+        
+        const data = await response.json();
+        
+        container.innerHTML = `
+            <h2 style=\""color: #667eea;\"">🎮 My Module</h2>
+            <div class=\""stats-grid\"">
+                <div class=\""stat-card\"">
+                    <h3>${{data.count}}</h3>
+                    <p>Items</p>
+                </div>
+            </div>
+        `;
+    }} catch (error) {{
+        container.innerHTML = `<p class=\""error\"">Error: ${{error.message}}</p>`;
+    }}
+}}
+```
+
+#### Step 4: Add API Endpoint
+
+In `RaCore/Program.cs`, add your endpoint:
+
+```csharp
+app.MapGet("/api/mymodule/status", async (HttpContext context) =>
+{
+    // 1. Check authentication
+    if (authModule == null)
+    {
+        context.Response.StatusCode = 503;
+        await context.Response.WriteAsJsonAsync(new { 
+            success = false, 
+            message = "Authentication not available" 
+        });
+        return;
+    }
+
+    // 2. Validate token and permissions
+    var authHeader = context.Request.Headers["Authorization"].ToString();
+    var token = authHeader.StartsWith("Bearer ") ? authHeader[7..] : authHeader;
+    var user = await authModule.GetUserByTokenAsync(token);
+
+    if (user == null || user.Role < UserRole.Admin)
+    {
+        context.Response.StatusCode = 403;
+        await context.Response.WriteAsJsonAsync(new { 
+            success = false, 
+            message = "Insufficient permissions" 
+        });
+        return;
+    }
+
+    // 3. Get your module
+    var myModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<MyModule>()
+        .FirstOrDefault();
+
+    if (myModule == null)
+    {
+        context.Response.StatusCode = 404;
+        await context.Response.WriteAsJsonAsync(new { 
+            success = false, 
+            message = "Module not found" 
+        });
+        return;
+    }
+
+    // 4. Return module data
+    await context.Response.WriteAsJsonAsync(new
+    {
+        success = true,
+        count = myModule.GetItemCount(),
+        status = "Operational"
+    });
+});
+```
+
+### UI Components
+
+Use these standard components for consistency:
+
+#### Stats Grid
+```html
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>123</h3>
+        <p>Metric Name</p>
+    </div>
+</div>
+```
+
+#### Module Grid
+```html
+<div class="modules-grid">
+    <div class="module-card">
+        <h3>Feature Title</h3>
+        <p>Description</p>
+        <button onclick="handleAction()">Action</button>
+    </div>
+</div>
+```
+
+#### Status Badge
+```html
+<span class="module-status active">Active</span>
+```
+
+### Color Palette
+
+```javascript
+{
+    primary: '#667eea',      // Purple
+    success: '#10b981',      // Green
+    warning: '#f59e0b',      // Orange
+    error: '#ef4444',        // Red
+    text: '#1a202c'          // Dark Text
+}
+```
+
+### Advanced Features
+
+#### Real-Time Updates
+
+```javascript
+async function renderMyModuleTab(container) {
+    let updateInterval;
+    
+    const update = async () => {
+        const data = await fetch('/api/mymodule/status', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('racore_token')}` }
+        }).then(r => r.json());
+        
+        document.getElementById('count').textContent = data.count;
+    };
+    
+    // Initial render
+    container.innerHTML = `
+        <div class="stat-card">
+            <h3 id="count">0</h3>
+            <p>Items</p>
+        </div>
+    `;
+    
+    await update();
+    updateInterval = setInterval(update, 5000);
+    
+    container.addEventListener('removed', () => clearInterval(updateInterval));
+}
+```
+
+### Complete Documentation
+
+For comprehensive control panel integration documentation, see:
+
+- **CONTROL_PANEL_MODULE_API.md** - Complete API reference
+- **CONTROL_PANEL_DEVELOPER_GUIDE.md** - Step-by-step developer guide
+- **LEGENDARY_CLIENTBUILDER_WEB_INTERFACE.md** - Example web interface
+- **PHASE9_3_3_SUMMARY.md** - Control panel architecture
+
+---
+
 ## Conclusion
 
 You now have everything you need to create powerful modules for RaOS! Remember:
@@ -1449,14 +1669,15 @@ You now have everything you need to create powerful modules for RaOS! Remember:
 3. **Follow Best Practices** - Error handling, async/await, resource management
 4. **Document Your Code** - Help others (and future you) understand your module
 5. **Share Your Work** - Contribute to the ecosystem (marketplace coming in Phase 10!)
+6. **Integrate with Control Panel** - Provide an admin interface for your module
 
 Happy coding! 🚀
 
 ---
 
-**Last Updated**: October 2025  
-**Version**: 1.0.0  
-**Maintained By**: GitHub Copilot (AI Assistant)  
+**Last Updated**: January 2025  
+**Version**: 1.0.1 (Phase 9.3.4)  
+**Maintained By**: RaCore Development Team  
 **Repository**: https://github.com/buffbot88/TheRaProject
 
 **Questions?** Open an issue on GitHub or check the documentation.
