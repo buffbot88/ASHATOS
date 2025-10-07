@@ -54,7 +54,7 @@ public class FirstRunManager
     }
     
     /// <summary>
-    /// Performs first-run initialization: spawns CMS with integrated Control Panel and configures Apache
+    /// Performs first-run initialization: spawns CMS with integrated Control Panel and configures Nginx
     /// </summary>
     public async Task<bool> InitializeAsync()
     {

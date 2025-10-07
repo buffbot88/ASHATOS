@@ -887,3 +887,77 @@ public class ConversionResult
 }
 
 #endregion
+
+#region Asset Security Module
+
+/// <summary>
+/// Interface for asset security with watermark detection and ownership verification
+/// </summary>
+public interface IAssetSecurityModule : IDisposable
+{
+    /// <summary>
+    /// Scan asset for watermarks, copyright, or embedded identifiers
+    /// </summary>
+    Task<WatermarkScanResult> ScanForWatermarksAsync(AssetDefinition asset);
+    
+    /// <summary>
+    /// Verify ownership or rights to an asset
+    /// </summary>
+    Task<OwnershipVerificationResult> VerifyOwnershipAsync(AssetDefinition asset, Guid userId);
+    
+    /// <summary>
+    /// Import asset with security checks
+    /// </summary>
+    Task<AssetImportResult> ImportAssetAsync(AssetDefinition asset, Guid ownerId, bool requireOwnershipProof = true);
+    
+    /// <summary>
+    /// Block asset import if verification fails
+    /// </summary>
+    Task<bool> BlockAssetImportAsync(Guid assetId, string reason);
+}
+
+public class WatermarkScanResult
+{
+    public bool HasWatermark { get; set; }
+    public List<WatermarkInfo> DetectedWatermarks { get; set; } = new();
+    public string ScanDetails { get; set; } = string.Empty;
+    public DateTime ScannedAt { get; set; }
+}
+
+public class WatermarkInfo
+{
+    public string Type { get; set; } = string.Empty; // "copyright", "trademark", "identifier"
+    public string Content { get; set; } = string.Empty;
+    public string Location { get; set; } = string.Empty; // "metadata", "embedded", "steganographic"
+    public float Confidence { get; set; } // 0.0 to 1.0
+}
+
+public class OwnershipVerificationResult
+{
+    public bool IsVerified { get; set; }
+    public OwnershipStatus Status { get; set; }
+    public string VerificationMethod { get; set; } = string.Empty;
+    public string Details { get; set; } = string.Empty;
+    public DateTime VerifiedAt { get; set; }
+}
+
+public class AssetImportResult
+{
+    public bool Success { get; set; }
+    public Guid? AssetId { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public WatermarkScanResult? WatermarkScan { get; set; }
+    public OwnershipVerificationResult? OwnershipVerification { get; set; }
+    public string LocalStoragePath { get; set; } = string.Empty;
+}
+
+public enum OwnershipStatus
+{
+    Verified,
+    Unverified,
+    RequiresProof,
+    Blocked,
+    Custom
+}
+
+#endregion
