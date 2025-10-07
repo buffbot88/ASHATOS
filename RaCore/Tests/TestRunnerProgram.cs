@@ -48,6 +48,16 @@ public class TestRunner
             Phase937Tests.RunTests();
         }
 
+        // Run Server Modes tests if requested
+        if (args.Length > 0 && args[0].ToLowerInvariant() == "servermodes")
+        {
+            Console.WriteLine("\n\n╔════════════════════════════════════════════════════════╗");
+            Console.WriteLine("║   Server Modes & Initialization Test Suite            ║");
+            Console.WriteLine("╚════════════════════════════════════════════════════════╝\n");
+            
+            ServerModesTests.RunTests();
+        }
+
         Console.WriteLine("\nPress any key to exit...");
         Console.ReadKey();
     }

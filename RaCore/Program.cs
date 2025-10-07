@@ -1375,6 +1375,144 @@ ILicenseModule? licenseModule = moduleManager.Modules
     .OfType<ILicenseModule>()
     .FirstOrDefault();
 
+// Server Configuration API Endpoints
+app.MapGet("/api/control/server/config", async (HttpContext context) =>
+{
+    try
+    {
+        if (authModule == null)
+        {
+            context.Response.StatusCode = 503;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Authentication not available" });
+            return;
+        }
+
+        var authHeader = context.Request.Headers["Authorization"].ToString();
+        var token = authHeader.StartsWith("Bearer ") ? authHeader[7..] : authHeader;
+        var user = await authModule.GetUserByTokenAsync(token);
+
+        if (user == null || user.Role < UserRole.Admin)
+        {
+            context.Response.StatusCode = 403;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Insufficient permissions" });
+            return;
+        }
+
+        var config = firstRunManager.GetServerConfiguration();
+        await context.Response.WriteAsJsonAsync(new { success = true, config });
+    }
+    catch (Exception ex)
+    {
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+    }
+});
+
+app.MapPost("/api/control/server/mode", async (HttpContext context) =>
+{
+    try
+    {
+        if (authModule == null)
+        {
+            context.Response.StatusCode = 503;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Authentication not available" });
+            return;
+        }
+
+        var authHeader = context.Request.Headers["Authorization"].ToString();
+        var token = authHeader.StartsWith("Bearer ") ? authHeader[7..] : authHeader;
+        var user = await authModule.GetUserByTokenAsync(token);
+
+        if (user == null || user.Role < UserRole.SuperAdmin)
+        {
+            context.Response.StatusCode = 403;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "SuperAdmin role required" });
+            return;
+        }
+
+        var request = await context.Request.ReadFromJsonAsync<ServerModeChangeRequest>();
+        if (request == null)
+        {
+            context.Response.StatusCode = 400;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Invalid request" });
+            return;
+        }
+
+        if (!Enum.TryParse<ServerMode>(request.Mode, true, out var mode))
+        {
+            context.Response.StatusCode = 400;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Invalid server mode" });
+            return;
+        }
+
+        firstRunManager.SetServerMode(mode);
+        await context.Response.WriteAsJsonAsync(new 
+        { 
+            success = true, 
+            message = $"Server mode changed to {mode}",
+            mode = mode.ToString(),
+            requiresRestart = true
+        });
+    }
+    catch (Exception ex)
+    {
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+    }
+});
+
+app.MapGet("/api/control/server/modes", async (HttpContext context) =>
+{
+    try
+    {
+        if (authModule == null)
+        {
+            context.Response.StatusCode = 503;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Authentication not available" });
+            return;
+        }
+
+        var authHeader = context.Request.Headers["Authorization"].ToString();
+        var token = authHeader.StartsWith("Bearer ") ? authHeader[7..] : authHeader;
+        var user = await authModule.GetUserByTokenAsync(token);
+
+        if (user == null || user.Role < UserRole.Admin)
+        {
+            context.Response.StatusCode = 403;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Insufficient permissions" });
+            return;
+        }
+
+        var modes = Enum.GetValues<ServerMode>().Select(m => new
+        {
+            value = m.ToString(),
+            name = m.ToString(),
+            description = m switch
+            {
+                ServerMode.Alpha => "Early development and testing with full logging",
+                ServerMode.Beta => "Pre-release testing with selected users",
+                ServerMode.Omega => "Main server configuration (US-Omega)",
+                ServerMode.Demo => "Demonstration instance with limited features",
+                ServerMode.Production => "Full production deployment",
+                _ => ""
+            }
+        });
+
+        await context.Response.WriteAsJsonAsync(new { success = true, modes });
+    }
+    catch (Exception ex)
+    {
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+    }
+});
+
+Console.WriteLine("[RaCore] Server Configuration API endpoints registered:");
+Console.WriteLine("  GET  /api/control/server/config - Get server configuration (Admin+)");
+Console.WriteLine("  POST /api/control/server/mode - Change server mode (SuperAdmin only)");
+Console.WriteLine("  GET  /api/control/server/modes - List available server modes (Admin+)");
+
+
 // Control Panel: Get Dashboard Stats
 app.MapGet("/api/control/stats", async (HttpContext context) =>
 {
@@ -3338,6 +3476,11 @@ public class CreateSceneRequest
 {
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+}
+
+public class ServerModeChangeRequest
+{
+    public string Mode { get; set; } = string.Empty;
 }
 
 // ============================================================================

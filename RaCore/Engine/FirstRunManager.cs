@@ -1,17 +1,20 @@
 using RaCore.Engine.Manager;
 using RaCore.Modules.Extensions.SiteBuilder;
 using System.Text.Json;
+using Abstractions;
 
 namespace RaCore.Engine;
 
 /// <summary>
-/// Manages first-run initialization for RaCore, including CMS spawning and Nginx setup
+/// Manages first-run initialization for RaCore, including CMS spawning, Nginx setup, and guided initialization sequence
 /// </summary>
 public class FirstRunManager
 {
     private readonly string _firstRunMarkerPath;
+    private readonly string _configPath;
     private readonly string _cmsPath;
     private readonly ModuleManager _moduleManager;
+    private ServerConfiguration _serverConfig;
     
     public FirstRunManager(ModuleManager moduleManager)
     {
@@ -19,7 +22,78 @@ public class FirstRunManager
         // Use GetCurrentDirectory() to get the RaCore.exe server root directory (where the executable runs)
         var serverRoot = Directory.GetCurrentDirectory();
         _firstRunMarkerPath = Path.Combine(serverRoot, ".racore_initialized");
+        _configPath = Path.Combine(serverRoot, "server-config.json");
         _cmsPath = Path.Combine(serverRoot, "wwwroot");
+        
+        // Load or create server configuration
+        _serverConfig = LoadServerConfiguration();
+    }
+    
+    /// <summary>
+    /// Load server configuration from disk or create a new one
+    /// </summary>
+    private ServerConfiguration LoadServerConfiguration()
+    {
+        try
+        {
+            if (File.Exists(_configPath))
+            {
+                var json = File.ReadAllText(_configPath);
+                var config = JsonSerializer.Deserialize<ServerConfiguration>(json);
+                if (config != null)
+                {
+                    Console.WriteLine($"[FirstRunManager] Loaded server configuration: Mode={config.Mode}");
+                    return config;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[FirstRunManager] Warning: Could not load server configuration: {ex.Message}");
+        }
+        
+        // Return default configuration
+        return new ServerConfiguration
+        {
+            Mode = ServerMode.Production,
+            IsFirstRun = true,
+            CmsPath = _cmsPath
+        };
+    }
+    
+    /// <summary>
+    /// Save server configuration to disk
+    /// </summary>
+    private void SaveServerConfiguration()
+    {
+        try
+        {
+            var json = JsonSerializer.Serialize(_serverConfig, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(_configPath, json);
+            Console.WriteLine($"[FirstRunManager] Server configuration saved: Mode={_serverConfig.Mode}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[FirstRunManager] Warning: Could not save server configuration: {ex.Message}");
+        }
+    }
+    
+    /// <summary>
+    /// Get the current server configuration
+    /// </summary>
+    public ServerConfiguration GetServerConfiguration()
+    {
+        return _serverConfig;
+    }
+    
+    /// <summary>
+    /// Set the server mode
+    /// </summary>
+    public void SetServerMode(ServerMode mode)
+    {
+        _serverConfig.Mode = mode;
+        SaveServerConfiguration();
+        Console.WriteLine($"[FirstRunManager] Server mode set to: {mode}");
     }
     
     /// <summary>
@@ -27,7 +101,85 @@ public class FirstRunManager
     /// </summary>
     public bool IsFirstRun()
     {
-        return !File.Exists(_firstRunMarkerPath);
+        return _serverConfig.IsFirstRun && !File.Exists(_firstRunMarkerPath);
+    }
+    
+    /// <summary>
+    /// Check system requirements and dependencies
+    /// </summary>
+    private InitializationStepResult CheckSystemRequirements()
+    {
+        var result = new InitializationStepResult { Success = true };
+        var warnings = new List<string>();
+        
+        Console.WriteLine("[FirstRunManager] Checking system requirements...");
+        
+        // Check .NET version
+        var dotnetVersion = Environment.Version;
+        Console.WriteLine($"  ✓ .NET Runtime: {dotnetVersion}");
+        
+        // Check for PHP
+        var phpPath = FindPhpExecutable();
+        if (phpPath != null)
+        {
+            Console.WriteLine($"  ✓ PHP executable found: {phpPath}");
+        }
+        else
+        {
+            warnings.Add("PHP not found - CMS functionality will be limited");
+            Console.WriteLine("  ⚠️  PHP not found - CMS functionality will be limited");
+        }
+        
+        // Check for Nginx
+        if (NginxManager.IsNginxAvailable())
+        {
+            Console.WriteLine("  ✓ Nginx is available");
+        }
+        else
+        {
+            warnings.Add("Nginx not available - will use PHP built-in server");
+            Console.WriteLine("  ⚠️  Nginx not available - will use PHP built-in server");
+        }
+        
+        // Check disk space
+        try
+        {
+            var drive = new DriveInfo(Directory.GetCurrentDirectory());
+            var freeSpaceGB = drive.AvailableFreeSpace / (1024.0 * 1024.0 * 1024.0);
+            Console.WriteLine($"  ✓ Available disk space: {freeSpaceGB:F2} GB");
+            
+            if (freeSpaceGB < 1.0)
+            {
+                warnings.Add($"Low disk space: {freeSpaceGB:F2} GB available");
+                Console.WriteLine($"  ⚠️  Low disk space: {freeSpaceGB:F2} GB available");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"  ⚠️  Could not check disk space: {ex.Message}");
+        }
+        
+        // Check memory
+        try
+        {
+            var process = System.Diagnostics.Process.GetCurrentProcess();
+            var memoryMB = process.WorkingSet64 / (1024.0 * 1024.0);
+            Console.WriteLine($"  ✓ Current memory usage: {memoryMB:F2} MB");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"  ⚠️  Could not check memory: {ex.Message}");
+        }
+        
+        result.Warnings = warnings;
+        result.Message = warnings.Count > 0 
+            ? $"System requirements check completed with {warnings.Count} warning(s)"
+            : "System requirements check completed successfully";
+            
+        _serverConfig.SystemRequirementsMet = true;
+        _serverConfig.SystemWarnings = warnings;
+        
+        return result;
     }
     
     /// <summary>
@@ -37,11 +189,22 @@ public class FirstRunManager
     {
         try
         {
+            _serverConfig.IsFirstRun = false;
+            _serverConfig.InitializationCompleted = true;
+            _serverConfig.InitializedAt = DateTime.UtcNow;
+            _serverConfig.CmsPath = _cmsPath;
+            
+            // Save configuration
+            SaveServerConfiguration();
+            
+            // Create marker file for backwards compatibility
             var initInfo = new
             {
                 InitializedAt = DateTime.UtcNow,
-                Version = "1.0",
-                CmsPath = _cmsPath
+                Version = _serverConfig.Version,
+                CmsPath = _cmsPath,
+                ServerMode = _serverConfig.Mode.ToString(),
+                LicenseKey = _serverConfig.LicenseKey
             };
             
             File.WriteAllText(_firstRunMarkerPath, JsonSerializer.Serialize(initInfo, new JsonSerializerOptions { WriteIndented = true }));
@@ -61,12 +224,28 @@ public class FirstRunManager
         await Task.CompletedTask;
         Console.WriteLine("========================================");
         Console.WriteLine("   RaCore First-Run Initialization");
+        Console.WriteLine($"   Server Mode: {_serverConfig.Mode}");
         Console.WriteLine("   CMS + Integrated Control Panel");
         Console.WriteLine("========================================");
         Console.WriteLine();
         
         try
         {
+            // Step 1: Check system requirements and dependencies
+            Console.WriteLine("[FirstRunManager] Step 1/7: Checking system requirements...");
+            Console.WriteLine();
+            var reqResult = CheckSystemRequirements();
+            Console.WriteLine($"[FirstRunManager] {reqResult.Message}");
+            if (reqResult.Warnings.Count > 0)
+            {
+                Console.WriteLine("[FirstRunManager] Warnings:");
+                foreach (var warning in reqResult.Warnings)
+                {
+                    Console.WriteLine($"  - {warning}");
+                }
+            }
+            Console.WriteLine();
+            
             // Find SiteBuilder module
             var siteBuilderModule = _moduleManager.Modules
                 .Select(m => m.Instance)
@@ -81,7 +260,7 @@ public class FirstRunManager
                 return false;
             }
             
-            Console.WriteLine("[FirstRunManager] Step 1/4: Generating wwwroot control panel...");
+            Console.WriteLine("[FirstRunManager] Step 2/7: Generating wwwroot control panel...");
             Console.WriteLine();
             
             // Generate wwwroot directory with control panel files
@@ -89,7 +268,7 @@ public class FirstRunManager
             Console.WriteLine(wwwrootResult);
             Console.WriteLine();
             
-            Console.WriteLine("[FirstRunManager] Step 2/4: Spawning CMS with Integrated Control Panel...");
+            Console.WriteLine("[FirstRunManager] Step 3/7: Spawning CMS with Integrated Control Panel...");
             Console.WriteLine();
             
             // Spawn the site with integrated control panel
@@ -104,7 +283,7 @@ public class FirstRunManager
                 return false;
             }
             
-            Console.WriteLine("[FirstRunManager] Step 3/4: Configuring Nginx...");
+            Console.WriteLine("[FirstRunManager] Step 4/7: Configuring Nginx...");
             Console.WriteLine();
             
             // Configure Nginx - use port 80 for the integrated CMS
@@ -147,7 +326,50 @@ public class FirstRunManager
             }
             
             Console.WriteLine();
-            Console.WriteLine("[FirstRunManager] Step 4/4: CMS Setup Instructions");
+            Console.WriteLine("[FirstRunManager] Step 5/7: Initialization Guidance");
+            Console.WriteLine();
+            
+            // Display guidance for completing initialization
+            Console.WriteLine("📋 TO COMPLETE INITIALIZATION:");
+            Console.WriteLine();
+            Console.WriteLine("1. Start RaCore and access the Control Panel:");
+            Console.WriteLine("   http://localhost/control-panel.html");
+            Console.WriteLine();
+            Console.WriteLine("2. Login with default credentials:");
+            Console.WriteLine("   Username: admin");
+            Console.WriteLine("   Password: admin123");
+            Console.WriteLine();
+            Console.WriteLine("3. IMPORTANT - Complete these steps:");
+            Console.WriteLine("   a) Change the default admin password (REQUIRED for security)");
+            Console.WriteLine("   b) Change the default admin username (RECOMMENDED)");
+            Console.WriteLine("   c) Enter your License Key for validation");
+            Console.WriteLine("   d) Configure server based on your license type");
+            Console.WriteLine();
+            Console.WriteLine($"4. Server Mode: {_serverConfig.Mode}");
+            if (_serverConfig.Mode == ServerMode.Alpha || _serverConfig.Mode == ServerMode.Beta)
+            {
+                Console.WriteLine("   Note: Extended logging and debugging features are enabled");
+            }
+            else if (_serverConfig.Mode == ServerMode.Demo)
+            {
+                Console.WriteLine("   Note: Some features are limited in Demo mode");
+            }
+            Console.WriteLine();
+            
+            Console.WriteLine("[FirstRunManager] Step 6/7: License Validation");
+            Console.WriteLine();
+            Console.WriteLine("License validation will be performed when you:");
+            Console.WriteLine("  - Enter your license key in the Control Panel");
+            Console.WriteLine($"  - Validation server: {_serverConfig.MainServerUrl}");
+            Console.WriteLine("  - Supported license types: Forum, CMS, GameServer, Enterprise");
+            Console.WriteLine();
+            
+            Console.WriteLine("[FirstRunManager] Step 7/7: Ashat AI Assistant");
+            Console.WriteLine();
+            Console.WriteLine("The Ashat AI assistant can be enabled after initialization:");
+            Console.WriteLine("  - Helps with server configuration and management");
+            Console.WriteLine("  - Assists with building websites and game systems");
+            Console.WriteLine("  - Available through the Control Panel");
             Console.WriteLine();
             
             // Check if PHP is available but don't start it
@@ -194,6 +416,8 @@ public class FirstRunManager
             
             Console.WriteLine("========================================");
             Console.WriteLine("   First-Run Initialization Complete");
+            Console.WriteLine($"   Server Mode: {_serverConfig.Mode}");
+            Console.WriteLine("   Next: Complete setup in Control Panel");
             Console.WriteLine("========================================");
             Console.WriteLine();
             
