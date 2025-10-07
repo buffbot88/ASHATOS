@@ -120,11 +120,11 @@ public class FirstRunManager
     }
     
     /// <summary>
-    /// Sync Dev mode setting with modules that need it (e.g., LegendaryPay)
+    /// Sync Dev mode setting with modules that need it (e.g., LegendaryPay, LegendarySupermarket)
     /// </summary>
     private void SyncDevModeWithModules()
     {
-        var isDevMode = _serverConfig.Mode == ServerMode.Dev;
+        var serverMode = _serverConfig.Mode;
         
         // Find LegendaryPay module and sync Dev mode
         var legendaryPayModule = _moduleManager.Modules
@@ -136,8 +136,24 @@ public class FirstRunManager
             var setDevModeMethod = legendaryPayModule.GetType().GetMethod("SetDevModeFromServer");
             if (setDevModeMethod != null)
             {
+                var isDevMode = serverMode == ServerMode.Dev;
                 setDevModeMethod.Invoke(legendaryPayModule, new object[] { isDevMode });
                 Console.WriteLine($"[FirstRunManager] Synced Dev mode ({isDevMode}) with LegendaryPay module");
+            }
+        }
+        
+        // Find LegendarySupermarket module and sync server mode (for Reseller feature control)
+        var supermarketModule = _moduleManager.Modules
+            .Select(m => m.Instance)
+            .FirstOrDefault(m => m.Name == "LegendarySupermarket");
+        
+        if (supermarketModule != null)
+        {
+            var setServerModeMethod = supermarketModule.GetType().GetMethod("SetServerModeFromConfig");
+            if (setServerModeMethod != null)
+            {
+                setServerModeMethod.Invoke(supermarketModule, new object[] { serverMode });
+                Console.WriteLine($"[FirstRunManager] Synced server mode ({serverMode}) with LegendarySupermarket module");
             }
         }
     }

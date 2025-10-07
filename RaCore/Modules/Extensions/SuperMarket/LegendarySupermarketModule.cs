@@ -21,9 +21,13 @@ public sealed class LegendarySupermarketModule : ModuleBase
     private IRaCoinModule? _racoinModule;
     private ILicenseModule? _licenseModule;
     private UserProfileModule? _profileModule;
+    private ServerMode _serverMode = ServerMode.Production; // Track server mode for Reseller feature control
     
     // Official store products (RaCoin side - licenses, modules, features)
     private readonly Dictionary<Guid, SuperMarketProduct> _officialProducts = new();
+    
+    // Reseller products (Forum, CMS, Game Server licenses) - disabled in Dev/Demo modes
+    private readonly HashSet<Guid> _resellerProductIds = new();
     
     // User marketplace listings (both RaCoin and Gold)
     private readonly Dictionary<Guid, MarketplaceListing> _marketplaceListings = new();
@@ -52,10 +56,18 @@ public sealed class LegendarySupermarketModule : ModuleBase
             _profileModule = _manager.GetModuleByName("UserProfile") as UserProfileModule;
         }
         
+        // Get server mode from FirstRunManager if available
+        SyncServerMode();
+        
         InitializeDefaultProducts();
         LogInfo("Legendary Supermarket module initialized - Dual-currency marketplace active");
         LogInfo("RaCoin side: Premium subscriptions, licensing, and premium items");
         LogInfo("Gold side: Free-tier in-game items and player trading");
+        
+        if (!IsResellerFeatureEnabled())
+        {
+            LogInfo($"Reseller feature is DISABLED in {_serverMode} mode - License sales not available");
+        }
     }
 
     public override string Process(string input)
@@ -257,14 +269,20 @@ public sealed class LegendarySupermarketModule : ModuleBase
             if (_officialProducts.Count == 0)
             {
                 // Reseller Pricing (AGPStudios Licensed Products)
-                AddOfficialProductInternal("Forum Script License", 20000m, ProductCategory.License, 
+                // These products are disabled in Dev and Demo modes
+                var forumLicense = AddOfficialProductInternal("Forum Script License", 20000m, ProductCategory.License, 
                     "1-year Forum Script license - Full-featured forum system ($20 USD)");
-                AddOfficialProductInternal("CMS Script License", 20000m, ProductCategory.License, 
-                    "1-year CMS Script license - Complete content management system ($20 USD)");
-                AddOfficialProductInternal("Custom Game Server License", 1000000m, ProductCategory.License, 
-                    "1-year Custom Game Server license - Unified client with server-side assets ($1000 USD)");
+                _resellerProductIds.Add(forumLicense.Id);
                 
-                // Standard License Tiers
+                var cmsLicense = AddOfficialProductInternal("CMS Script License", 20000m, ProductCategory.License, 
+                    "1-year CMS Script license - Complete content management system ($20 USD)");
+                _resellerProductIds.Add(cmsLicense.Id);
+                
+                var gameServerLicense = AddOfficialProductInternal("Custom Game Server License", 1000000m, ProductCategory.License, 
+                    "1-year Custom Game Server license - Unified client with server-side assets ($1000 USD)");
+                _resellerProductIds.Add(gameServerLicense.Id);
+                
+                // Standard License Tiers (available in all modes)
                 AddOfficialProductInternal("Standard License", 100m, ProductCategory.License, 
                     "1-year standard license with basic features");
                 AddOfficialProductInternal("Professional License", 500m, ProductCategory.License, 
@@ -272,7 +290,7 @@ public sealed class LegendarySupermarketModule : ModuleBase
                 AddOfficialProductInternal("Enterprise License", 2000m, ProductCategory.License, 
                     "1-year enterprise license with unlimited features");
                 
-                // Additional Products
+                // Additional Products (available in all modes)
                 AddOfficialProductInternal("Premium Theme Pack", 50m, ProductCategory.Theme, 
                     "Collection of premium UI themes");
                 AddOfficialProductInternal("AI Language Module", 150m, ProductCategory.Module, 
@@ -313,8 +331,12 @@ public sealed class LegendarySupermarketModule : ModuleBase
     {
         lock (_lock)
         {
+            var resellerEnabled = IsResellerFeatureEnabled();
+            
             var catalog = _officialProducts.Values
                 .Where(p => p.IsAvailable)
+                // Filter out Reseller products in Dev/Demo modes
+                .Where(p => resellerEnabled || !_resellerProductIds.Contains(p.Id))
                 .OrderBy(p => p.Category)
                 .ThenBy(p => p.PriceInRaCoins)
                 .Select(p => new
@@ -327,13 +349,19 @@ public sealed class LegendarySupermarketModule : ModuleBase
                     p.IsAvailable
                 });
 
+            var availableCount = _officialProducts.Values
+                .Count(p => p.IsAvailable && (resellerEnabled || !_resellerProductIds.Contains(p.Id)));
+
             return JsonSerializer.Serialize(new
             {
                 Store = "Official RaCoin Store",
                 Currency = "RaCoin",
+                ServerMode = _serverMode.ToString(),
+                ResellerFeatureEnabled = resellerEnabled,
                 TotalProducts = _officialProducts.Count,
-                AvailableProducts = _officialProducts.Values.Count(p => p.IsAvailable),
-                Products = catalog
+                AvailableProducts = availableCount,
+                Products = catalog,
+                Note = resellerEnabled ? null : "Reseller products (Forum, CMS, Game Server licenses) are not available in Dev/Demo modes"
             }, _jsonOptions);
         }
     }
@@ -358,6 +386,19 @@ public sealed class LegendarySupermarketModule : ModuleBase
                 {
                     Success = false,
                     Message = "Product not found in official store"
+                }, _jsonOptions);
+            }
+
+            // Check if this is a Reseller product and if Reseller feature is disabled
+            if (_resellerProductIds.Contains(productId) && !IsResellerFeatureEnabled())
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    Success = false,
+                    Message = $"Reseller products are not available in {_serverMode} mode. This product can only be purchased in Production, Alpha, Beta, or Omega modes.",
+                    ProductName = product.Name,
+                    ServerMode = _serverMode.ToString(),
+                    ResellerFeatureEnabled = false
                 }, _jsonOptions);
             }
 
@@ -1076,5 +1117,73 @@ public sealed class LegendarySupermarketModule : ModuleBase
         {
             return _marketplaceListings.Values.Where(l => l.IsAvailable).ToList();
         }
+    }
+
+    /// <summary>
+    /// Sync server mode from FirstRunManager
+    /// </summary>
+    private void SyncServerMode()
+    {
+        try
+        {
+            // Try to get FirstRunManager from ModuleManager
+            if (_manager != null)
+            {
+                var firstRunManagerProperty = _manager.GetType().GetProperty("FirstRunManager");
+                if (firstRunManagerProperty != null)
+                {
+                    var firstRunManager = firstRunManagerProperty.GetValue(_manager);
+                    if (firstRunManager != null)
+                    {
+                        var getConfigMethod = firstRunManager.GetType().GetMethod("GetServerConfiguration");
+                        if (getConfigMethod != null)
+                        {
+                            var config = getConfigMethod.Invoke(firstRunManager, null) as ServerConfiguration;
+                            if (config != null)
+                            {
+                                _serverMode = config.Mode;
+                                LogInfo($"Synced server mode: {_serverMode}");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            LogWarn($"Could not sync server mode, defaulting to Production: {ex.Message}");
+            _serverMode = ServerMode.Production;
+        }
+    }
+
+    /// <summary>
+    /// Set server mode from external caller (e.g., FirstRunManager)
+    /// </summary>
+    public void SetServerModeFromConfig(ServerMode mode)
+    {
+        lock (_lock)
+        {
+            var oldMode = _serverMode;
+            _serverMode = mode;
+            
+            if (oldMode != mode)
+            {
+                LogInfo($"Server mode changed: {oldMode} -> {mode}");
+                if (!IsResellerFeatureEnabled())
+                {
+                    LogInfo($"Reseller feature is DISABLED in {mode} mode");
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Check if Reseller feature should be enabled based on server mode.
+    /// Reseller feature (license sales) is DISABLED in Dev and Demo modes.
+    /// </summary>
+    private bool IsResellerFeatureEnabled()
+    {
+        // Reseller feature is disabled in Dev and Demo modes
+        return _serverMode != ServerMode.Dev && _serverMode != ServerMode.Demo;
     }
 }
