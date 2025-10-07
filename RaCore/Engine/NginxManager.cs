@@ -17,7 +17,7 @@ public class NginxManager
     private readonly string _cmsPath;
     private readonly int _port;
     
-    public NginxManager(string cmsPath, int port = 8080)
+    public NginxManager(string cmsPath, int port = 80)
     {
         _cmsPath = cmsPath;
         _port = port;

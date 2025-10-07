@@ -107,8 +107,8 @@ public class FirstRunManager
             Console.WriteLine("[FirstRunManager] Step 3/4: Configuring Nginx...");
             Console.WriteLine();
             
-            // Configure Nginx
-            var nginxManager = new NginxManager(_cmsPath, 8080);
+            // Configure Nginx - use port 80 for the integrated CMS
+            var nginxManager = new NginxManager(_cmsPath, 80);
             
             if (NginxManager.IsNginxAvailable())
             {
@@ -132,7 +132,7 @@ public class FirstRunManager
                         var domain = Environment.GetEnvironmentVariable("RACORE_PROXY_DOMAIN") ?? "localhost";
                         var racorePort = int.Parse(port);
                         
-                        var proxyManager = new NginxManager("", 8080);
+                        var proxyManager = new NginxManager("", 80);
                         if (proxyManager.ConfigureReverseProxy(racorePort, domain))
                         {
                             Console.WriteLine($"[FirstRunManager] ✅ Nginx reverse proxy configured for {domain}");
@@ -157,20 +157,16 @@ public class FirstRunManager
                 Console.WriteLine("✅ CMS files have been generated!");
                 Console.WriteLine($"   Location: {_cmsPath}");
                 Console.WriteLine();
-                Console.WriteLine("📋 To run the CMS, you have two options:");
+                Console.WriteLine("📋 To run the integrated CMS website:");
                 Console.WriteLine();
-                Console.WriteLine("Option 1: Use PHP built-in server (for testing):");
-                Console.WriteLine($"   cd {_cmsPath}");
-                Console.WriteLine("   php -S localhost:8080");
-                Console.WriteLine();
-                Console.WriteLine("Option 2: Use Nginx + PHP-FPM (recommended for production):");
+                Console.WriteLine("The CMS is configured to run through Nginx + PHP-FPM on port 80:");
                 Console.WriteLine("   1. Ensure Nginx is running (see instructions above)");
-                Console.WriteLine("   2. Configure Nginx to serve the CMS directory");
+                Console.WriteLine("   2. Configure Nginx to serve the CMS directory on port 80");
                 Console.WriteLine("   3. Start PHP-FPM service");
                 Console.WriteLine();
                 Console.WriteLine("🎛️  Default CMS Access:");
-                Console.WriteLine("   Homepage: http://localhost:8080 (or your configured domain)");
-                Console.WriteLine("   Control Panel: http://localhost:8080/control");
+                Console.WriteLine("   Homepage: http://localhost (port 80)");
+                Console.WriteLine("   Control Panel: http://localhost/control");
                 Console.WriteLine("   Default login: admin / admin123");
                 Console.WriteLine();
                 Console.WriteLine("🎛️  ROLE-BASED ACCESS:");

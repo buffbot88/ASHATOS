@@ -1071,36 +1071,12 @@ if (gameServerModule != null && authModule != null)
     Console.WriteLine("  GET    /api/gameserver/capabilities - Get system capabilities");
 }
 
-// Root endpoint - check if CMS is running, otherwise show landing page
+// Root endpoint - show welcome/status page
 app.MapGet("/", async (HttpContext context) =>
 {
-    // Get CMS port from environment or use default 8080
-    var cmsPort = Environment.GetEnvironmentVariable("RACORE_CMS_PORT") ?? "8080";
-    
-    // Check if CMS is accessible
-    var cmsAccessible = false;
-    try
-    {
-        using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(2) };
-        var response = await httpClient.GetAsync($"http://localhost:{cmsPort}");
-        cmsAccessible = response.IsSuccessStatusCode;
-    }
-    catch
-    {
-        // CMS is not accessible
-        cmsAccessible = false;
-    }
-    
-    if (cmsAccessible)
-    {
-        // Redirect to CMS if it's running
-        context.Response.Redirect($"http://localhost:{cmsPort}");
-    }
-    else
-    {
-        // Show landing page with instructions
-        context.Response.ContentType = "text/html";
-        await context.Response.WriteAsync($@"<!DOCTYPE html>
+    // Show landing page with instructions
+    context.Response.ContentType = "text/html";
+    await context.Response.WriteAsync($@"<!DOCTYPE html>
 <html>
 <head>
     <title>RaCore - Welcome</title>
@@ -1173,16 +1149,10 @@ app.MapGet("/", async (HttpContext context) =>
         <h1>🌟 Welcome to RaCore!</h1>
         <p>RaCore server is running successfully on port {port}.</p>
         
-        <div class='status'>
-            <strong>⚠️ CMS Not Running</strong>
-            <p>The CMS homepage is not currently accessible on port {cmsPort}.</p>
-        </div>
-        
         <div class='info'>
-            <h3>📋 To access the CMS:</h3>
-            <p>You need to start the PHP server manually. Open a terminal and run:</p>
-            <code>cd racore_cms && php -S localhost:{cmsPort}</code>
-            <p style='margin-top: 15px;'>Then refresh this page, and you'll be automatically redirected to the CMS.</p>
+            <h3>📋 About the RaCore CMS:</h3>
+            <p>The integrated CMS website is designed to run through Nginx + PHP-FPM on port 80.</p>
+            <p>The CMS includes a full-featured website with Control Panel, Forums, and User Profiles.</p>
         </div>
         
         <div class='success'>
@@ -1211,7 +1181,6 @@ app.MapGet("/", async (HttpContext context) =>
     </div>
 </body>
 </html>");
-    }
     
     return Task.CompletedTask;
 });
