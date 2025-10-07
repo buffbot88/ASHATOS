@@ -555,6 +555,130 @@ if (gameEngineModule != null)
     Console.WriteLine("  GET    /api/gameengine/scene/{sceneId}/entities - List entities");
     Console.WriteLine("  POST   /api/gameengine/scene/{sceneId}/generate - AI-generate content (admin only)");
     Console.WriteLine("  GET    /api/gameengine/stats - Get engine statistics");
+
+    // Check if we have the Legendary Game Engine with in-game chat
+    var legendaryEngineModule = gameEngineModule as LegendaryGameEngine.Core.ILegendaryGameEngineModule;
+    if (legendaryEngineModule != null)
+    {
+        // Create in-game chat room endpoint
+        app.MapPost("/api/gameengine/scene/{sceneId}/chat/room", async (HttpContext context) =>
+        {
+            try
+            {
+                var (authorized, user, error) = await ValidateGameEngineAccess(context, UserRole.Admin);
+                if (!authorized)
+                {
+                    context.Response.StatusCode = error == "No token provided" || error == "Invalid or expired token" ? 401 : 403;
+                    await context.Response.WriteAsJsonAsync(new { success = false, message = error });
+                    return;
+                }
+
+                var sceneId = context.Request.RouteValues["sceneId"]?.ToString() ?? "";
+                var body = await context.Request.ReadFromJsonAsync<Dictionary<string, string>>();
+                var roomName = body?.GetValueOrDefault("name", "General Chat") ?? "General Chat";
+
+                var (success, message, roomId) = await legendaryEngineModule.CreateInGameChatRoomAsync(sceneId, roomName, user?.Username ?? "unknown");
+                await context.Response.WriteAsJsonAsync(new { success, message, roomId });
+            }
+            catch (Exception ex)
+            {
+                context.Response.StatusCode = 500;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+            }
+        });
+
+        // Send in-game chat message endpoint
+        app.MapPost("/api/gameengine/chat/{roomId}/message", async (HttpContext context) =>
+        {
+            try
+            {
+                var (authorized, user, error) = await ValidateGameEngineAccess(context);
+                if (!authorized)
+                {
+                    context.Response.StatusCode = error == "No token provided" || error == "Invalid or expired token" ? 401 : 403;
+                    await context.Response.WriteAsJsonAsync(new { success = false, message = error });
+                    return;
+                }
+
+                var roomId = context.Request.RouteValues["roomId"]?.ToString() ?? "";
+                var body = await context.Request.ReadFromJsonAsync<Dictionary<string, string>>();
+                var content = body?.GetValueOrDefault("content", "") ?? "";
+
+                if (string.IsNullOrWhiteSpace(content))
+                {
+                    context.Response.StatusCode = 400;
+                    await context.Response.WriteAsJsonAsync(new { success = false, message = "Message content is required" });
+                    return;
+                }
+
+                var (success, message, messageId) = await legendaryEngineModule.SendInGameChatMessageAsync(
+                    roomId, user?.Id.ToString() ?? "unknown", user?.Username ?? "unknown", content);
+                await context.Response.WriteAsJsonAsync(new { success, message, messageId });
+            }
+            catch (Exception ex)
+            {
+                context.Response.StatusCode = 500;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+            }
+        });
+
+        // Get in-game chat messages endpoint
+        app.MapGet("/api/gameengine/chat/{roomId}/messages", async (HttpContext context) =>
+        {
+            try
+            {
+                var (authorized, _, error) = await ValidateGameEngineAccess(context);
+                if (!authorized)
+                {
+                    context.Response.StatusCode = error == "No token provided" || error == "Invalid or expired token" ? 401 : 403;
+                    await context.Response.WriteAsJsonAsync(new { success = false, message = error });
+                    return;
+                }
+
+                var roomId = context.Request.RouteValues["roomId"]?.ToString() ?? "";
+                var limitStr = context.Request.Query["limit"].ToString();
+                var limit = int.TryParse(limitStr, out var l) ? l : 50;
+
+                var messages = await legendaryEngineModule.GetInGameChatMessagesAsync(roomId, limit);
+                await context.Response.WriteAsJsonAsync(new { success = true, messages });
+            }
+            catch (Exception ex)
+            {
+                context.Response.StatusCode = 500;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+            }
+        });
+
+        // Get in-game chat rooms for scene endpoint
+        app.MapGet("/api/gameengine/scene/{sceneId}/chat/rooms", async (HttpContext context) =>
+        {
+            try
+            {
+                var (authorized, _, error) = await ValidateGameEngineAccess(context);
+                if (!authorized)
+                {
+                    context.Response.StatusCode = error == "No token provided" || error == "Invalid or expired token" ? 401 : 403;
+                    await context.Response.WriteAsJsonAsync(new { success = false, message = error });
+                    return;
+                }
+
+                var sceneId = context.Request.RouteValues["sceneId"]?.ToString() ?? "";
+                var rooms = await legendaryEngineModule.GetInGameChatRoomsForSceneAsync(sceneId);
+                await context.Response.WriteAsJsonAsync(new { success = true, rooms });
+            }
+            catch (Exception ex)
+            {
+                context.Response.StatusCode = 500;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+            }
+        });
+
+        Console.WriteLine("[RaCore] Legendary Game Engine in-game chat API endpoints registered:");
+        Console.WriteLine("  POST   /api/gameengine/scene/{sceneId}/chat/room - Create in-game chat room (admin only)");
+        Console.WriteLine("  POST   /api/gameengine/chat/{roomId}/message - Send message to in-game chat");
+        Console.WriteLine("  GET    /api/gameengine/chat/{roomId}/messages - Get in-game chat messages");
+        Console.WriteLine("  GET    /api/gameengine/scene/{sceneId}/chat/rooms - List in-game chat rooms for scene");
+    }
 }
 
 // ServerSetup API endpoints - Folder discovery and admin instance management

@@ -14,13 +14,17 @@
 
 ## 🎯 Overview
 
-**RaOS** (Ra Operating System) is a sophisticated AI-powered mainframe featuring the **Legendary CMS Suite** - a production-ready, modular Content Management System built as an external DLL. Phase 8 (completed October 2025) delivers enterprise-grade features including plugin architecture, REST API layer, granular permissions, and comprehensive monitoring.
+**RaOS** (Ra Operating System) is a sophisticated AI-powered mainframe featuring the **Legendary CMS Suite** (Phase 8) and **Legendary Game Engine Suite** (Phase 9) - production-ready, modular systems built as external DLLs. Phase 9 (completed January 2025) extracts the game engine into an independent DLL with Unreal Engine-inspired features including in-game chat, physics foundation, and advanced AI architecture.
 
 ### Key Features
 
-- 🔌 **Modular Architecture** - External DLL with zero coupling (76 KB)
+- 🔌 **Modular Architecture** - External DLLs with zero coupling
+  - LegendaryCMS.dll (76 KB) - Content Management System
+  - LegendaryGameEngine.dll (120 KB) - Game Engine Suite
+- 🎮 **Game Engine Suite** - Scene management, entities, AI generation, in-game chat
+- 💬 **Dual Chat Systems** - CMS website chat + in-game scene-specific chat
 - 🧩 **Plugin System** - Event-driven extensions with dependency injection
-- 🌐 **REST API** - 11+ endpoints with rate limiting and OpenAPI docs
+- 🌐 **REST API** - 20+ endpoints with rate limiting and OpenAPI docs
 - 🔒 **Enhanced RBAC** - 25+ permissions across 5 roles
 - ⚙️ **Configuration** - Environment-aware with runtime updates
 - 📊 **Monitoring** - Health checks and performance metrics
@@ -105,52 +109,72 @@ The Legendary CMS Suite represents the culmination of Phase 8 development, deliv
 - `RBACManager` (314 lines) - 25+ permissions, 5 roles
 - `CMSConfiguration` (142 lines) - Environment-aware configuration
 
+---
+
+## 🎮 Phase 9: Legendary Game Engine Suite
+
+### What's New (January 2025)
+
+The Legendary Game Engine Suite extracts the game engine into an independent DLL, following Phase 8's successful modularization pattern.
+
+#### Core Module: LegendaryGameEngine.dll
+
+**Size:** 120 KB | **Init Time:** <150ms | **Features:** Unreal Engine-inspired
+
+**Components:**
+- `LegendaryGameEngineModule` (698+ lines) - Main engine with AI generation
+- `GameEngineDatabase` (337 lines) - SQLite persistence layer
+- `GameEngineWebSocketBroadcaster` (136 lines) - Real-time event broadcasting
+- `InGameChatManager` (200 lines) - Scene-specific chat system
+
+#### Key Features
+
+**Scene Management:**
+- Create, list, update, delete game scenes (worlds/levels/areas)
+- AI-driven world generation from natural language
+- SQLite persistence across server restarts
+- Real-time WebSocket updates
+
+**In-Game Chat System:**
+- Scene-specific chat rooms (separate from CMS website chat)
+- Participant tracking and management
+- Message history (last 200 messages per room)
+- Real-time messaging within game instances
+
+**API Endpoints:**
+- Scene operations: create, list, get, delete
+- Entity operations: create, list, update, delete
+- In-game chat: create room, send message, get messages, list rooms
+- AI generation and engine statistics
+
+#### Chat System Comparison
+
+| Feature | CMS Website Chat | In-Game Chat |
+|---------|------------------|--------------|
+| **Module** | LegendaryCMS | LegendaryGameEngine |
+| **Purpose** | Website forums, support | Party/guild/zone chat |
+| **Scope** | Global, persistent | Scene-specific |
+| **Storage** | Long-term database | Short-term (200 msgs) |
+
 #### Module Commands
 
 ```bash
-cms status        # Show CMS status and component health
-cms config        # Display current configuration
-cms api           # List all 11+ API endpoints
-cms plugins       # Show loaded plugins
-cms rbac          # Display roles and permissions
-cms openapi       # Generate OpenAPI/Swagger specification
-help              # Show command help
+engine status        # Show engine status
+engine stats         # Engine statistics
+engine scene create  # Create a scene
+engine scene list    # List all scenes
+help                 # Show command help
 ```
-
-#### API Endpoints
-
-**Public Endpoints:**
-- `GET /api/health` - Health check with version info
-- `GET /api/version` - Module version information
-- `GET /api/endpoints` - List all available endpoints
-- `GET /api/forums` - Get all forums
-- `GET /api/blogs` - Get all blog posts
-- `GET /api/chat/rooms` - Get all chat rooms
-
-**Authenticated Endpoints:**
-- `POST /api/forums/post` - Create forum post (requires `forum.post`)
-- `POST /api/blogs/create` - Create blog post (requires `blog.create`)
-- `GET /api/profile` - Get user profile (requires `profile.view`)
-- `GET /api/admin/settings` - Get CMS settings (requires `admin.settings`)
-- `GET /api/plugins` - List loaded plugins (requires `admin.plugins`)
-
-#### Security & RBAC
-
-**Roles:** SuperAdmin, Admin, Moderator, User, Guest
-
-**Permissions (25+):**
-- **Forum:** view, post, edit, delete, moderate
-- **Blog:** view, create, edit, delete, publish
-- **Chat:** join, send, moderate, kick, ban
-- **Profile:** view, edit, delete
-- **Admin:** access, users, settings, plugins, themes
-- **System:** config, backup, migrate
-
-**Rate Limiting:** 60 req/min, 1000 req/hour per client
 
 ---
 
 ## 📖 Documentation
+
+### Current Phase 9 Documentation
+
+- **[Phase 9 Implementation](PHASE9_IMPLEMENTATION.md)** - Complete Phase 9 report
+- **[Legendary Game Engine README](LegendaryGameEngine/README.md)** - Module guide
+- **[Game Engine API](GAMEENGINE_API.md)** - API reference (Phase 4+)
 
 ### Current Phase 8 Documentation
 
@@ -335,6 +359,7 @@ RaOS has evolved through 8 major development phases since 2023:
 - **Phase 6 (2024):** Platform - Game engine integration
 - **Phase 7 (2025):** Enhanced Features - Self-healing and optimization
 - **Phase 8 (Oct 2025):** Legendary CMS Suite - Production-ready modular CMS ✅
+- **Phase 9 (Jan 2025):** Legendary Game Engine Suite - Modular game engine with in-game chat ✅
 
 **For complete historical details, see [HISTORY.md](HISTORY.md)**
 
@@ -377,22 +402,23 @@ See the LICENSE file for licensing information.
 
 ## 🌟 Acknowledgments
 
-**RaOS Legendary CMS Suite v8.0.0**
+**RaOS Legendary Suite v9.0.0**
 
 Built with ❤️ by the RaOS Development Team
 
-**Last Updated:** October 7, 2025  
-**Current Phase:** 8 (Legendary CMS Suite)  
+**Last Updated:** January 13, 2025  
+**Current Phase:** 9 (Legendary Game Engine Suite)  
 **Status:** ✅ Production Ready  
 **Build:** ✅ Passing  
-**Documentation:** 47,000+ words
+**Documentation:** 60,000+ words
 
 ---
 
 ## 📈 Statistics
 
-- **Development Phases:** 8 completed
+- **Development Phases:** 9 completed
 - **Total Modules:** 30+ extension modules
+- **Legendary DLLs:** 2 (CMS + Game Engine)
 - **Phase 8 Module Size:** 76 KB (LegendaryCMS.dll)
 - **API Endpoints:** 11+ operational
 - **Permissions:** 25+ granular
