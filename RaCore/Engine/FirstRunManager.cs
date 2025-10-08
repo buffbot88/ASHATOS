@@ -319,7 +319,34 @@ public class FirstRunManager
             Console.WriteLine("[FirstRunManager] Step 3/7: Spawning CMS with Integrated Control Panel...");
             Console.WriteLine();
             
-            // Spawn the site with integrated control panel
+            // Force regenerate CMS Suite - delete existing if present
+            if (Directory.Exists(_cmsPath))
+            {
+                Console.WriteLine($"[FirstRunManager] ⚠️  Existing CMS found at {_cmsPath}");
+                Console.WriteLine("[FirstRunManager] 🔄 Force regenerating CMS Suite...");
+                try
+                {
+                    // Backup existing if needed
+                    var backupPath = _cmsPath + $".backup.{DateTime.UtcNow:yyyyMMddHHmmss}";
+                    Console.WriteLine($"[FirstRunManager] 💾 Creating backup: {backupPath}");
+                    Directory.Move(_cmsPath, backupPath);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[FirstRunManager] ⚠️  Could not backup existing CMS: {ex.Message}");
+                    Console.WriteLine("[FirstRunManager] Proceeding with force regeneration...");
+                    try
+                    {
+                        Directory.Delete(_cmsPath, true);
+                    }
+                    catch (Exception deleteEx)
+                    {
+                        Console.WriteLine($"[FirstRunManager] ⚠️  Could not delete existing CMS: {deleteEx.Message}");
+                    }
+                }
+            }
+            
+            // Spawn the site with integrated control panel (force write)
             var result = siteBuilderModule.Process("site spawn integrated");
             Console.WriteLine(result);
             Console.WriteLine();
