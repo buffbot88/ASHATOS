@@ -1221,7 +1221,14 @@ if (gameServerModule != null && authModule != null)
     Console.WriteLine("  GET    /api/gameserver/capabilities - Get system capabilities");
 }
 
-// Root endpoint - show welcome/status page
+// Helper method to check if CMS is available
+static bool IsCmsAvailable(string wwwrootPath)
+{
+    var indexPhpPath = Path.Combine(wwwrootPath, "index.php");
+    return File.Exists(indexPhpPath);
+}
+
+// Root endpoint - redirect to CMS or show welcome/status page
 app.MapGet("/", async (HttpContext context) =>
 {
     context.Response.ContentType = "text/html";
@@ -1247,10 +1254,22 @@ app.MapGet("/", async (HttpContext context) =>
             return Task.CompletedTask;
         }
         
-        // Admins can access normally - fall through to normal homepage logic
+        // Admins can access normally - fall through to CMS or normal homepage logic
     }
     
-    // Phase 9.3.7: Homepage bot filtering
+    // Check if CMS is available (index.php exists in wwwroot)
+    if (IsCmsAvailable(wwwrootPath))
+    {
+        // CMS is available - redirect all users to CMS homepage
+        // This allows guests, members, and bots to access the CMS
+        // Bot detection and SEO are preserved as the CMS handles its own content
+        Console.WriteLine("[RaCore] CMS detected - redirecting to CMS homepage");
+        context.Response.Redirect("/index.php");
+        return Task.CompletedTask;
+    }
+    
+    // Fallback: CMS not available, use legacy bot-filtering homepage
+    // Phase 9.3.7: Homepage bot filtering (legacy behavior)
     // Only allow search engine bots to access homepage for SEO indexing
     var userAgent = context.Request.Headers["User-Agent"].ToString();
     var isBot = BotDetector.IsSearchEngineBot(userAgent);
