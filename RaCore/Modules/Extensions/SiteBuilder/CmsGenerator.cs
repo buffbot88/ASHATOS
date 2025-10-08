@@ -968,6 +968,7 @@ try {
 <head>
     <title>Profile: <?php echo htmlspecialchars($viewUser); ?> - <?php echo SITE_NAME; ?></title>
     <link rel='stylesheet' href='styles.css'>
+    <link rel='stylesheet' href='profile-styles.css'>
     <style>
         .profile-container {
             display: grid;
@@ -1088,6 +1089,13 @@ try {
                     <h2 style='text-align: center;'><?php echo htmlspecialchars($viewUser); ?></h2>
                     <?php if ($profile && !empty($profile['bio'])): ?>
                     <p style='text-align: center; color: #666;'><?php echo htmlspecialchars($profile['bio']); ?></p>
+                    <?php endif; ?>
+                    
+                    <?php if ($isLoggedIn && $viewUser === $currentUser): ?>
+                    <div style='text-align: center; margin-top: 15px;'>
+                        <a href='profile-edit.php' class='add-friend-btn' style='margin-right: 10px;'>✏️ Edit Profile</a>
+                        <a href='profile-settings.php' class='add-friend-btn' style='background: #6c757d;'>⚙️ Settings</a>
+                    </div>
                     <?php endif; ?>
                     
                     <div style='margin-top: 20px;'>
