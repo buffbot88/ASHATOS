@@ -3089,7 +3089,9 @@ app.MapPost("/api/control/system/restart-apache", async (HttpContext context) =>
     
     Console.WriteLine($"[API] Nginx restart requested by user: {user.Username}");
     
+#pragma warning disable CS0618 // Type or member is obsolete
     var (success, message) = RaCore.Engine.NginxManager.RestartNginx();
+#pragma warning restore CS0618 // Type or member is obsolete
     
     if (success)
     {

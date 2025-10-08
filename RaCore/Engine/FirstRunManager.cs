@@ -181,28 +181,8 @@ public class FirstRunManager
         var dotnetVersion = Environment.Version;
         Console.WriteLine($"  ✓ .NET Runtime: {dotnetVersion}");
         
-        // Check for PHP
-        var phpPath = FindPhpExecutable();
-        if (phpPath != null)
-        {
-            Console.WriteLine($"  ✓ PHP executable found: {phpPath}");
-        }
-        else
-        {
-            warnings.Add("PHP not found - CMS functionality will be limited");
-            Console.WriteLine("  ⚠️  PHP not found - CMS functionality will be limited");
-        }
-        
-        // Check for Nginx
-        if (NginxManager.IsNginxAvailable())
-        {
-            Console.WriteLine("  ✓ Nginx is available");
-        }
-        else
-        {
-            warnings.Add("Nginx not available - will use PHP built-in server");
-            Console.WriteLine("  ⚠️  Nginx not available - will use PHP built-in server");
-        }
+        // Note: PHP and Nginx scanning removed - should be pre-configured in host environment
+        Console.WriteLine("  ℹ️  PHP and Nginx should be pre-configured in host environment");
         
         // Check disk space
         try
@@ -339,7 +319,34 @@ public class FirstRunManager
             Console.WriteLine("[FirstRunManager] Step 3/7: Spawning CMS with Integrated Control Panel...");
             Console.WriteLine();
             
-            // Spawn the site with integrated control panel
+            // Force regenerate CMS Suite - delete existing if present
+            if (Directory.Exists(_cmsPath))
+            {
+                Console.WriteLine($"[FirstRunManager] ⚠️  Existing CMS found at {_cmsPath}");
+                Console.WriteLine("[FirstRunManager] 🔄 Force regenerating CMS Suite...");
+                try
+                {
+                    // Backup existing if needed
+                    var backupPath = _cmsPath + $".backup.{DateTime.UtcNow:yyyyMMddHHmmss}";
+                    Console.WriteLine($"[FirstRunManager] 💾 Creating backup: {backupPath}");
+                    Directory.Move(_cmsPath, backupPath);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[FirstRunManager] ⚠️  Could not backup existing CMS: {ex.Message}");
+                    Console.WriteLine("[FirstRunManager] Proceeding with force regeneration...");
+                    try
+                    {
+                        Directory.Delete(_cmsPath, true);
+                    }
+                    catch (Exception deleteEx)
+                    {
+                        Console.WriteLine($"[FirstRunManager] ⚠️  Could not delete existing CMS: {deleteEx.Message}");
+                    }
+                }
+            }
+            
+            // Spawn the site with integrated control panel (force write)
             var result = siteBuilderModule.Process("site spawn integrated");
             Console.WriteLine(result);
             Console.WriteLine();
@@ -357,6 +364,7 @@ public class FirstRunManager
             // Configure Nginx - use port 80 for the integrated CMS
             var nginxManager = new NginxManager(_cmsPath, 80);
             
+#pragma warning disable CS0618 // Type or member is obsolete
             if (NginxManager.IsNginxAvailable())
             {
                 // First, create the CMS-specific Nginx config
@@ -367,6 +375,7 @@ public class FirstRunManager
                 
                 // Also configure reverse proxy for RaCore if not already done
                 var configPath = NginxManager.FindNginxConfigPath();
+#pragma warning restore CS0618 // Type or member is obsolete
                 if (configPath != null)
                 {
                     var config = File.ReadAllText(configPath);
@@ -380,7 +389,9 @@ public class FirstRunManager
                         var racorePort = int.Parse(port);
                         
                         var proxyManager = new NginxManager("", 80);
+#pragma warning disable CS0618 // Type or member is obsolete
                         if (proxyManager.ConfigureReverseProxy(racorePort, domain))
+#pragma warning restore CS0618 // Type or member is obsolete
                         {
                             Console.WriteLine($"[FirstRunManager] ✅ Nginx reverse proxy configured for {domain}");
                             Console.WriteLine($"[FirstRunManager] After Nginx restart, access RaCore at: http://{domain}");
@@ -440,44 +451,11 @@ public class FirstRunManager
             Console.WriteLine("  - Available through the Control Panel");
             Console.WriteLine();
             
-            // Check if PHP is available but don't start it
-            var phpPath = FindPhpExecutable();
-            if (phpPath != null)
-            {
-                Console.WriteLine("✅ CMS files have been generated!");
-                Console.WriteLine($"   Location: {_cmsPath}");
-                Console.WriteLine();
-                Console.WriteLine("📋 To run the integrated CMS website:");
-                Console.WriteLine();
-                Console.WriteLine("The CMS is configured to run through Nginx + PHP-FPM on port 80:");
-                Console.WriteLine("   1. Ensure Nginx is running (see instructions above)");
-                Console.WriteLine("   2. Configure Nginx to serve the CMS directory on port 80");
-                Console.WriteLine("   3. Start PHP-FPM service");
-                Console.WriteLine();
-                Console.WriteLine("🎛️  Default CMS Access:");
-                Console.WriteLine("   Homepage: http://localhost (port 80)");
-                Console.WriteLine("   Control Panel: http://localhost/control");
-                Console.WriteLine("   Default login: admin / admin123");
-                Console.WriteLine();
-                Console.WriteLine("🎛️  ROLE-BASED ACCESS:");
-                Console.WriteLine("   - SuperAdmin: Full control panel + user panel");
-                Console.WriteLine("   - Admin: Admin control panel + user panel");
-                Console.WriteLine("   - User: User panel only");
-                Console.WriteLine();
-                Console.WriteLine("⚠️  Change the default password immediately!");
-                Console.WriteLine();
-            }
-            else
-            {
-                Console.WriteLine("✅ CMS files have been generated!");
-                Console.WriteLine($"   Location: {_cmsPath}");
-                Console.WriteLine();
-                Console.WriteLine("⚠️  PHP not found. Please install PHP 8+ to run the CMS");
-                Console.WriteLine("   - Windows: Download from https://windows.php.net/download/");
-                Console.WriteLine("   - Linux: sudo apt install php8.1 (or your distro's package manager)");
-                Console.WriteLine("   - macOS: brew install php");
-                Console.WriteLine();
-            }
+            // PHP and Nginx should be pre-configured in host environment
+            // No scanning is performed during initialization
+            Console.WriteLine("⚠️  Note: PHP and Nginx should be installed and configured in the host environment");
+            Console.WriteLine("   before running RaOS. RaOS no longer scans for these dependencies.");
+            Console.WriteLine();
             
             // Mark as initialized
             MarkAsInitialized();
@@ -499,90 +477,14 @@ public class FirstRunManager
         }
     }
     
+    /// <summary>
+    /// Finds PHP executable - DEPRECATED: PHP should be pre-configured in host environment
+    /// </summary>
+    [Obsolete("PHP scanning removed. PHP should be installed and configured in host environment before running RaOS.")]
     private string? FindPhpExecutable()
     {
-        // Try local php folder first (same directory as RaCore.exe server root)
-        var serverRoot = Directory.GetCurrentDirectory();
-        var localPhpFolder = Path.Combine(serverRoot, "php");
-        
-        // Build list of possible paths
-        var possiblePaths = new List<string>
-        {
-            Path.Combine(localPhpFolder, "php.exe"),     // Local Windows
-            Path.Combine(localPhpFolder, "php"),         // Local Linux/macOS
-            "php",                                        // In PATH
-            "/usr/bin/php",                               // Linux
-            "/usr/local/bin/php",                         // Linux/macOS
-        };
-        
-        // Add Windows-specific paths with multiple drive letters
-        if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
-        {
-            var driveLetters = new[] { "C", "D", "E", "F" };
-            var phpPaths = new[]
-            {
-                @"\php\php.exe",
-                @"\php8\php.exe",
-                @"\xampp\php\php.exe",
-                @"\Program Files\php\php.exe"
-            };
-            
-            foreach (var drive in driveLetters)
-            {
-                foreach (var phpPath in phpPaths)
-                {
-                    possiblePaths.Add($"{drive}:{phpPath}");
-                }
-            }
-        }
-
-        foreach (var path in possiblePaths)
-        {
-            try
-            {
-                // Check if file exists for absolute paths
-                if (Path.IsPathRooted(path) && !File.Exists(path))
-                {
-                    continue;
-                }
-
-                var startInfo = new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = path,
-                    Arguments = "--version",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
-
-                using var process = System.Diagnostics.Process.Start(startInfo);
-                if (process != null)
-                {
-                    process.WaitForExit(5000);
-                    if (process.ExitCode == 0)
-                    {
-                        Console.WriteLine($"[FirstRunManager] Found PHP at: {path}");
-                        return path;
-                    }
-                }
-            }
-            catch { continue; }
-        }
-
-        // Provide helpful diagnostic message
-        Console.WriteLine("[FirstRunManager] PHP not found in standard locations:");
-        Console.WriteLine($"  - Local folder: {localPhpFolder}");
-        Console.WriteLine("  - System PATH");
-        if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
-        {
-            Console.WriteLine("  - Common Windows paths (C:\\php, D:\\php, E:\\php, etc.)");
-        }
-        else
-        {
-            Console.WriteLine("  - /usr/bin/php, /usr/local/bin/php");
-        }
-
+        // PHP should be pre-configured in the host environment
+        // No scanning is performed
         return null;
     }
 }

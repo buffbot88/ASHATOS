@@ -115,7 +115,9 @@ public sealed class SiteBuilderModule : ModuleBase
                 return "Error: Components not initialized";
             }
 
+#pragma warning disable CS0618 // Type or member is obsolete
             var phpPath = _phpDetector.FindPhpExecutable();
+#pragma warning restore CS0618 // Type or member is obsolete
             if (phpPath == null)
             {
                 return _phpDetector.GetPhpNotFoundMessage();
@@ -134,7 +136,9 @@ public sealed class SiteBuilderModule : ModuleBase
                 return "Error: Components not initialized";
             }
 
+#pragma warning disable CS0618 // Type or member is obsolete
             var phpPath = _phpDetector.FindPhpExecutable();
+#pragma warning restore CS0618 // Type or member is obsolete
             if (phpPath == null)
             {
                 return _phpDetector.GetPhpNotFoundMessage();
@@ -153,7 +157,9 @@ public sealed class SiteBuilderModule : ModuleBase
                 return "Error: Components not initialized";
             }
 
+#pragma warning disable CS0618 // Type or member is obsolete
             var phpPath = _phpDetector.FindPhpExecutable();
+#pragma warning restore CS0618 // Type or member is obsolete
             if (phpPath == null)
             {
                 return _phpDetector.GetPhpNotFoundMessage();
@@ -206,7 +212,9 @@ public sealed class SiteBuilderModule : ModuleBase
 
         if (_phpDetector != null)
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             var phpPath = _phpDetector.FindPhpExecutable();
+#pragma warning restore CS0618 // Type or member is obsolete
             sb.AppendLine();
             sb.AppendLine($"PHP Status: {(phpPath != null ? "Found" : "Not found")}");
             if (phpPath != null)

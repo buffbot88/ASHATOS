@@ -9,7 +9,6 @@ namespace RaCore.Modules.Extensions.SiteBuilder;
 public class PhpDetector
 {
     private readonly SiteBuilderModule _module;
-    private string? _cachedPhpPath;
 
     public PhpDetector(SiteBuilderModule module)
     {
@@ -18,101 +17,18 @@ public class PhpDetector
 
     public string DetectPHP()
     {
-        try
-        {
-            _cachedPhpPath = FindPhpExecutable();
-            
-            if (_cachedPhpPath == null)
-            {
-                return GetPhpNotFoundMessage();
-            }
-
-            var version = GetPhpVersion(_cachedPhpPath);
-            return $"PHP found: {_cachedPhpPath}\nVersion: {version}";
-        }
-        catch (Exception ex)
-        {
-            _module.Log($"PHP detection error: {ex.Message}", "ERROR");
-            return $"Error detecting PHP: {ex.Message}";
-        }
+        // PHP scanning removed - should be pre-configured in host environment
+        return "PHP scanning disabled. PHP should be installed and configured in the host environment before running RaOS.";
     }
 
+    /// <summary>
+    /// Finds PHP executable - DEPRECATED: PHP should be pre-configured in host environment
+    /// </summary>
+    [Obsolete("PHP scanning removed. PHP should be installed and configured in host environment before running RaOS.")]
     public string? FindPhpExecutable()
     {
-        if (_cachedPhpPath != null)
-        {
-            return _cachedPhpPath;
-        }
-
-        // Try local php folder first (same directory as RaCore.exe server root)
-        var serverRoot = Directory.GetCurrentDirectory();
-        var localPhpFolder = Path.Combine(serverRoot, "php");
-        
-        // Build list of possible paths
-        var possiblePaths = new List<string>
-        {
-            Path.Combine(localPhpFolder, "php.exe"),     // Local Windows
-            Path.Combine(localPhpFolder, "php"),         // Local Linux/macOS
-            "php",                                        // In PATH
-            "/usr/bin/php",                               // Linux
-            "/usr/local/bin/php",                         // Linux/macOS
-        };
-        
-        // Add Windows-specific paths with multiple drive letters
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            var driveLetters = new[] { "C", "D", "E", "F" };
-            var phpPaths = new[]
-            {
-                @"\php\php.exe",
-                @"\php8\php.exe",
-                @"\xampp\php\php.exe",
-                @"\Program Files\php\php.exe"
-            };
-            
-            foreach (var drive in driveLetters)
-            {
-                foreach (var phpPath in phpPaths)
-                {
-                    possiblePaths.Add($"{drive}:{phpPath}");
-                }
-            }
-        }
-
-        foreach (var path in possiblePaths)
-        {
-            try
-            {
-                // Check if file exists for absolute paths
-                if (Path.IsPathRooted(path) && !File.Exists(path))
-                {
-                    continue;
-                }
-
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = path,
-                    Arguments = "--version",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
-
-                using var process = Process.Start(startInfo);
-                if (process != null)
-                {
-                    process.WaitForExit(5000);
-                    if (process.ExitCode == 0)
-                    {
-                        _cachedPhpPath = path;
-                        return path;
-                    }
-                }
-            }
-            catch { continue; }
-        }
-
+        // PHP should be pre-configured in the host environment
+        // No scanning is performed
         return null;
     }
 

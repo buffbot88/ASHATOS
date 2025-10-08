@@ -85,230 +85,33 @@ public class NginxManager
     /// <summary>
     /// Checks if Nginx is installed and available
     /// </summary>
+    [Obsolete("Nginx scanning removed. Nginx should be installed and configured in host environment before running RaOS.")]
     public static bool IsNginxAvailable()
     {
+#pragma warning disable CS0618 // Type or member is obsolete
         return FindNginxExecutable() != null;
+#pragma warning restore CS0618 // Type or member is obsolete
     }
     
     /// <summary>
-    /// Finds the Nginx executable path
+    /// Finds the Nginx executable path - DEPRECATED: Nginx should be pre-configured in host environment
     /// </summary>
+    [Obsolete("Nginx scanning removed. Nginx should be installed and configured in host environment before running RaOS.")]
     public static string? FindNginxExecutable()
     {
-        // First, try local RaCore Nginx folder
-        var serverRoot = Directory.GetCurrentDirectory();
-        var localNginxFolder = Path.Combine(serverRoot, "Nginx");
-        
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            var localNginxExe = Path.Combine(localNginxFolder, "nginx.exe");
-            if (File.Exists(localNginxExe))
-            {
-                Console.WriteLine($"[NginxManager] ✨ Found local Nginx: {localNginxExe}");
-                return localNginxExe;
-            }
-        }
-        else
-        {
-            var localNginxExe = Path.Combine(localNginxFolder, "nginx");
-            if (File.Exists(localNginxExe))
-            {
-                Console.WriteLine($"[NginxManager] ✨ Found local Nginx: {localNginxExe}");
-                return localNginxExe;
-            }
-        }
-        
-        // Try common command-line commands (Linux/Unix/Mac)
-        var nginxCommands = new[] { "nginx" };
-        
-        foreach (var cmd in nginxCommands)
-        {
-            try
-            {
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = cmd,
-                    Arguments = "-v",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
-                
-                using var process = Process.Start(startInfo);
-                if (process != null)
-                {
-                    process.WaitForExit(3000);
-                    if (process.ExitCode == 0)
-                    {
-                        return cmd;
-                    }
-                }
-            }
-            catch { continue; }
-        }
-        
-        // Try common install locations
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            var paths = new[]
-            {
-                @"C:\nginx\nginx.exe",
-                @"C:\nginx-1.24.0\nginx.exe",
-                @"C:\nginx-1.25.0\nginx.exe",
-                @"D:\nginx\nginx.exe",
-                @"E:\nginx\nginx.exe",
-                @"C:\Program Files\nginx\nginx.exe"
-            };
-            
-            foreach (var path in paths)
-            {
-                if (File.Exists(path))
-                {
-                    return path;
-                }
-            }
-        }
-        else
-        {
-            // Linux/Unix specific paths
-            var paths = new[]
-            {
-                "/usr/sbin/nginx",
-                "/usr/local/sbin/nginx",
-                "/usr/bin/nginx",
-                "/usr/local/bin/nginx"
-            };
-            
-            foreach (var path in paths)
-            {
-                if (File.Exists(path))
-                {
-                    try
-                    {
-                        var startInfo = new ProcessStartInfo
-                        {
-                            FileName = path,
-                            Arguments = "-v",
-                            RedirectStandardOutput = true,
-                            RedirectStandardError = true,
-                            UseShellExecute = false,
-                            CreateNoWindow = true
-                        };
-                        
-                        using var process = Process.Start(startInfo);
-                        if (process != null)
-                        {
-                            process.WaitForExit(3000);
-                            if (process.ExitCode == 0)
-                            {
-                                return path;
-                            }
-                        }
-                    }
-                    catch { continue; }
-                }
-            }
-        }
-        
+        // Nginx should be pre-configured in the host environment
+        // No scanning is performed
         return null;
     }
     
     /// <summary>
-    /// Finds the Nginx configuration file path
+    /// Finds the Nginx configuration file path - DEPRECATED: Nginx should be pre-configured in host environment
     /// </summary>
+    [Obsolete("Nginx scanning removed. Nginx should be installed and configured in host environment before running RaOS.")]
     public static string? FindNginxConfigPath()
     {
-        // First, try local RaCore Nginx folder
-        var serverRoot = Directory.GetCurrentDirectory();
-        var localNginxFolder = Path.Combine(serverRoot, "Nginx");
-        var localConfigPath = Path.Combine(localNginxFolder, "conf", "nginx.conf");
-        
-        if (File.Exists(localConfigPath))
-        {
-            Console.WriteLine($"[NginxManager] ✨ Found local Nginx config: {localConfigPath}");
-            return localConfigPath;
-        }
-        
-        var nginxPath = FindNginxExecutable();
-        if (nginxPath == null)
-        {
-            return null;
-        }
-        
-        // Try to get config path from Nginx itself
-        try
-        {
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = nginxPath,
-                Arguments = "-V",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-            
-            using var process = Process.Start(startInfo);
-            if (process != null)
-            {
-                // nginx -V outputs to stderr, not stdout
-                var output = process.StandardError.ReadToEnd();
-                process.WaitForExit(3000);
-                
-                // Look for --conf-path in output
-                var match = System.Text.RegularExpressions.Regex.Match(output, @"--conf-path=([^\s]+)");
-                if (match.Success)
-                {
-                    var configPath = match.Groups[1].Value;
-                    if (File.Exists(configPath))
-                    {
-                        return configPath;
-                    }
-                }
-            }
-        }
-        catch { }
-        
-        // Fallback: try common config locations
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            var configPaths = new[]
-            {
-                @"C:\nginx\conf\nginx.conf",
-                @"C:\nginx-1.24.0\conf\nginx.conf",
-                @"C:\nginx-1.25.0\conf\nginx.conf",
-                @"D:\nginx\conf\nginx.conf",
-                @"E:\nginx\conf\nginx.conf"
-            };
-            
-            foreach (var path in configPaths)
-            {
-                if (File.Exists(path))
-                {
-                    return path;
-                }
-            }
-        }
-        else
-        {
-            // Linux/Unix config locations
-            var configPaths = new[]
-            {
-                "/etc/nginx/nginx.conf",
-                "/usr/local/nginx/conf/nginx.conf",
-                "/usr/local/etc/nginx/nginx.conf"
-            };
-            
-            foreach (var path in configPaths)
-            {
-                if (File.Exists(path))
-                {
-                    return path;
-                }
-            }
-        }
-        
+        // Nginx should be pre-configured in the host environment
+        // No scanning is performed
         return null;
     }
     
@@ -316,9 +119,12 @@ public class NginxManager
     /// Parses the Nginx configuration to extract configured RaCore port from existing proxy rules
     /// </summary>
     /// <returns>The configured RaCore port, or null if not found</returns>
+    [Obsolete("Nginx scanning removed. Nginx should be installed and configured in host environment before running RaOS.")]
     public static int? GetConfiguredRaCorePort()
     {
+#pragma warning disable CS0618 // Type or member is obsolete
         var configPath = FindNginxConfigPath();
+#pragma warning restore CS0618 // Type or member is obsolete
         if (configPath == null || !File.Exists(configPath))
         {
             return null;
@@ -357,6 +163,7 @@ public class NginxManager
     /// <summary>
     /// Configures Nginx as a reverse proxy for RaCore
     /// </summary>
+    [Obsolete("Nginx scanning removed. Nginx should be installed and configured in host environment before running RaOS.")]
     public bool ConfigureReverseProxy(int racorePort = 80, string domain = "localhost")
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -367,7 +174,9 @@ public class NginxManager
             return false;
         }
         
+#pragma warning disable CS0618 // Type or member is obsolete
         var configPath = FindNginxConfigPath();
+#pragma warning restore CS0618 // Type or member is obsolete
         if (configPath == null)
         {
             Console.WriteLine("[NginxManager] ⚠️  Could not find Nginx configuration file");
@@ -674,11 +483,14 @@ server {{
     /// RaOS does not automatically restart Nginx during configuration.
     /// </summary>
     /// <returns>Tuple with success status and message</returns>
+    [Obsolete("Nginx scanning removed. Nginx should be installed and configured in host environment before running RaOS.")]
     public static (bool success, string message) RestartNginx()
     {
         try
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             var nginxPath = FindNginxExecutable();
+#pragma warning restore CS0618 // Type or member is obsolete
             if (nginxPath == null)
             {
                 return (false, "Nginx not found. Please ensure Nginx is installed.");
@@ -846,198 +658,35 @@ server {{
     }
     
     /// <summary>
-    /// Finds PHP executable in common locations
+    /// Finds PHP executable in common locations - DEPRECATED: PHP should be pre-configured in host environment
     /// </summary>
+    [Obsolete("PHP scanning removed. PHP should be installed and configured in host environment before running RaOS.")]
     public static string? FindPhpExecutable()
     {
-        // Try local php folder first
-        var serverRoot = Directory.GetCurrentDirectory();
-        var localPhpFolder = Path.Combine(serverRoot, "php");
-        
-        var possiblePaths = new List<string>
-        {
-            Path.Combine(localPhpFolder, "php.exe"),     // Local Windows
-            Path.Combine(localPhpFolder, "php"),         // Local Linux/macOS
-            "php",                                        // In PATH
-            "/usr/bin/php",                               // Linux
-            "/usr/local/bin/php",                         // Linux/macOS
-        };
-        
-        // Add Windows-specific paths
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            var driveLetters = new[] { "C", "D", "E", "F" };
-            var phpPaths = new[]
-            {
-                @"\php\php.exe",
-                @"\php8\php.exe",
-                @"\php81\php.exe",
-                @"\php82\php.exe",
-                @"\xampp\php\php.exe",
-                @"\wamp\bin\php\php8.1.0\php.exe",
-                @"\wamp64\bin\php\php8.1.0\php.exe"
-            };
-            
-            foreach (var drive in driveLetters)
-            {
-                foreach (var path in phpPaths)
-                {
-                    possiblePaths.Add($"{drive}:{path}");
-                }
-            }
-        }
-        
-        // Check each path
-        foreach (var path in possiblePaths)
-        {
-            try
-            {
-                if (File.Exists(path))
-                {
-                    return path;
-                }
-                
-                // Try to execute if it's in PATH
-                if (path == "php")
-                {
-                    var startInfo = new ProcessStartInfo
-                    {
-                        FileName = path,
-                        Arguments = "--version",
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    };
-                    
-                    using var process = Process.Start(startInfo);
-                    if (process != null)
-                    {
-                        process.WaitForExit(3000);
-                        if (process.ExitCode == 0)
-                        {
-                            return path;
-                        }
-                    }
-                }
-            }
-            catch { continue; }
-        }
-        
+        // PHP should be pre-configured in the host environment
+        // No scanning is performed
         return null;
     }
     
     /// <summary>
-    /// Finds PHP configuration file (php.ini)
+    /// Finds PHP configuration file (php.ini) - DEPRECATED: PHP should be pre-configured in host environment
     /// </summary>
+    [Obsolete("PHP scanning removed. PHP should be installed and configured in host environment before running RaOS.")]
     public static string? FindPhpIniPath(string? phpPath = null)
     {
-        phpPath ??= FindPhpExecutable();
-        
-        if (phpPath == null)
-        {
-            return null;
-        }
-        
-        // Try to get php.ini path from PHP itself
-        try
-        {
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = phpPath,
-                Arguments = "--ini",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-            
-            using var process = Process.Start(startInfo);
-            if (process != null)
-            {
-                var output = process.StandardOutput.ReadToEnd();
-                process.WaitForExit(3000);
-                
-                var lines = output.Split('\n');
-                foreach (var line in lines)
-                {
-                    if (line.Contains("Loaded Configuration File:"))
-                    {
-                        var path = line.Split(':')[1].Trim();
-                        if (File.Exists(path))
-                        {
-                            return path;
-                        }
-                    }
-                }
-            }
-        }
-        catch { }
-        
+        // PHP should be pre-configured in the host environment
+        // No scanning is performed
         return null;
     }
     
     /// <summary>
-    /// Gets the suggested path for generating a php.ini file based on PHP's expected location
+    /// Gets the suggested path for generating a php.ini file - DEPRECATED: PHP should be pre-configured in host environment
     /// </summary>
+    [Obsolete("PHP scanning removed. PHP should be installed and configured in host environment before running RaOS.")]
     public static string? GetSuggestedPhpIniPath(string? phpPath = null)
     {
-        phpPath ??= FindPhpExecutable();
-        
-        if (phpPath == null)
-        {
-            return null;
-        }
-        
-        // Try to get php.ini path from PHP itself
-        try
-        {
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = phpPath,
-                Arguments = "--ini",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-            
-            using var process = Process.Start(startInfo);
-            if (process != null)
-            {
-                var output = process.StandardOutput.ReadToEnd();
-                process.WaitForExit(3000);
-                
-                var lines = output.Split('\n');
-                
-                // First try to find "Configuration File (php.ini) Path:"
-                foreach (var line in lines)
-                {
-                    if (line.Contains("Configuration File (php.ini) Path:"))
-                    {
-                        var colonIndex = line.IndexOf("Path:");
-                        if (colonIndex >= 0)
-                        {
-                            var pathPart = line.Substring(colonIndex + 5).Trim().Trim('"');
-                            if (!string.IsNullOrEmpty(pathPart) && pathPart != "(none)")
-                            {
-                                // Return the full path to php.ini in that directory
-                                return Path.Combine(pathPart, "php.ini");
-                            }
-                        }
-                    }
-                }
-                
-                // Fallback: generate in the same directory as php.exe
-                var phpDir = Path.GetDirectoryName(phpPath);
-                if (!string.IsNullOrEmpty(phpDir))
-                {
-                    return Path.Combine(phpDir, "php.ini");
-                }
-            }
-        }
-        catch { }
-        
+        // PHP should be pre-configured in the host environment
+        // No scanning is performed
         return null;
     }
     
@@ -1113,9 +762,12 @@ sqlite3.extension_dir =
     /// <summary>
     /// Verifies that a PHP configuration file exists and is valid
     /// </summary>
+    [Obsolete("PHP scanning removed. PHP should be installed and configured in host environment before running RaOS.")]
     public static (bool exists, bool valid, string? message) VerifyPhpConfig(string? phpIniPath = null)
     {
+#pragma warning disable CS0618 // Type or member is obsolete
         phpIniPath ??= FindPhpIniPath();
+#pragma warning restore CS0618 // Type or member is obsolete
         
         if (phpIniPath == null)
         {
@@ -1152,9 +804,12 @@ sqlite3.extension_dir =
     /// <summary>
     /// Verifies that Nginx configuration files exist and are valid
     /// </summary>
+    [Obsolete("Nginx scanning removed. Nginx should be installed and configured in host environment before running RaOS.")]
     public static (bool exists, bool valid, string? message) VerifyNginxConfig()
     {
+#pragma warning disable CS0618 // Type or member is obsolete
         var configPath = FindNginxConfigPath();
+#pragma warning restore CS0618 // Type or member is obsolete
         
         if (configPath == null)
         {
@@ -1185,7 +840,9 @@ sqlite3.extension_dir =
             }
             
             // Try to test the configuration with nginx -t
+#pragma warning disable CS0618 // Type or member is obsolete
             var nginxPath = FindNginxExecutable();
+#pragma warning restore CS0618 // Type or member is obsolete
             if (nginxPath != null)
             {
                 try
@@ -1248,11 +905,14 @@ sqlite3.extension_dir =
     /// <summary>
     /// Starts Nginx web server
     /// </summary>
+    [Obsolete("Nginx scanning removed. Nginx should be installed and configured in host environment before running RaOS.")]
     public static (bool success, string message) StartNginx()
     {
         try
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             var nginxPath = FindNginxExecutable();
+#pragma warning restore CS0618 // Type or member is obsolete
             if (nginxPath == null)
             {
                 return (false, "Nginx not found. Please ensure Nginx is installed.");
@@ -1414,9 +1074,12 @@ sqlite3.extension_dir =
     /// <summary>
     /// Configures PHP settings in an existing php.ini file
     /// </summary>
+    [Obsolete("PHP scanning removed. PHP should be installed and configured in host environment before running RaOS.")]
     public static bool ConfigurePhpIni(string? phpIniPath = null)
     {
+#pragma warning disable CS0618 // Type or member is obsolete
         phpIniPath ??= FindPhpIniPath();
+#pragma warning restore CS0618 // Type or member is obsolete
         
         if (phpIniPath == null || !File.Exists(phpIniPath))
         {
