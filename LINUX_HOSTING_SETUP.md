@@ -1,5 +1,16 @@
 # 🐧 Linux Hosting Setup Guide for RaCore
 
+> **⚠️ IMPORTANT NOTE (January 2025):**  
+> This guide contains references to Nginx, which **has been removed** from RaCore as of this version.  
+> RaOS now focuses exclusively on **Apache HTTP Server** for web serving.  
+> 
+> **For Apache setup**, replace Nginx sections with Apache equivalents:
+> - Install: `sudo apt install apache2`
+> - Configure: Edit `/etc/apache2/sites-available/racore.conf`
+> - Enable: `sudo a2ensite racore && sudo systemctl reload apache2`
+> 
+> See [NGINX_REMOVAL_NOTICE.md](NGINX_REMOVAL_NOTICE.md) for full migration details.
+
 ## Should You Switch to Linux?
 
 ### **Yes! Here's Why:**

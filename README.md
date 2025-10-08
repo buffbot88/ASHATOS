@@ -38,11 +38,11 @@
 ### Prerequisites
 - .NET 9.0 SDK
 - Optional: PHP 8+ for CMS features
-- Optional: Nginx for production CMS deployment (recommended for Linux)
+- Optional: Apache HTTP Server for production CMS deployment (recommended for Linux)
 
 **🐧 Running on Linux?** See our comprehensive [Linux Hosting Setup Guide](LINUX_HOSTING_SETUP.md) for production deployment instructions.
 
-**🔧 Nginx Management:** RaOS can fully manage Nginx automatically! See [NGINX_MANAGEMENT_UBUNTU.md](NGINX_MANAGEMENT_UBUNTU.md) for setup instructions.
+**⚠️ Nginx Removed:** As of this version, Nginx support has been removed. RaOS now focuses on Apache HTTP Server. See [NGINX_REMOVAL_NOTICE.md](NGINX_REMOVAL_NOTICE.md) for migration details.
 
 **🤔 Windows vs Linux?** Check our [comparison guide](WINDOWS_VS_LINUX.md) to help decide (TL;DR: Linux is recommended for production).
 
