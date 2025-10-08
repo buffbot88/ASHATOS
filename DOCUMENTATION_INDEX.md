@@ -1,6 +1,6 @@
 # 📚 RaOS Documentation Index
 
-**Version:** 9.3.9  
+**Version:** 9.4.0  
 **Last Updated:** October 2025  
 **Status:** Production Ready
 

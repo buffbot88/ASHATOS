@@ -1,6 +1,6 @@
 # RaOS Version Management Guide
 
-**Current Version:** 9.3.9  
+**Current Version:** 9.4.0  
 **Last Updated:** October 2025
 
 ---
@@ -20,11 +20,11 @@ namespace RaCore;
 
 public static class RaVersion
 {
-    public const string Current = "9.3.9";
-    public const string FullVersion = "Phase 9.3.9";
+    public const string Current = "9.4.0";
+    public const string FullVersion = "Phase 9.4.0";
     public const int Major = 9;
-    public const int Minor = 3;
-    public const int Patch = 9;
+    public const int Minor = 4;
+    public const int Patch = 0;
     public const string Label = "Production Ready";
     public const string LastUpdated = "October 2025";
 }
@@ -84,13 +84,18 @@ RaOS follows a semantic versioning pattern: `MAJOR.MINOR.PATCH`
 - **9.3.8**: Ashat AI Coding Assistant
 - **9.3.9**: Documentation Audit & Unified Version System
 
+### Phase 9.4.x Releases
+
+- **9.4.0**: ASHAT Core Module & Public Alpha Readiness
+
 ## Modules Using Unified Version
 
 The following modules reference `RaVersion`:
 
 - **UpdateModule** - Uses `RaVersion.Current` for version checking
 - **LULModule** - Updated with current phase information
-- **LegendaryClientBuilder** - Uses version constant (9.3.9)
+- **LegendaryClientBuilder** - Uses version constant (9.4.0)
+- **ASHAT Core Module** - Initial release as Core module (9.4.0)
 
 ## Documentation Updates
 
