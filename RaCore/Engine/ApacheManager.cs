@@ -5,9 +5,11 @@ using System.Text.RegularExpressions;
 namespace RaCore.Engine;
 
 /// <summary>
-/// Manages Apache and PHP configuration scanning for external PHP execution
-/// RaOS uses internal Kestrel webserver, but generated PHP files need external Apache/PHP8
-/// Scans for Apache and PHP configurations from C:\RaOS\webserver\settings
+/// Manages Apache and PHP configuration scanning for external PHP execution on Linux
+/// RaOS uses internal Kestrel webserver on all platforms
+/// On Windows 11, Apache is NOT required - Kestrel handles all web serving
+/// On Linux, external Apache/PHP8 is optional for PHP file execution only
+/// Scans for Apache and PHP configurations from C:\RaOS\webserver\settings (Linux only)
 /// </summary>
 public class ApacheManager
 {
@@ -23,9 +25,18 @@ public class ApacheManager
     
     /// <summary>
     /// Scans for Apache httpd.conf in the static configuration folder
+    /// Note: On Windows 11, this is not required as Kestrel handles all web serving
     /// </summary>
     public static (bool found, string? path, string? message) ScanForApacheConfig()
     {
+        // On Windows, Apache is not needed
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            var message = "Apache is not required on Windows - RaOS uses Kestrel webserver";
+            Console.WriteLine($"[ApacheManager] ℹ️  {message}");
+            return (false, null, message);
+        }
+        
         try
         {
             Console.WriteLine($"[ApacheManager] Scanning for Apache configuration...");
@@ -62,9 +73,18 @@ public class ApacheManager
     
     /// <summary>
     /// Scans for PHP php.ini in the static configuration folder
+    /// Note: On Windows 11, this is optional as Kestrel can serve static/dynamic content
     /// </summary>
     public static (bool found, string? path, string? message) ScanForPhpConfig()
     {
+        // On Windows, PHP scanning is optional (Kestrel handles web serving)
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            var message = "PHP configuration is optional on Windows - RaOS uses Kestrel webserver";
+            Console.WriteLine($"[ApacheManager] ℹ️  {message}");
+            return (false, null, message);
+        }
+        
         try
         {
             Console.WriteLine($"[ApacheManager] Scanning for PHP configuration...");
