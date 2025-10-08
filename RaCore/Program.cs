@@ -2,6 +2,7 @@ using Abstractions;
 using RaCore.Engine;
 using RaCore.Engine.Manager;
 using RaCore.Engine.Memory;
+using RaCore.Models;
 using RaCore.Modules.Extensions.UserProfiles;
 using SQLitePCL;
 using System.Text.Json;
@@ -3342,4 +3343,16 @@ if (gameClientModule != null)
                 return Results.Json(new { success = true, templates });
             }
             else
-            
+            {
+                context.Response.StatusCode = 400;
+                return Results.Json(new { error = "Module does not support templates" });
+            }
+        }
+        catch (Exception ex)
+        {
+            context.Response.StatusCode = 400;
+            return Results.Json(new { error = ex.Message });
+        }
+    });
+
+    app.Run();
