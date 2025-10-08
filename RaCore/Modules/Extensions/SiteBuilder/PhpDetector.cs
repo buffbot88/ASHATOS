@@ -17,19 +17,132 @@ public class PhpDetector
 
     public string DetectPHP()
     {
-        // PHP scanning removed - should be pre-configured in host environment
-        return "PHP scanning disabled. PHP should be installed and configured in the host environment before running RaOS.";
+        var phpPath = FindPhpExecutable();
+        if (phpPath == null)
+        {
+            return GetPhpNotFoundMessage();
+        }
+        
+        var version = GetPhpVersion(phpPath);
+        return $"✅ PHP detected\nPath: {phpPath}\nVersion: {version}";
     }
 
     /// <summary>
-    /// Finds PHP executable - DEPRECATED: PHP should be pre-configured in host environment
+    /// Finds PHP executable by scanning common installation locations
     /// </summary>
-    [Obsolete("PHP scanning removed. PHP should be installed and configured in host environment before running RaOS.")]
     public string? FindPhpExecutable()
     {
-        // PHP should be pre-configured in the host environment
-        // No scanning is performed
-        return null;
+        try
+        {
+            // First, check the local php folder in server root
+            var serverRoot = Directory.GetCurrentDirectory();
+            var localPhpFolder = Path.Combine(serverRoot, "php");
+            var localPhpExe = Path.Combine(localPhpFolder, "php.exe");
+            
+            if (File.Exists(localPhpExe))
+            {
+                _module.Log($"Found PHP in local folder: {localPhpExe}");
+                return localPhpExe;
+            }
+            
+            // Try to find PHP in PATH
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                // Windows: Check common PHP installation paths
+                var commonPaths = new[]
+                {
+                    @"C:\php\php.exe",
+                    @"C:\PHP8\php.exe",
+                    @"C:\PHP82\php.exe",
+                    @"C:\Program Files\PHP\php.exe",
+                    @"C:\xampp\php\php.exe",
+                    @"C:\wamp64\bin\php\php8.2.0\php.exe"
+                };
+                
+                foreach (var path in commonPaths)
+                {
+                    if (File.Exists(path))
+                    {
+                        _module.Log($"Found PHP: {path}");
+                        return path;
+                    }
+                }
+                
+                // Try using 'where' command to find php in PATH
+                try
+                {
+                    var startInfo = new ProcessStartInfo
+                    {
+                        FileName = "where",
+                        Arguments = "php",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+                    
+                    using var process = Process.Start(startInfo);
+                    if (process != null)
+                    {
+                        var output = process.StandardOutput.ReadToEnd();
+                        process.WaitForExit(5000);
+                        
+                        if (process.ExitCode == 0 && !string.IsNullOrWhiteSpace(output))
+                        {
+                            var phpPath = output.Split('\n')[0].Trim();
+                            if (File.Exists(phpPath))
+                            {
+                                _module.Log($"Found PHP in PATH: {phpPath}");
+                                return phpPath;
+                            }
+                        }
+                    }
+                }
+                catch { }
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                // Linux/macOS: Use 'which' command
+                try
+                {
+                    var startInfo = new ProcessStartInfo
+                    {
+                        FileName = "which",
+                        Arguments = "php",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+                    
+                    using var process = Process.Start(startInfo);
+                    if (process != null)
+                    {
+                        var output = process.StandardOutput.ReadToEnd();
+                        process.WaitForExit(5000);
+                        
+                        if (process.ExitCode == 0 && !string.IsNullOrWhiteSpace(output))
+                        {
+                            var phpPath = output.Trim();
+                            if (File.Exists(phpPath))
+                            {
+                                _module.Log($"Found PHP: {phpPath}");
+                                return phpPath;
+                            }
+                        }
+                    }
+                }
+                catch { }
+            }
+            
+            _module.Log("PHP not found in any common locations");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _module.Log($"Error searching for PHP: {ex.Message}", "ERROR");
+            return null;
+        }
     }
 
     public string GetPhpVersion(string phpPath)
