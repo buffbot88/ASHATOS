@@ -337,6 +337,7 @@ public class FirstRunManager
             // Configure Nginx - use port 80 for the integrated CMS
             var nginxManager = new NginxManager(_cmsPath, 80);
             
+#pragma warning disable CS0618 // Type or member is obsolete
             if (NginxManager.IsNginxAvailable())
             {
                 // First, create the CMS-specific Nginx config
@@ -347,6 +348,7 @@ public class FirstRunManager
                 
                 // Also configure reverse proxy for RaCore if not already done
                 var configPath = NginxManager.FindNginxConfigPath();
+#pragma warning restore CS0618 // Type or member is obsolete
                 if (configPath != null)
                 {
                     var config = File.ReadAllText(configPath);
@@ -360,7 +362,9 @@ public class FirstRunManager
                         var racorePort = int.Parse(port);
                         
                         var proxyManager = new NginxManager("", 80);
+#pragma warning disable CS0618 // Type or member is obsolete
                         if (proxyManager.ConfigureReverseProxy(racorePort, domain))
+#pragma warning restore CS0618 // Type or member is obsolete
                         {
                             Console.WriteLine($"[FirstRunManager] ✅ Nginx reverse proxy configured for {domain}");
                             Console.WriteLine($"[FirstRunManager] After Nginx restart, access RaCore at: http://{domain}");

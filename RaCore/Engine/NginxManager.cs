@@ -85,9 +85,12 @@ public class NginxManager
     /// <summary>
     /// Checks if Nginx is installed and available
     /// </summary>
+    [Obsolete("Nginx scanning removed. Nginx should be installed and configured in host environment before running RaOS.")]
     public static bool IsNginxAvailable()
     {
+#pragma warning disable CS0618 // Type or member is obsolete
         return FindNginxExecutable() != null;
+#pragma warning restore CS0618 // Type or member is obsolete
     }
     
     /// <summary>
@@ -116,9 +119,12 @@ public class NginxManager
     /// Parses the Nginx configuration to extract configured RaCore port from existing proxy rules
     /// </summary>
     /// <returns>The configured RaCore port, or null if not found</returns>
+    [Obsolete("Nginx scanning removed. Nginx should be installed and configured in host environment before running RaOS.")]
     public static int? GetConfiguredRaCorePort()
     {
+#pragma warning disable CS0618 // Type or member is obsolete
         var configPath = FindNginxConfigPath();
+#pragma warning restore CS0618 // Type or member is obsolete
         if (configPath == null || !File.Exists(configPath))
         {
             return null;
@@ -157,6 +163,7 @@ public class NginxManager
     /// <summary>
     /// Configures Nginx as a reverse proxy for RaCore
     /// </summary>
+    [Obsolete("Nginx scanning removed. Nginx should be installed and configured in host environment before running RaOS.")]
     public bool ConfigureReverseProxy(int racorePort = 80, string domain = "localhost")
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -167,7 +174,9 @@ public class NginxManager
             return false;
         }
         
+#pragma warning disable CS0618 // Type or member is obsolete
         var configPath = FindNginxConfigPath();
+#pragma warning restore CS0618 // Type or member is obsolete
         if (configPath == null)
         {
             Console.WriteLine("[NginxManager] ⚠️  Could not find Nginx configuration file");
@@ -474,11 +483,14 @@ server {{
     /// RaOS does not automatically restart Nginx during configuration.
     /// </summary>
     /// <returns>Tuple with success status and message</returns>
+    [Obsolete("Nginx scanning removed. Nginx should be installed and configured in host environment before running RaOS.")]
     public static (bool success, string message) RestartNginx()
     {
         try
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             var nginxPath = FindNginxExecutable();
+#pragma warning restore CS0618 // Type or member is obsolete
             if (nginxPath == null)
             {
                 return (false, "Nginx not found. Please ensure Nginx is installed.");
@@ -750,9 +762,12 @@ sqlite3.extension_dir =
     /// <summary>
     /// Verifies that a PHP configuration file exists and is valid
     /// </summary>
+    [Obsolete("PHP scanning removed. PHP should be installed and configured in host environment before running RaOS.")]
     public static (bool exists, bool valid, string? message) VerifyPhpConfig(string? phpIniPath = null)
     {
+#pragma warning disable CS0618 // Type or member is obsolete
         phpIniPath ??= FindPhpIniPath();
+#pragma warning restore CS0618 // Type or member is obsolete
         
         if (phpIniPath == null)
         {
@@ -789,9 +804,12 @@ sqlite3.extension_dir =
     /// <summary>
     /// Verifies that Nginx configuration files exist and are valid
     /// </summary>
+    [Obsolete("Nginx scanning removed. Nginx should be installed and configured in host environment before running RaOS.")]
     public static (bool exists, bool valid, string? message) VerifyNginxConfig()
     {
+#pragma warning disable CS0618 // Type or member is obsolete
         var configPath = FindNginxConfigPath();
+#pragma warning restore CS0618 // Type or member is obsolete
         
         if (configPath == null)
         {
@@ -822,7 +840,9 @@ sqlite3.extension_dir =
             }
             
             // Try to test the configuration with nginx -t
+#pragma warning disable CS0618 // Type or member is obsolete
             var nginxPath = FindNginxExecutable();
+#pragma warning restore CS0618 // Type or member is obsolete
             if (nginxPath != null)
             {
                 try
@@ -885,11 +905,14 @@ sqlite3.extension_dir =
     /// <summary>
     /// Starts Nginx web server
     /// </summary>
+    [Obsolete("Nginx scanning removed. Nginx should be installed and configured in host environment before running RaOS.")]
     public static (bool success, string message) StartNginx()
     {
         try
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             var nginxPath = FindNginxExecutable();
+#pragma warning restore CS0618 // Type or member is obsolete
             if (nginxPath == null)
             {
                 return (false, "Nginx not found. Please ensure Nginx is installed.");
@@ -1051,9 +1074,12 @@ sqlite3.extension_dir =
     /// <summary>
     /// Configures PHP settings in an existing php.ini file
     /// </summary>
+    [Obsolete("PHP scanning removed. PHP should be installed and configured in host environment before running RaOS.")]
     public static bool ConfigurePhpIni(string? phpIniPath = null)
     {
+#pragma warning disable CS0618 // Type or member is obsolete
         phpIniPath ??= FindPhpIniPath();
+#pragma warning restore CS0618 // Type or member is obsolete
         
         if (phpIniPath == null || !File.Exists(phpIniPath))
         {
