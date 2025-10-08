@@ -7,6 +7,7 @@ namespace RaCore;
 /// <summary>
 /// Simple test runner for Phase 8 verification
 /// </summary>
+#pragma warning disable CS7022 // Entry point warning - this class can be used as alternate entry point
 public class TestRunner
 {
     public static async Task Main(string[] args)

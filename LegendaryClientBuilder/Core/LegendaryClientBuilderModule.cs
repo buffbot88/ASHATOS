@@ -420,6 +420,8 @@ public sealed class LegendaryClientBuilderModule : ModuleBase, ILegendaryClientB
 
     public async Task<GameClientPackage> RegenerateClientAsync(Guid packageId, ClientConfiguration newConfig)
     {
+        await Task.CompletedTask; // Suppress CS1998 warning - method reserved for future async operations
+        
         lock (_lock)
         {
             if (!_clients.TryGetValue(packageId, out var oldPackage))

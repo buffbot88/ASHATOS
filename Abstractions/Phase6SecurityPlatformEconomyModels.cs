@@ -594,16 +594,16 @@ public class ARObject
 {
     public Guid Id { get; set; }
     public string ModelPath { get; set; } = string.Empty;
-    public Vector3 Position { get; set; }
-    public Vector3 Rotation { get; set; }
+    public Vector3 Position { get; set; } = new();
+    public Vector3 Rotation { get; set; } = new();
     public Vector3 Scale { get; set; } = new() { X = 1, Y = 1, Z = 1 };
 }
 
 public class SpatialAnchor
 {
     public Guid Id { get; set; }
-    public Vector3 Position { get; set; }
-    public Vector3 Rotation { get; set; }
+    public Vector3 Position { get; set; } = new();
+    public Vector3 Rotation { get; set; } = new();
     public AnchorType Type { get; set; }
 }
 
@@ -619,8 +619,8 @@ public class VRObject
 {
     public Guid Id { get; set; }
     public string ModelPath { get; set; } = string.Empty;
-    public Vector3 Position { get; set; }
-    public Vector3 Rotation { get; set; }
+    public Vector3 Position { get; set; } = new();
+    public Vector3 Rotation { get; set; } = new();
     public bool IsInteractive { get; set; }
 }
 
@@ -628,13 +628,13 @@ public class VREnvironment
 {
     public string SkyboxPath { get; set; } = string.Empty;
     public float Brightness { get; set; } = 1.0f;
-    public Vector3 AmbientColor { get; set; }
+    public Vector3 AmbientColor { get; set; } = new();
 }
 
 public class TrackingData
 {
-    public Vector3 HeadPosition { get; set; }
-    public Vector3 HeadRotation { get; set; }
+    public Vector3 HeadPosition { get; set; } = new();
+    public Vector3 HeadRotation { get; set; } = new();
     public Vector3? LeftHandPosition { get; set; }
     public Vector3? RightHandPosition { get; set; }
     public Dictionary<string, float> ButtonStates { get; set; } = new();

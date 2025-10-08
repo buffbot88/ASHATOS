@@ -629,7 +629,7 @@ public class MarketAnalysis
 {
     public Guid WorldId { get; set; }
     public Dictionary<Guid, ItemAnalysis> ItemAnalyses { get; set; } = new();
-    public MarketTrend OverallTrend { get; set; }
+    public MarketTrend OverallTrend { get; set; } = new();
     public List<string> Insights { get; set; } = new();
     public DateTime AnalyzedAt { get; set; }
 }
@@ -638,7 +638,7 @@ public class ItemAnalysis
 {
     public Guid ItemId { get; set; }
     public decimal CurrentPrice { get; set; }
-    public MarketTrend Trend { get; set; }
+    public MarketTrend Trend { get; set; } = new();
     public float Volatility { get; set; }
     public int TradeVolume { get; set; }
 }
@@ -984,7 +984,7 @@ public class ComplianceViolation
 // Phase6ComplianceReport to avoid conflict
 public class Phase6ComplianceReport
 {
-    public ReportPeriod Period { get; set; }
+    public ReportPeriod Period { get; set; } = new();
     public int TotalChecks { get; set; }
     public int ViolationsFound { get; set; }
     public int ViolationsRemediated { get; set; }

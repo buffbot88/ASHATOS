@@ -96,6 +96,8 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
 
     public async Task<ModuleResponse> ProcessAsync(string input)
     {
+        await Task.CompletedTask; // Suppress CS1998 warning - method reserved for future async operations
+        
         var text = (input ?? "").Trim();
         LogInfo($"Processing request: {(text.Length > 50 ? text.Substring(0, 50) + "..." : text)}");
 
@@ -351,6 +353,8 @@ public sealed class AILanguageModule : ModuleBase, IDisposable
 
     public async Task<ModuleResponse> GenerateAsync(string intent, string context, string language = "en", Dictionary<string, object>? metadata = null)
     {
+        await Task.CompletedTask; // Suppress CS1998 warning - method reserved for future async operations
+        
         LogInfo($"GenerateAsync called with intent: {intent}, language: {language}");
         LogInfo("Note: AILanguage module generation is deprecated. Use LanguageModelProcessor instead.");
         
