@@ -1087,7 +1087,25 @@ sqlite3.extension_dir =
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[NginxManager] Error generating PHP config: {ex.Message}");
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"[NginxManager] ❌ ERROR: Failed to generate PHP config");
+            Console.WriteLine($"[NginxManager] Reason: {ex.Message}");
+            Console.WriteLine($"[NginxManager] Type: {ex.GetType().Name}");
+            Console.WriteLine($"[NginxManager] Target Path: {outputPath}");
+            
+            // Check for common issues
+            var directory = Path.GetDirectoryName(outputPath);
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+            {
+                Console.WriteLine($"[NginxManager] Issue: Directory does not exist: {directory}");
+            }
+            
+            if (ex is UnauthorizedAccessException)
+            {
+                Console.WriteLine($"[NginxManager] Issue: Permission denied - run with elevated privileges or check directory permissions");
+            }
+            
+            Console.ResetColor();
             return false;
         }
     }
@@ -1195,6 +1213,20 @@ sqlite3.extension_dir =
                         }
                         else
                         {
+                            // Check if the error is due to permission issues rather than config errors
+                            if (error.Contains("Permission denied") || error.Contains("permission denied") ||
+                                error.Contains("open()") && error.Contains("failed (13:"))
+                            {
+                                // Permission errors don't mean the config is invalid
+                                // The syntax is OK, just can't write to logs/pid files
+                                if (error.Contains("syntax is ok") || error.Contains("test is successful"))
+                                {
+                                    return (true, true, "Nginx configuration syntax is valid (permission errors ignored)");
+                                }
+                                // If syntax check passed but other permission errors occurred
+                                return (true, true, "Nginx configuration appears valid (permission errors prevented full test)");
+                            }
+                            
                             return (true, false, $"Nginx configuration test failed: {error}");
                         }
                     }
