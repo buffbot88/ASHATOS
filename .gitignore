@@ -517,3 +517,4 @@ Modules/*/*.md
 Modules/*/*.json
 !Modules/**/*.csproj
 !Modules/**/*.sln
+CMS/

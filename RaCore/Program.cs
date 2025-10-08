@@ -1178,9 +1178,11 @@ if (gameServerModule != null && authModule != null)
 }
 
 // Helper method to check if CMS is available
+// CMS is now in internal directory, not wwwroot
 static bool IsCmsAvailable(string wwwrootPath)
 {
-    var indexPhpPath = Path.Combine(wwwrootPath, "index.php");
+    var cmsInternalPath = Path.Combine(Directory.GetCurrentDirectory(), "CMS");
+    var indexPhpPath = Path.Combine(cmsInternalPath, "index.php");
     return File.Exists(indexPhpPath);
 }
 
@@ -1218,12 +1220,19 @@ app.MapGet("/", async (HttpContext context) =>
         }
         
         // Phase 9.3.9: Check if CMS is available
-        // If CMS is available, redirect to it for all users (including admins during construction)
+        // CMS files are internal - serve static site from wwwroot
+        // Static HTML will call API endpoints to get CMS content
         if (IsCmsAvailable(wwwrootPath))
         {
-            Console.WriteLine("[RaCore] CMS available - redirecting to /index.php");
-            context.Response.Redirect("/index.php");
-            return;
+            Console.WriteLine("[RaCore] CMS available - serving static site (wwwroot/index.html)");
+            // Serve static HTML which will call internal CMS APIs
+            var indexHtmlPath = Path.Combine(wwwrootPath, "index.html");
+            if (File.Exists(indexHtmlPath))
+            {
+                context.Response.ContentType = "text/html";
+                await context.Response.SendFileAsync(indexHtmlPath);
+                return;
+            }
         }
         
         // Fallback: CMS not available, use legacy bot-filtering homepage

@@ -189,19 +189,33 @@ public sealed class SiteBuilderModule : ModuleBase
         var sb = new StringBuilder();
         sb.AppendLine("SiteBuilder Status:");
         sb.AppendLine();
-        sb.AppendLine($"CMS Root: {_cmsRootPath}");
-        sb.AppendLine($"Exists: {Directory.Exists(_cmsRootPath)}");
         
+        // Check wwwroot (static HTML)
+        sb.AppendLine($"Static Site (wwwroot): {_cmsRootPath}");
+        sb.AppendLine($"  Exists: {Directory.Exists(_cmsRootPath)}");
         if (Directory.Exists(_cmsRootPath))
         {
-            var files = Directory.GetFiles(_cmsRootPath, "*.php");
-            sb.AppendLine($"PHP Files: {files.Length}");
+            var htmlFiles = Directory.GetFiles(_cmsRootPath, "*.html");
+            sb.AppendLine($"  HTML Files: {htmlFiles.Length}");
+        }
+        
+        sb.AppendLine();
+        
+        // Check internal CMS directory (PHP)
+        var cmsInternalPath = Path.Combine(Directory.GetCurrentDirectory(), "CMS");
+        sb.AppendLine($"CMS Internal (PHP): {cmsInternalPath}");
+        sb.AppendLine($"  Exists: {Directory.Exists(cmsInternalPath)}");
+        
+        if (Directory.Exists(cmsInternalPath))
+        {
+            var phpFiles = Directory.GetFiles(cmsInternalPath, "*.php");
+            sb.AppendLine($"  PHP Files: {phpFiles.Length}");
             
-            var controlPath = Path.Combine(_cmsRootPath, "control");
-            sb.AppendLine($"Control Panel: {(Directory.Exists(controlPath) ? "Installed" : "Not installed")}");
+            var controlPath = Path.Combine(cmsInternalPath, "control");
+            sb.AppendLine($"  Control Panel: {(Directory.Exists(controlPath) ? "Installed" : "Not installed")}");
             
-            var forumPath = Path.Combine(_cmsRootPath, "community");
-            sb.AppendLine($"Forum: {(Directory.Exists(forumPath) ? "Installed" : "Not installed")}");
+            var forumPath = Path.Combine(cmsInternalPath, "community");
+            sb.AppendLine($"  Forum: {(Directory.Exists(forumPath) ? "Installed" : "Not installed")}");
         }
 
         if (_phpDetector != null)

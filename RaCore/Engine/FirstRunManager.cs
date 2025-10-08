@@ -386,17 +386,21 @@ public class FirstRunManager
             Console.WriteLine("[FirstRunManager] Step 3/7: Spawning CMS with Integrated Control Panel...");
             Console.WriteLine();
             
-            // Force regenerate CMS Suite - delete existing if present
-            if (Directory.Exists(_cmsPath))
+            // CMS files go to internal directory, not wwwroot
+            // wwwroot contains only static HTML files
+            var cmsInternalPath = Path.Combine(Directory.GetCurrentDirectory(), "CMS");
+            
+            // Check if internal CMS directory exists and back it up if needed
+            if (Directory.Exists(cmsInternalPath))
             {
-                Console.WriteLine($"[FirstRunManager] ⚠️  Existing CMS found at {_cmsPath}");
+                Console.WriteLine($"[FirstRunManager] ⚠️  Existing CMS found at {cmsInternalPath}");
                 Console.WriteLine("[FirstRunManager] 🔄 Force regenerating CMS Suite...");
                 try
                 {
-                    // Backup existing if needed
-                    var backupPath = _cmsPath + $".backup.{DateTime.UtcNow:yyyyMMddHHmmss}";
+                    // Backup existing CMS
+                    var backupPath = cmsInternalPath + $".backup.{DateTime.UtcNow:yyyyMMddHHmmss}";
                     Console.WriteLine($"[FirstRunManager] 💾 Creating backup: {backupPath}");
-                    Directory.Move(_cmsPath, backupPath);
+                    Directory.Move(cmsInternalPath, backupPath);
                 }
                 catch (Exception ex)
                 {
@@ -404,7 +408,7 @@ public class FirstRunManager
                     Console.WriteLine("[FirstRunManager] Proceeding with force regeneration...");
                     try
                     {
-                        Directory.Delete(_cmsPath, true);
+                        Directory.Delete(cmsInternalPath, true);
                     }
                     catch (Exception deleteEx)
                     {
@@ -418,10 +422,10 @@ public class FirstRunManager
             Console.WriteLine(result);
             Console.WriteLine();
             
-            // Check if CMS was created successfully
-            if (!Directory.Exists(_cmsPath))
+            // Check if CMS was created successfully (in internal directory)
+            if (!Directory.Exists(cmsInternalPath))
             {
-                Console.WriteLine("[FirstRunManager] Error: CMS directory was not created");
+                Console.WriteLine("[FirstRunManager] Error: CMS internal directory was not created");
                 return false;
             }
             
