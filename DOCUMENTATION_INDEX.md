@@ -422,7 +422,7 @@ Found an issue or want to improve the docs?
 ---
 
 **Last Updated:** January 2025  
-**Documentation Version:** 9.3.2  
+**Documentation Version:** 9.4.0  
 **Total Word Count:** 200,000+ words  
 **Maintained By:** RaOS Development Team
 
