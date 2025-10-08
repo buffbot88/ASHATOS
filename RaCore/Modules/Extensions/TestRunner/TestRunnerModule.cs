@@ -27,6 +27,7 @@ public sealed class TestRunnerModule : ModuleBase, IDisposable
             "  start verify         - verify ordered wake timestamps",
             "  clean                - remove test artifacts from Memory",
             "  status               - list loaded modules",
+            "  windows11            - run Windows 11 Kestrel-only tests",
             "  help                 - show this help"
         ];
 
@@ -84,7 +85,13 @@ public sealed class TestRunnerModule : ModuleBase, IDisposable
             return await _thoughtProcessor.ProcessThoughtAsync(result, null, null, new System.Collections.Concurrent.ConcurrentQueue<Thought>(), Mood.Neutral);
         }
 
-        var failMsg = "TestRunner: unknown command. Try: start | start fast | start json | start seed <n> | start verify | clean | status | help";
+        if (string.Equals(text, "windows11", StringComparison.OrdinalIgnoreCase))
+        {
+            var result = RunWindows11Tests();
+            return await _thoughtProcessor.ProcessThoughtAsync(result, null, null, new System.Collections.Concurrent.ConcurrentQueue<Thought>(), Mood.Thinking);
+        }
+
+        var failMsg = "TestRunner: unknown command. Try: start | start fast | start json | start seed <n> | start verify | clean | status | windows11 | help";
         return await _thoughtProcessor.ProcessThoughtAsync(failMsg, null, null, new System.Collections.Concurrent.ConcurrentQueue<Thought>(), Mood.Confused);
     }
 
@@ -355,6 +362,27 @@ public sealed class TestRunnerModule : ModuleBase, IDisposable
                            .ToList();
         if (list.Count == 0) return "No modules loaded.";
         return "Loaded modules:\n- " + string.Join("\n- ", list);
+    }
+
+    private string RunWindows11Tests()
+    {
+        try
+        {
+            var output = new System.Text.StringBuilder();
+            output.AppendLine("=== Windows 11 Kestrel-Only Tests ===\n");
+            
+            // Run the tests
+            RaCore.Tests.Windows11KestrelTests.RunTests();
+            
+            output.AppendLine("\n✓ All Windows 11 Kestrel-only tests completed successfully");
+            output.AppendLine("See console output above for detailed test results");
+            
+            return output.ToString();
+        }
+        catch (Exception ex)
+        {
+            return $"❌ Windows 11 tests failed: {ex.Message}\n{ex.StackTrace}";
+        }
     }
 
     private static string Trim(string? s, int n)
