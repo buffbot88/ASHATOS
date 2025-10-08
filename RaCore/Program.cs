@@ -1129,7 +1129,8 @@ if (gameServerModule != null && authModule != null)
             }
 
             var exportRequest = await context.Request.ReadFromJsonAsync<GameExportRequest>();
-            var format = exportRequest?.Format ?? ExportFormat.Complete;
+            var formatString = exportRequest?.Format ?? "Complete";
+            var format = Enum.TryParse<ExportFormat>(formatString, true, out var parsedFormat) ? parsedFormat : ExportFormat.Complete;
 
             var response = await gameServerModule.ExportGameProjectAsync(gameId, format);
             await context.Response.WriteAsJsonAsync(response);
@@ -1583,11 +1584,6 @@ app.MapPost("/api/control/server/underconstruction", async (HttpContext context)
         if (request.Message != null)
         {
             config.UnderConstructionMessage = request.Message;
-        }
-        
-        if (request.RobotImage != null)
-        {
-            config.UnderConstructionRobotImage = request.RobotImage;
         }
 
         // Save the configuration
@@ -2101,10 +2097,10 @@ app.MapDelete("/api/control/forum/posts/{postId}", async (HttpContext context) =
     }
     
     var body = await context.Request.ReadFromJsonAsync<ForumPostActionRequest>();
-    if (body == null || string.IsNullOrEmpty(body.Reason))
+    if (body == null)
     {
         context.Response.StatusCode = 400;
-        return Results.Json(new { error = "Reason required" });
+        return Results.Json(new { error = "Request body required" });
     }
     
     var forumModule = moduleManager.Modules
@@ -2118,7 +2114,7 @@ app.MapDelete("/api/control/forum/posts/{postId}", async (HttpContext context) =
         return Results.Json(new { error = "Forum module not available" });
     }
     
-    var success = await forumModule.DeletePostAsync(postId, user.Id.ToString(), body.Reason);
+    var success = await forumModule.DeletePostAsync(postId, user.Id.ToString(), "Deleted by moderator");
     return Results.Json(new { success, message = success ? "Post deleted" : "Post not found" });
 });
 
@@ -2271,8 +2267,8 @@ app.MapPut("/api/control/forum/users/{userId}/ban", async (HttpContext context) 
         return Results.Json(new { error = "Forum module not available" });
     }
     
-    var success = await forumModule.BanUserAsync(userId, body.Banned, body.Reason ?? "", user.Id.ToString());
-    return Results.Json(new { success, message = body.Banned ? "User banned" : "User unbanned" });
+    var success = await forumModule.BanUserAsync(userId, true, body.Reason ?? "", user.Id.ToString());
+    return Results.Json(new { success, message = "User banned" });
 });
 
 app.MapGet("/api/control/forum/stats", async (HttpContext context) =>
@@ -2385,7 +2381,7 @@ app.MapPost("/api/blog/posts", async (HttpContext context) =>
         return Results.Json(new { error = "Blog module not available" });
     }
     
-    var result = await blogModule.CreatePostAsync(user.Id.ToString(), user.Username, body.Title, body.Content, body.Category);
+    var result = await blogModule.CreatePostAsync(user.Id.ToString(), user.Username, body.Title, body.Content, body.Tags?.FirstOrDefault() ?? "General");
     return Results.Json(new { success = result.success, message = result.message, postId = result.postId });
 });
 
@@ -3356,3 +3352,4 @@ if (gameClientModule != null)
     });
 
     app.Run();
+}
