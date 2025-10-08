@@ -105,6 +105,51 @@ app.MapGet("/", async (HttpContext context) =>
 - **After:** Try-catch with HasStarted check
 - **Impact:** Prevents server crashes if header errors occur
 
+## Flow Diagram
+
+```
+REQUEST to "/"
+    |
+    v
+[Try Block Start]
+    |
+    v
+[Check Under Construction?]
+    |
+    +-- YES --> [Check Admin?]
+    |               |
+    |               +-- NO --> Set ContentType → Write Under Construction Page → Return ✅
+    |               |
+    |               +-- YES --> Continue ↓
+    |
+    +-- NO --> Continue ↓
+    
+[Check CMS Available?]
+    |
+    +-- YES --> Redirect to /index.php → Return ✅
+    |           (No ContentType set)
+    |
+    +-- NO --> Continue ↓
+    
+[Bot Detection]
+    |
+    v
+Set ContentType ✅
+    |
+    +-- Bot? YES --> Write Bot Homepage HTML → Return ✅
+    |
+    +-- Bot? NO --> Write Access Denied HTML → Return ✅
+
+[Catch Block]
+    |
+    v
+[Check Response.HasStarted?]
+    |
+    +-- NO --> Set StatusCode 500 → Set ContentType → Write Error HTML ✅
+    |
+    +-- YES --> Log error only (no header changes) ✅
+```
+
 ## Testing
 
 ### Code Review Tests
