@@ -94,7 +94,7 @@ public sealed class GuardianAngelService
             Timestamp = DateTime.UtcNow
         };
 
-        if (assessment.ThreatLevel >= ThreatLevel.High)
+        if (assessment.ThreatLevel >= GuardianThreatLevel.High)
         {
             assessment.GuardianIntervention = true;
             assessment.InterventionMessage = "Guardian Angel ASHAT shields you from harm";
@@ -297,15 +297,15 @@ public sealed class GuardianAngelService
         return string.Empty;
     }
 
-    private ThreatLevel EvaluateThreatLevel(ThreatContext threat)
+    private GuardianThreatLevel EvaluateThreatLevel(ThreatContext threat)
     {
         if (threat.ImmediateDanger)
-            return ThreatLevel.Critical;
+            return GuardianThreatLevel.Critical;
         if (threat.PotentialHarm && threat.ProximityToPlayer < 10)
-            return ThreatLevel.High;
+            return GuardianThreatLevel.High;
         if (threat.PotentialHarm)
-            return ThreatLevel.Medium;
-        return ThreatLevel.Low;
+            return GuardianThreatLevel.Medium;
+        return GuardianThreatLevel.Low;
     }
 
     private int CalculateShieldStrength(ProtectionLevel level)
@@ -441,7 +441,7 @@ public class ProtectionAssessment
 {
     public string PlayerId { get; set; } = string.Empty;
     public DateTime Timestamp { get; set; }
-    public ThreatLevel ThreatLevel { get; set; }
+    public GuardianThreatLevel ThreatLevel { get; set; }
     public bool ProtectionActive { get; set; }
     public int ShieldStrength { get; set; }
     public string RecommendedAction { get; set; } = string.Empty;
@@ -498,7 +498,7 @@ public enum GuidancePriority
     Critical
 }
 
-public enum ThreatLevel
+public enum GuardianThreatLevel
 {
     Low,
     Medium,
