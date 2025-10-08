@@ -720,7 +720,7 @@ The Legendary Client Builder web interface provides a powerful, user-friendly pl
 
 ---
 
-**Version:** 9.3.4  
+**Version:** 9.4.0  
 **Last Updated:** January 2025  
 **Maintained By:** RaCore Development Team
 
