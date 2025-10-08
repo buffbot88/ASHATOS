@@ -68,6 +68,16 @@ public class TestRunner
             UnderConstructionTests.RunTests();
         }
 
+        // Run CMS Homepage Routing tests if requested (Phase 9.3.9)
+        if (args.Length > 0 && args[0].ToLowerInvariant() == "cmshomepage")
+        {
+            Console.WriteLine("\n\n╔════════════════════════════════════════════════════════╗");
+            Console.WriteLine("║   CMS Homepage Routing Test Suite (Phase 9.3.9)       ║");
+            Console.WriteLine("╚════════════════════════════════════════════════════════╝\n");
+            
+            CmsHomepageRoutingTests.RunTests();
+        }
+
         Console.WriteLine("\nPress any key to exit...");
         Console.ReadKey();
     }
