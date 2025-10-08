@@ -9,12 +9,12 @@ public static class RaVersion
     /// <summary>
     /// Current version of RaOS
     /// </summary>
-    public const string Current = "9.3.9";
+    public const string Current = "9.4.0";
     
     /// <summary>
     /// Full version string with phase prefix
     /// </summary>
-    public const string FullVersion = "Phase 9.3.9";
+    public const string FullVersion = "Phase 9.4.0";
     
     /// <summary>
     /// Major version number
@@ -24,12 +24,12 @@ public static class RaVersion
     /// <summary>
     /// Minor version number
     /// </summary>
-    public const int Minor = 3;
+    public const int Minor = 4;
     
     /// <summary>
     /// Patch version number
     /// </summary>
-    public const int Patch = 9;
+    public const int Patch = 0;
     
     /// <summary>
     /// Version status/label

@@ -15,11 +15,6 @@ if (!Directory.Exists(wwwrootPath))
     Console.WriteLine($"[RaCore] Created wwwroot directory: {wwwrootPath}");
 }
 
-var builder = WebApplication.CreateBuilder(args);
-
-// Explicitly configure WebRootPath to ensure it's found correctly
-builder.WebHost.UseWebRoot(wwwrootPath);
-
 // 1. Instantiate MemoryModule FIRST
 var memoryModule = new MemoryModule();
 memoryModule.Initialize(null); // Pass ModuleManager if needed
@@ -28,15 +23,27 @@ memoryModule.Initialize(null); // Pass ModuleManager if needed
 var moduleManager = new ModuleManager();
 moduleManager.RegisterBuiltInModule(memoryModule);
 
-// 3. Load other modules (plugins, etc.)
+// 3. Check for first run and auto-spawn CMS BEFORE loading other modules
+// This ensures all required files and configs are created before any module initialization
+var firstRunManager = new RaCore.Engine.FirstRunManager(moduleManager);
+
+if (firstRunManager.IsFirstRun())
+{
+    Console.WriteLine("[RaCore] First run detected - initializing CMS homepage...");
+    await firstRunManager.InitializeAsync();
+}
+
+// 4. Load other modules (plugins, etc.) AFTER CMS setup is complete
 moduleManager.LoadModules();
 
-// 4. Run boot sequence with self-healing checks and configuration verification
+var builder = WebApplication.CreateBuilder(args);
+
+// 5. Run boot sequence with self-healing checks and configuration verification
 // This will detect the port from Nginx configuration (MUST run before building app)
 var bootSequence = new RaCore.Engine.BootSequenceManager(moduleManager);
 await bootSequence.ExecuteBootSequenceAsync();
 
-// 5. Configure port - use detected port from Nginx config or fallback to default
+// 6. Configure port - use detected port from Nginx config or fallback to default
 // Nginx configuration is the source of truth for port management
 var port = Environment.GetEnvironmentVariable("RACORE_DETECTED_PORT") ?? "80";
 var urls = $"http://*:{port}";
@@ -68,26 +75,18 @@ var app = builder.Build();
 app.UseCors(); // Enable CORS
 app.UseWebSockets();
 
-// Configure default files to serve index.php as the homepage when CMS is available
-var defaultFilesOptions = new DefaultFilesOptions();
-defaultFilesOptions.DefaultFileNames.Clear();
-defaultFilesOptions.DefaultFileNames.Add("index.php");
-defaultFilesOptions.DefaultFileNames.Add("index.html");
-app.UseDefaultFiles(defaultFilesOptions);
+// NOTE: RaCore does NOT host the CMS website internally.
+// The CMS should be served through Nginx + PHP-FPM as configured during first run.
+// RaCore only provides API endpoints for control panel functionality.
 
-app.UseStaticFiles();
-
-// URL redirects for cleaner access
+// URL redirects for cleaner API access
 app.MapGet("/control-panel", async context =>
 {
     await Task.CompletedTask;
     context.Response.Redirect("/control-panel.html");
 });
 
-// 5. Check for first run and auto-spawn CMS with Nginx
-var firstRunManager = new RaCore.Engine.FirstRunManager(moduleManager);
-
-// 6. Wire up FirstRunManager to ServerConfig and License modules
+// 7. Wire up FirstRunManager to ServerConfig and License modules
 var serverConfigModule = moduleManager.Modules
     .Select(m => m.Instance)
     .FirstOrDefault(m => m.Name == "ServerConfig");
@@ -109,12 +108,6 @@ if (licenseModuleInstance != null)
     var setFirstRunManagerMethod = licenseModuleInstance.GetType().GetMethod("SetFirstRunManager");
     setFirstRunManagerMethod?.Invoke(licenseModuleInstance, new object[] { firstRunManager });
     Console.WriteLine("[RaCore] FirstRunManager wired to License module");
-}
-
-if (firstRunManager.IsFirstRun())
-{
-    Console.WriteLine("[RaCore] First run detected - initializing CMS homepage...");
-    await firstRunManager.InitializeAsync();
 }
 
 // Optionally pick up a SpeechModule if present
