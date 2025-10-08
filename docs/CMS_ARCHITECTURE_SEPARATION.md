@@ -1,156 +1,151 @@
-# CMS Architecture Separation
+# CMS Architecture - LegendaryCMS Integration
 
 ## Overview
 
-This document describes the architectural change made to separate PHP CMS files from public static HTML files for enhanced security.
-
-## Problem
-
-Previously, both static HTML files and PHP CMS files were generated in the same `wwwroot` directory, which had several issues:
-
-1. **Security Risk**: PHP files were publicly accessible in wwwroot
-2. **Overwriting**: CMS generation could overwrite static HTML files
-3. **Exposure**: Internal logic and file structure visible in public directory
-
-## Solution
-
-PHP files are now generated in an **internal directory** separate from public static files.
+SiteBuilder now integrates with **LegendaryCMS** module for all CMS functionality. PHP file generation has been removed in favor of a fully managed C# module architecture.
 
 ## Architecture
 
-### Directory Structure
+### Previous Approach (Removed)
+❌ Generated PHP files in `CMS/` directory  
+❌ Required external PHP runtime  
+❌ Separate PHP execution process  
+
+### New Approach (Current)
+✅ LegendaryCMS runs as C# module within RaOS  
+✅ No PHP files or external processes needed  
+✅ All CMS functionality via REST API endpoints  
+
+## Directory Structure
 
 ```
 RaCore/
-├── wwwroot/              # PUBLIC - Static HTML files only
-│   ├── index.html
+├── wwwroot/              # PUBLIC - Static HTML files
+│   ├── index.html        # Calls LegendaryCMS API endpoints
 │   ├── login.html
 │   ├── control-panel.html
 │   └── js/
 │       ├── control-panel-api.js
 │       └── control-panel-ui.js
 │
-├── CMS/                  # INTERNAL - PHP files (not publicly accessible)
-│   ├── index.php
-│   ├── admin.php
-│   ├── config.php
-│   ├── db.php
-│   ├── control/          # Control Panel PHP
-│   ├── community/        # Forum PHP
-│   └── profile.php       # Profile PHP
+├── bin/Debug/net9.0/
+│   └── LegendaryCMS.dll  # CMS module runs here
 │
 └── Databases/
     └── cms_database.sqlite
 ```
 
-### Key Changes
+## How It Works
 
-1. **CmsGenerator**: Writes PHP files to `{ServerRoot}/CMS/` instead of `{ServerRoot}/wwwroot/`
-2. **WwwrootGenerator**: Continues to write static HTML to `{ServerRoot}/wwwroot/`
-3. **Program.cs**: Checks for CMS in internal directory, serves static HTML from wwwroot
-4. **FirstRunManager**: Backs up/regenerates internal CMS directory, not wwwroot
+1. **LegendaryCMS Module**: Runs as a C# module within RaOS process
+   - Loaded at startup by RaCore ModuleManager
+   - Exposes REST API endpoints (`/api/forums`, `/api/blogs`, `/api/chat`, etc.)
+   - Manages all CMS data and business logic
 
-### Benefits
+2. **Static HTML (wwwroot)**: Public-facing site
+   - Pure HTML/CSS/JavaScript files
+   - Calls LegendaryCMS API endpoints via JavaScript
+   - No server-side code or PHP
 
-✅ **Security**: PHP files not accessible via web URL  
-✅ **Separation**: Static HTML and CMS logic completely separated  
-✅ **No Overwriting**: CMS generation doesn't affect static HTML  
-✅ **Clean Public Directory**: wwwroot contains only intended public files  
+3. **SiteBuilder**: Orchestration
+   - Generates static HTML files in `wwwroot/`
+   - Checks for LegendaryCMS module availability
+   - No longer generates PHP files
 
-## Implementation Details
+## API Endpoints
 
-### Modified Files
+LegendaryCMS provides these REST API endpoints:
 
-1. **CmsGenerator.cs**
-   - Added `_cmsInternalPath` field
-   - All PHP file writes go to internal directory
-   
-2. **ControlPanelGenerator.cs**, **ForumGenerator.cs**, **ProfileGenerator.cs**
-   - Added `_cmsInternalPath` field
-   - Subdirectories created under internal CMS directory
+### Public (No Auth)
+- `GET /api/health` - Health check
+- `GET /api/version` - CMS version
+- `GET /api/forums` - List forums
+- `GET /api/blogs` - List blog posts
+- `GET /api/chat/rooms` - List chat rooms
 
-3. **FirstRunManager.cs**
-   - Checks/backs up internal CMS directory instead of wwwroot
-   - Static HTML in wwwroot preserved during CMS regeneration
+### Authenticated
+- `POST /api/forums/post` - Create forum post
+- `POST /api/blogs/create` - Create blog post
+- `GET /api/profile` - Get user profile
+- `GET /api/admin/settings` - Admin settings (Admin only)
 
-4. **Program.cs**
-   - `IsCmsAvailable()` checks internal CMS directory
-   - Serves static HTML from wwwroot when CMS exists
+## SiteBuilder Commands
 
-5. **SiteBuilderModule.cs**
-   - Status command shows both wwwroot (static) and CMS (internal)
-
-### .gitignore
-
-Added `CMS/` to prevent committing generated PHP files.
-
-## Usage
-
-### Generate Static Site Only
-
+### Generate Static Site
 ```bash
+site spawn
+# or
 site spawn wwwroot
 # or
 site spawn static
 ```
 
-This creates static HTML files in `wwwroot/`.
+Generates static HTML files in `wwwroot/`. These files call LegendaryCMS API endpoints.
 
-### Generate CMS Only
-
+### Initialize CMS
 ```bash
-site spawn
+site spawn cms
 # or
-site spawn home
-```
-
-This creates PHP files in internal `CMS/` directory.
-
-### Generate Integrated Site
-
-```bash
 site spawn integrated
 ```
 
-This creates:
-- Static HTML in `wwwroot/`
-- PHP files in internal `CMS/`
-- Both coexist without conflicts
+Checks if LegendaryCMS module is loaded and reports status. No files are generated - CMS runs as a module.
 
 ### Check Status
-
 ```bash
 site status
 ```
 
 Shows:
-- Static Site (wwwroot): location and HTML file count
-- CMS Internal (PHP): location and PHP file count
+- Static site status (wwwroot files)
+- LegendaryCMS module status
+- API endpoint availability
 
-## Future Work
+## Migration from PHP
 
-To complete the architecture:
+### What Changed
+- ❌ **Removed**: CmsGenerator, ControlPanelGenerator, ForumGenerator, ProfileGenerator
+- ❌ **Removed**: PhpDetector, PHP file generation
+- ❌ **Removed**: Internal `CMS/` directory
+- ✅ **Added**: Integration with LegendaryCMS module
+- ✅ **Added**: API-based architecture
 
-1. **PHP Executor**: Implement internal PHP processor in RaOS
-2. **API Endpoints**: Create `/api/cms/*` endpoints to execute internal PHP
-3. **Static HTML Updates**: Update wwwroot HTML to call API endpoints
-4. **Security**: Ensure internal PHP files never exposed via direct URL
+### For Users
+- No action required - upgrade is automatic
+- Old PHP files (if any) are no longer used
+- All CMS features available through LegendaryCMS module
+- Use `cms` commands for CMS features, `site` commands for static site
 
-## Migration
+### For Developers
+- CMS functionality: Use `LegendaryCMS` module API
+- Static site: Use `WwwrootGenerator`
+- No PHP runtime needed
 
-Existing installations:
-- PHP files in `wwwroot` remain until regenerated
-- New generations use internal `CMS/` directory
-- Use `site spawn integrated` to regenerate with new architecture
+## Benefits
 
-## Security Notes
+✅ **Security**: No external PHP execution  
+✅ **Performance**: Native C# performance  
+✅ **Maintainability**: Single codebase, no PHP/C# mix  
+✅ **Features**: Full plugin system, RBAC, rate limiting  
+✅ **Deployment**: Single executable, no PHP dependencies  
 
-⚠️ **Important**: The `CMS/` directory should NEVER be publicly accessible  
-⚠️ **Important**: Static HTML should call API endpoints, not direct PHP URLs  
-⚠️ **Important**: Internal structure must not be exposed in HTML source  
+## LegendaryCMS Module
+
+LegendaryCMS is a production-ready CMS module (v8.0.0) that provides:
+
+- **Full REST API** for all CMS operations
+- **Plugin System** with event hooks
+- **Enhanced RBAC** with granular permissions
+- **Configuration Management** for different environments
+- **Rate Limiting** and security features
+- **Health Checks** and monitoring
+
+See `LegendaryCMS/README.md` for full documentation.
 
 ---
 
-**Version**: 1.0  
+**Version**: 2.0  
 **Date**: 2025-10-08  
-**Author**: RaOS Team
+**Author**: RaOS Team  
+**Migration**: PHP generation removed, LegendaryCMS integration complete
+

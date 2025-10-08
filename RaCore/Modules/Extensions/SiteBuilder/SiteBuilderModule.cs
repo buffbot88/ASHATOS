@@ -1,12 +1,13 @@
 using System.Text;
 using Abstractions;
 using RaCore.Engine.Manager;
+using LegendaryCMS.Core;
 
 namespace RaCore.Modules.Extensions.SiteBuilder;
 
 /// <summary>
 /// SiteBuilder Module - Unified website building system.
-/// Generates and manages CMS, Control Panels, Forums, and Profile systems.
+/// Integrates with LegendaryCMS for CMS functionality, generates static HTML sites.
 /// </summary>
 [RaModule(Category = "extensions")]
 public sealed class SiteBuilderModule : ModuleBase
@@ -14,38 +15,44 @@ public sealed class SiteBuilderModule : ModuleBase
     public override string Name => "SiteBuilder";
 
     private ModuleManager? _manager;
-    private string? _cmsRootPath;
+    private string? _wwwrootPath;
     private readonly object _lock = new();
     
-    private PhpDetector? _phpDetector;
-    private CmsGenerator? _cmsGenerator;
-    private ControlPanelGenerator? _controlPanelGenerator;
-    private ForumGenerator? _forumGenerator;
-    private ProfileGenerator? _profileGenerator;
-    private IntegratedSiteGenerator? _integratedSiteGenerator;
     private WwwrootGenerator? _wwwrootGenerator;
+    private ILegendaryCMSModule? _legendaryCMS;
 
     public override void Initialize(object? manager)
     {
         base.Initialize(manager);
         _manager = manager as ModuleManager;
         
-        // Use GetCurrentDirectory() to get the RaCore.exe server root directory (where the executable runs)
+        // Use GetCurrentDirectory() to get the RaCore.exe server root directory
         var serverRoot = Directory.GetCurrentDirectory();
-        _cmsRootPath = Path.Combine(serverRoot, "wwwroot");
-        var wwwrootPath = Path.Combine(serverRoot, "wwwroot");
+        _wwwrootPath = Path.Combine(serverRoot, "wwwroot");
         
-        // Initialize components
-        _phpDetector = new PhpDetector(this);
-        _cmsGenerator = new CmsGenerator(this, _cmsRootPath);
-        _controlPanelGenerator = new ControlPanelGenerator(this, _cmsRootPath);
-        _forumGenerator = new ForumGenerator(this, _cmsRootPath);
-        _profileGenerator = new ProfileGenerator(this, _cmsRootPath);
-        _integratedSiteGenerator = new IntegratedSiteGenerator(
-            this, _cmsRootPath, _cmsGenerator, _controlPanelGenerator, _forumGenerator, _profileGenerator);
-        _wwwrootGenerator = new WwwrootGenerator(this, wwwrootPath);
+        // Initialize wwwroot generator for static HTML
+        _wwwrootGenerator = new WwwrootGenerator(this, _wwwrootPath);
         
-        LogInfo("SiteBuilder module initialized");
+        // Find LegendaryCMS module if loaded
+        if (_manager != null)
+        {
+            var cmsModule = _manager.Modules
+                .Select(m => m.Instance)
+                .OfType<ILegendaryCMSModule>()
+                .FirstOrDefault();
+            
+            if (cmsModule != null)
+            {
+                _legendaryCMS = cmsModule;
+                LogInfo("SiteBuilder integrated with LegendaryCMS");
+            }
+            else
+            {
+                LogInfo("LegendaryCMS not found - CMS features will be unavailable");
+            }
+        }
+        
+        LogInfo("SiteBuilder module initialized (static HTML generation)");
     }
 
     public override string Process(string input)
@@ -64,29 +71,19 @@ public sealed class SiteBuilderModule : ModuleBase
 
         var command = text.ToLowerInvariant();
         
-        if (command == "site spawn" || command == "site spawn home")
+        if (command == "site spawn" || command == "site spawn wwwroot" || command == "site spawn static")
         {
-            return SpawnHomepage();
+            return GenerateWwwroot();
         }
 
-        if (command == "site spawn control")
+        if (command == "site spawn cms" || command == "site spawn integrated")
         {
-            return SpawnControlPanel();
-        }
-
-        if (command == "site spawn integrated")
-        {
-            return SpawnIntegratedSite();
+            return InitializeCMS();
         }
 
         if (command == "site status")
         {
             return GetSiteStatus();
-        }
-
-        if (command == "site detect php")
-        {
-            return _phpDetector?.DetectPHP() ?? "PHP detector not initialized";
         }
 
         return $"Unknown SiteBuilder command. Type 'help' for available commands.";
@@ -96,70 +93,41 @@ public sealed class SiteBuilderModule : ModuleBase
     {
         return string.Join(Environment.NewLine,
             "SiteBuilder commands:",
-            "  site spawn           - Create PHP CMS homepage with SQLite database",
-            "  site spawn home      - Same as 'site spawn'",
-            "  site spawn control   - Create standalone Control Panel",
-            "  site spawn integrated - Create CMS with integrated Control Panel (first-run)",
+            "  site spawn           - Generate static HTML site (wwwroot)",
+            "  site spawn wwwroot   - Same as 'site spawn'",
+            "  site spawn static    - Same as 'site spawn'",
+            "  site spawn cms       - Initialize LegendaryCMS module (if available)",
+            "  site spawn integrated - Generate static site + initialize CMS",
             "  site status          - Show site deployment status",
-            "  site detect php      - Detect PHP runtime version",
-            "  help                 - Show this help message"
+            "  help                 - Show this help message",
+            "",
+            "Note: CMS functionality is provided by LegendaryCMS module (v8.0.0)",
+            "      No PHP files are generated - CMS runs as internal RaOS module"
         );
     }
 
-    private string SpawnHomepage()
+    private string InitializeCMS()
     {
         lock (_lock)
         {
-            if (_cmsGenerator == null || _phpDetector == null)
+            if (_legendaryCMS == null)
             {
-                return "Error: Components not initialized";
+                return "❌ LegendaryCMS module not loaded. CMS features unavailable.\n" +
+                       "   LegendaryCMS runs as a C# module within RaOS - no PHP needed.";
             }
 
-            var phpPath = _phpDetector.FindPhpExecutable();
-            if (phpPath == null)
+            var status = _legendaryCMS.GetStatus();
+            if (status.IsInitialized && status.IsRunning)
             {
-                return _phpDetector.GetPhpNotFoundMessage();
+                return $"✅ LegendaryCMS is already running (v{status.Version})\n" +
+                       $"   Started: {status.StartTime:yyyy-MM-dd HH:mm:ss UTC}\n" +
+                       "   API endpoints available at /api/*\n" +
+                       "   Use 'cms status' for detailed information";
             }
 
-            return _cmsGenerator.GenerateHomepage(phpPath);
-        }
-    }
-
-    private string SpawnControlPanel()
-    {
-        lock (_lock)
-        {
-            if (_controlPanelGenerator == null || _phpDetector == null)
-            {
-                return "Error: Components not initialized";
-            }
-
-            var phpPath = _phpDetector.FindPhpExecutable();
-            if (phpPath == null)
-            {
-                return _phpDetector.GetPhpNotFoundMessage();
-            }
-
-            return _controlPanelGenerator.GenerateControlPanel(phpPath);
-        }
-    }
-
-    private string SpawnIntegratedSite()
-    {
-        lock (_lock)
-        {
-            if (_integratedSiteGenerator == null || _phpDetector == null)
-            {
-                return "Error: Components not initialized";
-            }
-
-            var phpPath = _phpDetector.FindPhpExecutable();
-            if (phpPath == null)
-            {
-                return _phpDetector.GetPhpNotFoundMessage();
-            }
-
-            return _integratedSiteGenerator.GenerateIntegratedSite(phpPath);
+            return "✅ LegendaryCMS module is loaded and ready\n" +
+                   "   Use 'cms' commands to interact with CMS features\n" +
+                   "   API endpoints: /api/forums, /api/blogs, /api/chat, etc.";
         }
     }
 
@@ -181,9 +149,9 @@ public sealed class SiteBuilderModule : ModuleBase
 
     private string GetSiteStatus()
     {
-        if (_cmsRootPath == null)
+        if (_wwwrootPath == null)
         {
-            return "CMS root path not configured";
+            return "Wwwroot path not configured";
         }
 
         var sb = new StringBuilder();
@@ -191,42 +159,34 @@ public sealed class SiteBuilderModule : ModuleBase
         sb.AppendLine();
         
         // Check wwwroot (static HTML)
-        sb.AppendLine($"Static Site (wwwroot): {_cmsRootPath}");
-        sb.AppendLine($"  Exists: {Directory.Exists(_cmsRootPath)}");
-        if (Directory.Exists(_cmsRootPath))
+        sb.AppendLine($"Static Site (wwwroot): {_wwwrootPath}");
+        sb.AppendLine($"  Exists: {Directory.Exists(_wwwrootPath)}");
+        if (Directory.Exists(_wwwrootPath))
         {
-            var htmlFiles = Directory.GetFiles(_cmsRootPath, "*.html");
+            var htmlFiles = Directory.GetFiles(_wwwrootPath, "*.html");
             sb.AppendLine($"  HTML Files: {htmlFiles.Length}");
         }
         
         sb.AppendLine();
         
-        // Check internal CMS directory (PHP)
-        var cmsInternalPath = Path.Combine(Directory.GetCurrentDirectory(), "CMS");
-        sb.AppendLine($"CMS Internal (PHP): {cmsInternalPath}");
-        sb.AppendLine($"  Exists: {Directory.Exists(cmsInternalPath)}");
-        
-        if (Directory.Exists(cmsInternalPath))
+        // Check LegendaryCMS status
+        if (_legendaryCMS != null)
         {
-            var phpFiles = Directory.GetFiles(cmsInternalPath, "*.php");
-            sb.AppendLine($"  PHP Files: {phpFiles.Length}");
-            
-            var controlPath = Path.Combine(cmsInternalPath, "control");
-            sb.AppendLine($"  Control Panel: {(Directory.Exists(controlPath) ? "Installed" : "Not installed")}");
-            
-            var forumPath = Path.Combine(cmsInternalPath, "community");
-            sb.AppendLine($"  Forum: {(Directory.Exists(forumPath) ? "Installed" : "Not installed")}");
-        }
-
-        if (_phpDetector != null)
-        {
-            var phpPath = _phpDetector.FindPhpExecutable();
-            sb.AppendLine();
-            sb.AppendLine($"PHP Status: {(phpPath != null ? "Found" : "Not found")}");
-            if (phpPath != null)
+            var cmsStatus = _legendaryCMS.GetStatus();
+            sb.AppendLine("LegendaryCMS Module:");
+            sb.AppendLine($"  Version: {cmsStatus.Version}");
+            sb.AppendLine($"  Initialized: {cmsStatus.IsInitialized}");
+            sb.AppendLine($"  Running: {cmsStatus.IsRunning}");
+            if (cmsStatus.IsRunning)
             {
-                sb.AppendLine($"PHP Path: {phpPath}");
+                sb.AppendLine($"  Started: {cmsStatus.StartTime:yyyy-MM-dd HH:mm:ss UTC}");
+                sb.AppendLine("  API Endpoints: /api/forums, /api/blogs, /api/chat, etc.");
             }
+        }
+        else
+        {
+            sb.AppendLine("LegendaryCMS Module: Not loaded");
+            sb.AppendLine("  CMS functionality unavailable");
         }
 
         return sb.ToString();

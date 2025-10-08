@@ -1178,12 +1178,22 @@ if (gameServerModule != null && authModule != null)
 }
 
 // Helper method to check if CMS is available
-// CMS is now in internal directory, not wwwroot
-static bool IsCmsAvailable(string wwwrootPath)
+// LegendaryCMS runs as a module, no PHP files needed
+static bool IsCmsAvailable(ModuleManager moduleManager)
 {
-    var cmsInternalPath = Path.Combine(Directory.GetCurrentDirectory(), "CMS");
-    var indexPhpPath = Path.Combine(cmsInternalPath, "index.php");
-    return File.Exists(indexPhpPath);
+    // Check if LegendaryCMS module is loaded and initialized
+    var cmsModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<LegendaryCMS.Core.ILegendaryCMSModule>()
+        .FirstOrDefault();
+    
+    if (cmsModule != null)
+    {
+        var status = cmsModule.GetStatus();
+        return status.IsInitialized && status.IsRunning;
+    }
+    
+    return false;
 }
 
 // Root endpoint - always register to handle Under Construction and CMS routing
@@ -1219,13 +1229,13 @@ app.MapGet("/", async (HttpContext context) =>
             // Admins can access normally - continue to CMS or fallback
         }
         
-        // Phase 9.3.9: Check if CMS is available
-        // CMS files are internal - serve static site from wwwroot
-        // Static HTML will call API endpoints to get CMS content
-        if (IsCmsAvailable(wwwrootPath))
+        // Phase 9.3.9: Check if LegendaryCMS is available
+        // LegendaryCMS runs as C# module, serves content via API endpoints
+        // Static HTML from wwwroot calls these API endpoints
+        if (IsCmsAvailable(moduleManager))
         {
-            Console.WriteLine("[RaCore] CMS available - serving static site (wwwroot/index.html)");
-            // Serve static HTML which will call internal CMS APIs
+            Console.WriteLine("[RaCore] LegendaryCMS available - serving static site (wwwroot/index.html)");
+            // Serve static HTML which will call LegendaryCMS API endpoints
             var indexHtmlPath = Path.Combine(wwwrootPath, "index.html");
             if (File.Exists(indexHtmlPath))
             {

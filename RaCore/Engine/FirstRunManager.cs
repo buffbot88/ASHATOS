@@ -383,51 +383,18 @@ public class FirstRunManager
             Console.WriteLine(wwwrootResult);
             Console.WriteLine();
             
-            Console.WriteLine("[FirstRunManager] Step 3/7: Spawning CMS with Integrated Control Panel...");
+            Console.WriteLine("[FirstRunManager] Step 3/7: Initializing LegendaryCMS...");
             Console.WriteLine();
             
-            // CMS files go to internal directory, not wwwroot
-            // wwwroot contains only static HTML files
-            var cmsInternalPath = Path.Combine(Directory.GetCurrentDirectory(), "CMS");
-            
-            // Check if internal CMS directory exists and back it up if needed
-            if (Directory.Exists(cmsInternalPath))
-            {
-                Console.WriteLine($"[FirstRunManager] ⚠️  Existing CMS found at {cmsInternalPath}");
-                Console.WriteLine("[FirstRunManager] 🔄 Force regenerating CMS Suite...");
-                try
-                {
-                    // Backup existing CMS
-                    var backupPath = cmsInternalPath + $".backup.{DateTime.UtcNow:yyyyMMddHHmmss}";
-                    Console.WriteLine($"[FirstRunManager] 💾 Creating backup: {backupPath}");
-                    Directory.Move(cmsInternalPath, backupPath);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[FirstRunManager] ⚠️  Could not backup existing CMS: {ex.Message}");
-                    Console.WriteLine("[FirstRunManager] Proceeding with force regeneration...");
-                    try
-                    {
-                        Directory.Delete(cmsInternalPath, true);
-                    }
-                    catch (Exception deleteEx)
-                    {
-                        Console.WriteLine($"[FirstRunManager] ⚠️  Could not delete existing CMS: {deleteEx.Message}");
-                    }
-                }
-            }
-            
-            // Spawn the site with integrated control panel (force write)
+            // Initialize CMS via SiteBuilder (which will check for LegendaryCMS module)
             var result = siteBuilderModule.Process("site spawn integrated");
             Console.WriteLine(result);
             Console.WriteLine();
             
-            // Check if CMS was created successfully (in internal directory)
-            if (!Directory.Exists(cmsInternalPath))
-            {
-                Console.WriteLine("[FirstRunManager] Error: CMS internal directory was not created");
-                return false;
-            }
+            Console.WriteLine("[FirstRunManager] ℹ️  CMS runs as LegendaryCMS module (v8.0.0)");
+            Console.WriteLine("[FirstRunManager] ℹ️  No PHP files generated - C# module handles all CMS features");
+            Console.WriteLine();
+            
             
             Console.WriteLine("[FirstRunManager] Step 4/7: Configuring Apache and PHP...");
             Console.WriteLine();
