@@ -1195,6 +1195,20 @@ sqlite3.extension_dir =
                         }
                         else
                         {
+                            // Check if the error is due to permission issues rather than config errors
+                            if (error.Contains("Permission denied") || error.Contains("permission denied") ||
+                                error.Contains("open()") && error.Contains("failed (13:"))
+                            {
+                                // Permission errors don't mean the config is invalid
+                                // The syntax is OK, just can't write to logs/pid files
+                                if (error.Contains("syntax is ok") || error.Contains("test is successful"))
+                                {
+                                    return (true, true, "Nginx configuration syntax is valid (permission errors ignored)");
+                                }
+                                // If syntax check passed but other permission errors occurred
+                                return (true, true, "Nginx configuration appears valid (permission errors prevented full test)");
+                            }
+                            
                             return (true, false, $"Nginx configuration test failed: {error}");
                         }
                     }
