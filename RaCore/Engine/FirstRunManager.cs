@@ -6,7 +6,7 @@ using Abstractions;
 namespace RaCore.Engine;
 
 /// <summary>
-/// Manages first-run initialization for RaCore, including CMS spawning, Nginx setup, and guided initialization sequence
+/// Manages first-run initialization for RaCore, including CMS spawning, Apache/PHP setup, and guided initialization sequence
 /// </summary>
 public class FirstRunManager
 {
@@ -320,7 +320,7 @@ public class FirstRunManager
     }
     
     /// <summary>
-    /// Performs first-run initialization: spawns CMS with integrated Control Panel and configures Nginx
+    /// Performs first-run initialization: spawns CMS with integrated Control Panel and configures Apache/PHP
     /// </summary>
     public async Task<bool> InitializeAsync()
     {

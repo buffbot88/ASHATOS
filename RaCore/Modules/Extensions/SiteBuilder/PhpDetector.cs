@@ -4,7 +4,8 @@ using System.Runtime.InteropServices;
 namespace RaCore.Modules.Extensions.SiteBuilder;
 
 /// <summary>
-/// Handles PHP runtime detection and validation.
+/// Handles PHP8 runtime detection and validation for executing generated PHP files.
+/// RaOS generates PHP files (CMS, forums, profiles) that require external PHP8 with development ini defaults.
 /// </summary>
 public class PhpDetector
 {

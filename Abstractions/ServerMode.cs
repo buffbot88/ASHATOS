@@ -134,6 +134,28 @@ public class ServerConfiguration
     /// If null, uses default cute robot face
     /// </summary>
     public string? UnderConstructionRobotImage { get; set; }
+    
+    /// <summary>
+    /// FTP server username for local FTP server access
+    /// Used by RaOS to connect to the local FTP server at localhost:21
+    /// </summary>
+    public string? FtpUsername { get; set; }
+    
+    /// <summary>
+    /// FTP server password for local FTP server access
+    /// Used by RaOS to connect to the local FTP server at localhost:21
+    /// </summary>
+    public string? FtpPassword { get; set; }
+    
+    /// <summary>
+    /// FTP server host (defaults to localhost)
+    /// </summary>
+    public string FtpHost { get; set; } = "localhost";
+    
+    /// <summary>
+    /// FTP server port (defaults to 21)
+    /// </summary>
+    public int FtpPort { get; set; } = 21;
 }
 
 /// <summary>

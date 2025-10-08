@@ -5,8 +5,8 @@ using System.Text.RegularExpressions;
 namespace RaCore.Engine;
 
 /// <summary>
-/// Manages Apache web server configuration for RaCore CMS
-/// Also manages PHP configuration independently of web server
+/// Manages Apache and PHP configuration scanning for external PHP execution
+/// RaOS uses internal Kestrel webserver, but generated PHP files need external Apache/PHP8
 /// Scans for Apache and PHP configurations from C:\RaOS\webserver\settings
 /// </summary>
 public class ApacheManager
