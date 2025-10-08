@@ -1,6 +1,6 @@
 # Legendary Client Builder - Web Interface Documentation
 
-**Version:** 9.3.9  
+**Version:** 9.4.0  
 **Last Updated:** January 2025  
 **Target Audience:** End Users & Administrators
 

@@ -1,6 +1,6 @@
 # 🚀 Deployment Guide
 
-**Version:** 9.3.2  
+**Version:** 9.4.0  
 **Last Updated:** January 2025  
 **Status:** Production Ready
 
@@ -802,7 +802,7 @@ echo "Deployment complete." | tee -a $LOG_FILE
 ---
 
 **Last Updated:** January 2025  
-**Version:** 9.3.2  
+**Version:** 9.4.0  
 **Maintained By:** RaOS Development Team
 
 ---

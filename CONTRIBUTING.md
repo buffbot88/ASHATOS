@@ -673,7 +673,7 @@ If you have questions about contributing:
 ---
 
 **Last Updated:** January 2025  
-**Version:** 9.3.2  
+**Version:** 9.4.0  
 **Maintained By:** RaOS Development Team
 
 ---
