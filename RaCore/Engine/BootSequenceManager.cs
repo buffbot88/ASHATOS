@@ -341,6 +341,17 @@ public class BootSequenceManager
         Console.ResetColor();
         Console.WriteLine();
         
+        // Kill switch: Skip Nginx verification if environment variable is set
+        var skipNginx = Environment.GetEnvironmentVariable("RACORE_SKIP_NGINX_CHECK");
+        if (!string.IsNullOrEmpty(skipNginx) && skipNginx.Equals("true", StringComparison.OrdinalIgnoreCase))
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("    ⚠️  Nginx verification skipped (RACORE_SKIP_NGINX_CHECK=true)");
+            Console.ResetColor();
+            Console.WriteLine();
+            return true;
+        }
+        
         // Display server IP address
         var serverIp = NginxManager.GetServerIpAddress();
         if (serverIp != null)
@@ -599,7 +610,18 @@ server {{
         catch (Exception ex)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"    (╥﹏╥) Oopsie! Error with Nginx: {ex.Message}");
+            Console.WriteLine($"    ❌ NGINX VERIFICATION ERROR");
+            Console.WriteLine($"    Reason: {ex.Message}");
+            Console.WriteLine($"    Type: {ex.GetType().Name}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"    Inner Exception: {ex.InnerException.Message}");
+            }
+            Console.WriteLine($"    Stack Trace: {ex.StackTrace?.Split('\n').FirstOrDefault()?.Trim() ?? "N/A"}");
+            Console.WriteLine();
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine($"    💡 To skip Nginx verification, set environment variable:");
+            Console.WriteLine($"       RACORE_SKIP_NGINX_CHECK=true");
             Console.ResetColor();
             Console.WriteLine();
             return true; // Don't fail boot on Nginx verification errors
@@ -614,6 +636,17 @@ server {{
         Console.WriteLine("    ╰─────────────────────────────────────╯");
         Console.ResetColor();
         Console.WriteLine();
+        
+        // Kill switch: Skip PHP verification if environment variable is set
+        var skipPhp = Environment.GetEnvironmentVariable("RACORE_SKIP_PHP_CHECK");
+        if (!string.IsNullOrEmpty(skipPhp) && skipPhp.Equals("true", StringComparison.OrdinalIgnoreCase))
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("    ⚠️  PHP verification skipped (RACORE_SKIP_PHP_CHECK=true)");
+            Console.ResetColor();
+            Console.WriteLine();
+            return true;
+        }
         
         try
         {
@@ -726,7 +759,13 @@ server {{
                 else
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("    (╥﹏╥) Failed to generate php.ini template");
+                    Console.WriteLine("    ❌ PHP TEMPLATE GENERATION FAILED");
+                    Console.WriteLine("    Reason: Unknown error during template generation");
+                    Console.WriteLine($"    Target Path: {localPhpIniPath}");
+                    Console.WriteLine();
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine($"    💡 To skip PHP verification, set environment variable:");
+                    Console.WriteLine($"       RACORE_SKIP_PHP_CHECK=true");
                     Console.ResetColor();
                 }
             }
@@ -737,7 +776,18 @@ server {{
         catch (Exception ex)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"    (╥﹏╥) Oopsie! Error with PHP: {ex.Message}");
+            Console.WriteLine($"    ❌ PHP VERIFICATION ERROR");
+            Console.WriteLine($"    Reason: {ex.Message}");
+            Console.WriteLine($"    Type: {ex.GetType().Name}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"    Inner Exception: {ex.InnerException.Message}");
+            }
+            Console.WriteLine($"    Stack Trace: {ex.StackTrace?.Split('\n').FirstOrDefault()?.Trim() ?? "N/A"}");
+            Console.WriteLine();
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine($"    💡 To skip PHP verification, set environment variable:");
+            Console.WriteLine($"       RACORE_SKIP_PHP_CHECK=true");
             Console.ResetColor();
             Console.WriteLine();
             return true; // Don't fail boot on PHP verification errors

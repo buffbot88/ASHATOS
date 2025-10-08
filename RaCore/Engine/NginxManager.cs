@@ -1087,7 +1087,25 @@ sqlite3.extension_dir =
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[NginxManager] Error generating PHP config: {ex.Message}");
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"[NginxManager] ❌ ERROR: Failed to generate PHP config");
+            Console.WriteLine($"[NginxManager] Reason: {ex.Message}");
+            Console.WriteLine($"[NginxManager] Type: {ex.GetType().Name}");
+            Console.WriteLine($"[NginxManager] Target Path: {outputPath}");
+            
+            // Check for common issues
+            var directory = Path.GetDirectoryName(outputPath);
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+            {
+                Console.WriteLine($"[NginxManager] Issue: Directory does not exist: {directory}");
+            }
+            
+            if (ex is UnauthorizedAccessException)
+            {
+                Console.WriteLine($"[NginxManager] Issue: Permission denied - run with elevated privileges or check directory permissions");
+            }
+            
+            Console.ResetColor();
             return false;
         }
     }
