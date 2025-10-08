@@ -162,12 +162,12 @@ public class ServerModesTests
             // Test GetServerConfiguration
             var config = firstRunManager.GetServerConfiguration();
             Assert(config != null, "ServerConfiguration should not be null");
-            Assert(config.Mode == ServerMode.Production, "Default mode should be Production");
+            Assert(config!.Mode == ServerMode.Production, "Default mode should be Production");
             
             // Test SetServerMode
             firstRunManager.SetServerMode(ServerMode.Beta);
             config = firstRunManager.GetServerConfiguration();
-            Assert(config.Mode == ServerMode.Beta, "Mode should be changed to Beta");
+            Assert(config!.Mode == ServerMode.Beta, "Mode should be changed to Beta");
             
             // Verify config file was created
             var configPath = Path.Combine(testDir, "server-config.json");

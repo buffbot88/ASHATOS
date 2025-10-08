@@ -2835,6 +2835,8 @@ app.MapGet("/api/social/profile/{userId}/activity", async (HttpContext context) 
 
 app.MapGet("/api/market/catalog", async (HttpContext context) =>
 {
+    await Task.CompletedTask; // Suppress CS1998 warning - endpoint is synchronous but uses async for consistency
+    
     var marketModule = moduleManager.Modules
         .Select(m => m.Instance)
         .FirstOrDefault(m => m.GetType().Name == "LegendarySupermarketModule");
@@ -3359,11 +3361,11 @@ if (gameClientModule != null)
         {
             // Check if module supports templates
             var legendaryCB = gameClientModule as dynamic;
-            if (legendaryCB != null && legendaryCB.GetType().Name == "LegendaryClientBuilderModule")
+            if (legendaryCB?.GetType()?.Name == "LegendaryClientBuilderModule")
             {
-                var clientPackage = await legendaryCB.GenerateClientFromTemplateAsync(
+                var clientPackage = await legendaryCB!.GenerateClientFromTemplateAsync(
                     user.Id, 
-                    request.LicenseKey, 
+                    request.LicenseKey ?? "", 
                     request.Platform,
                     request.TemplateName ?? "",
                     request.Configuration);
@@ -3403,7 +3405,7 @@ if (gameClientModule != null)
         try
         {
             var legendaryCB = gameClientModule as dynamic;
-            if (legendaryCB != null && legendaryCB.GetType().Name == "LegendaryClientBuilderModule")
+            if (legendaryCB?.GetType()?.Name == "LegendaryClientBuilderModule")
             {
                 var platformParam = context.Request.Query["platform"].ToString();
                 ClientPlatform? platform = null;
@@ -3412,7 +3414,7 @@ if (gameClientModule != null)
                     platform = p;
                 }
                 
-                var templates = legendaryCB.GetAvailableTemplates(platform);
+                var templates = legendaryCB!.GetAvailableTemplates(platform);
                 return Results.Json(new { success = true, templates });
             }
             else
@@ -3463,9 +3465,9 @@ if (gameClientModule != null)
             }
             
             var legendaryCB = gameClientModule as dynamic;
-            if (legendaryCB != null && legendaryCB.GetType().Name == "LegendaryClientBuilderModule")
+            if (legendaryCB?.GetType()?.Name == "LegendaryClientBuilderModule")
             {
-                var deleted = await legendaryCB.DeleteClientAsync(packageId);
+                var deleted = await legendaryCB!.DeleteClientAsync(packageId);
                 return Results.Json(new { success = deleted, message = deleted ? "Client deleted successfully" : "Failed to delete client" });
             }
             else
@@ -3536,9 +3538,9 @@ if (gameClientModule != null)
             // Try to get stats from the module
             try
             {
-                if (legendaryCB != null && legendaryCB.GetType().Name == "LegendaryClientBuilderModule")
+                if (legendaryCB?.GetType()?.Name == "LegendaryClientBuilderModule")
                 {
-                    var statsMethod = legendaryCB.GetType().GetMethod("GetStats");
+                    var statsMethod = legendaryCB!.GetType()?.GetMethod("GetStats");
                     if (statsMethod != null)
                     {
                         var stats = statsMethod.Invoke(legendaryCB, null) as dynamic;

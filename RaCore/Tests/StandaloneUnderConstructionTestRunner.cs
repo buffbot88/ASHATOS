@@ -7,6 +7,7 @@ namespace RaCore.Tests;
 /// <summary>
 /// Standalone test runner for Under Construction Tests (no server startup)
 /// </summary>
+#pragma warning disable CS7022 // Entry point warning - this class can be used as alternate entry point
 class StandaloneUnderConstructionTestRunner
 {
     static void Main(string[] args)
