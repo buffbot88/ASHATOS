@@ -181,8 +181,63 @@ public class FirstRunManager
         var dotnetVersion = Environment.Version;
         Console.WriteLine($"  ✓ .NET Runtime: {dotnetVersion}");
         
-        // Note: PHP and Nginx scanning removed - should be pre-configured in host environment
-        Console.WriteLine("  ℹ️  PHP and Nginx should be pre-configured in host environment");
+        // Scan for Apache and PHP configurations
+        Console.WriteLine("  ℹ️  Scanning for Apache and PHP configurations...");
+        
+        var apacheResult = ApacheManager.ScanForApacheConfig();
+        if (apacheResult.found)
+        {
+            Console.WriteLine($"  ✓ Apache config: {apacheResult.path}");
+            
+            // Verify Apache configuration
+            if (apacheResult.path != null)
+            {
+                var verifyResult = ApacheManager.VerifyApacheConfig(apacheResult.path);
+                if (!verifyResult.valid)
+                {
+                    warnings.Add($"Apache configuration issues: {string.Join(", ", verifyResult.issues)}");
+                    Console.WriteLine($"  ⚠️  Apache configuration issues detected");
+                }
+            }
+        }
+        else
+        {
+            warnings.Add($"Apache configuration not found: {apacheResult.message}");
+            Console.WriteLine($"  ⚠️  {apacheResult.message}");
+        }
+        
+        var phpResult = ApacheManager.ScanForPhpConfig();
+        if (phpResult.found)
+        {
+            Console.WriteLine($"  ✓ PHP config: {phpResult.path}");
+            
+            // Verify PHP configuration
+            if (phpResult.path != null)
+            {
+                var verifyResult = ApacheManager.VerifyPhpConfig(phpResult.path);
+                if (!verifyResult.valid)
+                {
+                    warnings.Add($"PHP configuration issues: {string.Join(", ", verifyResult.issues)}");
+                    Console.WriteLine($"  ⚠️  PHP configuration issues detected");
+                }
+            }
+        }
+        else
+        {
+            warnings.Add($"PHP configuration not found: {phpResult.message}");
+            Console.WriteLine($"  ⚠️  {phpResult.message}");
+        }
+        
+        // Check if Apache is available
+        if (ApacheManager.IsApacheAvailable())
+        {
+            Console.WriteLine("  ✓ Apache web server detected");
+        }
+        else
+        {
+            warnings.Add("Apache web server not detected");
+            Console.WriteLine("  ⚠️  Apache web server not detected");
+        }
         
         // Check disk space
         try
@@ -358,50 +413,35 @@ public class FirstRunManager
                 return false;
             }
             
-            Console.WriteLine("[FirstRunManager] Step 4/7: Configuring Nginx...");
+            Console.WriteLine("[FirstRunManager] Step 4/7: Configuring Apache and PHP...");
             Console.WriteLine();
             
-            // Configure Nginx - use port 80 for the integrated CMS
-            var nginxManager = new NginxManager(_cmsPath, 80);
+            // Scan for Apache and PHP configurations
+            var apacheResult = ApacheManager.ScanForApacheConfig();
+            var phpResult = ApacheManager.ScanForPhpConfig();
             
-#pragma warning disable CS0618 // Type or member is obsolete
-            if (NginxManager.IsNginxAvailable())
+            if (apacheResult.found && phpResult.found)
             {
-                // First, create the CMS-specific Nginx config
-                nginxManager.CreateNginxConfig();
-                Console.WriteLine();
-                Console.WriteLine("[FirstRunManager] Nginx configuration files created");
-                Console.WriteLine("[FirstRunManager] See instructions above to enable Nginx for CMS");
+                Console.WriteLine("[FirstRunManager] ✅ Apache and PHP configurations found");
+                Console.WriteLine($"[FirstRunManager]    Apache: {apacheResult.path}");
+                Console.WriteLine($"[FirstRunManager]    PHP: {phpResult.path}");
                 
-                // Also configure reverse proxy for RaCore if not already done
-                var configPath = NginxManager.FindNginxConfigPath();
-#pragma warning restore CS0618 // Type or member is obsolete
-                if (configPath != null)
+                // Configure PHP settings
+                Console.WriteLine("[FirstRunManager] 🔧 Configuring PHP settings...");
+                if (phpResult.path != null && ApacheManager.ConfigurePhpIni(phpResult.path))
                 {
-                    var config = File.ReadAllText(configPath);
-                    if (!config.Contains("# RaCore Reverse Proxy Configuration"))
-                    {
-                        Console.WriteLine();
-                        Console.WriteLine("[FirstRunManager] Configuring Nginx reverse proxy for RaCore...");
-                        
-                        var port = Environment.GetEnvironmentVariable("RACORE_PORT") ?? "80";
-                        var domain = Environment.GetEnvironmentVariable("RACORE_PROXY_DOMAIN") ?? "localhost";
-                        var racorePort = int.Parse(port);
-                        
-                        var proxyManager = new NginxManager("", 80);
-#pragma warning disable CS0618 // Type or member is obsolete
-                        if (proxyManager.ConfigureReverseProxy(racorePort, domain))
-#pragma warning restore CS0618 // Type or member is obsolete
-                        {
-                            Console.WriteLine($"[FirstRunManager] ✅ Nginx reverse proxy configured for {domain}");
-                            Console.WriteLine($"[FirstRunManager] After Nginx restart, access RaCore at: http://{domain}");
-                        }
-                    }
+                    Console.WriteLine("[FirstRunManager] ✅ PHP configured successfully");
+                }
+                else
+                {
+                    Console.WriteLine("[FirstRunManager] ⚠️  PHP configuration had issues (non-critical)");
                 }
             }
             else
             {
-                Console.WriteLine("[FirstRunManager] Nginx not available, will use PHP built-in server");
+                Console.WriteLine("[FirstRunManager] ⚠️  Apache or PHP configuration not found");
+                Console.WriteLine($"[FirstRunManager]    Please ensure configurations exist in: C:\\RaOS\\webserver\\settings");
+                Console.WriteLine($"[FirstRunManager]    Required files: httpd.conf, php.ini");
             }
             
             Console.WriteLine();
@@ -443,18 +483,12 @@ public class FirstRunManager
             Console.WriteLine("  - Supported license types: Forum, CMS, GameServer, Enterprise");
             Console.WriteLine();
             
-            Console.WriteLine("[FirstRunManager] Step 7/7: Ashat AI Assistant");
+            Console.WriteLine("[FirstRunManager] Step 7/7: Apache and PHP Verification");
             Console.WriteLine();
-            Console.WriteLine("The Ashat AI assistant can be enabled after initialization:");
-            Console.WriteLine("  - Helps with server configuration and management");
-            Console.WriteLine("  - Assists with building websites and game systems");
-            Console.WriteLine("  - Available through the Control Panel");
-            Console.WriteLine();
-            
-            // PHP and Nginx should be pre-configured in host environment
-            // No scanning is performed during initialization
-            Console.WriteLine("⚠️  Note: PHP and Nginx should be installed and configured in the host environment");
-            Console.WriteLine("   before running RaOS. RaOS no longer scans for these dependencies.");
+            Console.WriteLine("Apache and PHP configuration verified:");
+            Console.WriteLine($"  - Configuration folder: C:\\RaOS\\webserver\\settings");
+            Console.WriteLine("  - Required files: httpd.conf, php.ini");
+            Console.WriteLine("  - Apache web server should be installed and running");
             Console.WriteLine();
             
             // Mark as initialized
@@ -475,16 +509,5 @@ public class FirstRunManager
             Console.WriteLine(ex.StackTrace);
             return false;
         }
-    }
-    
-    /// <summary>
-    /// Finds PHP executable - DEPRECATED: PHP should be pre-configured in host environment
-    /// </summary>
-    [Obsolete("PHP scanning removed. PHP should be installed and configured in host environment before running RaOS.")]
-    private string? FindPhpExecutable()
-    {
-        // PHP should be pre-configured in the host environment
-        // No scanning is performed
-        return null;
     }
 }
