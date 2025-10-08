@@ -11,6 +11,7 @@ This update implements Apache and PHP configuration scanning to replace the depr
 **New Features**:
 - `ScanForApacheConfig()` - Scans for `httpd.conf` in `C:\RaOS\webserver\settings`
 - `ScanForPhpConfig()` - Scans for `php.ini` in `C:\RaOS\webserver\settings`
+- `ScanForPhpFolder()` - Scans for `php` folder in RaCore.exe directory (NEW)
 - `VerifyApacheConfig()` - Verifies Apache configuration has required modules
 - `VerifyPhpConfig()` - Verifies PHP configuration has required settings
 - `ConfigurePhpIni()` - Automatically updates PHP settings to recommended values
@@ -18,6 +19,7 @@ This update implements Apache and PHP configuration scanning to replace the depr
 
 **Key Capabilities**:
 - Scans static configuration folder: `C:\RaOS\webserver\settings`
+- Scans for PHP folder in RaCore.exe directory
 - Validates Apache proxy modules are enabled
 - Validates PHP memory limits, execution times, and other critical settings
 - Creates timestamped backups before modifying configuration files
@@ -41,10 +43,12 @@ This update implements Apache and PHP configuration scanning to replace the depr
 **Changes**:
 - Replaced Nginx configuration with Apache and PHP scanning in `CheckSystemRequirements()`
 - Added Apache and PHP configuration verification during initialization
+- Added PHP folder scanning in RaCore.exe directory
 - Removed Nginx reverse proxy configuration code
 - Added Apache and PHP configuration step in initialization sequence
 - Automatically configures PHP settings during first run
 - Reports detailed status of Apache and PHP configurations
+- Reports on PHP folder detection (found/not found)
 
 **New Initialization Steps**:
 ```
@@ -91,6 +95,24 @@ Step 4/7: Configuring Apache and PHP
 2. `php.ini` - PHP configuration file
    - Should contain recommended settings for RaCore
    - Will be automatically updated if settings are missing or incorrect
+
+### PHP Folder in RaCore.exe Directory
+**Path**: `<RaCore.exe directory>/php`
+
+**Purpose**: 
+- RaOS can now detect and use a local PHP installation placed in the `php` folder next to RaCore.exe
+- This provides a portable PHP installation that travels with the RaCore executable
+
+**Detection**:
+- RaOS scans for the `php` folder during startup
+- Checks for `php.exe` (Windows) or `php` binary (Linux/macOS)
+- Reports detection status during first-run initialization
+- Provides user feedback if folder is missing
+
+**Usage**:
+1. Create a `php` folder in the same directory as RaCore.exe
+2. Place PHP binaries in the folder (including `php.exe` or `php`)
+3. Run RaOS - it will automatically detect and report the PHP installation
 
 ### Recommended Apache Configuration
 ```apache
@@ -216,6 +238,7 @@ This implementation resolves all issues described in the bug report:
 ✅ **Apache Scanning**: Implemented and working
 ✅ **PHP Scanning**: Re-enabled and fully functional  
 ✅ **Static Config Folder**: Uses `C:\RaOS\webserver\settings`
+✅ **PHP Folder Detection**: Scans for PHP folder in RaCore.exe directory
 ✅ **Nginx Removal**: Nginx scanning methods marked as obsolete
 ✅ **CMS Suite Spawning**: Full CMS suite generation verified
 
@@ -230,10 +253,19 @@ For users deploying RaOS with Apache:
    └── php.ini
    ```
 
-2. Run RaOS first-run initialization
-3. Verify Apache and PHP are detected during startup
-4. Check that PHP configuration is automatically updated
-5. Access the CMS at `http://localhost`
+2. (Optional) Place PHP binaries in local folder:
+   ```
+   <RaCore.exe directory>\
+   └── php\
+       ├── php.exe (or php binary)
+       └── [other PHP files]
+   ```
+
+3. Run RaOS first-run initialization
+4. Verify Apache and PHP are detected during startup
+5. Check that PHP configuration is automatically updated
+6. Verify PHP folder detection (if using local PHP)
+7. Access the CMS at `http://localhost`
 
 ## Documentation Updated
 - [x] Implementation summary created

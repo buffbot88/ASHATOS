@@ -21,6 +21,7 @@ namespace RaCore.Tests
             TestApacheManagerExists();
             TestApacheScanningMethod();
             TestPhpScanningMethod();
+            TestPhpFolderScanningMethod();
             TestApacheAvailabilityCheck();
             TestConfigVerificationMethods();
 
@@ -71,7 +72,7 @@ namespace RaCore.Tests
 
         private static void TestPhpScanningMethod()
         {
-            Console.WriteLine("[Test 3/5] Testing PHP configuration scanning...");
+            Console.WriteLine("[Test 3/6] Testing PHP configuration scanning...");
             try
             {
                 var result = ApacheManager.ScanForPhpConfig();
@@ -93,9 +94,33 @@ namespace RaCore.Tests
             Console.WriteLine();
         }
 
+        private static void TestPhpFolderScanningMethod()
+        {
+            Console.WriteLine("[Test 4/6] Testing PHP folder scanning in RaCore directory...");
+            try
+            {
+                var result = ApacheManager.ScanForPhpFolder();
+                
+                if (result.found && result.path != null)
+                {
+                    Console.WriteLine($"  ✅ PHP folder found: {result.path}");
+                }
+                else
+                {
+                    Console.WriteLine($"  ℹ️  PHP folder not found: {result.message}");
+                    Console.WriteLine("     This is expected if php folder doesn't exist in RaCore.exe directory");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"  ❌ PHP folder scanning failed: {ex.Message}");
+            }
+            Console.WriteLine();
+        }
+
         private static void TestApacheAvailabilityCheck()
         {
-            Console.WriteLine("[Test 4/5] Testing Apache availability check...");
+            Console.WriteLine("[Test 5/6] Testing Apache availability check...");
             try
             {
                 var isAvailable = ApacheManager.IsApacheAvailable();
@@ -119,7 +144,7 @@ namespace RaCore.Tests
 
         private static void TestConfigVerificationMethods()
         {
-            Console.WriteLine("[Test 5/5] Testing configuration verification methods...");
+            Console.WriteLine("[Test 6/6] Testing configuration verification methods...");
             try
             {
                 // Create a temporary test config file

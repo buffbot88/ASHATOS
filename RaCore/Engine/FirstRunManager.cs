@@ -228,6 +228,18 @@ public class FirstRunManager
             Console.WriteLine($"  ⚠️  {phpResult.message}");
         }
         
+        // Scan for PHP folder in RaCore.exe directory
+        var phpFolderResult = ApacheManager.ScanForPhpFolder();
+        if (phpFolderResult.found)
+        {
+            Console.WriteLine($"  ✓ PHP folder: {phpFolderResult.path}");
+        }
+        else
+        {
+            warnings.Add($"PHP folder not found: {phpFolderResult.message}");
+            Console.WriteLine($"  ⚠️  {phpFolderResult.message}");
+        }
+        
         // Check if Apache is available
         if (ApacheManager.IsApacheAvailable())
         {
@@ -419,6 +431,7 @@ public class FirstRunManager
             // Scan for Apache and PHP configurations
             var apacheResult = ApacheManager.ScanForApacheConfig();
             var phpResult = ApacheManager.ScanForPhpConfig();
+            var phpFolderResult = ApacheManager.ScanForPhpFolder();
             
             if (apacheResult.found && phpResult.found)
             {
@@ -442,6 +455,17 @@ public class FirstRunManager
                 Console.WriteLine("[FirstRunManager] ⚠️  Apache or PHP configuration not found");
                 Console.WriteLine($"[FirstRunManager]    Please ensure configurations exist in: C:\\RaOS\\webserver\\settings");
                 Console.WriteLine($"[FirstRunManager]    Required files: httpd.conf, php.ini");
+            }
+            
+            // Report on PHP folder in RaCore.exe directory
+            if (phpFolderResult.found)
+            {
+                Console.WriteLine($"[FirstRunManager] ✅ PHP folder detected in RaCore directory: {phpFolderResult.path}");
+            }
+            else
+            {
+                Console.WriteLine($"[FirstRunManager] ℹ️  PHP folder not found in RaCore directory");
+                Console.WriteLine($"[FirstRunManager]    You can place PHP binaries in the 'php' folder next to RaCore.exe");
             }
             
             Console.WriteLine();

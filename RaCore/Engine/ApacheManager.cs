@@ -100,6 +100,60 @@ public class ApacheManager
     }
     
     /// <summary>
+    /// Scans for PHP folder in the RaCore.exe directory
+    /// </summary>
+    public static (bool found, string? path, string? message) ScanForPhpFolder()
+    {
+        try
+        {
+            // Get the directory where RaCore.exe is running
+            var serverRoot = Directory.GetCurrentDirectory();
+            var phpFolder = Path.Combine(serverRoot, "php");
+            
+            Console.WriteLine($"[ApacheManager] Scanning for PHP folder in RaCore directory...");
+            Console.WriteLine($"[ApacheManager] Server root: {serverRoot}");
+            Console.WriteLine($"[ApacheManager] PHP folder path: {phpFolder}");
+            
+            // Check if php folder exists
+            if (!Directory.Exists(phpFolder))
+            {
+                var message = $"PHP folder not found: {phpFolder}";
+                Console.WriteLine($"[ApacheManager] ⚠️  {message}");
+                return (false, null, message);
+            }
+            
+            Console.WriteLine($"[ApacheManager] ✅ Found PHP folder: {phpFolder}");
+            
+            // Check if php.exe exists in the folder (Windows)
+            var phpExe = Path.Combine(phpFolder, "php.exe");
+            if (File.Exists(phpExe))
+            {
+                Console.WriteLine($"[ApacheManager] ✅ Found PHP executable: {phpExe}");
+                return (true, phpFolder, $"PHP folder found with executable at: {phpFolder}");
+            }
+            
+            // Check for php binary (Linux/macOS)
+            var phpBinary = Path.Combine(phpFolder, "php");
+            if (File.Exists(phpBinary))
+            {
+                Console.WriteLine($"[ApacheManager] ✅ Found PHP binary: {phpBinary}");
+                return (true, phpFolder, $"PHP folder found with binary at: {phpFolder}");
+            }
+            
+            // PHP folder exists but no executable found
+            var noExeMessage = $"PHP folder exists but no php executable found in: {phpFolder}";
+            Console.WriteLine($"[ApacheManager] ⚠️  {noExeMessage}");
+            return (false, phpFolder, noExeMessage);
+        }
+        catch (Exception ex)
+        {
+            var errorMessage = $"Error scanning for PHP folder: {ex.Message}";
+            Console.WriteLine($"[ApacheManager] ❌ {errorMessage}");
+            return (false, null, errorMessage);
+        }
+    }
+    
+    /// <summary>
     /// Verifies Apache configuration is valid and contains required settings
     /// </summary>
     public static (bool valid, List<string> issues, string? message) VerifyApacheConfig(string configPath)
