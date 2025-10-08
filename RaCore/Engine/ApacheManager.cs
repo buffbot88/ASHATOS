@@ -376,4 +376,136 @@ public class ApacheManager
             return false;
         }
     }
+    
+    /// <summary>
+    /// Checks if Apache process is currently running
+    /// </summary>
+    public static bool IsApacheRunning()
+    {
+        try
+        {
+            // Check for Apache processes by name
+            var processNames = new[] { "httpd", "apache2" };
+            
+            foreach (var processName in processNames)
+            {
+                var processes = Process.GetProcessesByName(processName);
+                if (processes.Length > 0)
+                {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+    
+    /// <summary>
+    /// Gets detailed status information about Apache
+    /// </summary>
+    public static (bool installed, bool running, string? version, string message) GetApacheStatus()
+    {
+        var installed = IsApacheAvailable();
+        var running = IsApacheRunning();
+        string? version = null;
+        var message = string.Empty;
+        
+        if (installed)
+        {
+            // Try to get version
+            try
+            {
+                var processName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "httpd" : "apache2";
+                if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    // Try apache2 first, fallback to httpd
+                    try
+                    {
+                        var startInfo = new ProcessStartInfo
+                        {
+                            FileName = "apache2",
+                            Arguments = "-v",
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            UseShellExecute = false,
+                            CreateNoWindow = true
+                        };
+                        
+                        using var process = Process.Start(startInfo);
+                        if (process != null)
+                        {
+                            var output = process.StandardOutput.ReadToEnd();
+                            process.WaitForExit(5000);
+                            
+                            if (process.ExitCode == 0 && !string.IsNullOrWhiteSpace(output))
+                            {
+                                var lines = output.Split('\n');
+                                if (lines.Length > 0)
+                                {
+                                    version = lines[0].Trim();
+                                }
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Try httpd if apache2 fails
+                        try
+                        {
+                            var startInfo = new ProcessStartInfo
+                            {
+                                FileName = "httpd",
+                                Arguments = "-v",
+                                RedirectStandardOutput = true,
+                                RedirectStandardError = true,
+                                UseShellExecute = false,
+                                CreateNoWindow = true
+                            };
+                            
+                            using var process = Process.Start(startInfo);
+                            if (process != null)
+                            {
+                                var output = process.StandardOutput.ReadToEnd();
+                                process.WaitForExit(5000);
+                                
+                                if (process.ExitCode == 0 && !string.IsNullOrWhiteSpace(output))
+                                {
+                                    var lines = output.Split('\n');
+                                    if (lines.Length > 0)
+                                    {
+                                        version = lines[0].Trim();
+                                    }
+                                }
+                            }
+                        }
+                        catch { }
+                    }
+                }
+            }
+            catch { }
+            
+            if (running)
+            {
+                message = version != null 
+                    ? $"Apache is installed and running. Version: {version}" 
+                    : "Apache is installed and running";
+            }
+            else
+            {
+                message = version != null 
+                    ? $"Apache is installed but not running. Version: {version}" 
+                    : "Apache is installed but not running";
+            }
+        }
+        else
+        {
+            message = "Apache is not installed or not found in common locations";
+        }
+        
+        return (installed, running, version, message);
+    }
 }
