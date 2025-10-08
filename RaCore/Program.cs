@@ -67,6 +67,14 @@ builder.WebHost.UseUrls(urls);
 var app = builder.Build();
 app.UseCors(); // Enable CORS
 app.UseWebSockets();
+
+// Configure default files to serve index.php as the homepage when CMS is available
+var defaultFilesOptions = new DefaultFilesOptions();
+defaultFilesOptions.DefaultFileNames.Clear();
+defaultFilesOptions.DefaultFileNames.Add("index.php");
+defaultFilesOptions.DefaultFileNames.Add("index.html");
+app.UseDefaultFiles(defaultFilesOptions);
+
 app.UseStaticFiles();
 
 // URL redirects for cleaner access
@@ -1221,50 +1229,61 @@ if (gameServerModule != null && authModule != null)
     Console.WriteLine("  GET    /api/gameserver/capabilities - Get system capabilities");
 }
 
-// Root endpoint - show welcome/status page
-app.MapGet("/", async (HttpContext context) =>
+// Helper method to check if CMS is available
+static bool IsCmsAvailable(string wwwrootPath)
 {
-    context.Response.ContentType = "text/html";
-    
-    // Phase 9.3.8: Check for Under Construction mode first
-    var serverConfig = firstRunManager.GetServerConfiguration();
-    if (serverConfig.UnderConstruction)
+    var indexPhpPath = Path.Combine(wwwrootPath, "index.php");
+    return File.Exists(indexPhpPath);
+}
+
+// Root endpoint - only register if CMS is not available
+// If CMS is available, UseDefaultFiles middleware will serve index.php automatically
+if (!IsCmsAvailable(wwwrootPath))
+{
+    app.MapGet("/", async (HttpContext context) =>
     {
-        // Check if user is an admin - admins can still access during construction
-        var authHeader = context.Request.Headers["Authorization"].ToString();
-        var token = authHeader.StartsWith("Bearer ") ? authHeader[7..] : authHeader;
+        context.Response.ContentType = "text/html";
         
-        User? user = null;
-        if (!string.IsNullOrWhiteSpace(token) && authModule != null)
+        // Phase 9.3.8: Check for Under Construction mode first
+        var serverConfig = firstRunManager.GetServerConfiguration();
+        if (serverConfig.UnderConstruction)
         {
-            user = await authModule.GetUserByTokenAsync(token);
+            // Check if user is an admin - admins can still access during construction
+            var authHeader = context.Request.Headers["Authorization"].ToString();
+            var token = authHeader.StartsWith("Bearer ") ? authHeader[7..] : authHeader;
+            
+            User? user = null;
+            if (!string.IsNullOrWhiteSpace(token) && authModule != null)
+            {
+                user = await authModule.GetUserByTokenAsync(token);
+            }
+            
+            // Non-admins see Under Construction page
+            if (user == null || user.Role < UserRole.Admin)
+            {
+                await context.Response.WriteAsync(UnderConstructionHandler.GenerateUnderConstructionPage(serverConfig));
+                return Task.CompletedTask;
+            }
+            
+            // Admins can access normally - fall through to normal homepage logic
         }
         
-        // Non-admins see Under Construction page
-        if (user == null || user.Role < UserRole.Admin)
+        // Fallback: CMS not available, use legacy bot-filtering homepage
+        // Phase 9.3.7: Homepage bot filtering (legacy behavior)
+        // Only allow search engine bots to access homepage for SEO indexing
+        var userAgent = context.Request.Headers["User-Agent"].ToString();
+        var isBot = BotDetector.IsSearchEngineBot(userAgent);
+        
+        if (!isBot)
         {
-            await context.Response.WriteAsync(UnderConstructionHandler.GenerateUnderConstructionPage(serverConfig));
+            // Non-bot visitors get access denied message with control panel link
+            await context.Response.WriteAsync(BotDetector.GetAccessDeniedMessage());
             return Task.CompletedTask;
         }
         
-        // Admins can access normally - fall through to normal homepage logic
-    }
-    
-    // Phase 9.3.7: Homepage bot filtering
-    // Only allow search engine bots to access homepage for SEO indexing
-    var userAgent = context.Request.Headers["User-Agent"].ToString();
-    var isBot = BotDetector.IsSearchEngineBot(userAgent);
-    
-    if (!isBot)
-    {
-        // Non-bot visitors get access denied message with control panel link
-        await context.Response.WriteAsync(BotDetector.GetAccessDeniedMessage());
-        return Task.CompletedTask;
-    }
-    
-    // Search engine bots get the full homepage for indexing
-    var botName = BotDetector.GetBotName(userAgent);
-    Console.WriteLine($"[RaCore] Search engine bot detected: {botName} - Allowing homepage access");
+        // Search engine bots get the full homepage for indexing
+        var botName = BotDetector.GetBotName(userAgent);
+        Console.WriteLine($"[RaCore] Search engine bot detected: {botName} - Allowing homepage access");
     
     await context.Response.WriteAsync($@"<!DOCTYPE html>
 <html>
@@ -1406,7 +1425,12 @@ app.MapGet("/", async (HttpContext context) =>
 </html>");
     
     return Task.CompletedTask;
-});
+    });
+}
+else
+{
+    Console.WriteLine("[RaCore] CMS detected in wwwroot - homepage will be served via UseDefaultFiles middleware");
+}
 
 // ============================================================================
 // CONTROL PANEL API ENDPOINTS
