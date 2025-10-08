@@ -1018,7 +1018,7 @@ server {{
                         var colonIndex = line.IndexOf("Path:");
                         if (colonIndex >= 0)
                         {
-                            var pathPart = line.Substring(colonIndex + 5).Trim();
+                            var pathPart = line.Substring(colonIndex + 5).Trim().Trim('"');
                             if (!string.IsNullOrEmpty(pathPart) && pathPart != "(none)")
                             {
                                 // Return the full path to php.ini in that directory
