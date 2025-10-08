@@ -1236,15 +1236,14 @@ static bool IsCmsAvailable(string wwwrootPath)
     return File.Exists(indexPhpPath);
 }
 
-// Root endpoint - only register if CMS is not available
-// If CMS is available, UseDefaultFiles middleware will serve index.php automatically
-if (!IsCmsAvailable(wwwrootPath))
+// Root endpoint - always register to handle Under Construction and CMS routing
+// Phase 9.3.9: Unified homepage handler for all scenarios
+app.MapGet("/", async (HttpContext context) =>
 {
-    app.MapGet("/", async (HttpContext context) =>
+    try
     {
-        context.Response.ContentType = "text/html";
-        
-        // Phase 9.3.8: Check for Under Construction mode first
+        // Phase 9.3.8: Check for Under Construction mode FIRST
+        // This check must happen before any response headers or body are written
         var serverConfig = firstRunManager.GetServerConfiguration();
         if (serverConfig.UnderConstruction)
         {
@@ -1261,11 +1260,22 @@ if (!IsCmsAvailable(wwwrootPath))
             // Non-admins see Under Construction page
             if (user == null || user.Role < UserRole.Admin)
             {
+                // Set ContentType only when we're about to write the response
+                context.Response.ContentType = "text/html";
                 await context.Response.WriteAsync(UnderConstructionHandler.GenerateUnderConstructionPage(serverConfig));
-                return Task.CompletedTask;
+                return;
             }
             
-            // Admins can access normally - fall through to normal homepage logic
+            // Admins can access normally - continue to CMS or fallback
+        }
+        
+        // Phase 9.3.9: Check if CMS is available
+        // If CMS is available, redirect to it for all users (including admins during construction)
+        if (IsCmsAvailable(wwwrootPath))
+        {
+            Console.WriteLine("[RaCore] CMS available - redirecting to /index.php");
+            context.Response.Redirect("/index.php");
+            return;
         }
         
         // Fallback: CMS not available, use legacy bot-filtering homepage
@@ -1274,18 +1284,21 @@ if (!IsCmsAvailable(wwwrootPath))
         var userAgent = context.Request.Headers["User-Agent"].ToString();
         var isBot = BotDetector.IsSearchEngineBot(userAgent);
         
+        // Set ContentType only when we're about to write HTML response
+        context.Response.ContentType = "text/html";
+        
         if (!isBot)
         {
             // Non-bot visitors get access denied message with control panel link
             await context.Response.WriteAsync(BotDetector.GetAccessDeniedMessage());
-            return Task.CompletedTask;
+            return;
         }
         
         // Search engine bots get the full homepage for indexing
         var botName = BotDetector.GetBotName(userAgent);
         Console.WriteLine($"[RaCore] Search engine bot detected: {botName} - Allowing homepage access");
     
-    await context.Response.WriteAsync($@"<!DOCTYPE html>
+        await context.Response.WriteAsync($@"<!DOCTYPE html>
 <html>
 <head>
     <title>RaCore - Advanced Modular Server Platform</title>
@@ -1416,21 +1429,27 @@ if (!IsCmsAvailable(wwwrootPath))
         </div>
         
         <p style='margin-top: 30px; text-align: center; color: #6c757d;'>
-            <small>RaCore v1.0 - Phase 9.3.7 | 
+            <small>RaCore v1.0 - Phase 9.3.9 | 
             <a href='https://github.com/buffbot88/TheRaProject' target='_blank'>View on GitHub</a> | 
             Bot Access Control Enabled</small>
         </p>
     </div>
 </body>
 </html>");
-    
-    return Task.CompletedTask;
-    });
-}
-else
-{
-    Console.WriteLine("[RaCore] CMS detected in wwwroot - homepage will be served via UseDefaultFiles middleware");
-}
+    }
+    catch (Exception ex)
+    {
+        // Error handling to prevent server crashes if header setting fails
+        Console.WriteLine($"[RaCore] Error handling homepage request: {ex.Message}");
+        // Only try to set status code if response hasn't started
+        if (!context.Response.HasStarted)
+        {
+            context.Response.StatusCode = 500;
+            context.Response.ContentType = "text/html";
+            await context.Response.WriteAsync("<html><body><h1>500 Internal Server Error</h1><p>An error occurred while loading the homepage.</p></body></html>");
+        }
+    }
+});
 
 // ============================================================================
 // CONTROL PANEL API ENDPOINTS
