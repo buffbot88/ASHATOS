@@ -37,12 +37,11 @@
 
 ### Prerequisites
 - .NET 9.0 SDK
-- Optional: PHP 8+ for CMS features
-- Optional: Apache HTTP Server for production CMS deployment (recommended for Linux)
+- Optional: PHP 8+ (only if you want to execute generated PHP files for CMS, forums, profiles)
 
 **🐧 Running on Linux?** See our comprehensive [Linux Hosting Setup Guide](LINUX_HOSTING_SETUP.md) for production deployment instructions.
 
-**⚠️ Nginx Removed:** As of this version, Nginx support has been removed. RaOS now focuses on Apache HTTP Server. See [NGINX_REMOVAL_NOTICE.md](NGINX_REMOVAL_NOTICE.md) for migration details.
+**⚠️ Architecture Note:** RaOS uses an internal Kestrel webserver on port 80. External PHP8 is optional and only needed for executing generated PHP files. See [NGINX_REMOVAL_NOTICE.md](NGINX_REMOVAL_NOTICE.md) for details.
 
 **🤔 Windows vs Linux?** Check our [comparison guide](WINDOWS_VS_LINUX.md) to help decide (TL;DR: Linux is recommended for production).
 

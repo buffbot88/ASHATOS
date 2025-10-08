@@ -4,7 +4,8 @@ using System.Runtime.InteropServices;
 namespace RaCore.Modules.Extensions.SiteBuilder;
 
 /// <summary>
-/// Handles PHP runtime detection and validation.
+/// Handles PHP8 runtime detection and validation for executing generated PHP files.
+/// RaOS generates PHP files (CMS, forums, profiles) that require external PHP8 with development ini defaults.
 /// </summary>
 public class PhpDetector
 {
@@ -187,64 +188,5 @@ public class PhpDetector
                "  - Linux: sudo apt install php8.2-cli php8.2-sqlite3\n" +
                "  - macOS: brew install php\n" +
                "  - Windows: Download from https://windows.php.net/download/";
-    }
-    
-    /// <summary>
-    /// Checks if PHP process is currently running
-    /// </summary>
-    public bool IsPhpRunning()
-    {
-        try
-        {
-            // Check for PHP processes (php, php-fpm, php-cgi)
-            var processNames = new[] { "php", "php-fpm", "php-cgi" };
-            
-            foreach (var processName in processNames)
-            {
-                var processes = Process.GetProcessesByName(processName);
-                if (processes.Length > 0)
-                {
-                    return true;
-                }
-            }
-            
-            return false;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-    
-    /// <summary>
-    /// Gets detailed status information about PHP
-    /// </summary>
-    public (bool installed, bool running, string? version, string message) GetPhpStatus()
-    {
-        var phpPath = FindPhpExecutable();
-        var installed = phpPath != null;
-        var running = IsPhpRunning();
-        string? version = null;
-        var message = string.Empty;
-        
-        if (installed && phpPath != null)
-        {
-            version = GetPhpVersion(phpPath);
-            
-            if (running)
-            {
-                message = $"PHP is installed and running. Version: {version}, Path: {phpPath}";
-            }
-            else
-            {
-                message = $"PHP is installed but no PHP processes detected. Version: {version}, Path: {phpPath}";
-            }
-        }
-        else
-        {
-            message = "PHP is not installed or not found in common locations";
-        }
-        
-        return (installed, running, version, message);
     }
 }
