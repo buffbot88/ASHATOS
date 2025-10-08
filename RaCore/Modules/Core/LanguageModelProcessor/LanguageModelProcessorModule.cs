@@ -48,7 +48,7 @@ public sealed class LanguageModelProcessorModule : ModuleBase
     /// </summary>
     public async Task<bool> ProcessModelsAsync()
     {
-        LogInfo("Starting Language Model Processor for RaOS v5.0...");
+        LogInfo($"Starting Language Model Processor for RaOS v{RaVersion.Current}...");
         
         try
         {
