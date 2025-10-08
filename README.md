@@ -41,7 +41,9 @@
 
 **🐧 Running on Linux?** See our comprehensive [Linux Hosting Setup Guide](LINUX_HOSTING_SETUP.md) for production deployment instructions.
 
-**⚠️ Architecture Note:** RaOS uses an internal Kestrel webserver on port 80. External PHP8 is optional and only needed for executing generated PHP files. See [NGINX_REMOVAL_NOTICE.md](NGINX_REMOVAL_NOTICE.md) for details.
+**🪟 Running on Windows 11?** See our [Windows 11 CMS Setup Guide](WINDOWS11_CMS_SETUP.md) for Kestrel-only configuration (no Apache/Nginx needed).
+
+**⚠️ Architecture Note:** RaOS uses an internal Kestrel webserver on port 80. On Windows 11, Kestrel is the only supported webserver. On Linux, external Apache/PHP8 is optional for PHP file execution. See [NGINX_REMOVAL_NOTICE.md](NGINX_REMOVAL_NOTICE.md) for details.
 
 **🤔 Windows vs Linux?** Check our [comparison guide](WINDOWS_VS_LINUX.md) to help decide (TL;DR: Linux is recommended for production).
 
@@ -201,6 +203,7 @@ help                 # Show command help
 
 ### Platform Guides
 
+- **[Windows 11 CMS Setup](WINDOWS11_CMS_SETUP.md)** - Kestrel-only setup for Windows 11 (no Apache/Nginx needed)
 - **[Linux Hosting Setup](LINUX_HOSTING_SETUP.md)** - Production deployment on Ubuntu 22.04 LTS
 - **[Windows vs Linux](WINDOWS_VS_LINUX.md)** - Platform comparison guide
 - **[FTP Management](FTP_MANAGEMENT.md)** - FTP server management for RaOS (Linux)

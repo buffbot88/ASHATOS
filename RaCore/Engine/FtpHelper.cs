@@ -55,9 +55,36 @@ public class FtpHelper
             
             return (true, $"Connected to FTP server: {statusDescription}");
         }
+        catch (WebException webEx)
+        {
+            var errorMessage = $"Failed to connect to FTP server at {_host}:{_port}";
+            
+            if (webEx.Response is FtpWebResponse ftpResponse)
+            {
+                errorMessage += $" - Status: {ftpResponse.StatusCode} ({ftpResponse.StatusDescription})";
+            }
+            
+            // Add helpful diagnostics
+            errorMessage += $"\n  Error: {webEx.Message}";
+            
+            if (OperatingSystem.IsWindows())
+            {
+                errorMessage += "\n  Note: On Windows 11, FTP is optional. CMS creation uses Kestrel webserver.";
+                errorMessage += "\n  If you need FTP for external file management, ensure FTP server is installed and running.";
+            }
+            
+            return (false, errorMessage);
+        }
         catch (Exception ex)
         {
-            return (false, $"Failed to connect to FTP server: {ex.Message}");
+            var errorMessage = $"Failed to connect to FTP server at {_host}:{_port}: {ex.Message}";
+            
+            if (OperatingSystem.IsWindows())
+            {
+                errorMessage += "\n  Note: On Windows 11, FTP is optional for CMS operations.";
+            }
+            
+            return (false, errorMessage);
         }
     }
 

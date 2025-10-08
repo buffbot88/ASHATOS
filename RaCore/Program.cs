@@ -75,9 +75,9 @@ var app = builder.Build();
 app.UseCors(); // Enable CORS
 app.UseWebSockets();
 
-// NOTE: RaCore does NOT host the CMS website internally.
-// The CMS should be served through Nginx + PHP-FPM as configured during first run.
-// RaCore only provides API endpoints for control panel functionality.
+// NOTE: RaCore uses Kestrel webserver internally to host both the CMS and API endpoints.
+// On Windows 11, Kestrel is the only supported webserver.
+// External Apache/PHP8 is optional on Linux for PHP file execution only.
 
 // URL redirects for cleaner API access
 app.MapGet("/control-panel", async context =>

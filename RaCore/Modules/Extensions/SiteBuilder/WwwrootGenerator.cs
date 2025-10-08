@@ -42,12 +42,26 @@ public class WwwrootGenerator
             GenerateControlPanelApiJs(jsPath);
             GenerateControlPanelUiJs(jsPath);
             
-            // Generate server configuration files
-            GenerateNginxConfig(configPath);
-            GenerateApacheConfig(configPath);
-            GeneratePhpIni(configPath);
+            // Generate server configuration files (optional for Linux environments)
+            // On Windows 11, Kestrel is the only supported webserver
+            if (!OperatingSystem.IsWindows())
+            {
+                GenerateNginxConfig(configPath);
+                GenerateApacheConfig(configPath);
+                GeneratePhpIni(configPath);
+            }
+            else
+            {
+                _module.Log("Skipping Apache/Nginx config generation on Windows (Kestrel is used)");
+            }
             
             _module.Log($"✅ wwwroot generated successfully at: {_wwwrootPath}");
+            
+            var configFiles = OperatingSystem.IsWindows() 
+                ? "" 
+                : @"  - config/nginx.conf
+  - config/apache.conf
+  - config/php.ini";
             
             return $@"✅ wwwroot directory generated successfully!
 
@@ -63,9 +77,9 @@ Generated files:
   - js/control-panel-api.js
   - js/control-panel-ui.js
   - CONTROL_PANEL_MODULES.md
-  - config/nginx.conf
-  - config/apache.conf
-  - config/php.ini";
+{configFiles}
+
+Note: {(OperatingSystem.IsWindows() ? "On Windows, RaCore uses Kestrel webserver (no external webserver needed)" : "Server configuration files generated for Linux environments")}";
         }
         catch (Exception ex)
         {
