@@ -5,7 +5,7 @@ using Abstractions;
 namespace RaCore.Modules.Extensions.ServerSetup;
 
 /// <summary>
-/// Server Setup Module - Manages Nginx, PHP, Database folders, FTP, and per-admin instance configurations.
+/// Server Setup Module - Manages PHP, Database folders, FTP, and per-admin instance configurations.
 /// Creates discoverable folder structure for RaAI to enhance on-the-go.
 /// </summary>
 [RaModule(Category = "extensions")]
@@ -14,7 +14,6 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
     private readonly string _baseDirectory;
     private readonly string _databasesFolder;
     private readonly string _phpFolder;
-    private readonly string _nginxFolder;
     private readonly string _adminsFolder;
     private readonly string _ftpFolder;
 
@@ -26,7 +25,6 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
         _baseDirectory = Directory.GetCurrentDirectory();
         _databasesFolder = Path.Combine(_baseDirectory, "Databases");
         _phpFolder = Path.Combine(_baseDirectory, "php");
-        _nginxFolder = Path.Combine(_baseDirectory, "Nginx");
         _adminsFolder = Path.Combine(_baseDirectory, "Admins");
         _ftpFolder = Path.Combine(_baseDirectory, "ftp");
     }
@@ -46,7 +44,6 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
         LogInfo("ServerSetup module initialized");
         LogInfo($"  Databases folder: {_databasesFolder}");
         LogInfo($"  PHP folder: {_phpFolder}");
-        LogInfo($"  Nginx folder: {_nginxFolder}");
         LogInfo($"  Admins folder: {_adminsFolder}");
         LogInfo($"  FTP folder: {_ftpFolder}");
         
@@ -110,36 +107,6 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
             }
 
             var result = await CreateAdminFolderStructureAsync(license, username);
-            return new ModuleResponse
-            {
-                Text = result.Message,
-                Status = result.Success ? "success" : "error"
-            };
-        }
-
-        if (lower.StartsWith("serversetup nginx setup"))
-        {
-            var parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            string? license = null, username = null;
-            
-            foreach (var part in parts)
-            {
-                if (part.StartsWith("license="))
-                    license = part.Substring("license=".Length);
-                if (part.StartsWith("username="))
-                    username = part.Substring("username=".Length);
-            }
-
-            if (string.IsNullOrEmpty(license) || string.IsNullOrEmpty(username))
-            {
-                return new ModuleResponse
-                {
-                    Text = "Usage: serversetup nginx setup license=<number> username=<name>",
-                    Status = "error"
-                };
-            }
-
-            var result = await SetupNginxConfigAsync(license, username);
             return new ModuleResponse
             {
                 Text = result.Message,
@@ -252,7 +219,6 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
             Text = @"ServerSetup Module Commands:
   serversetup discover - Discover and validate server folders
   serversetup admin create license=<number> username=<name> - Create admin instance
-  serversetup nginx setup license=<number> username=<name> - Setup Nginx config
   serversetup php setup license=<number> username=<name> - Setup PHP config
   serversetup ftp status - Check FTP server status
   serversetup ftp setup license=<number> username=<name> - Setup FTP access for admin
@@ -288,22 +254,6 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
             await File.WriteAllTextAsync(
                 Path.Combine(_phpFolder, "README.md"),
                 "# PHP Configuration Directory\n\nPlace PHP binaries and configuration files here.\nRaCore AI can modify configurations in this folder for dynamic enhancements.\n"
-            );
-        }
-
-        // Check and create Nginx folder
-        result.NginxFolderExists = Directory.Exists(_nginxFolder);
-        result.NginxFolderPath = _nginxFolder;
-        if (!result.NginxFolderExists)
-        {
-            Directory.CreateDirectory(_nginxFolder);
-            result.CreatedFolders.Add("Nginx");
-            result.NginxFolderExists = true;
-            
-            // Create a readme in Nginx folder
-            await File.WriteAllTextAsync(
-                Path.Combine(_nginxFolder, "README.md"),
-                "# Nginx Web Server Configuration Directory\n\nPlace Nginx binaries and configuration files here.\nRaCore AI can modify configurations in this folder for dynamic enhancements.\n"
             );
         }
 
@@ -354,10 +304,6 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
             var phpIniPath = Path.Combine(adminPath, "php.ini");
             await File.WriteAllTextAsync(phpIniPath, GeneratePhpIniTemplate(licenseNumber, username));
 
-            // Create nginx.conf template
-            var nginxConfPath = Path.Combine(adminPath, "nginx.conf");
-            await File.WriteAllTextAsync(nginxConfPath, GenerateNginxConfigTemplate(licenseNumber, username, adminPath));
-
             // Create README for admin
             var readmePath = Path.Combine(adminPath, "README.md");
             await File.WriteAllTextAsync(readmePath, GenerateAdminReadme(licenseNumber, username));
@@ -377,8 +323,7 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
                 },
                 configs = new
                 {
-                    php_ini = phpIniPath,
-                    nginx_conf = nginxConfPath
+                    php_ini = phpIniPath
                 }
             };
             await File.WriteAllTextAsync(adminJsonPath, JsonSerializer.Serialize(metadata, new JsonSerializerOptions { WriteIndented = true }));
@@ -389,15 +334,14 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
                 Message = $"✅ Admin instance created: {licenseNumber}.{username}\n" +
                          $"Path: {adminPath}\n" +
                          $"Folders: Databases, wwwroot, documents\n" +
-                         $"Configs: php.ini, nginx.conf",
+                         $"Configs: php.ini",
                 Path = adminPath,
                 Details = new Dictionary<string, string>
                 {
                     ["databases"] = databasesPath,
                     ["wwwroot"] = wwwrootPath,
                     ["documents"] = documentsPath,
-                    ["php_ini"] = phpIniPath,
-                    ["nginx_conf"] = nginxConfPath
+                    ["php_ini"] = phpIniPath
                 }
             };
         }
@@ -407,46 +351,6 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
             {
                 Success = false,
                 Message = $"Error creating admin instance: {ex.Message}"
-            };
-        }
-    }
-
-    public async Task<SetupResult> SetupNginxConfigAsync(string licenseNumber, string username)
-    {
-        try
-        {
-            var adminPath = GetAdminInstancePath(licenseNumber, username);
-            
-            if (!Directory.Exists(adminPath))
-            {
-                return new SetupResult
-                {
-                    Success = false,
-                    Message = $"Admin instance does not exist: {licenseNumber}.{username}. Create it first."
-                };
-            }
-
-            var nginxConfPath = Path.Combine(adminPath, "nginx.conf");
-            var config = GenerateNginxConfigTemplate(licenseNumber, username, adminPath);
-            await File.WriteAllTextAsync(nginxConfPath, config);
-
-            return new SetupResult
-            {
-                Success = true,
-                Message = $"✅ Nginx configuration created for {licenseNumber}.{username}\nPath: {nginxConfPath}",
-                Path = nginxConfPath,
-                Details = new Dictionary<string, string>
-                {
-                    ["config_path"] = nginxConfPath
-                }
-            };
-        }
-        catch (Exception ex)
-        {
-            return new SetupResult
-            {
-                Success = false,
-                Message = $"Error setting up Nginx config: {ex.Message}"
             };
         }
     }
@@ -541,46 +445,6 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
         return sb.ToString();
     }
 
-    private string GenerateNginxConfigTemplate(string licenseNumber, string username, string adminPath)
-    {
-        var sb = new StringBuilder();
-        sb.AppendLine($"# Nginx Configuration for Admin Instance: {licenseNumber}.{username}");
-        sb.AppendLine($"# Generated: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC");
-        sb.AppendLine($"# RaCore AI can modify this file for on-the-go enhancements");
-        sb.AppendLine();
-        sb.AppendLine("server {");
-        sb.AppendLine("    listen 8080;");
-        sb.AppendLine($"    server_name {username}.localhost;");
-        sb.AppendLine($"    root \"{Path.Combine(adminPath, "wwwroot")}\";");
-        sb.AppendLine("    index index.php index.html index.htm;");
-        sb.AppendLine();
-        sb.AppendLine("    location / {");
-        sb.AppendLine("        try_files $uri $uri/ /index.php?$query_string;");
-        sb.AppendLine("    }");
-        sb.AppendLine();
-        sb.AppendLine("    # PHP Configuration");
-        sb.AppendLine("    location ~ \\.php$ {");
-        sb.AppendLine("        fastcgi_pass 127.0.0.1:9000;");
-        sb.AppendLine("        fastcgi_index index.php;");
-        sb.AppendLine("        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;");
-        sb.AppendLine($"        fastcgi_param PHP_VALUE \"error_log={Path.Combine(adminPath, "php_errors.log")}\";");
-        sb.AppendLine("        include fastcgi_params;");
-        sb.AppendLine("    }");
-        sb.AppendLine();
-        sb.AppendLine("    # Logging");
-        sb.AppendLine($"    access_log \"{Path.Combine(adminPath, "nginx_access.log")}\";");
-        sb.AppendLine($"    error_log \"{Path.Combine(adminPath, "nginx_error.log")}\";");
-        sb.AppendLine();
-        sb.AppendLine("    # Custom directives for RaCore AI");
-        sb.AppendLine($"    # Admin: {licenseNumber}.{username}");
-        sb.AppendLine("    # RaAI: Add custom Nginx directives below");
-        sb.AppendLine();
-        sb.AppendLine("}");
-        sb.AppendLine();
-
-        return sb.ToString();
-    }
-
     private string GenerateAdminReadme(string licenseNumber, string username)
     {
         var sb = new StringBuilder();
@@ -595,10 +459,9 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
         sb.AppendLine("```");
         sb.AppendLine($"{licenseNumber}.{username}/");
         sb.AppendLine("├── Databases/          # SQLite databases for CMS/Forums/GameServer");
-        sb.AppendLine("├── wwwroot/            # Web root for Nginx web server");
+        sb.AppendLine("├── wwwroot/            # Web root for Apache web server");
         sb.AppendLine("├── documents/          # Admin documents and notes");
         sb.AppendLine("├── php.ini             # PHP configuration (AI-modifiable)");
-        sb.AppendLine("├── nginx.conf          # Nginx configuration (AI-modifiable)");
         sb.AppendLine("├── admin.json          # Instance metadata");
         sb.AppendLine("└── README.md           # This file");
         sb.AppendLine("```");
@@ -607,9 +470,6 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
         sb.AppendLine();
         sb.AppendLine("### php.ini");
         sb.AppendLine("PHP configuration file for this admin instance. RaCore AI can modify this file dynamically for on-the-go enhancements.");
-        sb.AppendLine();
-        sb.AppendLine("### nginx.conf");
-        sb.AppendLine("Nginx web server configuration file. RaCore AI can update server settings, document root, and other Nginx directives.");
         sb.AppendLine();
         sb.AppendLine("## Usage");
         sb.AppendLine();
@@ -641,7 +501,6 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
         sb.AppendLine();
         sb.AppendLine($"✓ Databases folder: {result.DatabasesFolderPath}");
         sb.AppendLine($"✓ PHP folder: {result.PhpFolderPath}");
-        sb.AppendLine($"✓ Nginx folder: {result.NginxFolderPath}");
         sb.AppendLine($"✓ Admins folder: {result.AdminsFolderPath}");
         sb.AppendLine();
         

@@ -794,53 +794,6 @@ if (serverSetupModule != null && authModule != null)
         }
     });
 
-    // Setup Nginx configuration (deprecated - kept for compatibility)
-    app.MapPost("/api/serversetup/apache", async (HttpContext context) =>
-    {
-        try
-        {
-            var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Replace("Bearer ", "");
-            if (string.IsNullOrEmpty(token))
-            {
-                context.Response.StatusCode = 401;
-                await context.Response.WriteAsJsonAsync(new { success = false, message = "Unauthorized" });
-                return;
-            }
-
-            var user = await authModule.GetUserByTokenAsync(token);
-            if (user == null || !authModule.HasPermission(user, "ServerSetup", UserRole.Admin))
-            {
-                context.Response.StatusCode = 403;
-                await context.Response.WriteAsJsonAsync(new { success = false, message = "Admin role required" });
-                return;
-            }
-
-            var request = await context.Request.ReadFromJsonAsync<SetupConfigRequest>();
-            if (request == null || string.IsNullOrEmpty(request.LicenseNumber) || string.IsNullOrEmpty(request.Username))
-            {
-                context.Response.StatusCode = 400;
-                await context.Response.WriteAsJsonAsync(new { success = false, message = "Invalid request: licenseNumber and username required" });
-                return;
-            }
-
-            var result = await serverSetupModule.SetupNginxConfigAsync(request.LicenseNumber, request.Username);
-            if (result.Success)
-            {
-                await context.Response.WriteAsJsonAsync(new { success = true, message = result.Message, data = result.Details });
-            }
-            else
-            {
-                context.Response.StatusCode = 400;
-                await context.Response.WriteAsJsonAsync(new { success = false, message = result.Message });
-            }
-        }
-        catch (Exception ex)
-        {
-            context.Response.StatusCode = 500;
-            await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
-        }
-    });
-
     // Setup PHP configuration
     app.MapPost("/api/serversetup/php", async (HttpContext context) =>
     {
@@ -3073,37 +3026,6 @@ app.MapGet("/api/control/system/health", async (HttpContext context) =>
     };
     
     return await Task.FromResult(Results.Json(new { health }));
-});
-
-// Restart web server (Admin only) - deprecated endpoint
-app.MapPost("/api/control/system/restart-apache", async (HttpContext context) =>
-{
-    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
-    
-    if (user == null || !authModule!.HasPermission(user, "System", UserRole.Admin))
-    {
-        context.Response.StatusCode = 403;
-        return Results.Json(new { success = false, error = "Insufficient permissions. Admin role required." });
-    }
-    
-    Console.WriteLine($"[API] Nginx restart requested by user: {user.Username}");
-    
-#pragma warning disable CS0618 // Type or member is obsolete
-    var (success, message) = RaCore.Engine.NginxManager.RestartNginx();
-#pragma warning restore CS0618 // Type or member is obsolete
-    
-    if (success)
-    {
-        Console.WriteLine($"[API] ✅ Nginx restarted successfully by {user.Username}");
-        return Results.Json(new { success = true, message });
-    }
-    else
-    {
-        Console.WriteLine($"[API] ⚠️  Nginx restart failed: {message}");
-        context.Response.StatusCode = 500;
-        return Results.Json(new { success = false, error = message });
-    }
 });
 
 // ============================================================================
