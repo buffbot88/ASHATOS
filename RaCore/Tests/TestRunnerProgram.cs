@@ -89,6 +89,16 @@ public class TestRunner
             Windows11KestrelTests.RunTests();
         }
 
+        // Run ASHAT Deployment Workflow tests if requested
+        if (args.Length > 0 && args[0].ToLowerInvariant() == "deployment")
+        {
+            Console.WriteLine("\n\n╔════════════════════════════════════════════════════════╗");
+            Console.WriteLine("║   ASHAT Deployment Workflow Test Suite                ║");
+            Console.WriteLine("╚════════════════════════════════════════════════════════╝\n");
+            
+            AshatDeploymentWorkflowTests.RunTests();
+        }
+
         Console.WriteLine("\nPress any key to exit...");
         Console.ReadKey();
     }
