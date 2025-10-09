@@ -151,7 +151,7 @@ EOF
 echo "  Running comprehensive test suite..."
 # Use dotnet-script if available, otherwise document that tests exist
 if command -v dotnet-script &> /dev/null; then
-    dotnet-script /tmp/run_tests.csx 2>&1 | tee "../$TEST_OUTPUT" || true
+    dotnet-script /tmp/run_tests.csx 2>&1 | tee "../$TEST_OUTPUT"
     echo "  ✓ Test results saved to: $TEST_OUTPUT"
 else
     # Document that tests are available
