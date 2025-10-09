@@ -22,16 +22,10 @@ On Windows 11, RaOS uses **Kestrel as the only supported webserver**. No externa
 │  │   • CMS Serving              │  │
 │  │   • Static Files             │  │
 │  └──────────────────────────────┘  │
-│                                     │
-│  ┌──────────────────────────────┐  │
-│  │   wwwroot/                   │  │
-│  │   • index.html               │  │
-│  │   • control-panel.html       │  │
-│  │   • JS/CSS assets            │  │
-│  └──────────────────────────────┘  │
-│                                     │
-│  FTP: Optional (external file mgmt) │
-└─────────────────────────────────────┘
+│                                    │
+│                                    │
+│  FTP: Optional (external file mgmt)│
+└────────────────────────────────────┘
 ```
 
 ### Linux (for comparison)
@@ -46,14 +40,8 @@ On Windows 11, RaOS uses **Kestrel as the only supported webserver**. No externa
 │  │   • API Endpoints            │  │
 │  │   • Control Panel            │  │
 │  └──────────────────────────────┘  │
-│                                     │
-│  Optional External (for PHP exec):  │
-│  ┌──────────────────────────────┐  │
-│  │   Apache/PHP8 (optional)     │  │
-│  │   • PHP file execution       │  │
-│  │   • Admin folders            │  │
-│  └──────────────────────────────┘  │
-└─────────────────────────────────────┘
+│                                    │
+└────────────────────────────────────┘
 ```
 
 ## CMS Creation on Windows 11
@@ -72,10 +60,7 @@ That's it! No external webserver installation needed.
 When you create a CMS on Windows 11:
 
 1. ✅ **Kestrel** starts automatically with RaCore
-2. ✅ **wwwroot** directory is created with HTML/CSS/JS files
-3. ✅ **Control panel** is accessible immediately
-4. ❌ **Apache/Nginx** configs are NOT generated
-5. ❌ **External webserver** is NOT required
+2. ✅ **Control panel** is accessible immediately
 
 ### File Structure
 
@@ -83,21 +68,10 @@ When you create a CMS on Windows 11:
 RaCore.exe location/
 ├── RaCore.exe
 ├── wwwroot/
-│   ├── index.html
-│   ├── login.html
-│   ├── control-panel.html
-│   ├── admin.html
-│   ├── gameengine-dashboard.html
-│   ├── clientbuilder-dashboard.html
-│   └── js/
-│       ├── control-panel-api.js
-│       └── control-panel-ui.js
 ├── Admins/           (admin instances)
 ├── Databases/        (SQLite databases)
 └── php/              (optional, not used on Windows)
 ```
-
-Note: `config/` folder with Apache/Nginx configs is **NOT created on Windows**.
 
 ## Configuration
 
@@ -110,14 +84,11 @@ Default port is 80. To change:
 
 ### Access URLs
 
-- Control Panel: `http://localhost:80/control-panel.html`
-- Admin Panel: `http://localhost:80/admin.html`
-- Game Engine: `http://localhost:80/gameengine-dashboard.html`
-- Client Builder: `http://localhost:80/clientbuilder-dashboard.html`
+- Control Panel: `http://localhost:80/control-panel`
+- Admin Panel: `http://localhost:80/admin`
+- Game Engine: `http://localhost:80/gameengine-dashboard`
+- Client Builder: `http://localhost:80/clientbuilder-dashboard`
 
-## FTP Configuration (Optional)
-
-FTP is **optional** on Windows 11 for external file management only.
 
 ### When is FTP needed?
 
@@ -130,7 +101,6 @@ FTP is **optional** on Windows 11 for external file management only.
 - CMS creation
 - Control panel access
 - Web serving (handled by Kestrel)
-- Static file serving
 
 ### Configuring FTP (if needed)
 
@@ -169,7 +139,7 @@ Note: On Windows 11, FTP is optional for CMS operations.
 **Solution**:
 1. Check what's using port 80: `netstat -ano | findstr :80`
 2. Stop the conflicting service (often IIS or Skype)
-3. Or use a different port with `RACORE_PORT` environment variable
+3. Or use a different port with `RACORE_PORT` environment variable(if you do this, you must somehow mirror incoming traffic to the RaOS port you specify)
 
 ### Issue: Can't Access Control Panel
 
