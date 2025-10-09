@@ -80,7 +80,7 @@ public class BootSequenceFixTests
         var moduleManager = new ModuleManager();
         
         // Create a temporary wwwroot path for testing
-        var tempWwwroot = Path.Combine(Path.GetTempPath(), $"test_wwwroot_{Guid.NewGuid()}");
+        var tempWwwroot = Path.Join(Path.GetTempPath(), $"test_wwwroot_{Guid.NewGuid()}");
         
         try
         {

@@ -45,7 +45,7 @@ public class BootSequenceManager
         {
             // Don't fail boot if memory storage fails
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine($"    (´･ω･`) Could not persist config to Ra_Memory: {ex.Message}");
+            Console.WriteLine($"    (´･ω･`) Could not persist config to Ra_Memory: {ex.Message} || Restore Ra's memory, please. QQ");
             Console.ResetColor();
         }
     }
@@ -97,7 +97,7 @@ public class BootSequenceManager
         Console.ResetColor();
         Console.WriteLine();
         Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine($"    ✧･ﾟ: *✧･ﾟ:* Welcome to Ra OS v{RaVersion.Current} *:･ﾟ✧*:･ﾟ✧");
+        Console.WriteLine($"    ✧･ﾟ: *✧･ﾟ:* RaOS v{RaVersion.Current} powered by Nueral Network v1 *:･ﾟ✧*:･ﾟ✧");
         Console.ResetColor();
         Console.WriteLine();
         Console.ForegroundColor = ConsoleColor.Magenta;
@@ -152,7 +152,7 @@ public class BootSequenceManager
             {
                 Console.WriteLine("    (｡•́︿•̀｡) SelfHealingModule not found - skipping...");
                 Console.WriteLine();
-                return true; // Not a fatal error
+                return false; // required for updates
             }
             
             // Run health checks on all modules
@@ -255,7 +255,7 @@ public class BootSequenceManager
             Console.WriteLine($"    (╥﹏╥) Oopsie! Error during health checks: {ex.Message}");
             Console.ResetColor();
             Console.WriteLine();
-            return true; // Don't fail boot on self-healing errors
+            return false; // required for updates
         }
     }
     
@@ -280,7 +280,7 @@ public class BootSequenceManager
             {
                 Console.WriteLine("    (｡•́︿•̀｡) LanguageModelProcessor not found - skipping...");
                 Console.WriteLine();
-                return true; // Not a fatal error
+                return false; // Can't talk without this
             }
             
             Console.ForegroundColor = ConsoleColor.Magenta;
@@ -325,7 +325,7 @@ public class BootSequenceManager
             Console.WriteLine($"    (╥﹏╥) Oopsie! Error processing models: {ex.Message}");
             Console.ResetColor();
             Console.WriteLine();
-            return true; // Don't fail boot on model processing errors
+            return false; // Language models should be .gguf files
         }
     }
     
@@ -351,7 +351,7 @@ public class BootSequenceManager
                 Console.WriteLine("    (´･ω･`) SiteBuilder module not found - skipping wwwroot generation...");
                 Console.ResetColor();
                 Console.WriteLine();
-                return true; // Not a fatal error
+                return false; // This is a fatal, it you will not be able to spawn static files.
             }
             
             Console.ForegroundColor = ConsoleColor.Magenta;
@@ -399,10 +399,10 @@ public class BootSequenceManager
         catch (Exception ex)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"    (╥﹏╥) Oopsie! Error generating wwwroot: {ex.Message}");
+            Console.WriteLine($"    (╥﹏╥) Oopsie! Error generating wwwroot: {ex.Message} || Restore backup wwwroots or use a terminal for API SiteBuilder Commands.");
             Console.ResetColor();
             Console.WriteLine();
-            return true; // Don't fail boot on wwwroot generation errors
+            return false; // Fail boot on wwwroot generation errors
         }
     }
 }
