@@ -1,3 +1,122 @@
+# RaOS MainFrame Code Owners
+# 
+# This file defines who must review and approve changes to specific parts of the codebase.
+# GitHub will automatically request reviews from code owners when a PR touches their files.
+#
+# Syntax: <path-pattern> @username1 @username2
+# More specific patterns override general patterns
+
+# ============================================================================
+# Default ownership - all files require review from project maintainer
+# ============================================================================
+* @buffbot88
+
+# ============================================================================
+# Security-Sensitive Files & Directories
+# ============================================================================
+
+# Security documentation requires security review
+SECURITY*.md @buffbot88
+*SECURITY*.md @buffbot88
+
+# Authentication & Authorization modules - CRITICAL
+/RaCore/Modules/Extensions/Authentication/ @buffbot88
+/Abstractions/IAuthenticationModule.cs @buffbot88
+/Abstractions/AuthModels.cs @buffbot88
+
+# First-run and initialization - sensitive
+/RaCore/Engine/FirstRunManager.cs @buffbot88
+/RaCore/Engine/BootSequenceManager.cs @buffbot88
+
+# License and failsafe systems
+/RaCore/Modules/Extensions/License/ @buffbot88
+/RaCore/Engine/FailsafeManager.cs @buffbot88
+
+# SuperAdmin Control Panel
+/superadmin_control_panel/ @buffbot88
+SUPERADMIN_CONTROL_PANEL.md @buffbot88
+
+# ============================================================================
+# CI/CD & Infrastructure
+# ============================================================================
+
+# GitHub Actions workflows and CI/CD
+/.github/workflows/ @buffbot88
+/.github/CODEOWNERS @buffbot88
+
+# Build and deployment scripts
+build-*.sh @buffbot88
+*.sh @buffbot88
+
+# ============================================================================
+# Configuration Files
+# ============================================================================
+
+# Application configuration - production impact
+*.json @buffbot88
+*appsettings*.json @buffbot88
+server-config.json @buffbot88
+
+# Environment and deployment config
+.env* @buffbot88
+*.config @buffbot88
+
+# ============================================================================
+# API Endpoints & Web Interface
+# ============================================================================
+
+# API endpoint definitions
+/RaCore/Endpoints/ @buffbot88
+/RaCore/Program.cs @buffbot88
+
+# Web interface files
+/RaCore/wwwroot/ @buffbot88
+
+# ============================================================================
+# Database & Data Models
+# ============================================================================
+
+# Core data abstractions
+/Abstractions/ @buffbot88
+
+# Database and data layer
+/RaCore/Engine/Memory/ @buffbot88
+
+# ============================================================================
+# Release & Documentation
+# ============================================================================
+
+# Release checklists and gates
+PRODUCTION_RELEASE_CHECKLIST*.md @buffbot88
+SECURITY_GATE*.md @buffbot88
+*AUDIT_REPORT*.md @buffbot88
+
+# Architecture documentation
+ARCHITECTURE.md @buffbot88
+DEPLOYMENT_GUIDE.md @buffbot88
+
+# ============================================================================
+# External Modules (Legendary*)
+# ============================================================================
+
+# These can have separate ownership if teams split in future
+/LegendaryCMS/ @buffbot88
+/LegendaryGameEngine/ @buffbot88
+/LegendaryGameServer/ @buffbot88
+/LegendaryGameClient/ @buffbot88
+/LegendaryChat/ @buffbot88
+/LegendaryLearning/ @buffbot88
+/LegendaryClientBuilder/ @buffbot88
+
+# ============================================================================
+# Notes
+# ============================================================================
+# 
+# To assign additional reviewers, add them to the relevant lines above:
+#   Example: /RaCore/Modules/Extensions/Authentication/ @buffbot88 @security-team
+#
+# For more information:
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 # RaOS Security Gate - Code Owners
 # 
 # This file defines code ownership for security-critical components.

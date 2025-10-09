@@ -97,11 +97,13 @@
 
 ### Security ✅
 
+**🛡️ SECURITY GATE REQUIRED:** See [SECURITY_GATE_940.md](./SECURITY_GATE_940.md) - Must pass before release
+
 - [x] **Authentication & Authorization**
   - [x] Token-based authentication working
   - [x] RBAC permissions validated
   - [x] Role hierarchy correct (Guest < User < Admin < SuperAdmin)
-  - [x] Password hashing secure (SHA256)
+  - [x] Password hashing secure (PBKDF2-SHA512, 100k iterations)
 
 - [x] **Access Control**
   - [x] All sensitive endpoints protected
@@ -121,12 +123,17 @@
   - [x] License passkey validation
   - [x] Audit logging for critical operations
 
-- [ ] **Production Hardening** (Before Deployment)
+- [ ] **Production Hardening** (Before Deployment) - See [SECURITY_RECOMMENDATIONS.md](./SECURITY_RECOMMENDATIONS.md)
   - [ ] Review CORS settings for production domain
-  - [ ] Enable rate limiting
+  - [ ] Enable rate limiting (authentication endpoints)
   - [ ] Configure HTTPS/TLS certificates
+  - [ ] Enable HSTS headers
   - [ ] Set secure session timeouts
   - [ ] Review firewall rules
+  - [ ] Implement log rotation and retention policies
+  - [ ] Set up monitoring and alerting
+  - [ ] Configure CI/CD security scanning
+  - [ ] Enable branch protection and CODEOWNERS
 
 ### Configuration ✅
 
@@ -373,9 +380,11 @@
 
 ### Approvals Required
 
+**⚠️ PREREQUISITE:** [SECURITY_GATE_940.md](./SECURITY_GATE_940.md) must be closed before final sign-off
+
+- [ ] **Security Officer:** Security Gate passed and signed off
 - [ ] **Technical Lead:** Code quality approved
 - [ ] **QA Lead:** Testing complete and passed
-- [ ] **Security Officer:** Security audit passed
 - [ ] **Product Owner:** Feature set approved
 - [ ] **Release Manager:** Go for production
 
