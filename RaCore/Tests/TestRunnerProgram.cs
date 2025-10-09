@@ -149,6 +149,16 @@ public class TestRunner
             WindowOfRaComplianceTests.RunTests();
         }
 
+        // Run Onboarding Flow tests if requested
+        if (args.Length > 0 && args[0].ToLowerInvariant() == "onboarding")
+        {
+            Console.WriteLine("\n\n╔════════════════════════════════════════════════════════╗");
+            Console.WriteLine("║   Onboarding Flow Test Suite                          ║");
+            Console.WriteLine("╚════════════════════════════════════════════════════════╝\n");
+            
+            await OnboardingFlowTests.RunTests();
+        }
+
         Console.WriteLine("\nPress any key to exit...");
         Console.ReadKey();
     }
