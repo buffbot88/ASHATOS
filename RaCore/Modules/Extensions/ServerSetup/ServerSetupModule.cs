@@ -953,7 +953,19 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
             }
 #else
             // If not using .NET 6+, fall back to joining, but do NOT allow suspicious chars (see path whitelist)
-            process.StartInfo.Arguments = arguments; // Assume arguments already validated
+            // For extra safety, require all arguments to pass the safe regex (alphanumeric, underscore)
+            if (!string.IsNullOrWhiteSpace(arguments))
+            {
+                if (!IsAllArgumentsSafe(arguments))
+                {
+                    return new CommandResult
+                    {
+                        ExitCode = -1,
+                        Error = "Unsafe arguments detected; command not executed."
+                    };
+                }
+                process.StartInfo.Arguments = EscapeArguments(arguments);
+            }
 #endif
 
             process.Start();
