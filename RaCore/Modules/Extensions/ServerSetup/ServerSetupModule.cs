@@ -214,15 +214,58 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
             };
         }
 
+        if (lower.StartsWith("serversetup ftp createuser"))
+        {
+            var parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            string? username = null, path = null;
+            
+            foreach (var part in parts)
+            {
+                if (part.StartsWith("username="))
+                    username = part.Substring("username=".Length);
+                if (part.StartsWith("path="))
+                    path = part.Substring("path=".Length);
+            }
+
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(path))
+            {
+                return new ModuleResponse
+                {
+                    Text = "Usage: serversetup ftp createuser username=<name> path=<restricted_path>\n" +
+                          "Example: serversetup ftp createuser username=raos_ftp path=/home/racore/TheRaProject/RaCore",
+                    Status = "error"
+                };
+            }
+
+            var result = await CreateRestrictedFtpUserAsync(username, path);
+            return new ModuleResponse
+            {
+                Text = result.Message,
+                Status = result.Success ? "success" : "error"
+            };
+        }
+
+        if (lower.StartsWith("serversetup server health") || lower.StartsWith("serversetup health"))
+        {
+            var result = await CheckLiveServerHealthAsync();
+            return new ModuleResponse
+            {
+                Text = result.Message,
+                Status = result.IsOperational ? "success" : "warning"
+            };
+        }
+
         return new ModuleResponse
         {
             Text = @"ServerSetup Module Commands:
   serversetup discover - Discover and validate server folders
   serversetup admin create license=<number> username=<name> - Create admin instance
   serversetup php setup license=<number> username=<name> - Setup PHP config
+  serversetup health - Check if live server is operational
   serversetup ftp status - Check FTP server status
   serversetup ftp setup license=<number> username=<name> - Setup FTP access for admin
-  serversetup ftp info license=<number> username=<name> - Get FTP connection info",
+  serversetup ftp info license=<number> username=<name> - Get FTP connection info
+  serversetup ftp createuser username=<name> path=<path> - Create restricted FTP user",
             Status = "success"
         };
     }
@@ -591,6 +634,18 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
                 };
             }
 
+            // Check live server health first
+            var healthCheck = await CheckLiveServerHealthAsync();
+            if (!healthCheck.IsOperational)
+            {
+                return new SetupResult
+                {
+                    Success = false,
+                    Message = $"❌ Live server must be operational before FTP setup.\n\n{healthCheck.Message}\n\n" +
+                             "Please resolve server health issues and try again."
+                };
+            }
+
             // Check if admin instance exists
             var adminPath = GetAdminInstancePath(licenseNumber, username);
             if (!Directory.Exists(adminPath))
@@ -655,6 +710,9 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
             ftpConfig.AppendLine();
             ftpConfig.AppendLine("Note: FTP access uses Linux system users.");
             ftpConfig.AppendLine("The Super Admin can connect using their Linux credentials.");
+            ftpConfig.AppendLine();
+            ftpConfig.AppendLine("For enhanced security, consider creating a restricted FTP user:");
+            ftpConfig.AppendLine($"  serversetup ftp createuser username=raos_ftp path={_baseDirectory}");
             await File.WriteAllTextAsync(ftpConfigPath, ftpConfig.ToString());
 
             return new SetupResult
@@ -858,5 +916,221 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
         public int ExitCode { get; set; }
         public string Output { get; set; } = string.Empty;
         public string Error { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Create a restricted FTP user for RaOS folder access (Linux only)
+    /// </summary>
+    public async Task<SetupResult> CreateRestrictedFtpUserAsync(string username, string restrictedPath)
+    {
+        try
+        {
+            // Check if Linux
+            if (!OperatingSystem.IsLinux())
+            {
+                return new SetupResult
+                {
+                    Success = false,
+                    Message = "FTP user creation is only available on Linux systems."
+                };
+            }
+
+            // Validate username (alphanumeric and underscore only for security)
+            if (!System.Text.RegularExpressions.Regex.IsMatch(username, "^[a-zA-Z0-9_]+$"))
+            {
+                return new SetupResult
+                {
+                    Success = false,
+                    Message = "Invalid username. Use only alphanumeric characters and underscores."
+                };
+            }
+
+            // Validate restricted path exists
+            if (!Directory.Exists(restrictedPath))
+            {
+                return new SetupResult
+                {
+                    Success = false,
+                    Message = $"Restricted path does not exist: {restrictedPath}"
+                };
+            }
+
+            // Check if user already exists
+            var checkUserResult = await ExecuteCommandAsync("id", username);
+            if (checkUserResult.ExitCode == 0)
+            {
+                return new SetupResult
+                {
+                    Success = false,
+                    Message = $"User '{username}' already exists. Use existing user or choose a different username."
+                };
+            }
+
+            // Check if vsftpd is installed
+            var ftpStatus = await GetFtpStatusAsync();
+            if (!ftpStatus.IsInstalled)
+            {
+                return new SetupResult
+                {
+                    Success = false,
+                    Message = "vsftpd is not installed. Please install it first: sudo apt install vsftpd"
+                };
+            }
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"⚠️  Creating FTP user '{username}' restricted to: {restrictedPath}");
+            sb.AppendLine();
+            sb.AppendLine("This requires root/sudo privileges. Please run the following commands:");
+            sb.AppendLine();
+            sb.AppendLine($"1. Create the FTP user (no shell access):");
+            sb.AppendLine($"   sudo useradd -m -d {restrictedPath} -s /usr/sbin/nologin {username}");
+            sb.AppendLine();
+            sb.AppendLine($"2. Set password for the FTP user:");
+            sb.AppendLine($"   sudo passwd {username}");
+            sb.AppendLine();
+            sb.AppendLine($"3. Set ownership of the restricted directory:");
+            sb.AppendLine($"   sudo chown {username}:{username} {restrictedPath}");
+            sb.AppendLine($"   sudo chmod 755 {restrictedPath}");
+            sb.AppendLine();
+            sb.AppendLine($"4. Configure vsftpd to restrict user (edit /etc/vsftpd.conf):");
+            sb.AppendLine($"   chroot_local_user=YES");
+            sb.AppendLine($"   allow_writeable_chroot=YES");
+            sb.AppendLine($"   user_sub_token=$USER");
+            sb.AppendLine($"   local_root={restrictedPath}");
+            sb.AppendLine();
+            sb.AppendLine($"5. Restart vsftpd:");
+            sb.AppendLine($"   sudo systemctl restart vsftpd");
+            sb.AppendLine();
+            sb.AppendLine("⚠️  SECURITY NOTE: The FTP user will be restricted to the specified directory.");
+            sb.AppendLine("    This user will NOT have shell access and cannot navigate outside the restricted path.");
+
+            return new SetupResult
+            {
+                Success = true,
+                Message = sb.ToString(),
+                Path = restrictedPath,
+                Details = new Dictionary<string, string>
+                {
+                    ["username"] = username,
+                    ["restricted_path"] = restrictedPath,
+                    ["requires_sudo"] = "true"
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            return new SetupResult
+            {
+                Success = false,
+                Message = $"Error creating FTP user: {ex.Message}"
+            };
+        }
+    }
+
+    /// <summary>
+    /// Check if the live server is operational and ready for FTP setup
+    /// </summary>
+    public async Task<ServerHealthResult> CheckLiveServerHealthAsync()
+    {
+        var result = new ServerHealthResult();
+        var issues = new List<string>();
+
+        try
+        {
+            // Check if essential folders are accessible
+            result.DatabasesAccessible = Directory.Exists(_databasesFolder);
+            if (!result.DatabasesAccessible)
+            {
+                issues.Add("Databases folder is not accessible");
+            }
+            else
+            {
+                result.Details["databases_path"] = _databasesFolder;
+            }
+
+            result.PhpFolderAccessible = Directory.Exists(_phpFolder);
+            if (!result.PhpFolderAccessible)
+            {
+                issues.Add("PHP folder is not accessible");
+            }
+            else
+            {
+                result.Details["php_path"] = _phpFolder;
+            }
+
+            result.AdminsFolderAccessible = Directory.Exists(_adminsFolder);
+            if (!result.AdminsFolderAccessible)
+            {
+                issues.Add("Admins folder is not accessible");
+            }
+            else
+            {
+                result.Details["admins_path"] = _adminsFolder;
+            }
+
+            result.FtpFolderAccessible = Directory.Exists(_ftpFolder);
+            if (!result.FtpFolderAccessible)
+            {
+                // FTP folder may not exist yet - create it
+                try
+                {
+                    Directory.CreateDirectory(_ftpFolder);
+                    result.FtpFolderAccessible = true;
+                    result.Details["ftp_path"] = _ftpFolder;
+                }
+                catch
+                {
+                    issues.Add("FTP folder could not be created");
+                }
+            }
+            else
+            {
+                result.Details["ftp_path"] = _ftpFolder;
+            }
+
+            // On Linux, check if FTP server is running
+            if (OperatingSystem.IsLinux())
+            {
+                var ftpStatus = await GetFtpStatusAsync();
+                if (ftpStatus.IsInstalled)
+                {
+                    result.Details["ftp_server_installed"] = "true";
+                    result.Details["ftp_server_running"] = ftpStatus.IsRunning.ToString().ToLower();
+                    
+                    if (!ftpStatus.IsRunning)
+                    {
+                        issues.Add("FTP server (vsftpd) is installed but not running");
+                    }
+                }
+                else
+                {
+                    result.Details["ftp_server_installed"] = "false";
+                    issues.Add("FTP server (vsftpd) is not installed");
+                }
+            }
+
+            result.Issues = issues;
+            result.IsOperational = issues.Count == 0;
+
+            if (result.IsOperational)
+            {
+                result.Message = "✅ Live server is operational and ready for FTP setup.\n" +
+                               "All essential folders are accessible and FTP server is running.";
+            }
+            else
+            {
+                result.Message = $"⚠️  Server has {issues.Count} issue(s) that should be resolved:\n" +
+                               string.Join("\n", issues.Select(i => $"  - {i}"));
+            }
+
+            await Task.CompletedTask;
+        }
+        catch (Exception ex)
+        {
+            result.IsOperational = false;
+            result.Message = $"Error checking server health: {ex.Message}";
+        }
+
+        return result;
     }
 }
