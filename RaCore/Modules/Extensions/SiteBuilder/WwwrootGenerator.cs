@@ -18,29 +18,17 @@ public class WwwrootGenerator
     {
         try
         {
-            _module.Log("Starting wwwroot generation...");
+            _module.Log("Initializing Window of Ra (SiteBuilder)...");
             
-            // Create wwwroot directory
+            // Create wwwroot directory (for config files only, no static HTML)
             Directory.CreateDirectory(_wwwrootPath);
-            
-            // Create js subdirectory
-            var jsPath = Path.Combine(_wwwrootPath, "js");
-            Directory.CreateDirectory(jsPath);
             
             // Create config subdirectory for server configuration files
             var configPath = Path.Combine(_wwwrootPath, "config");
             Directory.CreateDirectory(configPath);
             
-            // Generate HTML/JS files
-            GenerateIndexHtml();
-            GenerateLoginHtml();
-            GenerateControlPanelHtml();
-            GenerateAdminHtml();
-            GenerateGameEngineDashboardHtml();
-            GenerateClientBuilderDashboardHtml();
-            GenerateControlPanelModulesMd();
-            GenerateControlPanelApiJs(jsPath);
-            GenerateControlPanelUiJs(jsPath);
+            // NO HTML generation - all UI is served dynamically through internal routing
+            // The Window of Ra (SiteBuilder) serves everything dynamically via RaOS
             
             // Generate server configuration files (optional for Linux environments)
             // On Windows 11, Kestrel is the only supported webserver
@@ -55,35 +43,38 @@ public class WwwrootGenerator
                 _module.Log("Skipping Apache/Nginx config generation on Windows (Kestrel is used)");
             }
             
-            _module.Log($"✅ wwwroot generated successfully at: {_wwwrootPath}");
+            _module.Log($"✅ Window of Ra (SiteBuilder) initialized at: {_wwwrootPath}");
             
             var configFiles = OperatingSystem.IsWindows() 
-                ? "" 
+                ? "  - No external configuration files needed (Kestrel webserver)" 
                 : @"  - config/nginx.conf
   - config/apache.conf
   - config/php.ini";
             
-            return $@"✅ wwwroot directory generated successfully!
+            return $@"✅ Window of Ra (SiteBuilder) initialized successfully!
 
 📁 Location: {_wwwrootPath}
 
-Generated files:
-  - index.html
-  - login.html
-  - control-panel.html
-  - admin.html
-  - gameengine-dashboard.html
-  - clientbuilder-dashboard.html
-  - js/control-panel-api.js
-  - js/control-panel-ui.js
-  - CONTROL_PANEL_MODULES.md
+🔒 SECURITY: All UI features are served dynamically through internal RaOS routing
+   - No static HTML files generated
+   - No external file access
+   - All features accessed via Window of Ra (SiteBuilder module)
+
+Available UI routes (dynamic, internal):
+  - /login - Login interface
+  - /control-panel - Main control panel
+  - /admin - Administrative dashboard
+  - /gameengine-dashboard - Game engine management
+  - /clientbuilder-dashboard - Client builder interface
+
+Configuration files:
 {configFiles}
 
 Note: {(OperatingSystem.IsWindows() ? "On Windows, RaCore uses Kestrel webserver (no external webserver needed)" : "Server configuration files generated for Linux environments")}";
         }
         catch (Exception ex)
         {
-            _module.Log($"wwwroot generation failed: {ex.Message}", "ERROR");
+            _module.Log($"Window of Ra initialization failed: {ex.Message}", "ERROR");
             return $"❌ Error: {ex.Message}";
         }
     }
