@@ -129,6 +129,16 @@ public class TestRunner
             MemoryManagementTests.RunAll();
         }
 
+        // Run Wwwroot Generation tests if requested
+        if (args.Length > 0 && args[0].ToLowerInvariant() == "wwwroot")
+        {
+            Console.WriteLine("\n\n╔════════════════════════════════════════════════════════╗");
+            Console.WriteLine("║   Wwwroot Generation Test Suite                       ║");
+            Console.WriteLine("╚════════════════════════════════════════════════════════╝\n");
+            
+            WwwrootGenerationTests.RunTests();
+        }
+
         Console.WriteLine("\nPress any key to exit...");
         Console.ReadKey();
     }
