@@ -59,6 +59,89 @@ app.MapAuthEndpoints(authModule);
 app.MapGameEngineEndpoints(gameEngineModule, authModule);
 ```
 
+### ServerSetupEndpoints.cs
+**Purpose**: Server environment discovery and admin instance management
+
+**Endpoints**:
+- `GET /api/serversetup/discover` - Discover server folders (Databases, php, Admins)
+- `POST /api/serversetup/admin` - Create admin instance (admin only)
+- `POST /api/serversetup/php` - Setup PHP configuration (admin only)
+
+**Usage**:
+```csharp
+app.MapServerSetupEndpoints(serverSetupModule, authModule);
+```
+
+### GameServerEndpoints.cs
+**Purpose**: AI-driven game creation and deployment
+
+**Endpoints**:
+- `POST /api/gameserver/create` - Create game from natural language description
+- `GET /api/gameserver/games` - List user's games
+- `GET /api/gameserver/game/{gameId}` - Get game project details
+- `GET /api/gameserver/game/{gameId}/preview` - Get game preview
+- `POST /api/gameserver/game/{gameId}/deploy` - Deploy game server (admin only)
+- `PUT /api/gameserver/game/{gameId}` - Update game
+- `DELETE /api/gameserver/game/{gameId}` - Delete game (admin only)
+- `POST /api/gameserver/game/{gameId}/export` - Export game project
+- `GET /api/gameserver/capabilities` - Get system capabilities
+
+**Usage**:
+```csharp
+app.MapGameServerEndpoints(gameServerModule, authModule);
+```
+
+### ControlPanelEndpoints.cs
+**Purpose**: Comprehensive admin dashboard and control panel functionality
+
+**Endpoint Groups**:
+- **Dashboard**: System statistics and overview
+- **Modules**: Module management and status
+- **Users**: User management and role assignment
+- **Licenses**: License management and assignment
+- **RaCoin**: Currency management and balances
+- **Forum**: Forum moderation API
+- **Blog**: Blog management API
+- **Chat**: Chat system API
+- **Social**: Social profiles and activity
+- **Supermarket**: Digital marketplace API
+- **Monitoring**: System health and performance
+- **Audit**: Security audit logs
+
+**Usage**:
+```csharp
+app.MapControlPanelEndpoints(moduleManager, authModule, licenseModule, racoinModule, gameEngineModule);
+```
+
+### DistributionEndpoints.cs
+**Purpose**: Distribution package management and software updates
+
+**Endpoints**:
+- `POST /api/distribution/create` - Create distribution package (admin only)
+- `GET /api/distribution/download/{licenseKey}` - Download distribution package (requires license)
+- `GET /api/distribution/packages` - List all packages (admin only)
+- `GET /api/updates/check` - Check for updates (requires license)
+- `GET /api/updates/download/{version}` - Download update package (requires license)
+- `GET /api/updates/list` - List all updates (admin only)
+
+**Usage**:
+```csharp
+app.MapDistributionEndpoints(distributionModule, updateModule, authModule);
+```
+
+### GameClientEndpoints.cs
+**Purpose**: Game client generation and template management
+
+**Endpoints**:
+- `POST /api/gameclient/generate` - Generate game client (backward compatible)
+- `POST /api/clientbuilder/generate` - Generate client with template (Phase 9.1)
+- `GET /api/clientbuilder/templates` - Get available templates
+
+**Usage**:
+```csharp
+app.MapGameClientEndpoints(gameClientModule, authModule);
+```
+
 ## Pattern for Creating New Endpoint Modules
 
 1. Create a new static class in this directory
@@ -109,26 +192,40 @@ app.MapMyNewEndpoints(myModule, authModule);
 
 ## Benefits
 
-### Before Refactoring
+### Before Refactoring (Initial State)
 - `Program.cs`: 3354 lines
 - All endpoints inline, hard to navigate
 - Difficult to locate specific API logic
 - Challenging to debug issues
 
-### After Refactoring
+### After Phase 1 (Auth & GameEngine)
 - `Program.cs`: 2830 lines (15.6% reduction)
+- Auth and GameEngine endpoints extracted
+- Clear separation by domain began
+
+### After Phase 2 (All Endpoint Groups - Current)
+- `Program.cs`: 728 lines (78.3% reduction from initial!)
+- **All 7 endpoint modules extracted**:
+  - AuthEndpoints (5 endpoints)
+  - GameEngineEndpoints (11 endpoints)
+  - ServerSetupEndpoints (3 endpoints)
+  - GameServerEndpoints (9 endpoints)
+  - ControlPanelEndpoints (12 endpoint groups, ~70 endpoints)
+  - DistributionEndpoints (6 endpoints)
+  - GameClientEndpoints (3 endpoints)
 - Clear separation by domain
 - Easy to find and modify endpoint groups
 - Modular architecture supports future growth
+- Significantly improved maintainability
 
-## Future Work
+## Completed Work
 
-Additional endpoint groups that can be extracted following this pattern:
-- **ServerSetup** (~250 lines): Environment discovery, admin setup
-- **GameServer** (~480 lines): Game creation and deployment
-- **ControlPanel** (~1600 lines): Server config, blog, chat, social, supermarket, monitoring
-- **Distribution** (~150 lines): Distribution management
-- **GameClient** (~300 lines): Client generation
+All planned endpoint groups have been successfully extracted:
+- ✅ **ServerSetup** (~140 lines): Environment discovery, admin setup
+- ✅ **GameServer** (~327 lines): Game creation and deployment
+- ✅ **ControlPanel** (~1400 lines): Server config, blog, chat, social, supermarket, monitoring
+- ✅ **Distribution** (~167 lines): Distribution and update management
+- ✅ **GameClient** (~130 lines): Client generation and templates
 
 ## Related Documentation
 
