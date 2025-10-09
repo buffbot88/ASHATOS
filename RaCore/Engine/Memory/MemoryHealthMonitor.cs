@@ -58,6 +58,14 @@ namespace RaCore.Engine.Memory
         }
         
         /// <summary>
+        /// Gets the alert manager for direct access to alert events.
+        /// </summary>
+        public MemoryAlertManager GetAlertManager()
+        {
+            return _alertManager;
+        }
+        
+        /// <summary>
         /// Forces an immediate health check.
         /// </summary>
         public MemoryMetrics CheckHealthNow()
@@ -181,9 +189,9 @@ namespace RaCore.Engine.Memory
                     _currentMetrics.StorageRate = items.Count / runningTimeHours;
                 }
                 
-                // Update configuration values from module (via reflection or add getters)
-                _currentMetrics.ConfiguredMaxItems = 10000; // Default from MemoryModule
-                _currentMetrics.ConfiguredMaxAgeHours = 90 * 24; // 90 days default
+                // Update configuration values from module
+                _currentMetrics.ConfiguredMaxItems = _memoryModule.MaxItems;
+                _currentMetrics.ConfiguredMaxAgeHours = _memoryModule.MaxAge.TotalHours;
                 
                 _logger.LogDebug("Metrics collected: {Metrics}", _currentMetrics);
             }
