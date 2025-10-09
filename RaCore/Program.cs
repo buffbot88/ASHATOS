@@ -34,6 +34,12 @@ if (firstRunManager.IsFirstRun())
     Console.WriteLine("[RaCore] First run detected - initializing CMS homepage...");
     await firstRunManager.InitializeAsync();
 }
+else
+{
+    // Always ensure wwwroot is up to date on boot
+    Console.WriteLine("[RaCore] Ensuring wwwroot is up to date...");
+    await firstRunManager.EnsureWwwrootAsync();
+}
 
 // 4. Load other modules (plugins, etc.) AFTER CMS setup is complete
 // Force load external Legendary module assemblies to ensure they're available for discovery

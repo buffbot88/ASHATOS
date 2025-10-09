@@ -856,6 +856,22 @@ app.MapGet("/api/blog/categories", async (HttpContext context) =>
 
 app.MapGet("/api/chat/rooms", async (HttpContext context) =>
 {
+    // Authentication check - ensure user is logged in before accessing rooms
+    if (authModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Authentication not available" });
+    }
+    
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule.GetUserByTokenAsync(token);
+    
+    if (user == null)
+    {
+        context.Response.StatusCode = 401;
+        return Results.Json(new { error = "Authentication required" });
+    }
+    
     var chatModule = moduleManager.Modules
         .Select(m => m.Instance)
         .OfType<IChatModule>()
@@ -873,8 +889,14 @@ app.MapGet("/api/chat/rooms", async (HttpContext context) =>
 
 app.MapPost("/api/chat/rooms", async (HttpContext context) =>
 {
+    if (authModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Authentication not available" });
+    }
+    
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule.GetUserByTokenAsync(token);
     
     if (user == null)
     {
@@ -906,6 +928,22 @@ app.MapPost("/api/chat/rooms", async (HttpContext context) =>
 
 app.MapGet("/api/chat/rooms/{roomId}/messages", async (HttpContext context) =>
 {
+    // Authentication check - ensure user is logged in before accessing messages
+    if (authModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Authentication not available" });
+    }
+    
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule.GetUserByTokenAsync(token);
+    
+    if (user == null)
+    {
+        context.Response.StatusCode = 401;
+        return Results.Json(new { error = "Authentication required" });
+    }
+    
     var roomId = context.Request.RouteValues["roomId"]?.ToString();
     if (string.IsNullOrEmpty(roomId))
     {
@@ -930,8 +968,14 @@ app.MapGet("/api/chat/rooms/{roomId}/messages", async (HttpContext context) =>
 
 app.MapPost("/api/chat/rooms/{roomId}/messages", async (HttpContext context) =>
 {
+    if (authModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Authentication not available" });
+    }
+    
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule.GetUserByTokenAsync(token);
     
     if (user == null)
     {
@@ -970,8 +1014,14 @@ app.MapPost("/api/chat/rooms/{roomId}/messages", async (HttpContext context) =>
 
 app.MapPost("/api/chat/rooms/{roomId}/join", async (HttpContext context) =>
 {
+    if (authModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Authentication not available" });
+    }
+    
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule.GetUserByTokenAsync(token);
     
     if (user == null)
     {

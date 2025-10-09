@@ -113,11 +113,9 @@ public class BootSequenceManager
         // Step 1.5: Process .gguf language models
         success &= await ProcessLanguageModelsAsync();
         
-        // Step 2: Verify Nginx configuration
-        success &= VerifyWebServerConfiguration();
-        
-        // Step 3: Verify PHP configuration
-        success &= VerifyPhpConfiguration();
+        // Note: Nginx and PHP scanning removed - RaOS processes PHP internally
+        // and uses Kestrel as web server. External web servers should be
+        // configured by the host environment before running RaOS.
         
         Console.WriteLine();
         Console.ForegroundColor = ConsoleColor.Yellow;
@@ -138,7 +136,7 @@ public class BootSequenceManager
     {
         Console.ForegroundColor = ConsoleColor.Cyan;
         Console.WriteLine("    ╭─────────────────────────────────────╮");
-        Console.WriteLine("    │  ଘ(੭ˊᵕˋ)੭ Step 1/4: Health Check!  │");
+        Console.WriteLine("    │  ଘ(੭ˊᵕˋ)੭ Step 1/2: Health Check!  │");
         Console.WriteLine("    ╰─────────────────────────────────────╯");
         Console.ResetColor();
         Console.WriteLine();
@@ -266,7 +264,7 @@ public class BootSequenceManager
     {
         Console.ForegroundColor = ConsoleColor.Cyan;
         Console.WriteLine("    ╭─────────────────────────────────────────╮");
-        Console.WriteLine("    │  ଘ(੭ˊᵕˋ)੭ Step 1.5: .gguf Processing! │");
+        Console.WriteLine("    │  ଘ(੭ˊᵕˋ)੭ Step 2/2: .gguf Processing! │");
         Console.WriteLine("    ╰─────────────────────────────────────────╯");
         Console.ResetColor();
         Console.WriteLine();
@@ -330,43 +328,5 @@ public class BootSequenceManager
             Console.WriteLine();
             return true; // Don't fail boot on model processing errors
         }
-    }
-    
-    private bool VerifyWebServerConfiguration()
-    {
-        Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine("    ╭─────────────────────────────────────╮");
-        Console.WriteLine("    │  ଘ(੭*ˊᵕˋ)੭* Step 2/4: Nginx Check!  │");
-        Console.WriteLine("    ╰─────────────────────────────────────╯");
-        Console.ResetColor();
-        Console.WriteLine();
-        
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine("    ⚠️  Nginx scanning disabled");
-        Console.WriteLine("    ℹ️  Nginx should be installed and configured in the host environment");
-        Console.WriteLine("    ℹ️  before running RaOS. RaOS no longer scans for Nginx.");
-        Console.ResetColor();
-        Console.WriteLine();
-        
-        return true;
-    }
-    
-    private bool VerifyPhpConfiguration()
-    {
-        Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine("    ╭─────────────────────────────────────╮");
-        Console.WriteLine("    │  ଘ(੭ˊ꒳ˋ)੭✧ Step 3/4: PHP Check!   │");
-        Console.WriteLine("    ╰─────────────────────────────────────╯");
-        Console.ResetColor();
-        Console.WriteLine();
-        
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine("    ⚠️  PHP scanning disabled");
-        Console.WriteLine("    ℹ️  PHP should be installed and configured in the host environment");
-        Console.WriteLine("    ℹ️  before running RaOS. RaOS no longer scans for PHP.");
-        Console.ResetColor();
-        Console.WriteLine();
-        
-        return true;
     }
 }
