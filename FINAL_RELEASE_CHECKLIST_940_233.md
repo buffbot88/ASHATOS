@@ -294,11 +294,14 @@ This document serves as the **master checklist** for issue #233, consolidating a
   - ⚠️ Action Required: Test rollback procedures
   - ⚠️ Action Required: Verify backup/restore functionality in production-like environment
   - ⚠️ Action Required: Document any issues discovered during dry run
+  - 📄 **Primary Guide:** [DEPLOYMENT_DRY_RUN_GUIDE_940.md](./DEPLOYMENT_DRY_RUN_GUIDE_940.md) - Comprehensive dry run procedures
   - 📄 Reference: [PRODUCTION_RELEASE_CHECKLIST_940.md](./PRODUCTION_RELEASE_CHECKLIST_940.md) (Rollback Plan)
   - 📄 Reference: [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)
   - 📝 Recommendation: Use staging environment identical to production
   - 📝 Recommendation: Test under realistic load conditions
   - 📝 Recommendation: Verify monitoring and alerting in staging
+  - ⏱️ Estimated Time: 2-3 hours
+  - 🎯 Validates: Deployment, rollback, backup/restore, monitoring
 
 ### Sign-Off & Approval
 
@@ -309,8 +312,11 @@ This document serves as the **master checklist** for issue #233, consolidating a
   - ⚠️ Action Required: Security Officer approval (security audit)
   - ⚠️ Action Required: Product Owner approval (feature set)
   - ⚠️ Action Required: Release Manager approval (go for production)
+  - 📄 **Primary Tracker:** [RELEASE_SIGNOFF_TRACKER_940.md](./RELEASE_SIGNOFF_TRACKER_940.md) - Sign-off tracking and procedures
   - 📄 Reference: [PRODUCTION_RELEASE_CHECKLIST_940.md](./PRODUCTION_RELEASE_CHECKLIST_940.md) (Final Sign-Off)
   - 📝 Note: All technical requirements met; awaiting stakeholder approvals
+  - ⏱️ Estimated Time: 1-2 days after dry run completion
+  - 🎯 Prerequisites: Deployment dry run must be completed first
 
 **Section Status:** ⚠️ **3 of 5 Complete** - Deployment dry run and sign-offs needed
 
@@ -416,6 +422,11 @@ This document serves as the **master checklist** for issue #233, consolidating a
 - [FTP_MANAGEMENT.md](./FTP_MANAGEMENT.md) - FTP setup guide
 - [LINUX_HOSTING_SETUP.md](./LINUX_HOSTING_SETUP.md) - Linux hosting
 - [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) - Deployment instructions
+- **[DEPLOYMENT_DRY_RUN_GUIDE_940.md](./DEPLOYMENT_DRY_RUN_GUIDE_940.md)** - **NEW:** Comprehensive dry run procedures
+
+### Release Management
+- **[RELEASE_SIGNOFF_TRACKER_940.md](./RELEASE_SIGNOFF_TRACKER_940.md)** - **NEW:** Stakeholder sign-off tracking
+- **[ISSUE_233_SYNC_SUMMARY.md](./ISSUE_233_SYNC_SUMMARY.md)** - **NEW:** Issue synchronization summary
 
 ### Development & Architecture
 - [ARCHITECTURE.md](./ARCHITECTURE.md) - System architecture
