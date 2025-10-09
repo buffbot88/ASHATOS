@@ -8,8 +8,8 @@ using RaCore.Modules.Extensions.UserProfiles;
 using SQLitePCL;
 using System.Text.Json;
 
-// Ensure wwwroot directory exists (will be populated by SiteBuilder on first run)
-// Use source directory for development compatibility
+// Ensure wwwroot directory exists (used for config files only, not for static HTML)
+// All UI is served dynamically through Window of Ra (SiteBuilder module)
 var wwwrootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
 if (!Directory.Exists(wwwrootPath))
 {
@@ -36,8 +36,8 @@ if (firstRunManager.IsFirstRun())
 }
 else
 {
-    // Always ensure wwwroot is up to date on boot
-    Console.WriteLine("[RaCore] Ensuring wwwroot is up to date...");
+    // Always ensure Window of Ra (SiteBuilder) is initialized on boot
+    Console.WriteLine("[RaCore] Initializing Window of Ra (SiteBuilder)...");
     await firstRunManager.EnsureWwwrootAsync();
 }
 

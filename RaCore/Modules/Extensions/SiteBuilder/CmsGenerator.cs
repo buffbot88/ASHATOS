@@ -217,14 +217,14 @@ $page = $pages[0] ?? ['title' => 'Welcome', 'content' => 'No content'];
                 <a href='forums.php'>Forums</a>
                 <a href='chat.php'>Chat</a>
                 <a href='profile.php?user=<?php echo urlencode($currentUser); ?>'>Social</a>
-                <a href='/control-panel.html' target='_blank'>Settings</a>
+                <a href='/control-panel' target='_blank'>Settings</a>
             </div>
         </nav>
         <div class='content'>
             <?php echo $page['content']; ?>
         </div>
         <footer class='site-footer'>
-            <p>Powered by RaCore | <a href='/control-panel.html'>Manage Your Site</a></p>
+            <p>Powered by RaCore | <a href='/control-panel'>Manage Your Site</a></p>
         </footer>
     </div>
 </body>
@@ -331,7 +331,7 @@ if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in']) {
             <div class='nav-links'>
                 <a href='index.php'>Home</a>
                 <a href='admin.php'>Admin</a>
-                <a href='/control-panel.html' target='_blank'>RaCore Control Panel</a>
+                <a href='/control-panel' target='_blank'>RaCore Control Panel</a>
                 <a href='?logout=1'>Logout</a>
             </div>
         </nav>
@@ -342,7 +342,7 @@ if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in']) {
                 <h2 style='color: #667eea; margin-bottom: 15px;'>Quick Actions</h2>
                 <ul style='list-style: none; padding: 0;'>
                     <li style='margin: 10px 0;'>
-                        <a href='/control-panel.html' target='_blank' style='display: inline-block; padding: 10px 20px; background: #667eea; color: white; border-radius: 5px; text-decoration: none;'>
+                        <a href='/control-panel' target='_blank' style='display: inline-block; padding: 10px 20px; background: #667eea; color: white; border-radius: 5px; text-decoration: none;'>
                             🎛️ Open RaCore Control Panel
                         </a>
                     </li>
@@ -371,7 +371,7 @@ if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in']) {
             </div>
         </div>
         <footer class='site-footer'>
-            <p>Powered by RaCore | <a href='/control-panel.html'>Advanced Management</a></p>
+            <p>Powered by RaCore | <a href='/control-panel'>Advanced Management</a></p>
         </footer>
     </div>
 </body>
@@ -567,7 +567,7 @@ try {
                 <a href='forums.php'>Forums</a>
                 <a href='chat.php'>Chat</a>
                 <a href='profile.php?user=<?php echo urlencode($currentUser); ?>'>Social</a>
-                <a href='/control-panel.html' target='_blank'>Settings</a>
+                <a href='/control-panel' target='_blank'>Settings</a>
             </div>
         </nav>
         <div class='content'>
@@ -604,7 +604,7 @@ try {
             <?php endif; ?>
         </div>
         <footer class='site-footer'>
-            <p>Powered by RaCore | <a href='/control-panel.html'>Manage Your Site</a></p>
+            <p>Powered by RaCore | <a href='/control-panel'>Manage Your Site</a></p>
         </footer>
     </div>
     
@@ -654,7 +654,7 @@ $currentUser = $_SESSION['username'] ?? 'guest';
                 <a href='forums.php'>Forums</a>
                 <a href='chat.php'>Chat</a>
                 <a href='profile.php?user=<?php echo urlencode($currentUser); ?>'>Social</a>
-                <a href='/control-panel.html' target='_blank'>Settings</a>
+                <a href='/control-panel' target='_blank'>Settings</a>
             </div>
         </nav>
         <div class='content'>
@@ -666,7 +666,7 @@ $currentUser = $_SESSION['username'] ?? 'guest';
             </div>
         </div>
         <footer class='site-footer'>
-            <p>Powered by RaCore | <a href='/control-panel.html'>Manage Your Site</a></p>
+            <p>Powered by RaCore | <a href='/control-panel'>Manage Your Site</a></p>
         </footer>
     </div>
 </body>
@@ -794,7 +794,7 @@ try {
                 <a href='forums.php'>Forums</a>
                 <a href='chat.php'>Chat</a>
                 <a href='profile.php?user=<?php echo urlencode($currentUser); ?>'>Social</a>
-                <a href='/control-panel.html' target='_blank'>Settings</a>
+                <a href='/control-panel' target='_blank'>Settings</a>
             </div>
         </nav>
         <div class='content'>
@@ -840,7 +840,7 @@ try {
             </div>
         </div>
         <footer class='site-footer'>
-            <p>Powered by RaCore | <a href='/control-panel.html'>Manage Your Site</a></p>
+            <p>Powered by RaCore | <a href='/control-panel'>Manage Your Site</a></p>
         </footer>
     </div>
     
@@ -1082,7 +1082,7 @@ try {
                 <a href='forums.php'>Forums</a>
                 <a href='chat.php'>Chat</a>
                 <a href='profile.php?user=<?php echo urlencode($currentUser); ?>'>Social</a>
-                <a href='/control-panel.html' target='_blank'>Settings</a>
+                <a href='/control-panel' target='_blank'>Settings</a>
             </div>
         </nav>
         <div class='content'>
@@ -1182,7 +1182,7 @@ try {
             </div>
         </div>
         <footer class='site-footer'>
-            <p>Powered by RaCore | <a href='/control-panel.html'>Manage Your Site</a></p>
+            <p>Powered by RaCore | <a href='/control-panel'>Manage Your Site</a></p>
         </footer>
     </div>
     

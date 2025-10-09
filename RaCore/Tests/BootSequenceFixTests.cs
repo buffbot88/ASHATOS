@@ -104,20 +104,26 @@ public class BootSequenceFixTests
                 throw new Exception("FAIL: wwwroot directory was not created");
             }
             
-            // Verify key files exist
-            var expectedFiles = new[] { "index.html", "login.html", "control-panel.html", "admin.html" };
-            foreach (var file in expectedFiles)
+            // Verify key files DO NOT exist (Window of Ra serves UI dynamically)
+            var notExpectedFiles = new[] { "index.html", "login.html", "control-panel.html", "admin.html" };
+            foreach (var file in notExpectedFiles)
             {
                 var filePath = Path.Combine(wwwrootPath, file);
-                if (!File.Exists(filePath))
+                if (File.Exists(filePath))
                 {
-                    throw new Exception($"FAIL: Expected file not found: {file}");
+                    throw new Exception($"FAIL: Static HTML file should not exist (using dynamic routing): {file}");
                 }
             }
             
-            Console.WriteLine("✓ PASS: Wwwroot generation creates all required files");
+            // Verify the result mentions dynamic routing
+            if (!result.Contains("dynamic"))
+            {
+                throw new Exception("FAIL: Result should mention dynamic routing");
+            }
+            
+            Console.WriteLine("✓ PASS: Window of Ra initialized with dynamic routing (no static HTML files)");
             Console.WriteLine($"  Location: {wwwrootPath}");
-            Console.WriteLine($"  Files: {string.Join(", ", expectedFiles)}");
+            Console.WriteLine($"  Mode: Dynamic UI serving (no static files)");
         }
         finally
         {

@@ -112,7 +112,7 @@ $stats = [
                 <div class='action-buttons'>
                     <a href='settings.php' class='action-btn'>⚙️ Site Settings</a>
                     <a href='users.php' class='action-btn'>👥 Manage Users</a>
-                    <a href='/control-panel.html' target='_blank' class='action-btn'>🎛️ RaCore Control Panel</a>
+                    <a href='/control-panel' target='_blank' class='action-btn'>🎛️ RaCore Control Panel</a>
                     <a href='../index.php' class='action-btn'>🌐 View Site</a>
                 </div>
             </div>
@@ -126,11 +126,11 @@ $stats = [
                     <li>License Management</li>
                     <li>RaCoin System</li>
                 </ul>
-                <p>Use the <strong><a href='/control-panel.html' target='_blank'>RaCore Control Panel</a></strong> instead.</p>
+                <p>Use the <strong><a href='/control-panel' target='_blank'>RaCore Control Panel</a></strong> instead.</p>
             </div>
         </div>
         <footer class='site-footer'>
-            <p>Powered by RaCore | <a href='/control-panel.html'>Advanced Management</a></p>
+            <p>Powered by RaCore | <a href='/control-panel'>Advanced Management</a></p>
         </footer>
     </div>
 </body>
@@ -214,11 +214,11 @@ foreach ($settings as $setting) {
                 <h3>📝 Note</h3>
                 <p>Changes to the site name will require a page refresh to take effect. 
                    For more advanced configuration options, use the 
-                   <a href='/control-panel.html' target='_blank'>RaCore Control Panel</a>.</p>
+                   <a href='/control-panel' target='_blank'>RaCore Control Panel</a>.</p>
             </div>
         </div>
         <footer class='site-footer'>
-            <p>Powered by RaCore | <a href='/control-panel.html'>Advanced Management</a></p>
+            <p>Powered by RaCore | <a href='/control-panel'>Advanced Management</a></p>
         </footer>
     </div>
 </body>
@@ -348,7 +348,7 @@ $users = $db->query('SELECT * FROM users ORDER BY created_at DESC');
             </div>
         </div>
         <footer class='site-footer'>
-            <p>Powered by RaCore | <a href='/control-panel.html'>Advanced Management</a></p>
+            <p>Powered by RaCore | <a href='/control-panel'>Advanced Management</a></p>
         </footer>
     </div>
 </body>

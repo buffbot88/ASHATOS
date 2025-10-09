@@ -66,7 +66,7 @@ public class UnderConstructionTests
         Assert(html.Contains("Under Construction"), "HTML should contain 'Under Construction' title");
         Assert(html.Contains("check back soon"), "HTML should contain default message");
         Assert(html.Contains("data:image/svg+xml"), "HTML should contain default robot SVG");
-        Assert(html.Contains("/control-panel.html"), "HTML should contain admin link");
+        Assert(html.Contains("/control-panel"), "HTML should contain admin link");
         
         // Test with custom message
         config.UnderConstructionMessage = "We'll be back in 2 hours!";
@@ -95,14 +95,14 @@ public class UnderConstructionTests
         Assert(html404.Contains("404"), "Error HTML should contain error code");
         Assert(html404.Contains("Page Not Found"), "Error HTML should contain error title");
         Assert(html404.Contains("doesn't exist"), "Error HTML should contain error message");
-        Assert(html404.Contains("/control-panel.html"), "Error HTML should contain control panel link by default");
+        Assert(html404.Contains("/control-panel"), "Error HTML should contain control panel link by default");
         
         // Test 500 error page without control panel link
         var html500 = UnderConstructionHandler.GenerateErrorPage(500, "Internal Server Error", "Something went wrong on our end.", false);
         
         Assert(html500.Contains("500"), "Error HTML should contain error code");
         Assert(html500.Contains("Internal Server Error"), "Error HTML should contain error title");
-        Assert(!html500.Contains("/control-panel.html"), "Error HTML should not contain control panel link when disabled");
+        Assert(!html500.Contains("/control-panel"), "Error HTML should not contain control panel link when disabled");
         
         // Test styling consistency
         Assert(html404.Contains("linear-gradient"), "Error page should have styled background");

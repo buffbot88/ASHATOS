@@ -378,7 +378,7 @@ public class FirstRunManager
             Console.WriteLine("📋 TO COMPLETE INITIALIZATION:");
             Console.WriteLine();
             Console.WriteLine("1. Start RaCore and access the Control Panel:");
-            Console.WriteLine("   http://localhost/control-panel.html");
+            Console.WriteLine("   http://localhost/control-panel");
             Console.WriteLine();
             Console.WriteLine("2. Login with default credentials:");
             Console.WriteLine("   Username: admin");
@@ -415,7 +415,7 @@ public class FirstRunManager
             Console.WriteLine("  - Kestrel web server integrated");
             Console.WriteLine("  - Static HTML files in wwwroot directory");
             Console.WriteLine("  - PHP processing via internal modules");
-            Console.WriteLine("  - Control Panel accessible at /control-panel.html");
+            Console.WriteLine("  - Control Panel accessible at /control-panel");
             Console.WriteLine();
             
             // Mark as initialized

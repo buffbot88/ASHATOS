@@ -121,7 +121,7 @@ $categories = $db->query('SELECT * FROM forum_categories ORDER BY id');
                 <a href='../forums.php'>Forums</a>
                 <a href='../chat.php'>Chat</a>
                 <a href='../profile.php?user=<?php echo urlencode($currentUser); ?>'>Social</a>
-                <a href='/control-panel.html' target='_blank'>Settings</a>
+                <a href='/control-panel' target='_blank'>Settings</a>
             </div>
         </nav>
         <div class='content'>
@@ -176,7 +176,7 @@ $categories = $db->query('SELECT * FROM forum_categories ORDER BY id');
             <?php endif; ?>
         </div>
         <footer class='site-footer'>
-            <p>Powered by RaCore | <a href='/control-panel.html'>Manage Your Site</a></p>
+            <p>Powered by RaCore | <a href='/control-panel'>Manage Your Site</a></p>
         </footer>
     </div>
 </body>
@@ -274,7 +274,7 @@ if ($topicId) {
                 <a href='../forums.php'>Forums</a>
                 <a href='../chat.php'>Chat</a>
                 <a href='../profile.php?user=<?php echo urlencode($currentUser); ?>'>Social</a>
-                <a href='/control-panel.html' target='_blank'>Settings</a>
+                <a href='/control-panel' target='_blank'>Settings</a>
             </div>
         </nav>
         <div class='content'>
@@ -381,7 +381,7 @@ if ($topicId) {
             <?php endif; ?>
         </div>
         <footer class='site-footer'>
-            <p>Powered by RaCore | <a href='/control-panel.html'>Manage Your Site</a></p>
+            <p>Powered by RaCore | <a href='/control-panel'>Manage Your Site</a></p>
         </footer>
     </div>
     
