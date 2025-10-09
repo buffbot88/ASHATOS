@@ -1557,7 +1557,7 @@ app.MapGet("/api/learning/courses/{level}", async (HttpContext context) =>
     var level = context.Request.RouteValues["level"]?.ToString() ?? "User";
     var courses = await learningModule.GetCoursesAsync(level);
     
-    return Results.Json(new { courses });
+    return Results.Json(new { success = true, courses });
 });
 
 app.MapGet("/api/learning/courses/{courseId}/lessons", async (HttpContext context) =>
@@ -1580,7 +1580,7 @@ app.MapGet("/api/learning/courses/{courseId}/lessons", async (HttpContext contex
     var courseId = context.Request.RouteValues["courseId"]?.ToString() ?? "";
     var lessons = await learningModule.GetLessonsAsync(courseId);
     
-    return Results.Json(new { lessons });
+    return Results.Json(new { success = true, lessons });
 });
 
 app.MapPost("/api/learning/lessons/{lessonId}/complete", async (HttpContext context) =>
