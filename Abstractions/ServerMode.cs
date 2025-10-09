@@ -156,6 +156,17 @@ public class ServerConfiguration
     /// FTP server port (defaults to 21)
     /// </summary>
     public int FtpPort { get; set; } = 21;
+    
+    /// <summary>
+    /// Indicates if the server has been activated with a valid license
+    /// Server activation is required after onboarding to access the control panel
+    /// </summary>
+    public bool ServerActivated { get; set; } = false;
+    
+    /// <summary>
+    /// Timestamp when the server was activated
+    /// </summary>
+    public DateTime? ActivatedAt { get; set; }
 }
 
 /// <summary>

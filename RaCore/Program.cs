@@ -662,7 +662,7 @@ static string GenerateOnboardingUI()
         
         <div style=""text-align: center; margin-top: 20px;"">
             <button id=""finishButton"" style=""display: none;"" class=""success"" onclick=""completeOnboarding()"">
-                🎉 Complete Onboarding & Access Control Panel
+                🎉 Complete Onboarding & Proceed to Activation
             </button>
         </div>
     </div>
@@ -880,9 +880,9 @@ static string GenerateOnboardingUI()
                 
                 const data = await response.json();
                 if (data.success) {
-                    showSuccess('🎉 Onboarding completed! Redirecting to Control Panel...');
+                    showSuccess('🎉 Onboarding completed! Redirecting to server activation...');
                     setTimeout(() => {
-                        window.location.href = '/control-panel';
+                        window.location.href = '/activation';
                     }, 2000);
                 } else {
                     showError('Failed to complete onboarding: ' + data.message);
@@ -910,6 +910,306 @@ static string GenerateOnboardingUI()
         
         // Initialize
         loadCourses();
+    </script>
+</body>
+</html>";
+}
+
+// Generate Server Activation UI dynamically
+static string GenerateActivationUI()
+{
+    return @"<!DOCTYPE html>
+<html lang=""en"">
+<head>
+    <meta charset=""UTF-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>Server Activation - RaOS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .activation-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+            text-align: center;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 16px;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .info-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .info-box p {
+            margin: 5px 0;
+            color: #555;
+            line-height: 1.6;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+        input[type=""text""] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            font-family: monospace;
+        }
+        input[type=""text""]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .button {
+            background: #667eea;
+            color: white;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            transition: background 0.3s;
+        }
+        .button:hover {
+            background: #5568d3;
+        }
+        .button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .status-message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status-message.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .license-types {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .license-type {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #555;
+        }
+        .license-type strong {
+            color: #667eea;
+        }
+        .dev-mode-notice {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class=""activation-container"">
+        <h1>🔑 Server Activation</h1>
+        <p class=""subtitle"">You're almost there! Enter your license key to activate your RaOS server.</p>
+        
+        <div id=""statusMessage"" class=""status-message""></div>
+        <div id=""devModeNotice"" class=""dev-mode-notice"" style=""display: none;"">
+            <strong>Development Mode:</strong> License validation is bypassed. Any valid format key will activate the server.
+        </div>
+        
+        <div class=""section"">
+            <div class=""info-box"">
+                <p><strong>✅ Onboarding Completed</strong></p>
+                <p>You've successfully completed the Masters Class training.</p>
+                <p><strong>Next Step:</strong> Activate your server with a license key to unlock all features.</p>
+            </div>
+        </div>
+        
+        <div class=""section"">
+            <div class=""section-title"">License Key</div>
+            <div class=""form-group"">
+                <label for=""licenseKey"">Enter your RaOS license key:</label>
+                <input type=""text"" id=""licenseKey"" placeholder=""RAOS-XXXX-XXXX-XXXX-XXXX"" />
+            </div>
+            <button class=""button"" onclick=""activateServer()"" id=""activateBtn"">
+                🚀 Activate Server
+            </button>
+        </div>
+        
+        <div class=""section"">
+            <div class=""section-title"">Available License Types</div>
+            <div class=""license-types"">
+                <div class=""license-type"">
+                    <strong>Forum:</strong> Forum features
+                </div>
+                <div class=""license-type"">
+                    <strong>CMS:</strong> Content management
+                </div>
+                <div class=""license-type"">
+                    <strong>GameServer:</strong> Game hosting
+                </div>
+                <div class=""license-type"">
+                    <strong>Enterprise:</strong> All features
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        async function checkAuth() {
+            const token = localStorage.getItem('racore_token');
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+            
+            // Check if already activated
+            try {
+                const response = await fetch('/api/control/activation-status', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.activated) {
+                        window.location.href = '/control-panel';
+                        return;
+                    }
+                    
+                    // Show dev mode notice if applicable
+                    if (data.devMode) {
+                        document.getElementById('devModeNotice').style.display = 'block';
+                    }
+                }
+            } catch (err) {
+                console.log('Activation check error:', err);
+            }
+        }
+        
+        async function activateServer() {
+            const licenseKey = document.getElementById('licenseKey').value.trim();
+            
+            if (!licenseKey) {
+                showMessage('Please enter a license key', 'error');
+                return;
+            }
+            
+            const btn = document.getElementById('activateBtn');
+            btn.disabled = true;
+            btn.textContent = '🔄 Activating...';
+            
+            try {
+                const token = localStorage.getItem('racore_token');
+                const response = await fetch('/api/control/activate', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ licenseKey })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('✅ Server activated successfully! Redirecting to Control Panel...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/control-panel';
+                    }, 2000);
+                } else {
+                    showMessage('❌ Activation failed: ' + data.message, 'error');
+                    btn.disabled = false;
+                    btn.textContent = '🚀 Activate Server';
+                }
+            } catch (error) {
+                showMessage('❌ Activation error: ' + error.message, 'error');
+                btn.disabled = false;
+                btn.textContent = '🚀 Activate Server';
+            }
+        }
+        
+        function showMessage(message, type) {
+            const statusMsg = document.getElementById('statusMessage');
+            statusMsg.className = 'status-message ' + type;
+            statusMsg.textContent = message;
+            statusMsg.style.display = 'block';
+            setTimeout(() => {
+                if (type !== 'success') {
+                    statusMsg.style.display = 'none';
+                }
+            }, 5000);
+        }
+        
+        // Allow Enter key to submit
+        document.getElementById('licenseKey').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                activateServer();
+            }
+        });
+        
+        checkAuth();
     </script>
 </body>
 </html>";
@@ -1024,6 +1324,24 @@ static string GenerateControlPanelUI()
             } catch (err) {
                 // If not SuperAdmin or learning module unavailable, continue to control panel
                 console.log('Onboarding check skipped:', err);
+            }
+            
+            // Check if server is activated
+            try {
+                const activationResponse = await fetch('/api/control/activation-status', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                
+                if (activationResponse.ok) {
+                    const activationData = await activationResponse.json();
+                    if (!activationData.activated) {
+                        // Redirect to activation if not activated
+                        window.location.href = '/activation';
+                        return;
+                    }
+                }
+            } catch (err) {
+                console.log('Activation check skipped:', err);
             }
         }
         async function loadStats() {
@@ -1452,6 +1770,13 @@ app.MapGet("/onboarding", async (HttpContext context) =>
     await context.Response.WriteAsync(GenerateOnboardingUI());
 });
 
+// Activation UI - served dynamically (for license activation)
+app.MapGet("/activation", async (HttpContext context) =>
+{
+    context.Response.ContentType = "text/html";
+    await context.Response.WriteAsync(GenerateActivationUI());
+});
+
 // Admin UI - served dynamically
 app.MapGet("/admin", async (HttpContext context) =>
 {
@@ -1734,7 +2059,7 @@ Console.WriteLine("  GET  /api/control/server/underconstruction - Get Under Cons
 
 
 // Control Panel API endpoints
-app.MapControlPanelEndpoints(moduleManager, authModule, licenseModule, racoinModule, gameEngineModule);
+app.MapControlPanelEndpoints(moduleManager, authModule, licenseModule, racoinModule, gameEngineModule, firstRunManager);
 
 // ============================================================================
 // Distribution & Update API Endpoints
