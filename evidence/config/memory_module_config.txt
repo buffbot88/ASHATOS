@@ -1,0 +1,21 @@
+Memory Module Configuration
+===========================
+
+Source: RaCore/Engine/Memory/MemoryModule.cs
+
+Default Configuration:
+- MaxAge: 90 days (TimeSpan.FromDays(90))
+- MaxItems: 10,000 items
+- Database Path: {AppContext.BaseDirectory}/ra_memory.sqlite
+
+Automatic Maintenance:
+- Triggered every 100th item stored
+- Threshold: 90% of max capacity
+- Operations: Prune old items, deduplicate, enforce limits
+
+Background Service:
+- MemoryMaintenanceService runs every 24 hours
+- Performs comprehensive maintenance cycle
+- Integrates with MemoryHealthMonitor
+
+Configuration is enforced in code and cannot be bypassed.

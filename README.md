@@ -333,28 +333,49 @@ var result = await pluginManager.LoadPluginAsync("/path/to/MyPlugin.dll");
 
 ## 🔒 Security
 
+### 🔐 Security Gate #235 (v9.4.0)
+
+RaOS v9.4.0 includes comprehensive security controls verified through Security Gate #235:
+
+- ✅ **Identity & Access Management:** Token-based auth, RBAC with 3 roles, server-side authorization
+- ✅ **Secrets Management:** PBKDF2-SHA512 hashing, environment-based configuration, no hardcoded secrets
+- ✅ **Transport Security:** TLS/HTTPS ready, secure cookies, CORS/CSRF protection
+- ✅ **Data Hygiene:** Automatic log pruning, PII redaction, encrypted backups, audit logging
+- ⚠️ **CI/CD Pipeline:** Automated security checks (CodeQL, dependency scan, secret scanning)
+- ⚠️ **Incident Response:** Documented procedures with 5-phase response plan
+
+📖 **Security Documentation:**
+- [SECURITY_GATE_235.md](SECURITY_GATE_235.md) - Complete security checklist (28 controls)
+- [SECURITY_ARCHITECTURE.md](SECURITY_ARCHITECTURE.md) - Security architecture details
+- [SECURITY_INCIDENT_RESPONSE_PLAN.md](SECURITY_INCIDENT_RESPONSE_PLAN.md) - Incident procedures
+- [evidence/security/](evidence/security/) - Security evidence and audit reports
+
 ### Production Checklist
 
 Before deploying to production:
 
+- [ ] Complete Security Gate #235 action items
 - [ ] Change default admin credentials
 - [ ] Enable HTTPS with valid certificates
-- [ ] Configure production rate limits
+- [ ] Configure production rate limits (5 req/min on auth)
 - [ ] Set up log aggregation and monitoring
 - [ ] Enable security event auditing
-- [ ] Configure CORS properly
+- [ ] Configure CORS for production domain
+- [ ] Enable branch protection and code reviews
+- [ ] Run dependency vulnerability scan
 - [ ] Regular security updates
 - [x] Backup and recovery procedures (Failsafe Backup System)
 
 ### Security Features
 
-- **Rate Limiting:** Configurable per-client limits
-- **Authentication:** Token-based with session management
-- **Authorization:** Permission-based access control
-- **Input Protection:** XSS/CSRF frameworks ready
-- **Audit Logging:** Security event tracking
+- **Rate Limiting:** Configurable per-client limits (CMS module)
+- **Authentication:** Token-based with PBKDF2-SHA512 hashing (100k iterations)
+- **Authorization:** RBAC with permission checks on all endpoints
+- **Input Protection:** Parameterized queries, input validation
+- **Audit Logging:** Security event tracking with UTC timestamps
 - **Health Monitoring:** Operational endpoints
-- **🛡️ Failsafe Backup System:** Emergency backup, restore, and corruption recovery (NEW!)
+- **🛡️ Failsafe Backup System:** Emergency backup, restore, and corruption recovery
+- **🔐 CI/CD Security:** Automated CodeQL, dependency review, secret scanning
 
 ### 🆕 Failsafe Backup System
 

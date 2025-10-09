@@ -14,6 +14,35 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
     private readonly string _baseDirectory;
     private readonly string _databasesFolder;
     private readonly string _phpFolder;
+
+    /// <summary>
+    /// Checks if a path is absolute, does not contain traversal, and is outside allowed folder root.
+    /// For this project, restrict to folders within _baseDirectory or a predefined safe area.
+    /// </summary>
+    private bool IsSafeAbsolutePath(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return false;
+        // Must be absolute
+        if (!System.IO.Path.IsPathFullyQualified(path))
+            return false;
+        // No traversal
+        if (path.Contains("..") || path.Contains(";") || path.Contains("&") || path.Contains("|") || path.Contains("$") || path.IndexOfAny(new [] {'\'','"','`'}) >= 0)
+            return false;
+        // Within base directory (if meaningful)
+        try
+        {
+            var normalizedBase = System.IO.Path.GetFullPath(_baseDirectory ?? "/");
+            var normalizedPath = System.IO.Path.GetFullPath(path);
+            if (!normalizedPath.StartsWith(normalizedBase))
+                return false;
+        }
+        catch
+        {
+            return false;
+        }
+        return true;
+    }
     private readonly string _adminsFolder;
     private readonly string _ftpFolder;
 
@@ -315,6 +344,16 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
 
     public async Task<SetupResult> CreateAdminFolderStructureAsync(string licenseNumber, string username)
     {
+        // Validate licenseNumber and username for safe path usage
+        if (!IsSafePathComponent(licenseNumber) || !IsSafePathComponent(username))
+        {
+            return new SetupResult
+            {
+                Success = false,
+                Message = "Invalid license number or username: possible path traversal or illegal characters detected.",
+                Path = null
+            };
+        }
         try
         {
             // Ensure base folders exist
@@ -396,6 +435,26 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
                 Message = $"Error creating admin instance: {ex.Message}"
             };
         }
+    }
+
+    /// <summary>
+    /// Validates that a string is suitable as a single filesystem path component.
+    /// Allows only alphanumerics, underscores, hyphens, and dots. No path separators or traversal.
+    /// </summary>
+    private static bool IsSafePathComponent(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return false;
+        // Reject path separators or traversal sequences
+        if (input.Contains("/") || input.Contains("\\") || input.Contains(".."))
+            return false;
+        // Allow only [A-Za-z0-9_.-]
+        foreach (var c in input)
+        {
+            if (!(char.IsLetterOrDigit(c) || c == '_' || c == '-' || c == '.'))
+                return false;
+        }
+        return true;
     }
 
     public async Task<SetupResult> SetupPhpConfigAsync(string licenseNumber, string username)
@@ -876,18 +935,26 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
     {
         try
         {
-            var process = new System.Diagnostics.Process
+            var process = new System.Diagnostics.Process();
+            process.StartInfo.FileName = command;
+            process.StartInfo.RedirectStandardOutput = true;
+            process.StartInfo.RedirectStandardError = true;
+            process.StartInfo.UseShellExecute = false;
+            process.StartInfo.CreateNoWindow = true;
+            // Basic argument escaping: split args by whitespace and pass as ArgumentList if possible (.NET 6+)
+#if NET6_0_OR_GREATER
+            if (!string.IsNullOrWhiteSpace(arguments))
             {
-                StartInfo = new System.Diagnostics.ProcessStartInfo
+                foreach (var arg in System.Text.RegularExpressions.Regex.Matches(arguments, @"[\""].+?[\""]|[^ ]+")
+                                                         .Select(m => m.ToString()))
                 {
-                    FileName = command,
-                    Arguments = arguments,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
+                    process.StartInfo.ArgumentList.Add(arg); // Each argument as a separate item
                 }
-            };
+            }
+#else
+            // If not using .NET 6+, fall back to joining, but do NOT allow suspicious chars (see path whitelist)
+            process.StartInfo.Arguments = arguments; // Assume arguments already validated
+#endif
 
             process.Start();
             var output = await process.StandardOutput.ReadToEndAsync();
@@ -945,7 +1012,15 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
                 };
             }
 
-            // Validate restricted path exists
+            // Sanitize and validate the restricted path
+            if (!IsSafeAbsolutePath(restrictedPath))
+            {
+                return new SetupResult
+                {
+                    Success = false,
+                    Message = $"Restricted path is invalid or unsafe: {restrictedPath}"
+                };
+            }
             if (!Directory.Exists(restrictedPath))
             {
                 return new SetupResult

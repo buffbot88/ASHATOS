@@ -20,6 +20,11 @@ namespace RaCore.Engine.Memory
         // Memory management configuration
         private readonly TimeSpan _maxAge = TimeSpan.FromDays(90); // Default: keep items for 90 days
         private readonly int _maxItems = 10000; // Default: maximum 10000 items
+        
+        // Configuration accessors for monitoring
+        public TimeSpan MaxAge => _maxAge;
+        public int MaxItems => _maxItems;
+        public string DatabasePath => _dbPath;
 
         public MemoryModule(string? dbPath = null)
         {
@@ -241,7 +246,7 @@ LIMIT 1;";
             return Convert.ToInt32(cmd.ExecuteScalar());
         }
 
-        public void PruneOldItems(TimeSpan? maxAge = null)
+        public int PruneOldItems(TimeSpan? maxAge = null)
         {
             var cutoff = DateTime.UtcNow - (maxAge ?? _maxAge);
             using var conn = new SqliteConnection(_connectionString);
@@ -251,9 +256,10 @@ LIMIT 1;";
             cmd.Parameters.AddWithValue("$cutoff", cutoff.ToString("o"));
             var deleted = cmd.ExecuteNonQuery();
             MemoryDiagnostics.RaiseEvent($"Pruned {deleted} old memory items (older than {cutoff:yyyy-MM-dd})");
+            return deleted;
         }
 
-        public void DeduplicateItems()
+        public int DeduplicateItems()
         {
             var items = GetAllItems().ToList();
             var groups = items.GroupBy(i => new { i.Key, i.Value }).Where(g => g.Count() > 1);
@@ -271,14 +277,15 @@ LIMIT 1;";
             }
 
             MemoryDiagnostics.RaiseEvent($"Deduplicated {removed} memory items");
+            return removed;
         }
 
-        public void EnforceItemLimit(int? maxItems = null)
+        public int EnforceItemLimit(int? maxItems = null)
         {
             var limit = maxItems ?? _maxItems;
             var count = Count();
             
-            if (count <= limit) return;
+            if (count <= limit) return 0;
 
             var toRemove = count - limit;
             using var conn = new SqliteConnection(_connectionString);
@@ -295,14 +302,16 @@ WHERE Id IN (
             cmd.Parameters.AddWithValue("$limit", toRemove);
             var deleted = cmd.ExecuteNonQuery();
             MemoryDiagnostics.RaiseEvent($"Enforced item limit: removed {deleted} oldest items");
+            return deleted;
         }
 
-        public void PerformMaintenance()
+        public (int pruned, int deduplicated, int limited) PerformMaintenance()
         {
-            PruneOldItems();
-            DeduplicateItems();
-            EnforceItemLimit();
+            var pruned = PruneOldItems();
+            var deduplicated = DeduplicateItems();
+            var limited = EnforceItemLimit();
             MemoryDiagnostics.RaiseEvent("Memory maintenance completed");
+            return (pruned, deduplicated, limited);
         }
 
         public string GetStats()
