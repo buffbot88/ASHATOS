@@ -315,6 +315,16 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
 
     public async Task<SetupResult> CreateAdminFolderStructureAsync(string licenseNumber, string username)
     {
+        // Validate licenseNumber and username for safe path usage
+        if (!IsSafePathComponent(licenseNumber) || !IsSafePathComponent(username))
+        {
+            return new SetupResult
+            {
+                Success = false,
+                Message = "Invalid license number or username: possible path traversal or illegal characters detected.",
+                Path = null
+            };
+        }
         try
         {
             // Ensure base folders exist
@@ -396,6 +406,26 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
                 Message = $"Error creating admin instance: {ex.Message}"
             };
         }
+    }
+
+    /// <summary>
+    /// Validates that a string is suitable as a single filesystem path component.
+    /// Allows only alphanumerics, underscores, hyphens, and dots. No path separators or traversal.
+    /// </summary>
+    private static bool IsSafePathComponent(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return false;
+        // Reject path separators or traversal sequences
+        if (input.Contains("/") || input.Contains("\\") || input.Contains(".."))
+            return false;
+        // Allow only [A-Za-z0-9_.-]
+        foreach (var c in input)
+        {
+            if (!(char.IsLetterOrDigit(c) || c == '_' || c == '-' || c == '.'))
+                return false;
+        }
+        return true;
     }
 
     public async Task<SetupResult> SetupPhpConfigAsync(string licenseNumber, string username)
