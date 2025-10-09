@@ -45,7 +45,7 @@ public class BootSequenceManager
         {
             // Don't fail boot if memory storage fails
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine($"    (´･ω･`) Could not persist config to Ra_Memory: {ex.Message}");
+            Console.WriteLine($"    (´･ω･`) Could not persist config to Ra_Memory: {ex.Message} || Restore Ra's memory, please. QQ");
             Console.ResetColor();
         }
     }
@@ -97,7 +97,7 @@ public class BootSequenceManager
         Console.ResetColor();
         Console.WriteLine();
         Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine($"    ✧･ﾟ: *✧･ﾟ:* Welcome to Ra OS v{RaVersion.Current} *:･ﾟ✧*:･ﾟ✧");
+        Console.WriteLine($"    ✧･ﾟ: *✧･ﾟ:* RaOS v{RaVersion.Current} powered by Nueral Network v1 *:･ﾟ✧*:･ﾟ✧");
         Console.ResetColor();
         Console.WriteLine();
         Console.ForegroundColor = ConsoleColor.Magenta;
@@ -113,9 +113,8 @@ public class BootSequenceManager
         // Step 1.5: Process .gguf language models
         success &= await ProcessLanguageModelsAsync();
         
-        // Note: Nginx and PHP scanning removed - RaOS processes PHP internally
-        // and uses Kestrel as web server. External web servers should be
-        // configured by the host environment before running RaOS.
+        // Step 2: Generate wwwroot static files
+        success &= GenerateWwwrootFiles();
         
         Console.WriteLine();
         Console.ForegroundColor = ConsoleColor.Yellow;
@@ -153,7 +152,7 @@ public class BootSequenceManager
             {
                 Console.WriteLine("    (｡•́︿•̀｡) SelfHealingModule not found - skipping...");
                 Console.WriteLine();
-                return true; // Not a fatal error
+                return false; // required for updates
             }
             
             // Run health checks on all modules
@@ -256,7 +255,7 @@ public class BootSequenceManager
             Console.WriteLine($"    (╥﹏╥) Oopsie! Error during health checks: {ex.Message}");
             Console.ResetColor();
             Console.WriteLine();
-            return true; // Don't fail boot on self-healing errors
+            return false; // required for updates
         }
     }
     
@@ -281,7 +280,7 @@ public class BootSequenceManager
             {
                 Console.WriteLine("    (｡•́︿•̀｡) LanguageModelProcessor not found - skipping...");
                 Console.WriteLine();
-                return true; // Not a fatal error
+                return false; // Can't talk without this
             }
             
             Console.ForegroundColor = ConsoleColor.Magenta;
@@ -326,7 +325,84 @@ public class BootSequenceManager
             Console.WriteLine($"    (╥﹏╥) Oopsie! Error processing models: {ex.Message}");
             Console.ResetColor();
             Console.WriteLine();
-            return true; // Don't fail boot on model processing errors
+            return false; // Language models should be .gguf files
+        }
+    }
+    
+    private bool GenerateWwwrootFiles()
+    {
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("    ╭──────────────────────────────────────────────╮");
+        Console.WriteLine("    │  ଘ(੭*ˊᵕˋ)੭* Step 2/3: Wwwroot Generation! │");
+        Console.WriteLine("    ╰──────────────────────────────────────────────╯");
+        Console.ResetColor();
+        Console.WriteLine();
+        
+        try
+        {
+            // Find SiteBuilder module
+            var siteBuilderModule = _moduleManager.Modules
+                .Select(m => m.Instance)
+                .FirstOrDefault(m => m.Name == "SiteBuilder");
+            
+            if (siteBuilderModule == null)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("    (´･ω･`) SiteBuilder module not found - skipping wwwroot generation...");
+                Console.ResetColor();
+                Console.WriteLine();
+                return false; // This is a fatal, it you will not be able to spawn static files.
+            }
+            
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            Console.WriteLine("    ♡ (っ◔◡◔)っ Generating static HTML files...");
+            Console.ResetColor();
+            
+            // Call GenerateWwwroot method via reflection
+            var generateMethod = siteBuilderModule.GetType().GetMethod("GenerateWwwroot");
+            if (generateMethod != null)
+            {
+                var result = generateMethod.Invoke(siteBuilderModule, null) as string;
+                
+                // Check if generation was successful
+                if (result != null && result.Contains("✅"))
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("    ✨ Wwwroot files generated successfully! ✨");
+                    Console.ResetColor();
+                    Console.WriteLine("       (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ Control Panel ready at /control-panel.html");
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine("    (´･ω･`) Wwwroot generation completed with warnings");
+                    Console.ResetColor();
+                }
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("    (´･ω･`) GenerateWwwroot method not found");
+                Console.ResetColor();
+            }
+            
+            Console.WriteLine();
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("    ℹ️  RaOS processes PHP internally via modules");
+            Console.WriteLine("    ℹ️  No external web server (Nginx/Apache) required");
+            Console.WriteLine("    ℹ️  Kestrel handles all web serving");
+            Console.ResetColor();
+            Console.WriteLine();
+            
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"    (╥﹏╥) Oopsie! Error generating wwwroot: {ex.Message} || Restore backup wwwroots or use a terminal for API SiteBuilder Commands.");
+            Console.ResetColor();
+            Console.WriteLine();
+            return false; // Fail boot on wwwroot generation errors
         }
     }
 }

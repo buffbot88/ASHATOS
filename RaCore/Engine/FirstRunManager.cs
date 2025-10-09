@@ -212,10 +212,10 @@ public class FirstRunManager
         var dotnetVersion = Environment.Version;
         Console.WriteLine($"  ✓ .NET Runtime: {dotnetVersion}");
         
-        // Note: Apache/PHP scanning removed - RaOS processes PHP internally via modules
-        // External web servers should be configured by the host environment before running RaOS
-        Console.WriteLine("  ℹ️  RaOS uses Kestrel web server and processes PHP internally");
-        Console.WriteLine("  ℹ️  No external web server configuration required");
+        // Note: RaOS now processes PHP internally via modules
+        Console.WriteLine("  ℹ️  RaOS uses internal Kestrel web server");
+        Console.WriteLine("  ℹ️  PHP processing handled by internal modules");
+        Console.WriteLine("  ℹ️  No external web server (Nginx/Apache) required");
         
         // Check disk space
         try
@@ -361,7 +361,17 @@ public class FirstRunManager
             Console.WriteLine("[FirstRunManager] ℹ️  No PHP files generated - C# module handles all CMS features");
             Console.WriteLine();
             
-            Console.WriteLine("[FirstRunManager] Step 4/5: Initialization Guidance");
+            
+            Console.WriteLine("[FirstRunManager] Step 4/7: Web Server Configuration");
+            Console.WriteLine();
+            
+            Console.WriteLine("[FirstRunManager] ℹ️  RaOS uses internal Kestrel web server");
+            Console.WriteLine("[FirstRunManager] ℹ️  PHP processing handled by internal modules");
+            Console.WriteLine("[FirstRunManager] ℹ️  No external web server (Nginx/Apache) required");
+            Console.WriteLine("[FirstRunManager] ✅ Web server configuration complete");
+            
+            Console.WriteLine();
+            Console.WriteLine("[FirstRunManager] Step 5/7: Initialization Guidance");
             Console.WriteLine();
             
             // Display guidance for completing initialization
@@ -397,6 +407,15 @@ public class FirstRunManager
             Console.WriteLine("  - Enter your license key in the Control Panel");
             Console.WriteLine($"  - Validation server: {_serverConfig.MainServerUrl}");
             Console.WriteLine("  - Supported license types: Forum, CMS, GameServer, Enterprise");
+            Console.WriteLine();
+            
+            Console.WriteLine("[FirstRunManager] Step 7/7: Server Ready");
+            Console.WriteLine();
+            Console.WriteLine("RaOS is configured and ready:");
+            Console.WriteLine("  - Kestrel web server integrated");
+            Console.WriteLine("  - Static HTML files in wwwroot directory");
+            Console.WriteLine("  - PHP processing via internal modules");
+            Console.WriteLine("  - Control Panel accessible at /control-panel.html");
             Console.WriteLine();
             
             // Mark as initialized
