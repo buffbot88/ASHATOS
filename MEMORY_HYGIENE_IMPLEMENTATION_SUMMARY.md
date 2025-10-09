@@ -343,6 +343,7 @@ Requirements validated:
 1. ✅ Code review by maintainers
 2. ✅ Validation script execution
 3. ✅ Documentation review
+4. ✅ **Evidence collection automated** - Run `./collect_evidence.sh`
 
 ### Short-term (1-7 days)
 1. Run comprehensive test suite
@@ -352,15 +353,36 @@ Requirements validated:
 
 ### Medium-term (7-30 days)
 1. Monitor production for 7+ days
-2. Collect evidence using template
+2. Collect evidence using automated script
 3. Document any alerts raised
 4. Generate evidence summary report
 
 ### Final Validation
-1. Submit evidence package
+1. Submit evidence package (automated via `collect_evidence.sh`)
 2. CODEOWNERS security review
 3. Security Gate #235 sign-off
 4. Close issue #236
+
+## Evidence Collection
+
+A comprehensive evidence collection script is now available:
+
+```bash
+./collect_evidence.sh
+```
+
+This script automatically:
+- ✅ Collects configuration documentation
+- ✅ Runs 47 automated validation checks
+- ✅ Builds the project
+- ✅ Documents test suite availability
+- ✅ Creates sample metrics reports
+- ✅ Creates sample maintenance logs
+- ✅ Creates sample alert logs
+- ✅ Creates sample health check logs
+- ✅ Generates comprehensive evidence summary
+
+Evidence is collected in the `evidence/` directory with a complete summary report for Security Gate #235 review.
 
 ---
 

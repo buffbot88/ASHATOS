@@ -263,6 +263,11 @@ Learn RaOS courses SuperAdmin  # Master Classes (4 courses, 29 lessons)
 |----------|-------------|
 | [SECURITY_ARCHITECTURE.md](SECURITY_ARCHITECTURE.md) | Complete security architecture |
 | [ASSET_SECURITY.md](ASSET_SECURITY.md) | Asset watermark & ownership verification (Phase 9.3.6) |
+| [MEMORY_HYGIENE_IMPLEMENTATION_SUMMARY.md](MEMORY_HYGIENE_IMPLEMENTATION_SUMMARY.md) | Memory/data hygiene for Security Gate #235 |
+| [EVIDENCE_COLLECTION_QUICKSTART.md](EVIDENCE_COLLECTION_QUICKSTART.md) | **NEW** Quick start for evidence collection (`./collect_evidence.sh`) |
+| [docs/MEMORY_HYGIENE_OBSERVABILITY.md](docs/MEMORY_HYGIENE_OBSERVABILITY.md) | Observability, metrics, and alerting |
+| [docs/MEMORY_HYGIENE_EVIDENCE.md](docs/MEMORY_HYGIENE_EVIDENCE.md) | Evidence collection template |
+| [evidence/README.md](evidence/README.md) | Automated evidence collection directory |
 | Compliance features documented in module-specific READMEs |
 
 ---
