@@ -261,6 +261,10 @@ Learn RaOS courses SuperAdmin  # Master Classes (4 courses, 29 lessons)
 
 | Document | Description |
 |----------|-------------|
+| [SECURITY_GATE_235.md](SECURITY_GATE_235.md) | **Pre-Release Security Checklist** for v9.4.0 (blocks issue #233) |
+| [SECURITY_GATE_235_SUMMARY.md](SECURITY_GATE_235_SUMMARY.md) | Security Gate #235 executive summary |
+| [SECURITY_GATE_235_QUICKREF.md](SECURITY_GATE_235_QUICKREF.md) | Quick reference for Security Gate #235 |
+| [BRANCH_PROTECTION_CONFIG.md](BRANCH_PROTECTION_CONFIG.md) | Branch protection configuration guide |
 | [SECURITY_ARCHITECTURE.md](SECURITY_ARCHITECTURE.md) | Complete security architecture |
 | [ASSET_SECURITY.md](ASSET_SECURITY.md) | Asset watermark & ownership verification (Phase 9.3.6) |
 | [MEMORY_HYGIENE_IMPLEMENTATION_SUMMARY.md](MEMORY_HYGIENE_IMPLEMENTATION_SUMMARY.md) | Memory/data hygiene for Security Gate #235 |
@@ -303,6 +307,8 @@ Learn RaOS courses SuperAdmin  # Master Classes (4 courses, 29 lessons)
 
 | Document | Description | Size |
 |----------|-------------|------|
+| [FINAL_RELEASE_CHECKLIST_940_233.md](FINAL_RELEASE_CHECKLIST_940_233.md) | **NEW** Final release checklist for issue #233 (Emperor/Temperance/Page of Cups) | 20KB |
+| [FINAL_RELEASE_QUICKREF_233.md](FINAL_RELEASE_QUICKREF_233.md) | **NEW** Quick reference for final release status | 3KB |
 | [AUDIT_SUMMARY_940.md](AUDIT_SUMMARY_940.md) | **NEW** Executive summary of audit findings and recommendations | 10KB |
 | [RAOS_MAINFRAME_AUDIT_REPORT_940.md](RAOS_MAINFRAME_AUDIT_REPORT_940.md) | **NEW** Complete MainFrame production readiness audit | 16KB |
 | [PRODUCTION_RELEASE_CHECKLIST_940.md](PRODUCTION_RELEASE_CHECKLIST_940.md) | **NEW** Production release checklist and go/no-go criteria | 10KB |
@@ -310,12 +316,19 @@ Learn RaOS courses SuperAdmin  # Master Classes (4 courses, 29 lessons)
 | [PHASE_940_IMPLEMENTATION_SUMMARY.md](PHASE_940_IMPLEMENTATION_SUMMARY.md) | Phase 9.4.0 implementation details | 9KB |
 | [VERIFICATION_REPORT_940.md](VERIFICATION_REPORT_940.md) | Build and verification results | 7KB |
 
+**Issue #233 Status (Final Release Checklist):**
+- ✅ Structure & Governance (Emperor): 5/5 complete
+- ✅ System Balance (Temperance): 5/5 complete
+- ✅ Human Experience (Page of Cups): 5/5 complete
+- ⚠️ Final Validation: 3/5 complete (deployment dry run & sign-offs needed)
+- **Overall: 90% complete (18/20 items)**
+
 **Audit Highlights:**
 - ✅ Clean build (0 errors, 0 warnings)
 - ✅ Security audit passed
 - ✅ Code quality improvements implemented
 - ✅ Production readiness score: 92/100
-- ✅ **Status: READY FOR PRODUCTION** 🎉
+- 🟡 **Status: ALMOST READY** (needs deployment dry run)
 
 ---
 
