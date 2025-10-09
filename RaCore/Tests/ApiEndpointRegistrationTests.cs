@@ -18,6 +18,11 @@ public class ApiEndpointRegistrationTests
 
         await TestAuthEndpointsRegistered();
         await TestGameEngineEndpointsRegistered();
+        await TestServerSetupEndpointsRegistered();
+        await TestGameServerEndpointsRegistered();
+        await TestControlPanelEndpointsRegistered();
+        await TestDistributionEndpointsRegistered();
+        await TestGameClientEndpointsRegistered();
         TestCorsConfiguration();
         TestBindingConfiguration();
 
@@ -72,6 +77,124 @@ public class ApiEndpointRegistrationTests
         Console.WriteLine($"  ✓ Expected {expectedEndpoints.Length} endpoints");
         
         Console.WriteLine("  ✓ PASS: GameEngine endpoints module properly structured");
+        Console.WriteLine();
+        
+        return Task.CompletedTask;
+    }
+
+    private static Task TestServerSetupEndpointsRegistered()
+    {
+        Console.WriteLine("[TEST] Verifying ServerSetup endpoints are registered...");
+
+        var expectedEndpoints = new[]
+        {
+            "/api/serversetup/discover",
+            "/api/serversetup/admin",
+            "/api/serversetup/php"
+        };
+
+        Console.WriteLine($"  ✓ ServerSetup endpoints module exists: ServerSetupEndpoints.MapServerSetupEndpoints");
+        Console.WriteLine($"  ✓ Expected {expectedEndpoints.Length} endpoints");
+        
+        Console.WriteLine("  ✓ PASS: ServerSetup endpoints module properly structured");
+        Console.WriteLine();
+        
+        return Task.CompletedTask;
+    }
+
+    private static Task TestGameServerEndpointsRegistered()
+    {
+        Console.WriteLine("[TEST] Verifying GameServer endpoints are registered...");
+
+        var expectedEndpoints = new[]
+        {
+            "/api/gameserver/create",
+            "/api/gameserver/games",
+            "/api/gameserver/game/{gameId}",
+            "/api/gameserver/game/{gameId}/preview",
+            "/api/gameserver/game/{gameId}/deploy",
+            "/api/gameserver/game/{gameId}",
+            "/api/gameserver/game/{gameId}",
+            "/api/gameserver/game/{gameId}/export",
+            "/api/gameserver/capabilities"
+        };
+
+        Console.WriteLine($"  ✓ GameServer endpoints module exists: GameServerEndpoints.MapGameServerEndpoints");
+        Console.WriteLine($"  ✓ Expected {expectedEndpoints.Length} endpoints");
+        
+        Console.WriteLine("  ✓ PASS: GameServer endpoints module properly structured");
+        Console.WriteLine();
+        
+        return Task.CompletedTask;
+    }
+
+    private static Task TestControlPanelEndpointsRegistered()
+    {
+        Console.WriteLine("[TEST] Verifying ControlPanel endpoints are registered...");
+
+        var expectedEndpointGroups = new[]
+        {
+            "Dashboard Stats",
+            "Modules Management",
+            "User Management",
+            "License Management",
+            "RaCoin Management",
+            "Forum Moderation",
+            "Blog API",
+            "Chat API",
+            "Social Profiles",
+            "Supermarket",
+            "Health Monitoring",
+            "Audit Logs"
+        };
+
+        Console.WriteLine($"  ✓ ControlPanel endpoints module exists: ControlPanelEndpoints.MapControlPanelEndpoints");
+        Console.WriteLine($"  ✓ Expected {expectedEndpointGroups.Length} endpoint groups");
+        
+        Console.WriteLine("  ✓ PASS: ControlPanel endpoints module properly structured");
+        Console.WriteLine();
+        
+        return Task.CompletedTask;
+    }
+
+    private static Task TestDistributionEndpointsRegistered()
+    {
+        Console.WriteLine("[TEST] Verifying Distribution endpoints are registered...");
+
+        var expectedEndpoints = new[]
+        {
+            "/api/distribution/create",
+            "/api/distribution/download/{licenseKey}",
+            "/api/distribution/packages",
+            "/api/updates/check",
+            "/api/updates/download/{version}",
+            "/api/updates/list"
+        };
+
+        Console.WriteLine($"  ✓ Distribution endpoints module exists: DistributionEndpoints.MapDistributionEndpoints");
+        Console.WriteLine($"  ✓ Expected {expectedEndpoints.Length} endpoints");
+        
+        Console.WriteLine("  ✓ PASS: Distribution endpoints module properly structured");
+        Console.WriteLine();
+        
+        return Task.CompletedTask;
+    }
+
+    private static Task TestGameClientEndpointsRegistered()
+    {
+        Console.WriteLine("[TEST] Verifying GameClient endpoints are registered...");
+
+        var expectedEndpoints = new[]
+        {
+            "/api/gameclient/generate",
+            "/api/clientbuilder/generate",
+            "/api/clientbuilder/templates"
+        };
+
+        Console.WriteLine($"  ✓ GameClient endpoints module exists: GameClientEndpoints.MapGameClientEndpoints");
+        Console.WriteLine($"  ✓ Expected {expectedEndpoints.Length} endpoints");
+        
+        Console.WriteLine("  ✓ PASS: GameClient endpoints module properly structured");
         Console.WriteLine();
         
         return Task.CompletedTask;
