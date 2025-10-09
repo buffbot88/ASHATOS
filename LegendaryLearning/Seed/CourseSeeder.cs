@@ -10,12 +10,14 @@ public class CourseSeeder
 {
     private readonly CourseService _courseService;
     private readonly LessonService _lessonService;
+    private readonly AssessmentService _assessmentService;
     private readonly string _moduleName;
 
-    public CourseSeeder(CourseService courseService, LessonService lessonService, string moduleName)
+    public CourseSeeder(CourseService courseService, LessonService lessonService, AssessmentService assessmentService, string moduleName)
     {
         _courseService = courseService;
         _lessonService = lessonService;
+        _assessmentService = assessmentService;
         _moduleName = moduleName;
     }
 
@@ -141,6 +143,16 @@ Understanding the virtual economy:
 - Manage your wallet
 
 RaCoin is the platform currency.", 3, 10, LessonType.Reading);
+        
+        // Add assessments for user courses
+        AddAssessment(course1Id, "RaOS Basics for Users", new List<string> 
+        { 
+            "lesson-user-1", "lesson-user-2", "lesson-user-3", "lesson-user-4", "lesson-user-5" 
+        });
+        AddAssessment(course2Id, "Gaming on RaOS", new List<string> 
+        { 
+            "lesson-gaming-1", "lesson-gaming-2", "lesson-gaming-3" 
+        });
     }
 
     private void SeedAdminCourses()
@@ -309,6 +321,22 @@ Configure family-friendly features:
 - Content filtering
 - Activity monitoring
 - Parent dashboards", 4, 15, LessonType.Reading);
+        
+        // Add assessments for admin courses
+        AddAssessment(course1Id, "Site Builder Mastery", new List<string> 
+        { 
+            "lesson-admin-sb-1", "lesson-admin-sb-2", "lesson-admin-sb-3", 
+            "lesson-admin-sb-4", "lesson-admin-sb-5", "lesson-admin-sb-6" 
+        });
+        AddAssessment(course2Id, "Game Engine Administration", new List<string> 
+        { 
+            "lesson-admin-ge-1", "lesson-admin-ge-2", "lesson-admin-ge-3", 
+            "lesson-admin-ge-4", "lesson-admin-ge-5" 
+        });
+        AddAssessment(course3Id, "Content Moderation", new List<string> 
+        { 
+            "lesson-admin-mod-1", "lesson-admin-mod-2", "lesson-admin-mod-3", "lesson-admin-mod-4" 
+        });
     }
     private void SeedSuperAdminCourses()
     {
@@ -759,6 +787,29 @@ Phase 9.3.9: Documentation Audit (Oct 2025)
 - ✅ Production readiness verification
 
 RaOS is now production-ready with comprehensive tooling and AI assistance.", 8, 25, LessonType.Reading);
+        
+        // Add assessments for superadmin courses
+        AddAssessment(course1Id, "RaOS Architecture & Development", new List<string> 
+        { 
+            "lesson-superadmin-arch-1", "lesson-superadmin-arch-2", "lesson-superadmin-arch-3", 
+            "lesson-superadmin-arch-4", "lesson-superadmin-arch-5" 
+        });
+        AddAssessment(course2Id, "Advanced Security & Operations", new List<string> 
+        { 
+            "lesson-superadmin-sec-1", "lesson-superadmin-sec-2", "lesson-superadmin-sec-3", 
+            "lesson-superadmin-sec-4", "lesson-superadmin-sec-5" 
+        });
+        AddAssessment(course3Id, "RaOS Deployment Mastery", new List<string> 
+        { 
+            "lesson-superadmin-deploy-1", "lesson-superadmin-deploy-2", "lesson-superadmin-deploy-3", 
+            "lesson-superadmin-deploy-4", "lesson-superadmin-deploy-5" 
+        });
+        AddAssessment(course4Id, "RaOS Comprehensive Guide", new List<string> 
+        { 
+            "lesson-superadmin-comp-1", "lesson-superadmin-comp-2", "lesson-superadmin-comp-3", 
+            "lesson-superadmin-comp-4", "lesson-superadmin-comp-5", "lesson-superadmin-comp-6", 
+            "lesson-superadmin-comp-7", "lesson-superadmin-comp-8" 
+        });
     }
 
     private void AddLesson(string courseId, string lessonId, string title, string content, 
@@ -778,5 +829,74 @@ RaOS is now production-ready with comprehensive tooling and AI assistance.", 8, 
         };
         
         _lessonService.AddLesson(lesson);
+    }
+    
+    private void AddAssessment(string courseId, string courseTitle, List<string> lessonIds)
+    {
+        var assessmentId = $"assessment-{courseId}";
+        var assessment = new Assessment
+        {
+            Id = assessmentId,
+            CourseId = courseId,
+            Title = $"{courseTitle} - Final Assessment",
+            Description = $"Test your knowledge from the {courseTitle} course. You must score 70% or higher to pass.",
+            PassingScore = 70,
+            CreatedAt = DateTime.UtcNow,
+            IsActive = true
+        };
+        
+        var questionsWithAnswers = new List<(Question, List<Answer>)>();
+        int orderIndex = 1;
+        
+        // Create 2 questions per lesson for comprehensive coverage
+        foreach (var lessonId in lessonIds)
+        {
+            // Question 1 for this lesson
+            var question1Id = $"q-{assessmentId}-{lessonId}-1";
+            var question1 = new Question
+            {
+                Id = question1Id,
+                AssessmentId = assessmentId,
+                LessonId = lessonId,
+                QuestionText = $"Which statement best describes the content covered in this lesson?",
+                Type = QuestionType.MultipleChoice,
+                OrderIndex = orderIndex++,
+                Points = 1,
+                CreatedAt = DateTime.UtcNow
+            };
+            
+            var answers1 = new List<Answer>
+            {
+                new Answer { Id = $"{question1Id}-a", QuestionId = question1Id, AnswerText = "The lesson covers the correct concepts", IsCorrect = true, OrderIndex = 1 },
+                new Answer { Id = $"{question1Id}-b", QuestionId = question1Id, AnswerText = "The lesson is about something else", IsCorrect = false, OrderIndex = 2 },
+                new Answer { Id = $"{question1Id}-c", QuestionId = question1Id, AnswerText = "The lesson has no content", IsCorrect = false, OrderIndex = 3 }
+            };
+            
+            questionsWithAnswers.Add((question1, answers1));
+            
+            // Question 2 for this lesson
+            var question2Id = $"q-{assessmentId}-{lessonId}-2";
+            var question2 = new Question
+            {
+                Id = question2Id,
+                AssessmentId = assessmentId,
+                LessonId = lessonId,
+                QuestionText = $"Did you understand the key concepts in this lesson?",
+                Type = QuestionType.TrueFalse,
+                OrderIndex = orderIndex++,
+                Points = 1,
+                CreatedAt = DateTime.UtcNow
+            };
+            
+            var answers2 = new List<Answer>
+            {
+                new Answer { Id = $"{question2Id}-true", QuestionId = question2Id, AnswerText = "True", IsCorrect = true, OrderIndex = 1 },
+                new Answer { Id = $"{question2Id}-false", QuestionId = question2Id, AnswerText = "False", IsCorrect = false, OrderIndex = 2 }
+            };
+            
+            questionsWithAnswers.Add((question2, answers2));
+        }
+        
+        _assessmentService.CreateAssessment(assessment, questionsWithAnswers);
     }
 }

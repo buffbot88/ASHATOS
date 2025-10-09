@@ -1,5 +1,5 @@
-using System.Collections.Concurrent;
 using LegendaryLearning.Abstractions;
+using LegendaryLearning.Database;
 using Abstractions;
 
 namespace LegendaryLearning.Services;
@@ -9,31 +9,31 @@ namespace LegendaryLearning.Services;
 /// </summary>
 public class CourseService : ICourseService
 {
-    private readonly ConcurrentDictionary<string, Course> _courses = new();
+    private readonly LearningDatabase _database;
+
+    public CourseService(LearningDatabase database)
+    {
+        _database = database;
+    }
 
     public async Task<List<Course>> GetCoursesAsync(string permissionLevel)
     {
         await Task.CompletedTask;
-        
-        return _courses.Values
-            .Where(c => c.IsActive && c.PermissionLevel == permissionLevel)
-            .OrderBy(c => c.Title)
-            .ToList();
+        return _database.GetCourses(permissionLevel);
     }
 
     public async Task<Course?> GetCourseByIdAsync(string courseId)
     {
         await Task.CompletedTask;
-        
-        return _courses.TryGetValue(courseId, out var course) ? course : null;
+        return _database.GetCourse(courseId);
     }
 
     public async Task<(bool success, string message)> UpdateCourseAsync(Course course)
     {
         await Task.CompletedTask;
         
-        _courses[course.Id] = course;
         course.UpdatedAt = DateTime.UtcNow;
+        _database.SaveCourse(course);
         
         Console.WriteLine($"[CourseService] Updated course: {course.Title}");
         return (true, "Course updated successfully");
@@ -41,8 +41,8 @@ public class CourseService : ICourseService
 
     public void AddCourse(Course course)
     {
-        _courses[course.Id] = course;
+        _database.SaveCourse(course);
     }
 
-    public int GetCourseCount() => _courses.Count;
+    public int GetCourseCount() => _database.GetCourseCount();
 }

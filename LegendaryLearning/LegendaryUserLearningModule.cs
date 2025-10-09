@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using Abstractions;
 using LegendaryLearning.Services;
 using LegendaryLearning.Seed;
+using LegendaryLearning.Database;
 
 namespace LegendaryLearning;
 
@@ -16,24 +17,29 @@ public sealed class LegendaryUserLearningModule : ModuleBase, ILearningModule
 {
     public override string Name => "Learn RaOS";
     
+    private readonly LearningDatabase _database;
     private readonly CourseService _courseService;
     private readonly LessonService _lessonService;
     private readonly ProgressService _progressService;
     private readonly AchievementService _achievementService;
     private readonly TrophyService _trophyService;
+    private readonly AssessmentService _assessmentService;
     
     public LegendaryUserLearningModule()
     {
-        _courseService = new CourseService();
-        _lessonService = new LessonService();
+        _database = new LearningDatabase();
+        _courseService = new CourseService(_database);
+        _lessonService = new LessonService(_database);
         _achievementService = new AchievementService(Name);
         _trophyService = new TrophyService(Name);
         _progressService = new ProgressService(
+            _database,
             _lessonService,
             _courseService,
             _achievementService,
             _trophyService,
             Name);
+        _assessmentService = new AssessmentService(_database, _lessonService, Name);
     }
     
     public override void Initialize(object? manager)
@@ -43,8 +49,9 @@ public sealed class LegendaryUserLearningModule : ModuleBase, ILearningModule
         Console.WriteLine($"[{Name}] Initializing Legendary User Learning Module (LULmodule)...");
         Console.WriteLine($"[{Name}] Self-paced learning with real-time updates");
         Console.WriteLine($"[{Name}] Trophy and achievement system enabled");
+        Console.WriteLine($"[{Name}] End-of-course adaptive assessments enabled");
         
-        var seeder = new CourseSeeder(_courseService, _lessonService, Name);
+        var seeder = new CourseSeeder(_courseService, _lessonService, _assessmentService, Name);
         seeder.SeedInitialCourses();
         
         Console.WriteLine($"[{Name}] Learning Module initialized");
@@ -65,6 +72,8 @@ public sealed class LegendaryUserLearningModule : ModuleBase, ILearningModule
             "complete" when parts.Length >= 3 => CompleteLesson(parts[1], parts[2]),
             "achievements" when parts.Length >= 2 => ShowAchievements(parts[1]),
             "trophies" when parts.Length >= 2 => ShowTrophies(parts[1]),
+            "test" when parts.Length >= 2 => ShowTest(parts[1]),
+            "results" when parts.Length >= 3 => ShowResults(parts[1], parts[2]),
             "help" => GetHelp(),
             _ => GetHelp()
         };
@@ -77,6 +86,8 @@ public sealed class LegendaryUserLearningModule : ModuleBase, ILearningModule
   lessons <courseId> - List lessons for a course
   progress <userId> <courseId> - Show user progress for a course
   complete <userId> <lessonId> - Mark a lesson as completed
+  test <courseId> - Show test information for a course
+  results <userId> <courseId> - Show user's assessment results for a course
   achievements <userId> - Show user achievements
   trophies <userId> - Show user trophies
   help - Show this help message";
@@ -195,6 +206,70 @@ public sealed class LegendaryUserLearningModule : ModuleBase, ILearningModule
         return string.Join(Environment.NewLine, lines);
     }
     
+    private string ShowTest(string courseId)
+    {
+        var task = _assessmentService.GetCourseAssessmentAsync(courseId);
+        task.Wait();
+        var assessment = task.Result;
+        
+        if (assessment == null)
+        {
+            return $"No assessment found for course {courseId}.";
+        }
+        
+        var lines = new List<string> 
+        { 
+            $"Assessment: {assessment.Title}",
+            $"Description: {assessment.Description}",
+            $"Passing Score: {assessment.PassingScore}%",
+            "",
+            "Complete all lessons in the course to take this assessment.",
+            "If you fail specific sections, you'll only need to restudy and retake those sections."
+        };
+        
+        return string.Join(Environment.NewLine, lines);
+    }
+    
+    private string ShowResults(string userId, string courseId)
+    {
+        var task = _assessmentService.GetUserAssessmentResultsAsync(userId, courseId);
+        task.Wait();
+        var results = task.Result;
+        
+        if (results.Count == 0)
+        {
+            return $"No assessment results found for user {userId} in course {courseId}.";
+        }
+        
+        var lines = new List<string> { $"Assessment Results ({results.Count} attempts):" };
+        foreach (var result in results)
+        {
+            var status = result.Passed ? "✅ PASSED" : "❌ FAILED";
+            lines.Add($"  {status} - Score: {result.Score}% ({result.AttemptedAt:g})");
+            
+            if (!result.Passed && result.FailedLessonIds.Count > 0)
+            {
+                lines.Add($"    Need to restudy {result.FailedLessonIds.Count} lesson(s):");
+                foreach (var lessonId in result.FailedLessonIds.Take(5))
+                {
+                    var lessonTask = _lessonService.GetLessonByIdAsync(lessonId);
+                    lessonTask.Wait();
+                    var lesson = lessonTask.Result;
+                    if (lesson != null)
+                    {
+                        lines.Add($"      - {lesson.Title}");
+                    }
+                }
+                if (result.FailedLessonIds.Count > 5)
+                {
+                    lines.Add($"      ... and {result.FailedLessonIds.Count - 5} more");
+                }
+            }
+        }
+        
+        return string.Join(Environment.NewLine, lines);
+    }
+    
     // ILearningModule interface implementation
     public async Task<List<Course>> GetCoursesAsync(string permissionLevel)
     {
@@ -254,5 +329,25 @@ public sealed class LegendaryUserLearningModule : ModuleBase, ILearningModule
     public async Task<bool> MarkSuperAdminCoursesCompletedAsync(string userId)
     {
         return await _progressService.MarkSuperAdminCoursesCompletedAsync(userId);
+    }
+    
+    public async Task<Assessment?> GetCourseAssessmentAsync(string courseId)
+    {
+        return await _assessmentService.GetCourseAssessmentAsync(courseId);
+    }
+    
+    public async Task<UserAssessmentResult> SubmitAssessmentAsync(string userId, string assessmentId, Dictionary<string, string> answers)
+    {
+        return await _assessmentService.SubmitAssessmentAsync(userId, assessmentId, answers);
+    }
+    
+    public async Task<List<UserAssessmentResult>> GetUserAssessmentResultsAsync(string userId, string courseId)
+    {
+        return await _assessmentService.GetUserAssessmentResultsAsync(userId, courseId);
+    }
+    
+    public async Task<bool> CanTakeAssessmentAsync(string userId, string courseId)
+    {
+        return await _assessmentService.CanTakeAssessmentAsync(userId, courseId);
     }
 }

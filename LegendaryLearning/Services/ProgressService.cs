@@ -1,5 +1,5 @@
-using System.Collections.Concurrent;
 using LegendaryLearning.Abstractions;
+using LegendaryLearning.Database;
 using Abstractions;
 
 namespace LegendaryLearning.Services;
@@ -9,7 +9,7 @@ namespace LegendaryLearning.Services;
 /// </summary>
 public class ProgressService : IProgressService
 {
-    private readonly ConcurrentDictionary<string, CourseProgress> _userProgress = new();
+    private readonly LearningDatabase _database;
     private readonly ILessonService _lessonService;
     private readonly ICourseService _courseService;
     private readonly IAchievementService _achievementService;
@@ -17,12 +17,14 @@ public class ProgressService : IProgressService
     private readonly string _moduleName;
 
     public ProgressService(
+        LearningDatabase database,
         ILessonService lessonService,
         ICourseService courseService,
         IAchievementService achievementService,
         ITrophyService trophyService,
         string moduleName)
     {
+        _database = database;
         _lessonService = lessonService;
         _courseService = courseService;
         _achievementService = achievementService;
@@ -40,9 +42,9 @@ public class ProgressService : IProgressService
             return false;
         }
         
-        var progressKey = $"{userId}:{lesson.CourseId}";
+        var progress = _database.GetCourseProgress(userId, lesson.CourseId);
         
-        if (!_userProgress.TryGetValue(progressKey, out var progress))
+        if (progress == null)
         {
             progress = new CourseProgress
             {
@@ -51,7 +53,6 @@ public class ProgressService : IProgressService
                 StartedAt = DateTime.UtcNow,
                 LastAccessedAt = DateTime.UtcNow
             };
-            _userProgress[progressKey] = progress;
         }
         
         if (!progress.CompletedLessonIds.Contains(lessonId))
@@ -72,6 +73,8 @@ public class ProgressService : IProgressService
                     await AwardCourseCompletionAsync(userId, lesson.CourseId);
                 }
             }
+            
+            _database.SaveCourseProgress(progress);
             
             // Award achievement for first lesson
             if (progress.CompletedLessonIds.Count == 1)
@@ -95,9 +98,7 @@ public class ProgressService : IProgressService
     public async Task<CourseProgress?> GetUserProgressAsync(string userId, string courseId)
     {
         await Task.CompletedTask;
-        
-        var progressKey = $"{userId}:{courseId}";
-        return _userProgress.TryGetValue(progressKey, out var progress) ? progress : null;
+        return _database.GetCourseProgress(userId, courseId);
     }
 
     public async Task<bool> HasCompletedSuperAdminCoursesAsync(string userId)
