@@ -309,6 +309,7 @@ Learn RaOS courses SuperAdmin  # Master Classes (4 courses, 29 lessons)
 |----------|-------------|------|
 | [FINAL_RELEASE_CHECKLIST_940_233.md](FINAL_RELEASE_CHECKLIST_940_233.md) | **NEW** Final release checklist for issue #233 (Emperor/Temperance/Page of Cups) | 20KB |
 | [FINAL_RELEASE_QUICKREF_233.md](FINAL_RELEASE_QUICKREF_233.md) | **NEW** Quick reference for final release status | 3KB |
+| [FINAL_RELEASE_ACTION_PLAN_233.md](FINAL_RELEASE_ACTION_PLAN_233.md) | **NEW** Action plan to complete remaining 10% | 11KB |
 | [AUDIT_SUMMARY_940.md](AUDIT_SUMMARY_940.md) | **NEW** Executive summary of audit findings and recommendations | 10KB |
 | [RAOS_MAINFRAME_AUDIT_REPORT_940.md](RAOS_MAINFRAME_AUDIT_REPORT_940.md) | **NEW** Complete MainFrame production readiness audit | 16KB |
 | [PRODUCTION_RELEASE_CHECKLIST_940.md](PRODUCTION_RELEASE_CHECKLIST_940.md) | **NEW** Production release checklist and go/no-go criteria | 10KB |
