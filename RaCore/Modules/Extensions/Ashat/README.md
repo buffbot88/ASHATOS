@@ -321,13 +321,83 @@ AshatCodingAssistantModule
 
 ## 🌈 Personality & Tone
 
-Ashat is designed to be:
+Ashat is designed to be emotionally intelligent and adaptable:
 
 - **Friendly & Approachable** - Warm, encouraging communication
 - **Professional** - Clear, accurate technical information
 - **Educational** - Helps you learn and grow
 - **Patient** - Takes time to understand your needs
 - **Enthusiastic** - Excited about helping you build great things
+
+### Configurable Personalities
+
+ASHAT now supports multiple personality profiles to match your preferences and working style:
+
+**Available Personality Templates:**
+- **Friendly Assistant** (default) - Warm, encouraging, and supportive
+- **Professional Mentor** - Clear, focused, and educational
+- **Playful Companion** - Humorous, enthusiastic, and casual
+- **Calm Guide** - Patient, reassuring, and mindful
+- **Enthusiastic Coach** - Motivating, energetic, and positive
+- **Wise Advisor** - Thoughtful, measured, and insightful
+
+**Configure ASHAT's Personality:**
+```bash
+# Set personality for a user
+ashatpersonality set alice friendly
+ashatpersonality set bob professional
+ashatpersonality set charlie playful
+
+# View current personality
+ashatpersonality get alice
+
+# List all available templates
+ashatpersonality templates
+```
+
+### Emotional Intelligence
+
+ASHAT can detect and respond to user emotions with empathy:
+
+```bash
+# ASHAT detects user emotions from messages
+ashatemot detect alice "I'm stuck on this problem"
+# Response: Detects frustration, offers calm support
+
+# ASHAT expresses emotions appropriately
+ashatemot express bob excited
+# Response: "I can feel your excitement! This is wonderful! 🌟"
+
+# Generate empathetic responses
+ashatemot respond charlie frustrated
+# Response: Provides supportive guidance and encouragement
+```
+
+### Relationship Building
+
+ASHAT builds meaningful relationships with users over time:
+
+```bash
+# Track relationship status
+ashatrel status alice
+
+# Learn user preferences
+ashatrel prefer bob likes_humor=true
+
+# View relationship milestones
+ashatrel milestone alice
+
+# Provide positive reinforcement
+ashatrel reinforce charlie "completed first project"
+# Response: Celebrates achievement with encouragement
+```
+
+**Relationship Levels:**
+- 🆕 **New** - Just starting
+- 👋 **Acquainted** - Getting to know each other
+- 🤝 **Familiar** - Regular interactions
+- 💙 **Trusted** - Strong relationship
+- 💖 **Bonded** - Deep, established relationship
 
 ## 🔮 Future Enhancements
 
@@ -336,13 +406,23 @@ Planned improvements:
 - [ ] Web-based UI for interactive sessions
 - [ ] Code snippet suggestions with syntax highlighting
 - [ ] Integration with version control for code review
-- [ ] Learning from user feedback and preferences
+- [x] Learning from user feedback and preferences
 - [ ] Multi-user collaborative sessions
 - [ ] Advanced debugging capabilities
 - [ ] Project-wide refactoring assistance
 - [ ] Automated testing suggestions
 - [ ] Performance optimization guidance
 - [ ] Security vulnerability detection
+- [x] Personality customization and emotional intelligence
+- [x] Emotion detection and empathetic responses
+- [x] User relationship tracking and adaptation
+- [x] Positive reinforcement and encouragement
+- [x] Psychological context awareness (motivation, cognitive load)
+- [ ] Mental wellness check-ins
+- [ ] Team-based personality configurations
+- [ ] Advanced sentiment analysis
+- [ ] Contextual humor and playfulness
+- [ ] Long-term memory and relationship history
 
 ## 📚 Related Modules
 
