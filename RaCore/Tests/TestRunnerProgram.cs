@@ -99,6 +99,16 @@ public class TestRunner
             AshatDeploymentWorkflowTests.RunTests();
         }
 
+        // Run ASHAT Server Setup Helper tests if requested
+        if (args.Length > 0 && args[0].ToLowerInvariant() == "ashatsetup")
+        {
+            Console.WriteLine("\n\n╔════════════════════════════════════════════════════════╗");
+            Console.WriteLine("║   ASHAT Server Setup Helper Test Suite                ║");
+            Console.WriteLine("╚════════════════════════════════════════════════════════╝\n");
+            
+            await AshatServerSetupHelperTest.RunTests();
+        }
+
         Console.WriteLine("\nPress any key to exit...");
         Console.ReadKey();
     }

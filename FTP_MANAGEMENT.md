@@ -10,12 +10,15 @@ The FTP Server Management Extension for RaOS provides an internal system for man
 
 ## Features
 
+- ✅ **Server Health Monitoring** - Check if live server is operational before FTP setup
 - ✅ **FTP Server Status Monitoring** - Check if vsftpd is installed and running
 - ✅ **Per-Admin Instance FTP Setup** - Isolated FTP access for each licensed admin
 - ✅ **Automatic Directory Structure** - Creates FTP folders and symlinks to admin instances
 - ✅ **Connection Info Retrieval** - Get FTP credentials and paths for any admin instance
+- ✅ **Restricted FTP User Creation** - Step-by-step guide to create secure, restricted FTP users
 - ✅ **Console and API Access** - Manage FTP through RaOS console commands
 - ✅ **Linux System Integration** - Works with existing vsftpd installations
+- ✅ **Security First Approach** - Live server check required before FTP setup
 
 ---
 
@@ -48,6 +51,20 @@ For complete vsftpd configuration, see [LINUX_HOSTING_SETUP.md](LINUX_HOSTING_SE
 ---
 
 ## Console Commands
+
+### Check Server Health
+
+Check if the live server is operational and ready for FTP setup:
+
+```
+serversetup health
+```
+
+**Example Output:**
+```
+✅ Live server is operational and ready for FTP setup.
+All essential folders are accessible and FTP server is running.
+```
 
 ### Check FTP Status
 
@@ -122,9 +139,65 @@ The 'admin' directory in FTP links to: /home/racore/TheRaProject/RaCore/Admins/1
 Super Admins can directly manage files through FTP.
 ```
 
+### Create Restricted FTP User (Enhanced Security)
+
+Create a dedicated FTP user restricted to the RaOS folder for enhanced security:
+
+```
+serversetup ftp createuser username=<username> path=<restricted_path>
+```
+
+**Example:**
+```
+serversetup ftp createuser username=raos_ftp path=/home/racore/TheRaProject/RaCore
+```
+
+**What this does:**
+- Provides step-by-step instructions to create a restricted FTP user
+- User is restricted to the specified directory (chroot jail)
+- User has no shell access (nologin shell)
+- Enhances security by isolating FTP access to RaOS folder only
+
+**Example Output:**
+```
+⚠️  Creating FTP user 'raos_ftp' restricted to: /home/racore/TheRaProject/RaCore
+
+This requires root/sudo privileges. Please run the following commands:
+
+1. Create the FTP user (no shell access):
+   sudo useradd -m -d /home/racore/TheRaProject/RaCore -s /usr/sbin/nologin raos_ftp
+
+2. Set password for the FTP user:
+   sudo passwd raos_ftp
+
+3. Set ownership of the restricted directory:
+   sudo chown raos_ftp:raos_ftp /home/racore/TheRaProject/RaCore
+   sudo chmod 755 /home/racore/TheRaProject/RaCore
+
+4. Configure vsftpd to restrict user (edit /etc/vsftpd.conf):
+   chroot_local_user=YES
+   allow_writeable_chroot=YES
+   user_sub_token=$USER
+   local_root=/home/racore/TheRaProject/RaCore
+
+5. Restart vsftpd:
+   sudo systemctl restart vsftpd
+
+⚠️  SECURITY NOTE: The FTP user will be restricted to the specified directory.
+    This user will NOT have shell access and cannot navigate outside the restricted path.
+```
+
 ---
 
 ## Workflow Example
+
+### 0. Check Server Health (New - Recommended First Step)
+
+Before setting up FTP, verify the server is operational:
+
+```
+serversetup health
+```
 
 ### 1. Create Admin Instance
 
@@ -150,7 +223,17 @@ Retrieve FTP connection details:
 serversetup ftp info license=12345 username=johndoe
 ```
 
-### 4. Connect via FTP Client
+### 4. (Optional) Create Restricted FTP User
+
+For enhanced security, create a dedicated FTP user restricted to RaOS:
+
+```
+serversetup ftp createuser username=raos_ftp path=/home/racore/TheRaProject/RaCore
+```
+
+Follow the provided instructions to complete the setup.
+
+### 5. Connect via FTP Client
 
 Use an FTP client (FileZilla, WinSCP, etc.) to connect:
 
@@ -226,6 +309,16 @@ public interface IServerSetupModule
     /// Get FTP connection info for an admin
     /// </summary>
     Task<FtpConnectionInfo> GetFtpConnectionInfoAsync(string licenseNumber, string username);
+    
+    /// <summary>
+    /// Create a restricted FTP user for RaOS folder access
+    /// </summary>
+    Task<SetupResult> CreateRestrictedFtpUserAsync(string username, string restrictedPath);
+    
+    /// <summary>
+    /// Check if the live server is operational and ready for FTP setup
+    /// </summary>
+    Task<ServerHealthResult> CheckLiveServerHealthAsync();
 }
 ```
 
@@ -253,6 +346,18 @@ public class FtpConnectionInfo
     public string? FtpPath { get; set; }
     public Dictionary<string, string> Details { get; set; }
 }
+
+public class ServerHealthResult
+{
+    public bool IsOperational { get; set; }
+    public string Message { get; set; }
+    public bool DatabasesAccessible { get; set; }
+    public bool PhpFolderAccessible { get; set; }
+    public bool AdminsFolderAccessible { get; set; }
+    public bool FtpFolderAccessible { get; set; }
+    public List<string> Issues { get; set; }
+    public Dictionary<string, string> Details { get; set; }
+}
 ```
 
 ### Usage Example
@@ -260,6 +365,14 @@ public class FtpConnectionInfo
 ```csharp
 var module = new ServerSetupModule();
 module.Initialize(null);
+
+// Check server health before FTP setup
+var health = await module.CheckLiveServerHealthAsync();
+if (!health.IsOperational)
+{
+    Console.WriteLine($"Server issues detected: {health.Message}");
+    return;
+}
 
 // Check FTP status
 var status = await module.GetFtpStatusAsync();
@@ -281,6 +394,13 @@ if (connInfo.Success)
 {
     Console.WriteLine($"Connect to: {connInfo.Host}:{connInfo.Port}");
     Console.WriteLine($"Path: {connInfo.FtpPath}");
+}
+
+// Create restricted FTP user (provides instructions)
+var userResult = await module.CreateRestrictedFtpUserAsync("raos_ftp", "/path/to/raos");
+if (userResult.Success)
+{
+    Console.WriteLine(userResult.Message); // Displays setup instructions
 }
 ```
 

@@ -42,6 +42,16 @@ public interface IServerSetupModule
     /// Get FTP connection info for an admin
     /// </summary>
     Task<FtpConnectionInfo> GetFtpConnectionInfoAsync(string licenseNumber, string username);
+    
+    /// <summary>
+    /// Create a restricted FTP user for RaOS folder access
+    /// </summary>
+    Task<SetupResult> CreateRestrictedFtpUserAsync(string username, string restrictedPath);
+    
+    /// <summary>
+    /// Check if the live server is operational and ready for FTP setup
+    /// </summary>
+    Task<ServerHealthResult> CheckLiveServerHealthAsync();
 }
 
 /// <summary>
@@ -98,5 +108,20 @@ public class FtpConnectionInfo
     public int Port { get; set; } = 21;
     public string? Username { get; set; }
     public string? FtpPath { get; set; }
+    public Dictionary<string, string> Details { get; set; } = new();
+}
+
+/// <summary>
+/// Server health check result
+/// </summary>
+public class ServerHealthResult
+{
+    public bool IsOperational { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public bool DatabasesAccessible { get; set; }
+    public bool PhpFolderAccessible { get; set; }
+    public bool AdminsFolderAccessible { get; set; }
+    public bool FtpFolderAccessible { get; set; }
+    public List<string> Issues { get; set; } = new();
     public Dictionary<string, string> Details { get; set; } = new();
 }
