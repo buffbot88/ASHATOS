@@ -1,4 +1,5 @@
 using Abstractions;
+using RaCore.Endpoints;
 using RaCore.Engine;
 using RaCore.Engine.Manager;
 using RaCore.Engine.Memory;
@@ -47,26 +48,48 @@ await bootSequence.ExecuteBootSequenceAsync();
 // 6. Configure port - use detected port from Nginx config or fallback to default
 // Nginx configuration is the source of truth for port management
 var port = Environment.GetEnvironmentVariable("RACORE_DETECTED_PORT") ?? "80";
-var urls = $"http://*:{port}";
+var urls = $"http://0.0.0.0:{port}";
+
+Console.WriteLine($"[RaCore] Configuring Kestrel to listen on: {urls}");
+Console.WriteLine($"[RaCore] This will bind to ALL network interfaces (0.0.0.0)");
 
 // Add CORS support for agpstudios.online domain and dynamic port
+// Check if we should use permissive CORS (for development/debugging)
+var allowPermissiveCors = Environment.GetEnvironmentVariable("RACORE_PERMISSIVE_CORS")?.ToLower() == "true";
+
 var allowedOrigins = new List<string>
 {
     $"http://localhost:{port}",
     "http://localhost",
+    $"http://127.0.0.1:{port}",
+    "http://127.0.0.1",
     "http://agpstudios.online",
     "https://agpstudios.online"
 };
 
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
+    if (allowPermissiveCors)
     {
-        policy.WithOrigins(allowedOrigins.ToArray())
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials();
-    });
+        Console.WriteLine("[RaCore] CORS: Using permissive mode (RACORE_PERMISSIVE_CORS=true)");
+        options.AddDefaultPolicy(policy =>
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        });
+    }
+    else
+    {
+        Console.WriteLine($"[RaCore] CORS: Allowing specific origins: {string.Join(", ", allowedOrigins)}");
+        options.AddDefaultPolicy(policy =>
+        {
+            policy.WithOrigins(allowedOrigins.ToArray())
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        });
+    }
 });
 
 // Configure URLs with dynamic port
@@ -75,6 +98,13 @@ builder.WebHost.UseUrls(urls);
 var app = builder.Build();
 app.UseCors(); // Enable CORS
 app.UseWebSockets();
+
+Console.WriteLine($"[RaCore] Kestrel webserver starting...");
+Console.WriteLine($"[RaCore] Server will be accessible at:");
+Console.WriteLine($"  - http://localhost:{port}");
+Console.WriteLine($"  - http://127.0.0.1:{port}");
+Console.WriteLine($"  - http://<your-server-ip>:{port}");
+Console.WriteLine($"[RaCore] Ensure firewall allows inbound connections on port {port}");
 
 // NOTE: RaCore uses Kestrel webserver internally to host both the CMS and API endpoints.
 // On Windows 11, Kestrel is the only supported webserver.
@@ -117,6 +147,7 @@ ISpeechModule? speechModule = moduleManager.Modules
     .OfType<ISpeechModule>()
     .FirstOrDefault();
 
+
 // Get authentication module if present
 IAuthenticationModule? authModule = moduleManager.Modules
     .Select(m => m.Instance)
@@ -140,153 +171,8 @@ app.Map("/ws", async context =>
 });
 
 // Authentication API endpoints
-if (authModule != null)
-{
-    // Register endpoint
-    app.MapPost("/api/auth/register", async (HttpContext context) =>
-    {
-        try
-        {
-            var request = await context.Request.ReadFromJsonAsync<RegisterRequest>();
-            if (request == null)
-            {
-                context.Response.StatusCode = 400;
-                await context.Response.WriteAsJsonAsync(new { success = false, message = "Invalid request" });
-                return;
-            }
+app.MapAuthEndpoints(authModule);
 
-            var ipAddress = context.Connection.RemoteIpAddress?.ToString() ?? "";
-            var response = await authModule.RegisterAsync(request, ipAddress);
-            await context.Response.WriteAsJsonAsync(response);
-        }
-        catch (Exception ex)
-        {
-            context.Response.StatusCode = 500;
-            await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
-        }
-    });
-
-    // Login endpoint
-    app.MapPost("/api/auth/login", async (HttpContext context) =>
-    {
-        try
-        {
-            var request = await context.Request.ReadFromJsonAsync<LoginRequest>();
-            if (request == null)
-            {
-                context.Response.StatusCode = 400;
-                await context.Response.WriteAsJsonAsync(new { success = false, message = "Invalid request" });
-                return;
-            }
-
-            var ipAddress = context.Connection.RemoteIpAddress?.ToString() ?? "";
-            var userAgent = context.Request.Headers["User-Agent"].ToString();
-            var response = await authModule.LoginAsync(request, ipAddress, userAgent);
-            await context.Response.WriteAsJsonAsync(response);
-        }
-        catch (Exception ex)
-        {
-            context.Response.StatusCode = 500;
-            await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
-        }
-    });
-
-    // Logout endpoint
-    app.MapPost("/api/auth/logout", async (HttpContext context) =>
-    {
-        try
-        {
-            var authHeader = context.Request.Headers["Authorization"].ToString();
-            var token = authHeader.StartsWith("Bearer ") ? authHeader[7..] : authHeader;
-            
-            if (string.IsNullOrWhiteSpace(token))
-            {
-                context.Response.StatusCode = 401;
-                await context.Response.WriteAsJsonAsync(new { success = false, message = "No token provided" });
-                return;
-            }
-
-            var success = await authModule.LogoutAsync(token);
-            await context.Response.WriteAsJsonAsync(new { success, message = success ? "Logged out successfully" : "Invalid token" });
-        }
-        catch (Exception ex)
-        {
-            context.Response.StatusCode = 500;
-            await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
-        }
-    });
-
-    // Validate token endpoint
-    app.MapPost("/api/auth/validate", async (HttpContext context) =>
-    {
-        try
-        {
-            var authHeader = context.Request.Headers["Authorization"].ToString();
-            var token = authHeader.StartsWith("Bearer ") ? authHeader[7..] : authHeader;
-            
-            if (string.IsNullOrWhiteSpace(token))
-            {
-                await context.Response.WriteAsJsonAsync(new { valid = false, message = "No token provided" });
-                return;
-            }
-
-            var session = await authModule.ValidateTokenAsync(token);
-            var user = session != null ? await authModule.GetUserByTokenAsync(token) : null;
-            
-            await context.Response.WriteAsJsonAsync(new 
-            { 
-                valid = session != null, 
-                user = user != null ? new { user.Username, user.Email, user.Role } : null,
-                expiresAt = session?.ExpiresAtUtc
-            });
-        }
-        catch (Exception ex)
-        {
-            context.Response.StatusCode = 500;
-            await context.Response.WriteAsJsonAsync(new { valid = false, message = ex.Message });
-        }
-    });
-
-    // Get security events endpoint (admin only)
-    app.MapGet("/api/auth/events", async (HttpContext context) =>
-    {
-        try
-        {
-            var authHeader = context.Request.Headers["Authorization"].ToString();
-            var token = authHeader.StartsWith("Bearer ") ? authHeader[7..] : authHeader;
-            
-            if (string.IsNullOrWhiteSpace(token))
-            {
-                context.Response.StatusCode = 401;
-                await context.Response.WriteAsJsonAsync(new { success = false, message = "No token provided" });
-                return;
-            }
-
-            var user = await authModule.GetUserByTokenAsync(token);
-            if (user == null || !authModule.HasPermission(user, "Authentication", UserRole.Admin))
-            {
-                context.Response.StatusCode = 403;
-                await context.Response.WriteAsJsonAsync(new { success = false, message = "Insufficient permissions" });
-                return;
-            }
-
-            var events = await authModule.GetSecurityEventsAsync(100);
-            await context.Response.WriteAsJsonAsync(new { success = true, events });
-        }
-        catch (Exception ex)
-        {
-            context.Response.StatusCode = 500;
-            await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
-        }
-    });
-
-    Console.WriteLine("[RaCore] Authentication API endpoints registered:");
-    Console.WriteLine("  POST /api/auth/register");
-    Console.WriteLine("  POST /api/auth/login");
-    Console.WriteLine("  POST /api/auth/logout");
-    Console.WriteLine("  POST /api/auth/validate");
-    Console.WriteLine("  GET  /api/auth/events (admin only)");
-}
 
 // Get game engine module if present
 IGameEngineModule? gameEngineModule = moduleManager.Modules
