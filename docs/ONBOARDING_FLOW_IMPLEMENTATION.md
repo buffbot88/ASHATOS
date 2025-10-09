@@ -1,16 +1,18 @@
-# Onboarding Flow Implementation
+# Onboarding Flow and License Activation Implementation
 
 ## Overview
 
-This document describes the onboarding flow implementation that ensures all first-time SuperAdmin users complete the Masters Class courses before accessing the RaCore Control Panel.
+This document describes the complete onboarding and license activation flow implementation that ensures all first-time SuperAdmin users complete the Masters Class courses and activate their server with a valid license key before accessing the RaCore Control Panel.
 
 ## Problem Addressed
 
-**Issue:** Users were bypassing the class module and Masters class on first login, going directly to the RaCore Control Panel without completing essential onboarding.
+**Issue:** Users were bypassing the class module and Masters class on first login, going directly to the RaCore Control Panel without completing essential onboarding. Additionally, servers could be accessed without proper license activation.
 
-**Solution:** Implemented a mandatory onboarding flow that:
+**Solution:** Implemented a mandatory onboarding and activation flow that:
 - Routes new SuperAdmin users through Masters Class courses
 - Gates Control Panel access until onboarding is complete
+- Requires license activation after onboarding completion
+- Validates license keys before granting full access
 - Provides clear progress tracking and completion status
 
 ## Implementation Details
@@ -98,19 +100,31 @@ This prevents users from:
 
 **Location:** `RaCore/Endpoints/ControlPanelEndpoints.cs`
 
-Existing endpoints used by the onboarding flow:
-
+**Onboarding endpoints:**
 - **GET `/api/learning/superadmin/status`** - Check completion status
 - **POST `/api/learning/superadmin/complete`** - Mark courses complete
 - **GET `/api/learning/courses/SuperAdmin`** - Get all SuperAdmin courses
 - **GET `/api/learning/courses/{courseId}/lessons`** - Get course lessons
 - **POST `/api/learning/lessons/{lessonId}/complete`** - Mark lesson complete
 
+**Activation endpoints:**
+- **GET `/api/control/activation-status`** - Check server activation status
+  - Returns: `{ activated, activatedAt, licenseKey, licenseType, devMode }`
+  - Requires: SuperAdmin authentication
+  
+- **POST `/api/control/activate`** - Activate server with license key
+  - Body: `{ licenseKey: "RAOS-XXXX-XXXX-XXXX-XXXX" }`
+  - Returns: `{ success, message, licenseType, activatedAt }`
+  - Requires: SuperAdmin authentication
+  - Validates license format
+  - In Dev mode: bypasses external validation
+  - In Production mode: validates with US-Omega server
+
 ### 5. Backend Support
 
 **Location:** `RaCore/Modules/Extensions/Authentication/AuthenticationModule.cs`
 
-The authentication module already sets `RequiresLULModule` during login:
+The authentication module sets `RequiresLULModule` during login:
 
 ```csharp
 // Check if SuperAdmin needs to complete LULModule courses
@@ -132,6 +146,30 @@ return new AuthResponse
 };
 ```
 
+### 6. ServerConfiguration Changes
+
+**Location:** `Abstractions/ServerMode.cs`
+
+Added activation state tracking to ServerConfiguration:
+
+```csharp
+/// <summary>
+/// Indicates if the server has been activated with a valid license
+/// Server activation is required after onboarding to access the control panel
+/// </summary>
+public bool ServerActivated { get; set; } = false;
+
+/// <summary>
+/// Timestamp when the server was activated
+/// </summary>
+public DateTime? ActivatedAt { get; set; }
+```
+
+**FirstRunManager** integration:
+- `GetServerConfiguration()` - Returns current server configuration including activation state
+- `SaveConfiguration()` - Persists configuration changes including activation status
+- Passed to `MapControlPanelEndpoints()` to enable activation API endpoints
+
 ## User Experience Flow
 
 ### First-Time Login
@@ -145,7 +183,11 @@ return new AuthResponse
 7. Progress bar updates in real-time
 8. After all courses complete, "Complete Onboarding" button appears
 9. User clicks button, system marks courses as complete
-10. User redirected to Control Panel
+10. User redirected to `/activation` (License Activation Page)
+11. User enters license key
+12. System validates license (online validation or Dev mode bypass)
+13. On successful activation, server is activated and configuration saved
+14. User redirected to Control Panel
 
 ### Subsequent Logins
 
@@ -153,7 +195,9 @@ return new AuthResponse
 2. Authentication checks completion status
 3. Returns `requiresLULModule: false` (already completed)
 4. Login page redirects directly to `/control-panel`
-5. Control panel loads normally
+5. Control panel checks activation status
+6. If activated, control panel loads normally
+7. If not activated, redirects to `/activation`
 
 ### Bypass Prevention
 
@@ -162,7 +206,44 @@ If user tries to navigate directly to `/control-panel`:
 2. `checkAuth()` runs on page load
 3. Calls `/api/learning/superadmin/status`
 4. If not completed, redirects to `/onboarding`
-5. User cannot access control panel until courses done
+5. Calls `/api/control/activation-status`
+6. If not activated, redirects to `/activation`
+7. User cannot access control panel until onboarding done AND server activated
+
+## License Activation Flow
+
+### Activation Page (/activation)
+
+After completing onboarding, users are presented with the activation page that:
+- Displays completion confirmation
+- Shows license key input field
+- Lists available license types (Forum, CMS, GameServer, Enterprise)
+- Validates license format (RAOS-XXXX-XXXX-XXXX-XXXX)
+- Submits to `/api/control/activate` endpoint
+
+### License Validation
+
+**Production Mode:**
+- License key is validated against main server (US-Omega) at `https://us-omega.raos.io`
+- Server receives license type and expiration information
+- Features are enabled based on license package
+- Configuration is persisted to disk
+
+**Dev Mode:**
+- License validation is bypassed for faster development
+- Any valid format license key is accepted
+- License type is set to "Development"
+- Dev mode notice is displayed on activation page
+
+### Post-Activation
+
+After successful activation:
+- `ServerActivated` flag is set to `true`
+- `ActivatedAt` timestamp is recorded
+- `LicenseKey` and `LicenseType` are saved to configuration
+- Activation event is logged
+- User is redirected to Control Panel
+- All features are unlocked based on license type
 
 ## SuperAdmin Courses (Masters Class)
 
@@ -277,11 +358,18 @@ Potential improvements:
 - [x] Progress tracking visible and accurate
 - [x] Tests validate all requirements
 - [x] Documentation complete
+- [x] License activation required after onboarding completion
+- [x] Server activation state tracked in ServerConfiguration
+- [x] Control panel gated until server is activated
+- [x] License validation with Dev mode bypass
+- [x] Activation logging and error handling implemented
 
 ## Implementation Date
 
-October 9, 2025
+October 9, 2025 (Initial onboarding flow)
+January 2026 (License activation integration)
 
 ## Issue Reference
 
 Resolves issue: "Onboarding Flow Broken: Users Bypass Class Module and Masters Class on First Login"
+Implements: "Feature: Guided Onboarding and License-Based Server Activation Flow"
