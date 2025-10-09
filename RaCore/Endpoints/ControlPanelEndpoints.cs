@@ -21,7 +21,8 @@ public static class ControlPanelEndpoints
         IAuthenticationModule? authModule,
         ILicenseModule? licenseModule,
         IRaCoinModule? racoinModule,
-        IGameEngineModule? gameEngineModule)
+        IGameEngineModule? gameEngineModule,
+        RaCore.Engine.FirstRunManager? firstRunManager = null)
     {
         if (authModule == null)
         {
@@ -1609,8 +1610,195 @@ app.MapPost("/api/learning/lessons/{lessonId}/complete", async (HttpContext cont
     });
 });
 
+// Server Activation: Check activation status
+app.MapGet("/api/control/activation-status", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null || user.Role != UserRole.SuperAdmin)
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "SuperAdmin role required" });
+    }
+    
+    if (firstRunManager == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "FirstRunManager not available" });
+    }
+    
+    var config = firstRunManager.GetServerConfiguration();
+    
+    return Results.Json(new 
+    { 
+        activated = config.ServerActivated,
+        activatedAt = config.ActivatedAt,
+        licenseKey = config.LicenseKey,
+        licenseType = config.LicenseType,
+        devMode = config.Mode == ServerMode.Dev
+    });
+});
+
+// Server Activation: Activate server with license key
+app.MapPost("/api/control/activate", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null || user.Role != UserRole.SuperAdmin)
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { success = false, message = "SuperAdmin role required" });
+    }
+    
+    if (firstRunManager == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { success = false, message = "FirstRunManager not available" });
+    }
+    
+    // Read request body
+    using var reader = new StreamReader(context.Request.Body);
+    var body = await reader.ReadToEndAsync();
+    var requestData = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(body);
+    
+    if (requestData == null || !requestData.ContainsKey("licenseKey"))
+    {
+        return Results.Json(new { success = false, message = "License key is required" });
+    }
+    
+    var licenseKey = requestData["licenseKey"].GetString();
+    
+    if (string.IsNullOrWhiteSpace(licenseKey))
+    {
+        return Results.Json(new { success = false, message = "License key cannot be empty" });
+    }
+    
+    var config = firstRunManager.GetServerConfiguration();
+    
+    // Validate license format
+    if (!IsValidLicenseFormat(licenseKey))
+    {
+        return Results.Json(new { success = false, message = "Invalid license key format. Expected: RAOS-XXXX-XXXX-XXXX-XXXX" });
+    }
+    
+    // In Dev mode, bypass external validation
+    bool validationSuccess;
+    string licenseType = "Enterprise";
+    
+    if (config.Mode == ServerMode.Dev || config.SkipLicenseValidation)
+    {
+        // Dev mode: accept any valid format
+        validationSuccess = true;
+        licenseType = "Development";
+        Console.WriteLine($"[Activation] Dev mode: License validation bypassed for key: {licenseKey}");
+    }
+    else
+    {
+        // Production mode: validate with license server
+        try
+        {
+            var validationResult = await ValidateLicenseWithServerAsync(licenseKey, config.MainServerUrl);
+            validationSuccess = validationResult.success;
+            licenseType = validationResult.licenseType ?? "Unknown";
+            
+            if (!validationSuccess)
+            {
+                return Results.Json(new { success = false, message = "License validation failed: " + validationResult.message });
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Activation] License validation error: {ex.Message}");
+            return Results.Json(new { success = false, message = "License validation server unreachable. Please check your connection or contact support." });
+        }
+    }
+    
+    if (validationSuccess)
+    {
+        // Update server configuration
+        config.LicenseKey = licenseKey;
+        config.LicenseType = licenseType;
+        config.ServerActivated = true;
+        config.ActivatedAt = DateTime.UtcNow;
+        
+        // Save configuration
+        firstRunManager.SaveConfiguration();
+        
+        // Log activation event
+        if (licenseModule != null)
+        {
+            await licenseModule.LogLicenseEventAsync(
+                user.Id,
+                "ServerActivation",
+                $"Server activated with {licenseType} license",
+                true
+            );
+        }
+        
+        Console.WriteLine($"[Activation] Server activated successfully");
+        Console.WriteLine($"[Activation] License Type: {licenseType}");
+        Console.WriteLine($"[Activation] License Key: {licenseKey}");
+        Console.WriteLine($"[Activation] Activated By: {user.Username}");
+        Console.WriteLine($"[Activation] Activated At: {config.ActivatedAt}");
+        
+        return Results.Json(new 
+        { 
+            success = true, 
+            message = "Server activated successfully",
+            licenseType,
+            activatedAt = config.ActivatedAt
+        });
+    }
+    
+    return Results.Json(new { success = false, message = "License activation failed" });
+});
+
         Console.WriteLine("[RaCore] Control Panel API endpoints registered");
 
         return app;
+    }
+    
+    private static bool IsValidLicenseFormat(string licenseKey)
+    {
+        if (string.IsNullOrWhiteSpace(licenseKey))
+            return false;
+            
+        // Accept format: RAOS-XXXX-XXXX-XXXX-XXXX or similar patterns
+        var parts = licenseKey.Split('-');
+        return parts.Length >= 2 && parts[0].Equals("RAOS", StringComparison.OrdinalIgnoreCase);
+    }
+    
+    private static async Task<(bool success, string? licenseType, string message)> ValidateLicenseWithServerAsync(string licenseKey, string serverUrl)
+    {
+        using var httpClient = new HttpClient();
+        httpClient.Timeout = TimeSpan.FromSeconds(10);
+        
+        try
+        {
+            var response = await httpClient.PostAsJsonAsync($"{serverUrl}/api/license/validate", new { licenseKey });
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<Dictionary<string, JsonElement>>();
+                if (result != null && result.ContainsKey("valid") && result["valid"].GetBoolean())
+                {
+                    var licenseType = result.ContainsKey("type") ? result["type"].GetString() : "Unknown";
+                    return (true, licenseType, "License validated successfully");
+                }
+                return (false, null, "Invalid license key");
+            }
+            
+            return (false, null, $"Validation server returned status: {response.StatusCode}");
+        }
+        catch (HttpRequestException ex)
+        {
+            return (false, null, $"Network error: {ex.Message}");
+        }
+        catch (TaskCanceledException)
+        {
+            return (false, null, "Validation request timed out");
+        }
     }
 }
