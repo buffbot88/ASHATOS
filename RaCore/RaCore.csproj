@@ -19,12 +19,12 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\Abstractions\Abstractions.csproj" />
+	  <ProjectReference Include="..\LegendaryChat\LegendaryChat.csproj" />
+	  <ProjectReference Include="..\LegendaryClientBuilder\LegendaryClientBuilder.csproj" />
 	  <ProjectReference Include="..\LegendaryCMS\LegendaryCMS.csproj" />
 	  <ProjectReference Include="..\LegendaryGameEngine\LegendaryGameEngine.csproj" />
-	  <ProjectReference Include="..\LegendaryClientBuilder\LegendaryClientBuilder.csproj" />
-	  <ProjectReference Include="..\LegendaryChat\LegendaryChat.csproj" />
-	  <ProjectReference Include="..\LegendaryLearning\LegendaryLearning.csproj" />
 	  <ProjectReference Include="..\LegendaryGameServer\LegendaryGameServer.csproj" />
+	  <ProjectReference Include="..\LegendaryLearning\LegendaryLearning.csproj" />
 	  <ProjectReference Include="..\LegendaryGameClient\LegendaryGameClient.csproj" />
 	</ItemGroup>
 	<ItemGroup>
