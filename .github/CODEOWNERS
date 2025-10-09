@@ -1,0 +1,60 @@
+# RaOS Security Gate - Code Owners
+# 
+# This file defines code ownership for security-critical components.
+# Code owners are automatically requested for review when someone opens 
+# a pull request that modifies code that they own.
+#
+# For Security Gate #235 compliance, these approvals are required before
+# changes can be merged to protected branches.
+
+# Default owners for everything in the repo
+* @buffbot88
+
+# MainFrame Core Components - Require security review
+/RaCore/                                    @buffbot88
+/Abstractions/                              @buffbot88
+
+# Security-Critical Modules - Require explicit security team approval
+/RaCore/Modules/Extensions/Authentication/  @buffbot88
+/RaCore/Modules/Extensions/Failsafe/       @buffbot88
+/RaCore/Modules/Extensions/ServerSetup/    @buffbot88
+/LegendaryCMS/Security/                     @buffbot88
+
+# API Endpoints - Security review required
+/RaCore/Endpoints/                          @buffbot88
+/RaCore/Program.cs                          @buffbot88
+
+# Configuration Files - DevOps and security review
+*.json                                      @buffbot88
+*.yml                                       @buffbot88
+*.yaml                                      @buffbot88
+appsettings*.json                          @buffbot88
+
+# Build and Deployment Scripts - DevOps review
+build-*.sh                                  @buffbot88
+*.sh                                        @buffbot88
+/setup/                                     @buffbot88
+
+# Deployment Documentation - DevOps and security review
+DEPLOYMENT_GUIDE.md                         @buffbot88
+LINUX_HOSTING_SETUP.md                     @buffbot88
+FTP_MANAGEMENT.md                          @buffbot88
+
+# Security Documentation - Security team mandatory review
+SECURITY*.md                                @buffbot88
+/evidence/security/                         @buffbot88
+SECURITY_GATE_235.md                       @buffbot88
+
+# Release and Audit Documents - Release manager and security review
+PRODUCTION_RELEASE_CHECKLIST_940.md        @buffbot88
+RAOS_MAINFRAME_AUDIT_REPORT_940.md         @buffbot88
+VERIFICATION_REPORT_940.md                 @buffbot88
+
+# GitHub Workflows - DevOps and security review
+/.github/workflows/                         @buffbot88
+/.github/CODEOWNERS                        @buffbot88
+
+# Test Files - Testing team review
+**/Tests/                                   @buffbot88
+**/*Tests.cs                               @buffbot88
+**/Testing/                                 @buffbot88
