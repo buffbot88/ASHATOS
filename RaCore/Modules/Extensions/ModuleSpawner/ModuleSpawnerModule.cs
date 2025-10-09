@@ -219,8 +219,10 @@ public sealed class ModuleSpawnerModule : ModuleBase
             return "Error: Please provide a prompt. Example: spawn module Create a weather forecast module";
         }
 
-        // TODO: In production, verify SuperAdmin permission here
-        // For now, proceed with generation
+        // SECURITY NOTE: In production environments, this operation should only be available to SuperAdmin users.
+        // This can be enforced at the API endpoint level or by checking _authModule here.
+        // Current implementation allows module spawning for development/testing purposes.
+        // Recommended: Add authentication context parameter and validate user role >= SuperAdmin
 
         try
         {

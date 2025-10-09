@@ -42,13 +42,19 @@ public static class GameClientEndpoints
                 return Results.Json(new { error = "Invalid request" });
             }
             
+            if (string.IsNullOrWhiteSpace(request.LicenseKey))
+            {
+                context.Response.StatusCode = 400;
+                return Results.Json(new { error = "LicenseKey is required" });
+            }
+            
             try
             {
                 var clientPackage = await gameClientModule.GenerateClientAsync(
                     user.Id, 
                     request.LicenseKey, 
                     request.Platform, 
-                    request.Configuration);
+                    request.Configuration ?? new ClientConfiguration());
                 return Results.Json(new { success = true, client = clientPackage });
             }
             catch (Exception ex)
@@ -77,6 +83,12 @@ public static class GameClientEndpoints
                 return Results.Json(new { error = "Invalid request" });
             }
             
+            if (string.IsNullOrWhiteSpace(request.LicenseKey))
+            {
+                context.Response.StatusCode = 400;
+                return Results.Json(new { error = "LicenseKey is required" });
+            }
+            
             try
             {
                 // Check if module supports templates
@@ -85,10 +97,10 @@ public static class GameClientEndpoints
                 {
                     var clientPackage = await legendaryCB!.GenerateClientFromTemplateAsync(
                         user.Id, 
-                        request.LicenseKey ?? "", 
+                        request.LicenseKey, 
                         request.Platform,
                         request.TemplateName ?? "",
-                        request.Configuration);
+                        request.Configuration ?? new ClientConfiguration());
                     return Results.Json(new { success = true, client = clientPackage });
                 }
                 else
@@ -98,7 +110,7 @@ public static class GameClientEndpoints
                         user.Id, 
                         request.LicenseKey, 
                         request.Platform, 
-                        request.Configuration);
+                        request.Configuration ?? new ClientConfiguration());
                     return Results.Json(new { success = true, client = clientPackage });
                 }
             }
