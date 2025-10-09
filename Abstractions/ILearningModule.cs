@@ -65,6 +65,26 @@ public interface ILearningModule
     /// Mark SuperAdmin courses as completed for a user (for first-time setup).
     /// </summary>
     Task<bool> MarkSuperAdminCoursesCompletedAsync(string userId);
+    
+    /// <summary>
+    /// Get assessment for a course.
+    /// </summary>
+    Task<Assessment?> GetCourseAssessmentAsync(string courseId);
+    
+    /// <summary>
+    /// Submit assessment and get results.
+    /// </summary>
+    Task<UserAssessmentResult> SubmitAssessmentAsync(string userId, string assessmentId, Dictionary<string, string> answers);
+    
+    /// <summary>
+    /// Get user's assessment history for a course.
+    /// </summary>
+    Task<List<UserAssessmentResult>> GetUserAssessmentResultsAsync(string userId, string courseId);
+    
+    /// <summary>
+    /// Check if user can take the final assessment (all lessons completed).
+    /// </summary>
+    Task<bool> CanTakeAssessmentAsync(string userId, string courseId);
 }
 
 /// <summary>
@@ -181,4 +201,71 @@ public enum LearningTrophyTier
     Gold,
     Platinum,
     Diamond
+}
+
+/// <summary>
+/// Represents an end-of-course assessment.
+/// </summary>
+public class Assessment
+{
+    public string Id { get; set; } = string.Empty;
+    public string CourseId { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public int PassingScore { get; set; } = 70; // Percentage required to pass
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+    public bool IsActive { get; set; } = true;
+}
+
+/// <summary>
+/// Represents a question in an assessment.
+/// </summary>
+public class Question
+{
+    public string Id { get; set; } = string.Empty;
+    public string AssessmentId { get; set; } = string.Empty;
+    public string LessonId { get; set; } = string.Empty; // Links question to specific lesson for targeted remediation
+    public string QuestionText { get; set; } = string.Empty;
+    public QuestionType Type { get; set; } = QuestionType.MultipleChoice;
+    public int OrderIndex { get; set; }
+    public int Points { get; set; } = 1;
+    public DateTime CreatedAt { get; set; }
+}
+
+/// <summary>
+/// Represents an answer option for a question.
+/// </summary>
+public class Answer
+{
+    public string Id { get; set; } = string.Empty;
+    public string QuestionId { get; set; } = string.Empty;
+    public string AnswerText { get; set; } = string.Empty;
+    public bool IsCorrect { get; set; }
+    public int OrderIndex { get; set; }
+}
+
+/// <summary>
+/// Represents a user's assessment attempt and results.
+/// </summary>
+public class UserAssessmentResult
+{
+    public string Id { get; set; } = string.Empty;
+    public string UserId { get; set; } = string.Empty;
+    public string AssessmentId { get; set; } = string.Empty;
+    public int Score { get; set; } // Percentage score
+    public bool Passed { get; set; }
+    public DateTime AttemptedAt { get; set; }
+    public List<string> FailedLessonIds { get; set; } = new(); // Lessons that need retaking
+    public Dictionary<string, string> UserAnswers { get; set; } = new(); // QuestionId -> AnswerId
+}
+
+/// <summary>
+/// Types of assessment questions.
+/// </summary>
+public enum QuestionType
+{
+    MultipleChoice,
+    TrueFalse,
+    ShortAnswer
 }
