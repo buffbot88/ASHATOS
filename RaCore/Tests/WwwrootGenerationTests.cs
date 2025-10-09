@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using RaCore.Engine;
 using RaCore.Engine.Manager;
 using RaCore.Engine.Memory;
@@ -8,21 +9,22 @@ using RaCore.Modules.Extensions.SiteBuilder;
 namespace RaCore.Tests;
 
 /// <summary>
-/// Tests for wwwroot generation on boot
-/// Verifies that static HTML files are generated automatically
+/// Tests for Window of Ra (SiteBuilder) initialization on boot
+/// Verifies that dynamic UI routing is configured (no static HTML files)
 /// </summary>
 public class WwwrootGenerationTests
 {
     public static void RunTests()
     {
-        Console.WriteLine("=== Wwwroot Generation Tests ===");
+        Console.WriteLine("=== Window of Ra (SiteBuilder) Initialization Tests ===");
         Console.WriteLine();
         
         TestEnsureWwwrootAsync();
         TestWwwrootDirectoryCreation();
+        TestNoStaticHtmlGeneration();
         
         Console.WriteLine();
-        Console.WriteLine("=== All Wwwroot Generation Tests Passed ===");
+        Console.WriteLine("=== All Window of Ra Tests Passed ===");
     }
     
     private static void TestEnsureWwwrootAsync()
@@ -79,7 +81,7 @@ public class WwwrootGenerationTests
     
     private static void TestWwwrootDirectoryCreation()
     {
-        Console.WriteLine("Test 2: Wwwroot Directory Creation");
+        Console.WriteLine("Test 2: Wwwroot Directory Creation (config only, no HTML)");
         
         // Create a temporary directory for testing
         var testDir = Path.Combine(Path.GetTempPath(), "racore_wwwroot_dir_test_" + Guid.NewGuid().ToString());
@@ -104,7 +106,84 @@ public class WwwrootGenerationTests
             // Verify it was created
             Assert(Directory.Exists(wwwrootPath), "Wwwroot directory should be created");
             
-            Console.WriteLine("  ✓ Wwwroot directory creation works");
+            Console.WriteLine("  ✓ Wwwroot directory creation works (for config files only)");
+            
+            // Restore original directory
+            Directory.SetCurrentDirectory(originalDir);
+        }
+        finally
+        {
+            // Clean up test directory
+            if (Directory.Exists(testDir))
+            {
+                try
+                {
+                    Directory.Delete(testDir, true);
+                }
+                catch
+                {
+                    // Ignore cleanup errors
+                }
+            }
+        }
+    }
+    
+    private static void TestNoStaticHtmlGeneration()
+    {
+        Console.WriteLine("Test 3: Window of Ra - No Static HTML Generation");
+        
+        // Create a temporary directory for testing
+        var testDir = Path.Combine(Path.GetTempPath(), "racore_no_html_test_" + Guid.NewGuid().ToString());
+        Directory.CreateDirectory(testDir);
+        
+        try
+        {
+            // Save current directory
+            var originalDir = Directory.GetCurrentDirectory();
+            
+            // Change to test directory
+            Directory.SetCurrentDirectory(testDir);
+            
+            var wwwrootPath = Path.Combine(testDir, "wwwroot");
+            Directory.CreateDirectory(wwwrootPath);
+            
+            // Create minimal setup
+            var memoryModule = new MemoryModule();
+            memoryModule.Initialize(null);
+            
+            var moduleManager = new ModuleManager();
+            moduleManager.RegisterBuiltInModule(memoryModule);
+            
+            // Load SiteBuilder module
+            moduleManager.LoadModules();
+            
+            // Find SiteBuilder module
+            var siteBuilderModule = moduleManager.Modules
+                .Select(m => m.Instance)
+                .OfType<SiteBuilderModule>()
+                .FirstOrDefault();
+            
+            if (siteBuilderModule != null)
+            {
+                // Generate wwwroot (should NOT create HTML files)
+                var result = siteBuilderModule.GenerateWwwroot();
+                
+                // Verify no HTML files were created
+                var htmlFiles = Directory.Exists(wwwrootPath) 
+                    ? Directory.GetFiles(wwwrootPath, "*.html", SearchOption.AllDirectories) 
+                    : Array.Empty<string>();
+                
+                Assert(htmlFiles.Length == 0, "No HTML files should be generated - all UI is dynamic");
+                
+                // Verify the result message mentions dynamic routing
+                Assert(result.Contains("dynamic"), "Result should mention dynamic routing");
+                
+                Console.WriteLine("  ✓ No static HTML files generated (dynamic routing only)");
+            }
+            else
+            {
+                Console.WriteLine("  ⚠ SiteBuilder module not found - test skipped");
+            }
             
             // Restore original directory
             Directory.SetCurrentDirectory(originalDir);

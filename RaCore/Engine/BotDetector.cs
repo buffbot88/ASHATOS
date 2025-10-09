@@ -170,7 +170,7 @@ public class BotDetector
         <div class='info'>
             <h3>📋 For Users:</h3>
             <p>If you're looking to access RaCore services, please use the Control Panel:</p>
-            <p><a href='/control-panel.html' class='button'>Open Control Panel</a></p>
+            <p><a href='/control-panel' class='button'>Open Control Panel</a></p>
         </div>
         
         <div class='info'>

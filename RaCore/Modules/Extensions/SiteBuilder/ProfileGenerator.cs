@@ -153,7 +153,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <a href='forums.php'>Forums</a>
                 <a href='chat.php'>Chat</a>
                 <a href='profile.php?user=<?php echo urlencode($_SESSION['username']); ?>'>Social</a>
-                <a href='/control-panel.html' target='_blank'>Settings</a>
+                <a href='/control-panel' target='_blank'>Settings</a>
             </div>
         </nav>
         <div class='content'>
@@ -211,7 +211,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
         <footer class='site-footer'>
-            <p>Powered by RaCore | <a href='/control-panel.html'>Manage Your Site</a></p>
+            <p>Powered by RaCore | <a href='/control-panel'>Manage Your Site</a></p>
         </footer>
     </div>
 </body>
@@ -278,7 +278,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <a href='forums.php'>Forums</a>
                 <a href='chat.php'>Chat</a>
                 <a href='profile.php?user=<?php echo urlencode($_SESSION['username']); ?>'>Social</a>
-                <a href='/control-panel.html' target='_blank'>Settings</a>
+                <a href='/control-panel' target='_blank'>Settings</a>
             </div>
         </nav>
         <div class='content'>
@@ -342,7 +342,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
         <footer class='site-footer'>
-            <p>Powered by RaCore | <a href='/control-panel.html'>Manage Your Site</a></p>
+            <p>Powered by RaCore | <a href='/control-panel'>Manage Your Site</a></p>
         </footer>
     </div>
 </body>

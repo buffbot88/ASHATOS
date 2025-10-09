@@ -18,29 +18,17 @@ public class WwwrootGenerator
     {
         try
         {
-            _module.Log("Starting wwwroot generation...");
+            _module.Log("Initializing Window of Ra (SiteBuilder)...");
             
-            // Create wwwroot directory
+            // Create wwwroot directory (for config files only, no static HTML)
             Directory.CreateDirectory(_wwwrootPath);
-            
-            // Create js subdirectory
-            var jsPath = Path.Combine(_wwwrootPath, "js");
-            Directory.CreateDirectory(jsPath);
             
             // Create config subdirectory for server configuration files
             var configPath = Path.Combine(_wwwrootPath, "config");
             Directory.CreateDirectory(configPath);
             
-            // Generate HTML/JS files
-            GenerateIndexHtml();
-            GenerateLoginHtml();
-            GenerateControlPanelHtml();
-            GenerateAdminHtml();
-            GenerateGameEngineDashboardHtml();
-            GenerateClientBuilderDashboardHtml();
-            GenerateControlPanelModulesMd();
-            GenerateControlPanelApiJs(jsPath);
-            GenerateControlPanelUiJs(jsPath);
+            // NO HTML generation - all UI is served dynamically through internal routing
+            // The Window of Ra (SiteBuilder) serves everything dynamically via RaOS
             
             // Generate server configuration files (optional for Linux environments)
             // On Windows 11, Kestrel is the only supported webserver
@@ -55,35 +43,38 @@ public class WwwrootGenerator
                 _module.Log("Skipping Apache/Nginx config generation on Windows (Kestrel is used)");
             }
             
-            _module.Log($"✅ wwwroot generated successfully at: {_wwwrootPath}");
+            _module.Log($"✅ Window of Ra (SiteBuilder) initialized at: {_wwwrootPath}");
             
             var configFiles = OperatingSystem.IsWindows() 
-                ? "" 
+                ? "  - No external configuration files needed (Kestrel webserver)" 
                 : @"  - config/nginx.conf
   - config/apache.conf
   - config/php.ini";
             
-            return $@"✅ wwwroot directory generated successfully!
+            return $@"✅ Window of Ra (SiteBuilder) initialized successfully!
 
 📁 Location: {_wwwrootPath}
 
-Generated files:
-  - index.html
-  - login.html
-  - control-panel.html
-  - admin.html
-  - gameengine-dashboard.html
-  - clientbuilder-dashboard.html
-  - js/control-panel-api.js
-  - js/control-panel-ui.js
-  - CONTROL_PANEL_MODULES.md
+🔒 SECURITY: All UI features are served dynamically through internal RaOS routing
+   - No static HTML files generated
+   - No external file access
+   - All features accessed via Window of Ra (SiteBuilder module)
+
+Available UI routes (dynamic, internal):
+  - /login - Login interface
+  - /control-panel - Main control panel
+  - /admin - Administrative dashboard
+  - /gameengine-dashboard - Game engine management
+  - /clientbuilder-dashboard - Client builder interface
+
+Configuration files:
 {configFiles}
 
 Note: {(OperatingSystem.IsWindows() ? "On Windows, RaCore uses Kestrel webserver (no external webserver needed)" : "Server configuration files generated for Linux environments")}";
         }
         catch (Exception ex)
         {
-            _module.Log($"wwwroot generation failed: {ex.Message}", "ERROR");
+            _module.Log($"Window of Ra initialization failed: {ex.Message}", "ERROR");
             return $"❌ Error: {ex.Message}";
         }
     }
@@ -155,7 +146,7 @@ Note: {(OperatingSystem.IsWindows() ? "On Windows, RaCore uses Kestrel webserver
     <div class=""container"">
         <h1>🌟 RaCore AI Mainframe</h1>
         <p>Welcome to RaCore - Your AI-powered modular framework</p>
-        <a href=""/control-panel.html"" class=""button"">Access Control Panel</a>
+        <a href=""/control-panel"" class=""button"">Access Control Panel</a>
     </div>
 </body>
 </html>";
@@ -317,7 +308,7 @@ Note: {(OperatingSystem.IsWindows() ? "On Windows, RaCore uses Kestrel webserver
                     successDiv.textContent = 'Login successful! Redirecting...';
                     successDiv.style.display = 'block';
                     setTimeout(() => {
-                        window.location.href = '/control-panel.html';
+                        window.location.href = '/control-panel';
                     }, 1000);
                 } else {
                     errorDiv.textContent = data.message || 'Login failed';
@@ -555,7 +546,7 @@ Note: {(OperatingSystem.IsWindows() ? "On Windows, RaCore uses Kestrel webserver
         <div class=""login-box"">
             <h1 style=""color: #667eea; margin-bottom: 10px;"">🎛️ Control Panel</h1>
             <h3 style=""color: #666; margin-bottom: 30px; font-weight: normal;"">Please login to continue</h3>
-            <p style=""text-align: center;""><a href=""/login.html"" style=""color: #667eea; text-decoration: none; font-weight: 600;"">Go to Login →</a></p>
+            <p style=""text-align: center;""><a href=""/login"" style=""color: #667eea; text-decoration: none; font-weight: 600;"">Go to Login →</a></p>
         </div>
     </div>
 
@@ -675,7 +666,7 @@ Note: {(OperatingSystem.IsWindows() ? "On Windows, RaCore uses Kestrel webserver
 </head>
 <body>
     <div class=""container"">
-        <a href=""/control-panel.html"" class=""back-btn"">← Back to Control Panel</a>
+        <a href=""/control-panel"" class=""back-btn"">← Back to Control Panel</a>
         
         <div class=""header"">
             <h1>⚙️ Admin Panel</h1>
@@ -708,7 +699,7 @@ Note: {(OperatingSystem.IsWindows() ? "On Windows, RaCore uses Kestrel webserver
         async function loadStats() {
             const token = localStorage.getItem('racore_token');
             if (!token) {
-                window.location.href = '/login.html';
+                window.location.href = '/login';
                 return;
             }
 
@@ -829,7 +820,7 @@ Note: {(OperatingSystem.IsWindows() ? "On Windows, RaCore uses Kestrel webserver
 </head>
 <body>
     <div class=""container"">
-        <a href=""/control-panel.html"" class=""back-btn"">← Back to Control Panel</a>
+        <a href=""/control-panel"" class=""back-btn"">← Back to Control Panel</a>
         
         <div class=""header"">
             <h1>🎮 Game Engine Dashboard</h1>
@@ -848,7 +839,7 @@ Note: {(OperatingSystem.IsWindows() ? "On Windows, RaCore uses Kestrel webserver
         async function loadScenes() {
             const token = localStorage.getItem('racore_token');
             if (!token) {
-                window.location.href = '/login.html';
+                window.location.href = '/login';
                 return;
             }
 
@@ -1185,7 +1176,7 @@ Note: {(OperatingSystem.IsWindows() ? "On Windows, RaCore uses Kestrel webserver
                 <h1>🔨 Legendary Client Builder</h1>
                 <p style=""color: #666; margin-top: 5px;"">Advanced Multi-Platform Game Client Generation</p>
             </div>
-            <a href=""/control-panel.html"" class=""back-btn"">← Back to Control Panel</a>
+            <a href=""/control-panel"" class=""back-btn"">← Back to Control Panel</a>
         </div>
 
         <div class=""stats-grid"">
@@ -1279,7 +1270,7 @@ Note: {(OperatingSystem.IsWindows() ? "On Windows, RaCore uses Kestrel webserver
     <script>
         const token = localStorage.getItem('racore_token');
         if (!token) {
-            window.location.href = '/login.html';
+            window.location.href = '/login';
         }
 
         let updateInterval;
@@ -1530,7 +1521,7 @@ Returns:
 
 ## Usage
 
-Access the control panel at: `http://localhost:5000/control-panel.html`
+Access the control panel at: `http://localhost:5000/control-panel`
 
 Default credentials:
 - Username: `admin`
@@ -1713,7 +1704,7 @@ class RaCoreAPI {
 
         if (response.status === 401) {
             localStorage.removeItem('racore_token');
-            window.location.href = '/login.html';
+            window.location.href = '/login';
             throw new Error('Unauthorized');
         }
 
@@ -1741,7 +1732,7 @@ class RaCoreAPI {
     async logout() {
         await this.request('/api/auth/logout', { method: 'POST' });
         localStorage.removeItem('racore_token');
-        window.location.href = '/login.html';
+        window.location.href = '/login';
     }
 
     isAuthenticated() {
@@ -1922,7 +1913,7 @@ function renderSiteBuilderTab(container) {
             <div class=""module-card"">
                 <h3>CMS Generation</h3>
                 <p>Generate and manage CMS sites with integrated control panels.</p>
-                <button class=""action-button"" onclick=""window.location.href='/admin.html'"">Manage CMS</button>
+                <button class=""action-button"" onclick=""window.location.href='/admin'"">Manage CMS</button>
             </div>
             <div class=""module-card"">
                 <h3>Control Panel</h3>
@@ -2024,7 +2015,7 @@ function renderAuthenticationTab(container) {
             <div class=""module-card"">
                 <h3>User Management</h3>
                 <p>Manage users, roles, and permissions.</p>
-                <button class=""action-button"" onclick=""window.location.href='/admin.html'"">Manage Users</button>
+                <button class=""action-button"" onclick=""window.location.href='/admin'"">Manage Users</button>
             </div>
             <div class=""module-card"">
                 <h3>Session Management</h3>
@@ -2043,7 +2034,7 @@ function renderLicenseTab(container) {
             <div class=""module-card"">
                 <h3>License Overview</h3>
                 <p>View and manage licenses.</p>
-                <button class=""action-button"" onclick=""window.location.href='/admin.html'"">View Licenses</button>
+                <button class=""action-button"" onclick=""window.location.href='/admin'"">View Licenses</button>
             </div>
             <div class=""module-card"">
                 <h3>Instance Tracking</h3>
@@ -2062,7 +2053,7 @@ function renderRaCoinTab(container) {
             <div class=""module-card"">
                 <h3>Wallet Management</h3>
                 <p>Manage user wallets and balances.</p>
-                <button class=""action-button"" onclick=""window.location.href='/admin.html'"">View Wallets</button>
+                <button class=""action-button"" onclick=""window.location.href='/admin'"">View Wallets</button>
             </div>
             <div class=""module-card"">
                 <h3>Transaction History</h3>

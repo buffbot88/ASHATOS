@@ -68,7 +68,7 @@ public class CloudFlareConfig
             },
             new CloudFlarePageRule
             {
-                Url = $"{domain}/control-panel.html",
+                Url = $"{domain}/control-panel",
                 Settings = new Dictionary<string, object>
                 {
                     { "cache_level", "bypass" },

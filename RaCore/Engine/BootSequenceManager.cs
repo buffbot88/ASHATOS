@@ -370,7 +370,7 @@ public class BootSequenceManager
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine("    ✨ Wwwroot files generated successfully! ✨");
                     Console.ResetColor();
-                    Console.WriteLine("       (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ Control Panel ready at /control-panel.html");
+                    Console.WriteLine("       (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ Control Panel ready at /control-panel");
                 }
                 else
                 {

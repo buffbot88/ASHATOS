@@ -186,7 +186,7 @@ public static class UnderConstructionHandler
         <div class=""info-box"">
             <h3>👤 Are you an administrator?</h3>
             <p>Administrators can access the Control Panel even during maintenance.</p>
-            <a href=""/control-panel.html"" class=""admin-link"">🎛️ Admin Control Panel</a>
+            <a href=""/control-panel"" class=""admin-link"">🎛️ Admin Control Panel</a>
         </div>
         
         <div class=""footer"">
@@ -211,7 +211,7 @@ public static class UnderConstructionHandler
         <div class=""action-box"">
             <h3>🎛️ Need Help?</h3>
             <p>If you're an administrator, you can access the control panel:</p>
-            <a href=""/control-panel.html"" class=""action-link"">Open Control Panel</a>
+            <a href=""/control-panel"" class=""action-link"">Open Control Panel</a>
         </div>" : "";
         
         return $@"<!DOCTYPE html>
