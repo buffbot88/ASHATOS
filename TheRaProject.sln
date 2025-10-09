@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LegendaryGameEngine", "Lege
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LegendaryClientBuilder", "LegendaryClientBuilder\LegendaryClientBuilder.csproj", "{6BB51AFA-0AAA-48B3-A4B6-334F640941C2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LegendaryGameServer", "LegendaryGameServer\LegendaryGameServer.csproj", "{A60CACCE-78CF-4A41-ABBE-FFAFB2B1ADED}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +85,18 @@ Global
 		{6BB51AFA-0AAA-48B3-A4B6-334F640941C2}.Release|x64.Build.0 = Release|Any CPU
 		{6BB51AFA-0AAA-48B3-A4B6-334F640941C2}.Release|x86.ActiveCfg = Release|Any CPU
 		{6BB51AFA-0AAA-48B3-A4B6-334F640941C2}.Release|x86.Build.0 = Release|Any CPU
+		{A60CACCE-78CF-4A41-ABBE-FFAFB2B1ADED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A60CACCE-78CF-4A41-ABBE-FFAFB2B1ADED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A60CACCE-78CF-4A41-ABBE-FFAFB2B1ADED}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A60CACCE-78CF-4A41-ABBE-FFAFB2B1ADED}.Debug|x64.Build.0 = Debug|Any CPU
+		{A60CACCE-78CF-4A41-ABBE-FFAFB2B1ADED}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A60CACCE-78CF-4A41-ABBE-FFAFB2B1ADED}.Debug|x86.Build.0 = Debug|Any CPU
+		{A60CACCE-78CF-4A41-ABBE-FFAFB2B1ADED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A60CACCE-78CF-4A41-ABBE-FFAFB2B1ADED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A60CACCE-78CF-4A41-ABBE-FFAFB2B1ADED}.Release|x64.ActiveCfg = Release|Any CPU
+		{A60CACCE-78CF-4A41-ABBE-FFAFB2B1ADED}.Release|x64.Build.0 = Release|Any CPU
+		{A60CACCE-78CF-4A41-ABBE-FFAFB2B1ADED}.Release|x86.ActiveCfg = Release|Any CPU
+		{A60CACCE-78CF-4A41-ABBE-FFAFB2B1ADED}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,8 +1,7 @@
 using System.Collections.Concurrent;
 using Abstractions;
-using RaCore.Engine.Manager;
 
-namespace RaCore.Modules.Extensions.Chat;
+namespace LegendaryChat;
 
 [RaModule(Category = "extensions")]
 public sealed class ChatModule : ModuleBase, IChatModule
@@ -13,19 +12,36 @@ public sealed class ChatModule : ModuleBase, IChatModule
     private readonly ConcurrentDictionary<string, ChatMessage> _messages = new();
     private readonly ConcurrentDictionary<string, List<string>> _roomMessages = new();
     private readonly ConcurrentDictionary<string, List<ChatUser>> _roomUsers = new();
-    private ModuleManager? _manager;
     private IContentModerationModule? _moderationModule;
     
     public override void Initialize(object? manager)
     {
-        _manager = manager as ModuleManager;
+        base.Initialize(manager);
         
-        if (_manager != null)
+        // Try to get moderation module through reflection to avoid tight coupling
+        if (manager != null)
         {
-            _moderationModule = _manager.Modules
-                .Select(m => m.Instance)
-                .OfType<IContentModerationModule>()
-                .FirstOrDefault();
+            var modulesProperty = manager.GetType().GetProperty("Modules");
+            if (modulesProperty != null)
+            {
+                var modules = modulesProperty.GetValue(manager) as System.Collections.IEnumerable;
+                if (modules != null)
+                {
+                    foreach (var moduleWrapper in modules)
+                    {
+                        var instanceProperty = moduleWrapper.GetType().GetProperty("Instance");
+                        if (instanceProperty != null)
+                        {
+                            var instance = instanceProperty.GetValue(moduleWrapper);
+                            if (instance is IContentModerationModule mod)
+                            {
+                                _moderationModule = mod;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
         }
         
         Console.WriteLine($"[{Name}] Initializing Chat Module...");

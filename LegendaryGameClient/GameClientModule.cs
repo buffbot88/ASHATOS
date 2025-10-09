@@ -2,7 +2,7 @@ using System.Text;
 using System.Text.Json;
 using Abstractions;
 
-namespace RaCore.Modules.Extensions.GameClient;
+namespace LegendaryGameClient;
 
 /// <summary>
 /// GameClient Module - Generates multi-platform game client screens for each game server.
@@ -31,10 +31,14 @@ public sealed class GameClientModule : ModuleBase, IGameClientModule
     {
         base.Initialize(manager);
         
-        // Get reference to license module
-        if (manager is RaCore.Engine.Manager.ModuleManager moduleManager)
+        // Get reference to license module through reflection to avoid tight coupling
+        if (manager != null)
         {
-            _licenseModule = moduleManager.GetModuleByName("License") as ILicenseModule;
+            var getModuleMethod = manager.GetType().GetMethod("GetModuleByName");
+            if (getModuleMethod != null)
+            {
+                _licenseModule = getModuleMethod.Invoke(manager, new object[] { "License" }) as ILicenseModule;
+            }
         }
         
         LogInfo("GameClient module initialized");
