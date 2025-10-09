@@ -139,6 +139,16 @@ public class TestRunner
             BootSequenceFixTests.RunTests();
         }
 
+        // Run Window of Ra Compliance tests if requested (Issue #255)
+        if (args.Length > 0 && args[0].ToLowerInvariant() == "windowofra")
+        {
+            Console.WriteLine("\n\n╔════════════════════════════════════════════════════════╗");
+            Console.WriteLine("║   Window of Ra Compliance Test Suite (Issue #255)     ║");
+            Console.WriteLine("╚════════════════════════════════════════════════════════╝\n");
+            
+            WindowOfRaComplianceTests.RunTests();
+        }
+
         Console.WriteLine("\nPress any key to exit...");
         Console.ReadKey();
     }
