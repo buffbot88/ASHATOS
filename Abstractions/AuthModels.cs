@@ -123,6 +123,7 @@ public class AuthResponse
     public string? Token { get; set; }
     public User? User { get; set; }
     public DateTime? TokenExpiresAt { get; set; }
+    public bool RequiresLULModule { get; set; } = false;
 }
 
 /// <summary>

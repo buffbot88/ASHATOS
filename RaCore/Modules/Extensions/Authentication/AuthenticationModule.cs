@@ -20,6 +20,7 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
     private readonly List<SecurityEvent> _securityEvents = new();
     private readonly object _lock = new();
     private ILicenseModule? _licenseModule;
+    private ILearningModule? _learningModule;
     
     // Security configuration
     private const int SaltSize = 32; // 256 bits
@@ -34,10 +35,11 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
     {
         base.Initialize(manager);
         
-        // Get reference to license module
+        // Get reference to license module and learning module
         if (manager is ModuleManager moduleManager)
         {
             _licenseModule = moduleManager.GetModuleByName("License") as ILicenseModule;
+            _learningModule = moduleManager.GetModuleByName("Learn RaOS") as ILearningModule;
         }
         
         LogInfo("Authentication module initialized with secure password hashing (PBKDF2)");
@@ -170,12 +172,14 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
 
     public async Task<AuthResponse> LoginAsync(LoginRequest request, string ipAddress = "", string userAgent = "")
     {
-        await Task.CompletedTask; // Async placeholder
+        User? user = null;
+        string? token = null;
+        Session? session = null;
         
         lock (_lock)
         {
             // Find user
-            var user = _users.Values.FirstOrDefault(u => 
+            user = _users.Values.FirstOrDefault(u => 
                 u.Username.Equals(request.Username, StringComparison.OrdinalIgnoreCase));
 
             if (user == null || !user.IsActive)
@@ -207,8 +211,8 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
             }
 
             // Create session
-            var token = GenerateSecureToken();
-            var session = new Session
+            token = GenerateSecureToken();
+            session = new Session
             {
                 Id = Guid.NewGuid(),
                 UserId = user.Id,
@@ -229,16 +233,30 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
                 _ = _licenseModule.LogLicenseEventAsync(user.Id, "Login", "License validated successfully", true);
             }
             LogInfo($"User logged in: {user.Username}");
-
-            return new AuthResponse
-            {
-                Success = true,
-                Message = "Login successful",
-                Token = token,
-                User = SanitizeUser(user),
-                TokenExpiresAt = session.ExpiresAtUtc
-            };
         }
+
+        // Check if SuperAdmin needs to complete LULModule courses (outside lock)
+        bool requiresLULModule = false;
+        if (user.Role == UserRole.SuperAdmin && _learningModule != null)
+        {
+            var hasCompleted = await _learningModule.HasCompletedSuperAdminCoursesAsync(user.Id.ToString());
+            requiresLULModule = !hasCompleted;
+            
+            if (requiresLULModule)
+            {
+                LogInfo($"SuperAdmin {user.Username} needs to complete LULModule courses");
+            }
+        }
+
+        return new AuthResponse
+        {
+            Success = true,
+            Message = "Login successful",
+            Token = token,
+            User = SanitizeUser(user),
+            TokenExpiresAt = session?.ExpiresAtUtc,
+            RequiresLULModule = requiresLULModule
+        };
     }
 
     public async Task<bool> LogoutAsync(string token)
