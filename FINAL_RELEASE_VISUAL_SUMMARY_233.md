@@ -63,10 +63,12 @@
 ### 🔴 Critical (Must Complete)
 
 #### 1. Production Deployment Dry Run
-**Status:** Not Started  
+**Status:** Ready to Execute  
 **Owner:** DevOps Team  
 **Estimated:** 2-3 hours  
 **Blocks:** Sign-offs
+
+**📄 Guide:** [DEPLOYMENT_DRY_RUN_GUIDE_940.md](./DEPLOYMENT_DRY_RUN_GUIDE_940.md)
 
 **Actions:**
 - [ ] Deploy to staging
@@ -79,6 +81,8 @@
 **Owner:** Release Manager  
 **Estimated:** 1-2 days  
 **Blocks:** Production Release
+
+**📄 Tracker:** [RELEASE_SIGNOFF_TRACKER_940.md](./RELEASE_SIGNOFF_TRACKER_940.md)
 
 **Approvals Needed:**
 - [ ] Technical Lead (code quality)
@@ -226,11 +230,16 @@ TODAY               +1 Day              +2 Days             +3 Days
 - [📦 Production Checklist](./PRODUCTION_RELEASE_CHECKLIST_940.md) - Production guide
 - [📝 Release Notes](./RELEASE_NOTES_940.md) - v9.4.0 changelog
 - [🏛️ Audit Report](./RAOS_MAINFRAME_AUDIT_REPORT_940.md) - Detailed audit
+- **[✍️ Sign-Off Tracker](./RELEASE_SIGNOFF_TRACKER_940.md)** - **NEW:** Approval tracking
 
 ### For DevOps
 - [🚀 Deployment Guide](./DEPLOYMENT_GUIDE.md) - Deployment instructions
+- **[🧪 Dry Run Guide](./DEPLOYMENT_DRY_RUN_GUIDE_940.md)** - **NEW:** Dry run procedures
 - [🔧 Branch Protection](./BRANCH_PROTECTION_CONFIG.md) - GitHub settings
 - [📋 Verification Report](./VERIFICATION_REPORT_940.md) - Build results
+
+### For Issue Updates
+- **[🔄 Sync Summary](./ISSUE_233_SYNC_SUMMARY.md)** - **NEW:** GitHub issue update guide
 
 ---
 
