@@ -79,6 +79,16 @@ public class TestRunner
             CmsHomepageRoutingTests.RunTests();
         }
 
+        // Run ASHAT Personality & Emotion tests if requested
+        if (args.Length > 0 && args[0].ToLowerInvariant() == "ashatpersonality")
+        {
+            Console.WriteLine("\n\n╔════════════════════════════════════════════════════════╗");
+            Console.WriteLine("║   ASHAT Personality & Emotion Intelligence Tests      ║");
+            Console.WriteLine("╚════════════════════════════════════════════════════════╝\n");
+            
+            AshatPersonalityEmotionTests.RunTests();
+        }
+
         // Run Windows 11 Kestrel-only tests if requested
         if (args.Length > 0 && args[0].ToLowerInvariant() == "windows11")
         {
