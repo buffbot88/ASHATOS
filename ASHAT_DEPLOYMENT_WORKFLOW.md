@@ -48,6 +48,50 @@ The ASHAT Deployment Workflow Module implements a comprehensive push-to-public-s
 
 ---
 
+## FTP Setup for Public Server
+
+Before deploying updates to a public server, you may want to set up FTP access for file uploads and downloads. ASHAT provides an integrated workflow for this.
+
+### Setup FTP on Public Server
+
+```bash
+deploy setupftp <license> <username> <server-url>
+```
+
+**Example:**
+```bash
+deploy setupftp 12345 admin1 http://staging.raos.io
+```
+
+**This provides a comprehensive checklist for:**
+1. Checking server health (ensuring live server is operational)
+2. Installing FTP server (vsftpd)
+3. Creating admin instance
+4. Setting up FTP access
+5. Creating restricted FTP user (for security)
+6. Getting connection information
+
+### Why Setup FTP?
+
+- **File Uploads**: Easily upload RaOS updates to the public server
+- **File Downloads**: Download logs and diagnostic files
+- **Secure Access**: Create restricted FTP users limited to RaOS folder
+- **Admin Management**: Manage admin instances through FTP
+
+### Integration with ASHAT Server Setup Helper
+
+For more detailed, interactive guidance, use:
+
+```bash
+ashat setup launch        # Guided public server launch
+ashat setup guide         # Comprehensive setup guide
+ashat setup ftp <step>    # Step-by-step FTP guidance
+```
+
+See [ASHAT_SERVER_SETUP_HELPER.md](ASHAT_SERVER_SETUP_HELPER.md) for complete details.
+
+---
+
 ## Getting Started
 
 ### Prerequisites
@@ -184,6 +228,7 @@ deploy cancel <update-id>
 | `deploy configure public <url> <name>` | Configure Public staging server | `deploy configure public http://staging.raos.io Staging` |
 | `deploy configure omega <url> <name>` | Configure OMEGA production server | `deploy configure omega https://omega.raos.io Production` |
 | `deploy servers` | List all configured servers | `deploy servers` |
+| `deploy setupftp <license> <user> <url>` | Setup FTP for Public Server with checklist | `deploy setupftp 12345 admin1 http://staging.raos.io` |
 
 ### Deployment Management
 
@@ -211,19 +256,22 @@ deploy cancel <update-id>
 
 ```bash
 # 1. Configure servers (first time only)
-deploy configure public http://staging.raos.io Staging
+deploy configure public http://staging.raos.io PublicStaging
 deploy configure omega https://omega.raos.io Production
 
-# 2. Push security patch
+# 2. Setup FTP for public server (optional, for file uploads)
+deploy setupftp 12345 admin1 http://staging.raos.io
+
+# 3. Push security patch
 deploy push security-patch-001 'Critical security fixes for authentication module'
 
-# 3. Verify on staging
+# 4. Verify on staging
 deploy verify security-patch-001
 
-# 4. If verification passes, approve for production
+# 5. If verification passes, approve for production
 deploy approve security-patch-001
 
-# 5. Check deployment history
+# 6. Check deployment history
 deploy history
 ```
 

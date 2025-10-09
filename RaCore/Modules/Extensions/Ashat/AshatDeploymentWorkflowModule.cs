@@ -71,6 +71,7 @@ public sealed class AshatDeploymentWorkflowModule : ModuleBase
             "servers" => ListServers(),
             "history" => GetDeploymentHistory(),
             "configure" when parts.Length >= 4 => ConfigureServer(parts[1], parts[2], parts[3]),
+            "setupftp" when parts.Length >= 4 => SetupPublicServerFtp(parts[1], parts[2], parts[3]),
             "push" when parts.Length >= 3 => PushToPublicServer(parts[1], parts[2], string.Join(" ", parts.Skip(3))),
             "verify" when parts.Length >= 2 => VerifyDeployment(parts[1]),
             "approve" when parts.Length >= 2 => ApproveForOmega(parts[1]),
@@ -142,6 +143,77 @@ public sealed class AshatDeploymentWorkflowModule : ModuleBase
                $"Name: {name}\n" +
                $"URL: {url}\n" +
                $"Status: {(server.IsConfigured ? "Ready" : "Pending")}";
+    }
+
+    private string SetupPublicServerFtp(string license, string username, string serverUrl)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("🚀 ASHAT Public Server FTP Setup");
+        sb.AppendLine();
+        
+        // Step 1: Verify public server is configured
+        if (!_servers.TryGetValue(PUBLIC_SERVER, out var publicServer) || !publicServer.IsConfigured)
+        {
+            sb.AppendLine("❌ Public Server not configured");
+            sb.AppendLine();
+            sb.AppendLine("Configure your public server first:");
+            sb.AppendLine($"  deploy configure public {serverUrl} PublicStaging");
+            return sb.ToString();
+        }
+
+        sb.AppendLine($"✅ Public Server: {publicServer.Name}");
+        sb.AppendLine($"   URL: {publicServer.Url}");
+        sb.AppendLine();
+
+        // Step 2: Check server health
+        sb.AppendLine("📋 Setup Checklist:");
+        sb.AppendLine();
+        sb.AppendLine("[ ] Step 1: Check server health");
+        sb.AppendLine("    Command: serversetup health");
+        sb.AppendLine("    Purpose: Ensure live server is operational");
+        sb.AppendLine();
+        
+        // Step 3: Install/verify FTP
+        sb.AppendLine("[ ] Step 2: Install FTP server (if not already installed)");
+        sb.AppendLine("    Command: sudo apt install vsftpd");
+        sb.AppendLine("    Verify: serversetup ftp status");
+        sb.AppendLine();
+        
+        // Step 4: Create admin instance
+        sb.AppendLine($"[ ] Step 3: Create admin instance");
+        sb.AppendLine($"    Command: serversetup admin create license={license} username={username}");
+        sb.AppendLine("    Purpose: Create isolated admin workspace");
+        sb.AppendLine();
+        
+        // Step 5: Setup FTP access
+        sb.AppendLine($"[ ] Step 4: Setup FTP access");
+        sb.AppendLine($"    Command: serversetup ftp setup license={license} username={username}");
+        sb.AppendLine("    Purpose: Configure FTP directory structure");
+        sb.AppendLine();
+        
+        // Step 6: Create restricted FTP user
+        sb.AppendLine("[ ] Step 5: Create restricted FTP user (Recommended)");
+        sb.AppendLine("    Command: serversetup ftp createuser username=raos_ftp path=/path/to/raos");
+        sb.AppendLine("    Purpose: Secure FTP access to RaOS folder only");
+        sb.AppendLine();
+        
+        // Step 7: Get connection info
+        sb.AppendLine($"[ ] Step 6: Get FTP connection info");
+        sb.AppendLine($"    Command: serversetup ftp info license={license} username={username}");
+        sb.AppendLine("    Purpose: Retrieve credentials for FTP client");
+        sb.AppendLine();
+        
+        sb.AppendLine("💡 Pro Tips:");
+        sb.AppendLine("  - Use 'ashat setup launch' for interactive guidance");
+        sb.AppendLine("  - Review security course: ashat setup course ftp-security");
+        sb.AppendLine("  - Test FTP connection before deploying updates");
+        sb.AppendLine();
+        sb.AppendLine("Once FTP is set up, you can:");
+        sb.AppendLine("  1. Push updates: deploy push <id> <description>");
+        sb.AppendLine("  2. Verify on public server: deploy verify <id>");
+        sb.AppendLine("  3. Approve for OMEGA: deploy approve <id>");
+
+        return sb.ToString();
     }
 
     private string PushToPublicServer(string updateId, string description, string additionalInfo)
@@ -554,6 +626,7 @@ COMMANDS:
     deploy configure public <url> <name>   - Configure Public Server
     deploy configure omega <url> <name>    - Configure OMEGA Server
     deploy servers                         - List configured servers
+    deploy setupftp <license> <user> <url> - Setup FTP for Public Server
 
   Deployment Workflow:
     deploy push <id> <desc> [info]        - Push update to Public Server
