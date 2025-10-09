@@ -145,12 +145,12 @@ TheRaProject/
 - Slightly slower than built-in (DLL loading overhead)
 
 **When to Use**:
-- Large feature sets (CMS, Game Engine)
-- Features that need frequent updates
+- Large feature sets (CMS, Game Engine, Chat)
+- UX modules that change frequently
 - Optional modules (not everyone needs them)
 - Third-party contributions
 
-**Example**: LegendaryCMS, LegendaryGameEngine, LegendaryClientBuilder
+**Example**: LegendaryCMS, LegendaryGameEngine, LegendaryClientBuilder, LegendaryChat, LegendaryLearning, LegendaryGameServer, LegendaryGameClient
 
 ### 3. Dynamically Spawned Modules
 
@@ -1413,11 +1413,19 @@ Console.WriteLine($"[{Name}] Loaded from: {assembly.Location}");
 
 ### Module Examples
 
+**External Legendary Modules**:
 - **LegendaryCMS** - Full-featured CMS module
 - **LegendaryGameEngine** - Game engine with chat
 - **LegendaryClientBuilder** - Client generator
+- **LegendaryChat** - Real-time chat system with moderation
+- **LegendaryLearning** - Interactive learning/training (LULModule)
+- **LegendaryGameServer** - AI-driven game creation
+- **LegendaryGameClient** - Multi-platform game client generator
+
+**Built-in Infrastructure Modules**:
 - **RaCoinModule** - Virtual currency system
 - **AuthenticationModule** - User authentication
+- **LicenseModule** - License management
 
 ### Tools
 

@@ -13,12 +13,14 @@ RaOS has **TWO distinct Modules directories**, each serving a different purpose.
 **Location**: `/RaCore/Modules/`
 
 **Contents**:
-- **Core** modules (5): Autonomy, Collaboration, LanguageModelProcessor, SelfHealing, Transparency
-- **Extensions** modules (29): AIContent, Authentication, Blog, Chat, CodeGeneration, Distribution, Execution, FeatureExplorer, Forum, GameClient, GameEngine, GameServer, Knowledge, Language, License, MarketMonitor, ModuleSpawner, Planning, RaCoin, Safety, Sentiment, ServerSetup, SiteBuilder, Skills, SuperMarket, Support, TestRunner, Updates, UserProfiles
+- **Core** modules (7): Autonomy, Collaboration, LanguageModelProcessor, SelfHealing, Transparency, Ashat, AssetSecurity
+- **Infrastructure Extensions** modules (24): AIContent, Authentication, Blog, CodeGeneration, Distribution, Execution, FeatureExplorer, Forum, Knowledge, Language, License, MarketMonitor, ModuleSpawner, Planning, RaCoin, Safety, Sentiment, ServerConfig, ServerSetup, SiteBuilder, Skills, SuperMarket, Support, TestRunner, Updates, UserProfiles
 - **Handlers** modules
 - **Speech** modules
 - **Conscious** modules
 - **Subconscious** modules
+
+**Note**: UX modules (Chat, Learning/LUL, GameServer, GameClient, GameEngine) have been externalized as Legendary modules and are no longer built into RaCore.
 
 **File Types**: `.cs` source files compiled into the RaCore assembly
 

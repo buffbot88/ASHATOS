@@ -1,8 +1,7 @@
 using System.Collections.Concurrent;
 using Abstractions;
-using RaCore.Engine.Manager;
 
-namespace RaCore.Modules.Extensions.Learning;
+namespace LegendaryLearning;
 
 /// <summary>
 /// Legendary User Learning Module (LULmodule)
@@ -21,11 +20,10 @@ public sealed class LegendaryUserLearningModule : ModuleBase, ILearningModule
     private readonly ConcurrentDictionary<string, CourseProgress> _userProgress = new();
     private readonly ConcurrentDictionary<string, List<LearningAchievement>> _userAchievements = new();
     private readonly ConcurrentDictionary<string, List<LearningTrophy>> _userTrophies = new();
-    private ModuleManager? _manager;
     
     public override void Initialize(object? manager)
     {
-        _manager = manager as ModuleManager;
+        base.Initialize(manager);
         
         Console.WriteLine($"[{Name}] Initializing Legendary User Learning Module (LULmodule)...");
         Console.WriteLine($"[{Name}] Self-paced learning with real-time updates");

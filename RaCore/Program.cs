@@ -36,6 +36,21 @@ if (firstRunManager.IsFirstRun())
 }
 
 // 4. Load other modules (plugins, etc.) AFTER CMS setup is complete
+// Force load external Legendary module assemblies to ensure they're available for discovery
+// This is necessary because .NET doesn't auto-load referenced DLLs unless they're explicitly used
+try
+{
+    System.Reflection.Assembly.Load("LegendaryChat");
+    System.Reflection.Assembly.Load("LegendaryLearning");
+    System.Reflection.Assembly.Load("LegendaryGameServer");
+    System.Reflection.Assembly.Load("LegendaryGameClient");
+    // LegendaryCMS, LegendaryGameEngine, and LegendaryClientBuilder are already loaded elsewhere
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"[RaCore] Warning: Could not preload some external modules: {ex.Message}");
+}
+
 moduleManager.LoadModules();
 
 var builder = WebApplication.CreateBuilder(args);

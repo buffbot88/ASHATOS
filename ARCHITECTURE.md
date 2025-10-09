@@ -83,8 +83,11 @@
 │  │                                                            │  │
 │  │  ┌────────────────────────────────────────────────────┐  │  │
 │  │  │          Built-in Modules (RaCore/Modules/)        │  │  │
-│  │  │  • Core Modules (5)                                │  │  │
-│  │  │  • Extension Modules (29+)                         │  │  │
+│  │  │  • Core Modules (7): Autonomy, Collaboration,      │  │  │
+│  │  │    LanguageModelProcessor, SelfHealing,            │  │  │
+│  │  │    Transparency, Ashat, AssetSecurity              │  │  │
+│  │  │  • Infrastructure Modules (24+): Authentication,   │  │  │
+│  │  │    License, Safety, RaCoin, etc.                   │  │  │
 │  │  │  • Handler Modules                                 │  │  │
 │  │  │  • Speech/Conscious/Subconscious                   │  │  │
 │  │  └────────────────────────────────────────────────────┘  │  │
@@ -97,6 +100,16 @@
 │  │  │    Suite     │  │Engine Suite  │  │   Builder     │ │  │
 │  │  │   (76 KB)    │  │  (120 KB)    │  │   (90 KB)     │ │  │
 │  │  └──────────────┘  └──────────────┘  └───────────────┘ │  │
+│  │                                                          │  │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌───────────────┐ │  │
+│  │  │LegendaryChat │  │LegendaryLrng │  │LegendaryGame  │ │  │
+│  │  │  (24 KB)     │  │  (68 KB)     │  │Server (69 KB) │ │  │
+│  │  └──────────────┘  └──────────────┘  └───────────────┘ │  │
+│  │                                                          │  │
+│  │  ┌──────────────┐                                       │  │
+│  │  │LegendaryGame │                                       │  │
+│  │  │Client (36 KB)│                                       │  │
+│  │  └──────────────┘                                       │  │
 │  └──────────────────────────────────────────────────────────┘  │
 │                                                                   │
 │  ┌──────────────────────────────────────────────────────────┐  │
@@ -280,11 +293,13 @@ Configuration management with environment awareness.
 Compiled directly into RaCore assembly. Cannot be updated independently.
 
 **Categories**:
-- **Core** (5 modules): Autonomy, Collaboration, LanguageModelProcessor, SelfHealing, Transparency
-- **Extensions** (29+ modules): AIContent, Authentication, Blog, Chat, CodeGeneration, Forum, GameEngine, RaCoin, etc.
+- **Core** (7 modules): Autonomy, Collaboration, LanguageModelProcessor, SelfHealing, Transparency, Ashat, AssetSecurity
+- **Infrastructure Extensions** (24+ modules): AIContent, Authentication, Blog, CodeGeneration, Forum, RaCoin, License, Safety, etc.
 - **Handlers**: Request/response processing
 - **Speech**: Natural language processing
 - **Conscious/Subconscious**: AI reasoning and decision-making
+
+**Note**: UX modules (Chat, Learning/LUL, GameServer, GameClient, GameEngine) have been externalized as Legendary modules.
 
 #### External Legendary Modules
 **Location**: Separate DLL projects
@@ -295,6 +310,10 @@ Independent class libraries loaded at runtime. Can be updated without rebuilding
 1. **LegendaryCMS** (Phase 8) - Content management system
 2. **LegendaryGameEngine** (Phase 9) - Game engine with in-game chat
 3. **LegendaryClientBuilder** (Phase 9.1) - Multi-platform game client generator
+4. **LegendaryChat** - Real-time chat system with moderation
+5. **LegendaryLearning** (LULModule) - Interactive learning and training system
+6. **LegendaryGameServer** - AI-driven game creation and deployment
+7. **LegendaryGameClient** - Multi-platform game client generator
 
 #### Dynamically Spawned Modules
 **Location**: `/Modules/`

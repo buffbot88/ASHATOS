@@ -2,9 +2,8 @@ using System.Collections.Concurrent;
 using System.Text;
 using System.Text.Json;
 using Abstractions;
-using RaCore.Engine.Manager;
 
-namespace RaCore.Modules.Extensions.GameServer;
+namespace LegendaryGameServer;
 
 /// <summary>
 /// Game Server Module - Advanced AI-driven game creation and deployment system.
@@ -16,7 +15,6 @@ public sealed class GameServerModule : ModuleBase, IGameServerModule
 {
     public override string Name => "GameServer";
 
-    private ModuleManager? _manager;
     private IGameEngineModule? _gameEngine;
     private IAIContentModule? _aiContent;
     private IServerSetupModule? _serverSetup;
@@ -28,7 +26,6 @@ public sealed class GameServerModule : ModuleBase, IGameServerModule
     public override void Initialize(object? manager)
     {
         base.Initialize(manager);
-        _manager = manager as ModuleManager;
         _projectsBasePath = Path.Combine(AppContext.BaseDirectory, "GameProjects");
         
         if (!Directory.Exists(_projectsBasePath))
@@ -36,12 +33,16 @@ public sealed class GameServerModule : ModuleBase, IGameServerModule
             Directory.CreateDirectory(_projectsBasePath);
         }
 
-        // Get references to other modules
-        if (_manager != null)
+        // Get references to other modules through reflection to avoid tight coupling
+        if (manager != null)
         {
-            _gameEngine = _manager.GetModuleByName("GameEngine") as IGameEngineModule;
-            _aiContent = _manager.GetModuleByName("AIContent") as IAIContentModule;
-            _serverSetup = _manager.GetModuleByName("ServerSetup") as IServerSetupModule;
+            var getModuleMethod = manager.GetType().GetMethod("GetModuleByName");
+            if (getModuleMethod != null)
+            {
+                _gameEngine = getModuleMethod.Invoke(manager, new object[] { "GameEngine" }) as IGameEngineModule;
+                _aiContent = getModuleMethod.Invoke(manager, new object[] { "AIContent" }) as IAIContentModule;
+                _serverSetup = getModuleMethod.Invoke(manager, new object[] { "ServerSetup" }) as IServerSetupModule;
+            }
         }
 
         LogInfo("GameServer module initialized - AI-driven game creation suite active");
