@@ -441,7 +441,13 @@ static string GenerateLoginUI()
                 const data = await response.json();
                 if (data.success) {
                     localStorage.setItem('racore_token', data.token);
-                    window.location.href = '/control-panel';
+                    
+                    // Check if user needs to complete LULModule onboarding
+                    if (data.requiresLULModule) {
+                        window.location.href = '/onboarding';
+                    } else {
+                        window.location.href = '/control-panel';
+                    }
                 } else {
                     error.textContent = data.message || 'Login failed';
                     error.style.display = 'block';
@@ -451,6 +457,459 @@ static string GenerateLoginUI()
                 error.style.display = 'block';
             }
         });
+    </script>
+</body>
+</html>";
+}
+
+// Generate Onboarding UI dynamically
+static string GenerateOnboardingUI()
+{
+    return @"<!DOCTYPE html>
+<html lang=""en"">
+<head>
+    <meta charset=""UTF-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>Masters Class Onboarding - RaCore</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .onboarding-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 900px;
+            width: 100%;
+            padding: 40px;
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .course-list {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .course-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .course-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+        .course-card.completed {
+            background: #f0f9ff;
+            border-color: #22c55e;
+        }
+        .course-card.active {
+            border-color: #667eea;
+            background: #fafbff;
+        }
+        .course-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .course-description {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .course-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+            color: #888;
+        }
+        .lesson-viewer {
+            display: none;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+            background: #fafbff;
+        }
+        .lesson-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .lesson-content {
+            color: #555;
+            line-height: 1.8;
+            margin-bottom: 25px;
+            white-space: pre-wrap;
+        }
+        .lesson-navigation {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+            align-items: center;
+        }
+        button {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        button.secondary {
+            background: #6c757d;
+        }
+        button.secondary:hover {
+            background: #5a6268;
+        }
+        button.success {
+            background: #22c55e;
+        }
+        button.success:hover {
+            background: #16a34a;
+        }
+        .status-message {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .status-message.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #22c55e;
+        }
+        .status-message.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .completion-badge {
+            display: inline-block;
+            background: #22c55e;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class=""onboarding-container"">
+        <h1>🎓 Masters Class Onboarding</h1>
+        <p class=""subtitle"">Welcome to RaOS! Complete these courses to access the Control Panel.</p>
+        
+        <div class=""progress-bar"">
+            <div class=""progress-fill"" id=""progressBar""></div>
+        </div>
+        
+        <div class=""status-message"" id=""statusMessage""></div>
+        
+        <div id=""loadingMessage"" class=""loading"">Loading your courses...</div>
+        
+        <div id=""courseList"" class=""course-list"" style=""display: none;""></div>
+        
+        <div id=""lessonViewer"" class=""lesson-viewer""></div>
+        
+        <div style=""text-align: center; margin-top: 20px;"">
+            <button id=""finishButton"" style=""display: none;"" class=""success"" onclick=""completeOnboarding()"">
+                🎉 Complete Onboarding & Access Control Panel
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        let currentCourse = null;
+        let currentLesson = null;
+        let courses = [];
+        let lessons = [];
+        let completedLessons = new Set();
+        
+        async function checkAuth() {
+            const token = localStorage.getItem('racore_token');
+            if (!token) {
+                window.location.href = '/login';
+                return false;
+            }
+            return true;
+        }
+        
+        async function loadCourses() {
+            if (!await checkAuth()) return;
+            
+            try {
+                const token = localStorage.getItem('racore_token');
+                const response = await fetch('/api/learning/courses/SuperAdmin', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.status === 403 || response.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+                
+                const data = await response.json();
+                if (data.success) {
+                    courses = data.courses;
+                    await loadProgress();
+                    renderCourses();
+                    document.getElementById('loadingMessage').style.display = 'none';
+                    document.getElementById('courseList').style.display = 'grid';
+                } else {
+                    showError('Failed to load courses: ' + data.message);
+                }
+            } catch (error) {
+                showError('Failed to load courses: ' + error.message);
+            }
+        }
+        
+        async function loadProgress() {
+            const token = localStorage.getItem('racore_token');
+            for (const course of courses) {
+                try {
+                    const response = await fetch(`/api/learning/courses/${course.id}/lessons`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const data = await response.json();
+                    if (data.success && data.lessons) {
+                        course.lessons = data.lessons;
+                        course.completed = data.lessons.every(l => l.completed);
+                        data.lessons.forEach(l => {
+                            if (l.completed) completedLessons.add(l.id);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Failed to load progress for course:', course.id);
+                }
+            }
+            updateProgress();
+        }
+        
+        function renderCourses() {
+            const container = document.getElementById('courseList');
+            container.innerHTML = '';
+            
+            courses.forEach(course => {
+                const card = document.createElement('div');
+                card.className = 'course-card' + (course.completed ? ' completed' : '');
+                card.innerHTML = `
+                    <div class=""course-title"">
+                        ${course.title}
+                        ${course.completed ? '<span class=""completion-badge"">✓ Completed</span>' : ''}
+                    </div>
+                    <div class=""course-description"">${course.description}</div>
+                    <div class=""course-meta"">
+                        <span>📚 ${course.lessonCount} lessons</span>
+                        <span>⏱️ ${course.estimatedMinutes} minutes</span>
+                    </div>
+                `;
+                card.onclick = () => openCourse(course);
+                container.appendChild(card);
+            });
+        }
+        
+        async function openCourse(course) {
+            if (!course.lessons) {
+                await loadProgress();
+            }
+            
+            currentCourse = course;
+            lessons = course.lessons || [];
+            currentLesson = lessons.find(l => !l.completed) || lessons[0];
+            
+            if (currentLesson) {
+                await loadLessonContent(currentLesson);
+            }
+        }
+        
+        async function loadLessonContent(lesson) {
+            const viewer = document.getElementById('lessonViewer');
+            currentLesson = lesson;
+            
+            viewer.innerHTML = `
+                <div class=""lesson-title"">${lesson.title}</div>
+                <div class=""lesson-content"">${lesson.content}</div>
+                <div class=""lesson-navigation"">
+                    <button class=""secondary"" onclick=""closeLessonViewer()"">← Back to Courses</button>
+                    <div>
+                        <button onclick=""previousLesson()"" ${lessons.indexOf(lesson) === 0 ? 'disabled' : ''}>
+                            ← Previous
+                        </button>
+                        <button onclick=""completeLesson()"" class=""${lesson.completed ? 'success' : ''}"">
+                            ${lesson.completed ? '✓ Completed' : 'Mark Complete'}
+                        </button>
+                        <button onclick=""nextLesson()"" ${lessons.indexOf(lesson) === lessons.length - 1 ? 'disabled' : ''}>
+                            Next →
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            viewer.style.display = 'block';
+            viewer.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function closeLessonViewer() {
+            document.getElementById('lessonViewer').style.display = 'none';
+        }
+        
+        function previousLesson() {
+            const currentIndex = lessons.indexOf(currentLesson);
+            if (currentIndex > 0) {
+                loadLessonContent(lessons[currentIndex - 1]);
+            }
+        }
+        
+        function nextLesson() {
+            const currentIndex = lessons.indexOf(currentLesson);
+            if (currentIndex < lessons.length - 1) {
+                loadLessonContent(lessons[currentIndex + 1]);
+            }
+        }
+        
+        async function completeLesson() {
+            if (!currentLesson || currentLesson.completed) return;
+            
+            try {
+                const token = localStorage.getItem('racore_token');
+                const response = await fetch(`/api/learning/lessons/${currentLesson.id}/complete`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    currentLesson.completed = true;
+                    completedLessons.add(currentLesson.id);
+                    
+                    // Check if course is completed
+                    if (lessons.every(l => l.completed)) {
+                        currentCourse.completed = true;
+                        showSuccess('🎉 Course completed!');
+                    } else {
+                        showSuccess('✓ Lesson completed!');
+                    }
+                    
+                    updateProgress();
+                    renderCourses();
+                    
+                    // Auto-advance to next lesson
+                    const currentIndex = lessons.indexOf(currentLesson);
+                    if (currentIndex < lessons.length - 1) {
+                        setTimeout(() => loadLessonContent(lessons[currentIndex + 1]), 1000);
+                    } else {
+                        setTimeout(closeLessonViewer, 1500);
+                    }
+                } else {
+                    showError('Failed to complete lesson: ' + data.message);
+                }
+            } catch (error) {
+                showError('Failed to complete lesson: ' + error.message);
+            }
+        }
+        
+        function updateProgress() {
+            const totalLessons = courses.reduce((sum, c) => sum + (c.lessons?.length || c.lessonCount), 0);
+            const completed = completedLessons.size;
+            const percentage = totalLessons > 0 ? (completed / totalLessons) * 100 : 0;
+            
+            document.getElementById('progressBar').style.width = percentage + '%';
+            
+            // Show finish button if all courses completed
+            if (courses.every(c => c.completed)) {
+                document.getElementById('finishButton').style.display = 'block';
+            }
+        }
+        
+        async function completeOnboarding() {
+            try {
+                const token = localStorage.getItem('racore_token');
+                const response = await fetch('/api/learning/superadmin/complete', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showSuccess('🎉 Onboarding completed! Redirecting to Control Panel...');
+                    setTimeout(() => {
+                        window.location.href = '/control-panel';
+                    }, 2000);
+                } else {
+                    showError('Failed to complete onboarding: ' + data.message);
+                }
+            } catch (error) {
+                showError('Failed to complete onboarding: ' + error.message);
+            }
+        }
+        
+        function showSuccess(message) {
+            const statusMsg = document.getElementById('statusMessage');
+            statusMsg.className = 'status-message success';
+            statusMsg.textContent = message;
+            statusMsg.style.display = 'block';
+            setTimeout(() => statusMsg.style.display = 'none', 5000);
+        }
+        
+        function showError(message) {
+            const statusMsg = document.getElementById('statusMessage');
+            statusMsg.className = 'status-message error';
+            statusMsg.textContent = message;
+            statusMsg.style.display = 'block';
+            document.getElementById('loadingMessage').style.display = 'none';
+        }
+        
+        // Initialize
+        loadCourses();
     </script>
 </body>
 </html>";
@@ -546,6 +1005,25 @@ static string GenerateControlPanelUI()
             if (!token) {
                 window.location.href = '/login';
                 return;
+            }
+            
+            // Check if SuperAdmin needs to complete onboarding
+            try {
+                const response = await fetch('/api/learning/superadmin/status', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (!data.hasCompleted) {
+                        // Redirect to onboarding if not completed
+                        window.location.href = '/onboarding';
+                        return;
+                    }
+                }
+            } catch (err) {
+                // If not SuperAdmin or learning module unavailable, continue to control panel
+                console.log('Onboarding check skipped:', err);
             }
         }
         async function loadStats() {
@@ -965,6 +1443,13 @@ app.MapGet("/login", async (HttpContext context) =>
 {
     context.Response.ContentType = "text/html";
     await context.Response.WriteAsync(GenerateLoginUI());
+});
+
+// Onboarding UI - served dynamically (for Masters class onboarding)
+app.MapGet("/onboarding", async (HttpContext context) =>
+{
+    context.Response.ContentType = "text/html";
+    await context.Response.WriteAsync(GenerateOnboardingUI());
 });
 
 // Admin UI - served dynamically
