@@ -23,12 +23,28 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '9.0.x'
-    
+
+    - name: Detect solution file
+      run: |
+        set -euo pipefail
+        mapfile -t slns < <(git ls-files '*.sln')
+        if [ ${#slns[@]} -eq 0 ]; then
+          echo "::error::No .sln file found. Add a solution or hardcode your project path in the workflow."
+          exit 1
+        elif [ ${#slns[@]} -gt 1 ]; then
+          echo "::error::Multiple .sln files found:"
+          printf ' - %s\n' "${slns[@]}"
+          echo "::error::Set SOLUTION_FILE explicitly in the workflow to disambiguate."
+          exit 1
+        fi
+        echo "SOLUTION_FILE=${slns[0]}" >> "$GITHUB_ENV"
+        echo "Using solution: ${slns[0]}"
+
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore "$SOLUTION_FILE"
     
     - name: Build
-      run: dotnet build --no-restore --configuration Release
+      run: dotnet build "$SOLUTION_FILE" --no-restore --configuration Release
     
     - name: Run tests
       run: |
@@ -36,7 +52,7 @@ jobs:
           chmod +x run-private-alpha-tests.sh
           ./run-private-alpha-tests.sh || echo "Tests completed with issues - review required"
         else
-          dotnet test --no-build --configuration Release --verbosity normal
+          dotnet test "$SOLUTION_FILE" --no-build --configuration Release --verbosity normal
         fi
 
   dependency-scan:
@@ -51,14 +67,30 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '9.0.x'
-    
+
+    - name: Detect solution file
+      run: |
+        set -euo pipefail
+        mapfile -t slns < <(git ls-files '*.sln')
+        if [ ${#slns[@]} -eq 0 ]; then
+          echo "::error::No .sln file found. Add a solution or hardcode your project path in the workflow."
+          exit 1
+        elif [ ${#slns[@]} -gt 1 ]; then
+          echo "::error::Multiple .sln files found:"
+          printf ' - %s\n' "${slns[@]}"
+          echo "::error::Set SOLUTION_FILE explicitly in the workflow to disambiguate."
+          exit 1
+        fi
+        echo "SOLUTION_FILE=${slns[0]}" >> "$GITHUB_ENV"
+        echo "Using solution: ${slns[0]}"
+
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore "$SOLUTION_FILE"
     
     - name: Check for vulnerable packages
       run: |
         echo "Scanning for vulnerable NuGet packages..."
-        dotnet list package --vulnerable --include-transitive 2>&1 | tee vulnerability-report.txt
+        dotnet list "$SOLUTION_FILE" package --vulnerable --include-transitive 2>&1 | tee vulnerability-report.txt
         
         if grep -q "has the following vulnerable packages" vulnerability-report.txt; then
           echo "::warning::Vulnerable packages detected! Review vulnerability-report.txt"
@@ -70,7 +102,7 @@ jobs:
     - name: List all packages
       run: |
         echo "Current package versions:"
-        dotnet list package --include-transitive
+        dotnet list "$SOLUTION_FILE" package --include-transitive
     
     - name: Upload vulnerability report
       if: always()
