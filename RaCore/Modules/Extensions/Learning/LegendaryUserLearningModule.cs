@@ -1175,4 +1175,53 @@ RaOS is now production-ready with comprehensive tooling and AI assistance.", 8, 
         
         _courseLessons[courseId].Add(lessonId);
     }
+    
+    public async Task<bool> HasCompletedSuperAdminCoursesAsync(string userId)
+    {
+        await Task.CompletedTask;
+        
+        // Get all SuperAdmin courses
+        var superAdminCourses = await GetCoursesAsync("SuperAdmin");
+        if (superAdminCourses.Count == 0)
+        {
+            return false; // No courses to complete
+        }
+        
+        // Check if user has completed all SuperAdmin courses
+        foreach (var course in superAdminCourses)
+        {
+            var progress = await GetUserProgressAsync(userId, course.Id);
+            if (progress == null || progress.CompletedAt == null)
+            {
+                return false; // At least one course not completed
+            }
+        }
+        
+        return true;
+    }
+    
+    public async Task<bool> MarkSuperAdminCoursesCompletedAsync(string userId)
+    {
+        await Task.CompletedTask;
+        
+        // Get all SuperAdmin courses
+        var superAdminCourses = await GetCoursesAsync("SuperAdmin");
+        if (superAdminCourses.Count == 0)
+        {
+            return false;
+        }
+        
+        // Mark all lessons in all SuperAdmin courses as completed
+        foreach (var course in superAdminCourses)
+        {
+            var lessons = await GetLessonsAsync(course.Id);
+            foreach (var lesson in lessons)
+            {
+                await CompleteLessonAsync(userId, lesson.Id);
+            }
+        }
+        
+        Console.WriteLine($"[{Name}] Marked all SuperAdmin courses as completed for user: {userId}");
+        return true;
+    }
 }

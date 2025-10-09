@@ -29,6 +29,11 @@ public static class ControlPanelEndpoints
             return app;
         }
 
+// Get LearningModule reference for LULModule endpoints
+var learningModule = moduleManager.Modules
+    .Select(m => m.Instance)
+    .OfType<ILearningModule>()
+    .FirstOrDefault();
 
 // Control Panel: Get Dashboard Stats
 app.MapGet("/api/control/stats", async (HttpContext context) =>
@@ -1421,6 +1426,137 @@ app.MapGet("/api/control/audit/logs", async (HttpContext context) =>
     
     var events = await authModule!.GetSecurityEventsAsync(limit: 100);
     return Results.Json(new { logs = events });
+});
+
+// ============================================================================
+// LULModule API Endpoints
+// ============================================================================
+
+app.MapGet("/api/learning/superadmin/status", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null || user.Role != UserRole.SuperAdmin)
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "SuperAdmin role required" });
+    }
+    
+    if (learningModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Learning module not available" });
+    }
+    
+    var hasCompleted = await learningModule.HasCompletedSuperAdminCoursesAsync(user.Id.ToString());
+    var courses = await learningModule.GetCoursesAsync("SuperAdmin");
+    
+    return Results.Json(new 
+    { 
+        hasCompleted,
+        totalCourses = courses.Count,
+        courses = courses.Select(c => new { c.Id, c.Title, c.Description, c.LessonCount })
+    });
+});
+
+app.MapPost("/api/learning/superadmin/complete", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null || user.Role != UserRole.SuperAdmin)
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "SuperAdmin role required" });
+    }
+    
+    if (learningModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Learning module not available" });
+    }
+    
+    var success = await learningModule.MarkSuperAdminCoursesCompletedAsync(user.Id.ToString());
+    
+    return Results.Json(new 
+    { 
+        success,
+        message = success ? "All SuperAdmin courses marked as completed" : "Failed to mark courses as completed"
+    });
+});
+
+app.MapGet("/api/learning/courses/{level}", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null)
+    {
+        context.Response.StatusCode = 401;
+        return Results.Json(new { error = "Authentication required" });
+    }
+    
+    if (learningModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Learning module not available" });
+    }
+    
+    var level = context.Request.RouteValues["level"]?.ToString() ?? "User";
+    var courses = await learningModule.GetCoursesAsync(level);
+    
+    return Results.Json(new { courses });
+});
+
+app.MapGet("/api/learning/courses/{courseId}/lessons", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null)
+    {
+        context.Response.StatusCode = 401;
+        return Results.Json(new { error = "Authentication required" });
+    }
+    
+    if (learningModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Learning module not available" });
+    }
+    
+    var courseId = context.Request.RouteValues["courseId"]?.ToString() ?? "";
+    var lessons = await learningModule.GetLessonsAsync(courseId);
+    
+    return Results.Json(new { lessons });
+});
+
+app.MapPost("/api/learning/lessons/{lessonId}/complete", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null)
+    {
+        context.Response.StatusCode = 401;
+        return Results.Json(new { error = "Authentication required" });
+    }
+    
+    if (learningModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Learning module not available" });
+    }
+    
+    var lessonId = context.Request.RouteValues["lessonId"]?.ToString() ?? "";
+    var success = await learningModule.CompleteLessonAsync(user.Id.ToString(), lessonId);
+    
+    return Results.Json(new 
+    { 
+        success,
+        message = success ? "Lesson marked as completed" : "Failed to mark lesson as completed"
+    });
 });
 
         Console.WriteLine("[RaCore] Control Panel API endpoints registered");

@@ -55,6 +55,16 @@ public interface ILearningModule
     /// Add or update a lesson.
     /// </summary>
     Task<(bool success, string message)> UpdateLessonAsync(Lesson lesson);
+    
+    /// <summary>
+    /// Check if a user has completed all required SuperAdmin courses.
+    /// </summary>
+    Task<bool> HasCompletedSuperAdminCoursesAsync(string userId);
+    
+    /// <summary>
+    /// Mark SuperAdmin courses as completed for a user (for first-time setup).
+    /// </summary>
+    Task<bool> MarkSuperAdminCoursesCompletedAsync(string userId);
 }
 
 /// <summary>
