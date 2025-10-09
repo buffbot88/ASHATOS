@@ -6,6 +6,7 @@
 [![Version](https://img.shields.io/badge/version-9.4.0-blue)]()
 [![.NET](https://img.shields.io/badge/.NET-9.0-purple)]()
 [![License](https://img.shields.io/badge/license-MIT-orange)]()
+[![Security Gate](https://img.shields.io/badge/security-gate%20active-red)](./SECURITY_GATE_940.md)
 [![Last Updated](https://img.shields.io/badge/updated-October_2025-green)]()
 
 > Enterprise-grade modular CMS with plugin architecture, REST API, enhanced RBAC, ASHAT AI Core Module, and comprehensive security features.
@@ -211,8 +212,14 @@ help                 # Show command help
 ### Historical Documentation
 
 - **[Development History](HISTORY.md)** - Complete archive of Phases 2-7
-- **[Security Architecture](SECURITY_ARCHITECTURE.md)** - Security implementation details
 - **[PHASES.md](PHASES.md)** - Complete phase roadmap
+
+### Security Documentation
+
+- **[Security Gate v9.4.0](SECURITY_GATE_940.md)** - 🔒 Pre-release security checklist (BLOCKING for #233)
+- **[Security Architecture](SECURITY_ARCHITECTURE.md)** - Authentication & authorization implementation
+- **[Security Recommendations](SECURITY_RECOMMENDATIONS.md)** - Production hardening guide
+- **[Incident Response Plan](INCIDENT_RESPONSE_PLAN.md)** - Security incident procedures
 
 ---
 
