@@ -20,6 +20,7 @@ public sealed class FailsafeModule : ModuleBase
     private IAuthenticationModule? _authModule;
     private ILicenseModule? _licenseModule;
     private string? _encryptedFailsafePassword;
+    private string? _failsafePasswordSalt;
     private bool _failsafePasswordSet;
     private Guid? _lastSafeBackupId;
     
@@ -177,18 +178,19 @@ public sealed class FailsafeModule : ModuleBase
                 return "Failsafe password must be at least 8 characters long";
             }
 
-            // Encrypt the password
-            _encryptedFailsafePassword = EncryptPassword(password);
+            // Hash the password with salt using PBKDF2
+            _failsafePasswordSalt = GenerateSalt();
+            _encryptedFailsafePassword = HashPassword(password, _failsafePasswordSalt);
             _failsafePasswordSet = true;
             
-            LogInfo("Failsafe password has been set and encrypted");
+            LogInfo("Failsafe password has been set and hashed securely using PBKDF2");
             
             return JsonSerializer.Serialize(new
             {
                 Success = true,
                 Message = "Failsafe password set successfully",
                 Timestamp = DateTime.UtcNow,
-                Note = "Password encrypted and stored securely. Use 'help_failsafe -start <passkey>' to trigger emergency backup."
+                Note = "Password hashed and stored securely using PBKDF2. Use 'help_failsafe -start <passkey>' to trigger emergency backup."
             }, _jsonOptions);
         }
     }
@@ -472,19 +474,37 @@ public sealed class FailsafeModule : ModuleBase
 
     private string EncryptPassword(string password)
     {
-        // Simple encryption for demonstration - in production use proper encryption
+        // Deprecated - use HashPassword instead
+        // Kept for reference but not used anymore
         var bytes = Encoding.UTF8.GetBytes(password);
         var hash = SHA256.HashData(bytes);
         return Convert.ToBase64String(hash);
     }
 
+    private static string GenerateSalt()
+    {
+        const int SaltSize = 32; // 256 bits
+        var saltBytes = RandomNumberGenerator.GetBytes(SaltSize);
+        return Convert.ToBase64String(saltBytes);
+    }
+
+    private static string HashPassword(string password, string salt)
+    {
+        const int HashSize = 64; // 512 bits
+        const int Iterations = 100000; // PBKDF2 iterations
+        var saltBytes = Convert.FromBase64String(salt);
+        using var pbkdf2 = new Rfc2898DeriveBytes(password, saltBytes, Iterations, HashAlgorithmName.SHA512);
+        var hash = pbkdf2.GetBytes(HashSize);
+        return Convert.ToBase64String(hash);
+    }
+
     private bool ValidateFailsafePassword(string password)
     {
-        if (string.IsNullOrEmpty(_encryptedFailsafePassword))
+        if (string.IsNullOrEmpty(_encryptedFailsafePassword) || string.IsNullOrEmpty(_failsafePasswordSalt))
             return false;
         
-        var encrypted = EncryptPassword(password);
-        return encrypted == _encryptedFailsafePassword;
+        var hashedPassword = HashPassword(password, _failsafePasswordSalt);
+        return hashedPassword == _encryptedFailsafePassword;
     }
 }
 

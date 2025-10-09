@@ -143,6 +143,7 @@ public class License
     
     // Failsafe backup system
     public string? FailsafePasswordHash { get; set; }
+    public string? FailsafePasswordSalt { get; set; }
     public DateTime? FailsafePasswordSetAtUtc { get; set; }
 }
 
