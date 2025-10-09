@@ -135,7 +135,7 @@ public class BootSequenceManager
     {
         Console.ForegroundColor = ConsoleColor.Cyan;
         Console.WriteLine("    ╭─────────────────────────────────────╮");
-        Console.WriteLine("    │  ଘ(੭ˊᵕˋ)੭ Step 1/4: Health Check!  │");
+        Console.WriteLine("    │  ଘ(੭ˊᵕˋ)੭ Step 1/2: Health Check!  │");
         Console.WriteLine("    ╰─────────────────────────────────────╯");
         Console.ResetColor();
         Console.WriteLine();
@@ -263,7 +263,7 @@ public class BootSequenceManager
     {
         Console.ForegroundColor = ConsoleColor.Cyan;
         Console.WriteLine("    ╭─────────────────────────────────────────╮");
-        Console.WriteLine("    │  ଘ(੭ˊᵕˋ)੭ Step 1.5: .gguf Processing! │");
+        Console.WriteLine("    │  ଘ(੭ˊᵕˋ)੭ Step 2/2: .gguf Processing! │");
         Console.WriteLine("    ╰─────────────────────────────────────────╯");
         Console.ResetColor();
         Console.WriteLine();

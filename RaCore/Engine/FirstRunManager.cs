@@ -160,6 +160,37 @@ public class FirstRunManager
     }
     
     /// <summary>
+    /// Ensures wwwroot directory is populated with static HTML files on every boot
+    /// </summary>
+    public async Task EnsureWwwrootAsync()
+    {
+        await Task.CompletedTask;
+        
+        try
+        {
+            // Find SiteBuilder module
+            var siteBuilderModule = _moduleManager.Modules
+                .Select(m => m.Instance)
+                .OfType<SiteBuilderModule>()
+                .FirstOrDefault();
+            
+            if (siteBuilderModule == null)
+            {
+                Console.WriteLine("[FirstRunManager] Warning: SiteBuilder module not found");
+                return;
+            }
+            
+            // Generate wwwroot directory with control panel files
+            var wwwrootResult = siteBuilderModule.GenerateWwwroot();
+            Console.WriteLine(wwwrootResult);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[FirstRunManager] Warning: Could not generate wwwroot: {ex.Message}");
+        }
+    }
+    
+    /// <summary>
     /// Checks if this is the first run of RaCore
     /// </summary>
     public bool IsFirstRun()
@@ -282,7 +313,7 @@ public class FirstRunManager
         try
         {
             // Step 1: Check system requirements and dependencies
-            Console.WriteLine("[FirstRunManager] Step 1/7: Checking system requirements...");
+            Console.WriteLine("[FirstRunManager] Step 1/5: Checking system requirements...");
             Console.WriteLine();
             var reqResult = CheckSystemRequirements();
             Console.WriteLine($"[FirstRunManager] {reqResult.Message}");
@@ -310,7 +341,7 @@ public class FirstRunManager
                 return false;
             }
             
-            Console.WriteLine("[FirstRunManager] Step 2/7: Generating wwwroot control panel...");
+            Console.WriteLine("[FirstRunManager] Step 2/5: Generating wwwroot control panel...");
             Console.WriteLine();
             
             // Generate wwwroot directory with control panel files
@@ -318,7 +349,7 @@ public class FirstRunManager
             Console.WriteLine(wwwrootResult);
             Console.WriteLine();
             
-            Console.WriteLine("[FirstRunManager] Step 3/7: Initializing LegendaryCMS...");
+            Console.WriteLine("[FirstRunManager] Step 3/5: Initializing LegendaryCMS...");
             Console.WriteLine();
             
             // Initialize CMS via SiteBuilder (which will check for LegendaryCMS module)
@@ -370,7 +401,7 @@ public class FirstRunManager
             }
             Console.WriteLine();
             
-            Console.WriteLine("[FirstRunManager] Step 6/7: License Validation");
+            Console.WriteLine("[FirstRunManager] Step 5/5: License Validation");
             Console.WriteLine();
             Console.WriteLine("License validation will be performed when you:");
             Console.WriteLine("  - Enter your license key in the Control Panel");
