@@ -16,6 +16,10 @@ namespace RaCore.Engine.Memory
 
         private readonly string _dbPath;
         private readonly string _connectionString;
+        
+        // Memory management configuration
+        private readonly TimeSpan _maxAge = TimeSpan.FromDays(90); // Default: keep items for 90 days
+        private readonly int _maxItems = 10000; // Default: maximum 10000 items
 
         public MemoryModule(string? dbPath = null)
         {
@@ -69,6 +73,16 @@ VALUES ($id, $key, $value, $createdAt, $metadata);";
             cmd.ExecuteNonQuery();
 
             MemoryDiagnostics.RaiseMemoryStored(item);
+
+            // Periodic maintenance: check every 100 items if we need cleanup
+            if (item.Id.GetHashCode() % 100 == 0)
+            {
+                var count = Count();
+                if (count > _maxItems * 0.9) // If approaching limit, enforce it
+                {
+                    EnforceItemLimit();
+                }
+            }
 
             string summary = $"Memory stored: \"{key}\" = \"{value}\".";
             return Task.FromResult(new ModuleResponse { Text = summary, Type = "memory.store", Status = "ok" });
@@ -227,6 +241,85 @@ LIMIT 1;";
             return Convert.ToInt32(cmd.ExecuteScalar());
         }
 
+        public void PruneOldItems(TimeSpan? maxAge = null)
+        {
+            var cutoff = DateTime.UtcNow - (maxAge ?? _maxAge);
+            using var conn = new SqliteConnection(_connectionString);
+            conn.Open();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "DELETE FROM MemoryItems WHERE CreatedAt < $cutoff;";
+            cmd.Parameters.AddWithValue("$cutoff", cutoff.ToString("o"));
+            var deleted = cmd.ExecuteNonQuery();
+            MemoryDiagnostics.RaiseEvent($"Pruned {deleted} old memory items (older than {cutoff:yyyy-MM-dd})");
+        }
+
+        public void DeduplicateItems()
+        {
+            var items = GetAllItems().ToList();
+            var groups = items.GroupBy(i => new { i.Key, i.Value }).Where(g => g.Count() > 1);
+            int removed = 0;
+
+            foreach (var group in groups)
+            {
+                var orderedItems = group.OrderByDescending(i => i.CreatedAt).ToList();
+                // Keep the most recent, remove the rest
+                foreach (var item in orderedItems.Skip(1))
+                {
+                    if (Remove(item.Id))
+                        removed++;
+                }
+            }
+
+            MemoryDiagnostics.RaiseEvent($"Deduplicated {removed} memory items");
+        }
+
+        public void EnforceItemLimit(int? maxItems = null)
+        {
+            var limit = maxItems ?? _maxItems;
+            var count = Count();
+            
+            if (count <= limit) return;
+
+            var toRemove = count - limit;
+            using var conn = new SqliteConnection(_connectionString);
+            conn.Open();
+            using var cmd = conn.CreateCommand();
+            // Remove oldest items first
+            cmd.CommandText = @"
+DELETE FROM MemoryItems 
+WHERE Id IN (
+    SELECT Id FROM MemoryItems 
+    ORDER BY CreatedAt ASC 
+    LIMIT $limit
+);";
+            cmd.Parameters.AddWithValue("$limit", toRemove);
+            var deleted = cmd.ExecuteNonQuery();
+            MemoryDiagnostics.RaiseEvent($"Enforced item limit: removed {deleted} oldest items");
+        }
+
+        public void PerformMaintenance()
+        {
+            PruneOldItems();
+            DeduplicateItems();
+            EnforceItemLimit();
+            MemoryDiagnostics.RaiseEvent("Memory maintenance completed");
+        }
+
+        public string GetStats()
+        {
+            var count = Count();
+            var items = GetAllItems().ToList();
+            
+            if (count == 0)
+                return "Memory is empty.";
+
+            var oldest = items.Min(i => i.CreatedAt);
+            var newest = items.Max(i => i.CreatedAt);
+            var avgAge = items.Average(i => (DateTime.UtcNow - i.CreatedAt).TotalDays);
+            
+            return $"Memory stats: {count} items, oldest: {oldest:yyyy-MM-dd}, newest: {newest:yyyy-MM-dd}, avg age: {avgAge:F1} days";
+        }
+
         public override string Process(string input)
         {
             // Parse the input for commands, e.g. "store key value"
@@ -255,8 +348,23 @@ LIMIT 1;";
                 case "count":
                     return $"Memory count: {Count()}";
 
+                case "stats":
+                    return GetStats();
+
+                case "prune":
+                    PruneOldItems();
+                    return "Old items pruned successfully.";
+
+                case "deduplicate":
+                    DeduplicateItems();
+                    return "Duplicate items removed successfully.";
+
+                case "maintenance":
+                    PerformMaintenance();
+                    return "Memory maintenance completed successfully.";
+
                 case "help":
-                    return "Commands: store <key> <value>, recall <key>, count, help";
+                    return "Commands: store <key> <value>, recall <key>, count, stats, prune, deduplicate, maintenance, help";
 
                 default:
                     return "Unknown command. Type 'help' for options.";

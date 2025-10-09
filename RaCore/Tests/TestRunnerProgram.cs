@@ -119,6 +119,16 @@ public class TestRunner
             await AshatServerSetupHelperTest.RunTests();
         }
 
+        // Run Memory Management tests if requested
+        if (args.Length > 0 && args[0].ToLowerInvariant() == "memory")
+        {
+            Console.WriteLine("\n\n╔════════════════════════════════════════════════════════╗");
+            Console.WriteLine("║   Memory Management Test Suite                        ║");
+            Console.WriteLine("╚════════════════════════════════════════════════════════╝\n");
+            
+            MemoryManagementTests.RunAll();
+        }
+
         Console.WriteLine("\nPress any key to exit...");
         Console.ReadKey();
     }
