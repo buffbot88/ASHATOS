@@ -24,6 +24,7 @@ public sealed class LegendaryUserLearningModule : ModuleBase, ILearningModule
     private readonly AchievementService _achievementService;
     private readonly TrophyService _trophyService;
     private readonly AssessmentService _assessmentService;
+    private readonly AshatLearningGuideService _ashatGuide;
     
     public LegendaryUserLearningModule()
     {
@@ -40,6 +41,7 @@ public sealed class LegendaryUserLearningModule : ModuleBase, ILearningModule
             _trophyService,
             Name);
         _assessmentService = new AssessmentService(_database, _lessonService, Name);
+        _ashatGuide = new AshatLearningGuideService(_database, Name);
     }
     
     public override void Initialize(object? manager)
@@ -50,11 +52,13 @@ public sealed class LegendaryUserLearningModule : ModuleBase, ILearningModule
         Console.WriteLine($"[{Name}] Self-paced learning with real-time updates");
         Console.WriteLine($"[{Name}] Trophy and achievement system enabled");
         Console.WriteLine($"[{Name}] End-of-course adaptive assessments enabled");
+        Console.WriteLine($"[{Name}] Ashat AI learning guide: ACTIVE 💙");
         
         var seeder = new CourseSeeder(_courseService, _lessonService, _assessmentService, Name);
         seeder.SeedInitialCourses();
         
         Console.WriteLine($"[{Name}] Learning Module initialized");
+        Console.WriteLine($"[{Name}] Ashat is ready to guide learners through all courses!");
     }
     
     public override string Process(string input)
@@ -74,6 +78,7 @@ public sealed class LegendaryUserLearningModule : ModuleBase, ILearningModule
             "trophies" when parts.Length >= 2 => ShowTrophies(parts[1]),
             "test" when parts.Length >= 2 => ShowTest(parts[1]),
             "results" when parts.Length >= 3 => ShowResults(parts[1], parts[2]),
+            "ashat" when parts.Length >= 2 => ProcessAshatCommand(parts.Skip(1).ToArray()),
             "help" => GetHelp(),
             _ => GetHelp()
         };
@@ -90,7 +95,15 @@ public sealed class LegendaryUserLearningModule : ModuleBase, ILearningModule
   results <userId> <courseId> - Show user's assessment results for a course
   achievements <userId> - Show user achievements
   trophies <userId> - Show user trophies
-  help - Show this help message";
+  ashat <command> - Interact with Ashat, your AI learning guide 💙
+  help - Show this help message
+
+Ashat Commands:
+  ashat welcome <courseId> - Get Ashat's personalized course welcome
+  ashat progress <userId> <courseId> - See your progress with Ashat's encouragement
+  ashat motivate - Get a motivational boost from Ashat
+  ashat prepare <courseId> - Get ready for an assessment with Ashat
+  ashat help - Show Ashat's detailed help";
     }
     
     private string ListCourses(string permissionLevel)
@@ -149,12 +162,37 @@ public sealed class LegendaryUserLearningModule : ModuleBase, ILearningModule
     
     private string CompleteLesson(string userId, string lessonId)
     {
+        var lesson = _lessonService.GetLessonByIdAsync(lessonId).Result;
+        if (lesson == null)
+        {
+            return $"Lesson {lessonId} not found.";
+        }
+        
         var task = _progressService.CompleteLessonAsync(userId, lessonId);
         task.Wait();
         
-        return task.Result 
-            ? $"Lesson {lessonId} marked as completed for user {userId}." 
-            : $"Failed to complete lesson {lessonId}.";
+        if (!task.Result)
+        {
+            return $"Failed to complete lesson {lessonId}.";
+        }
+        
+        // Get total lessons for progress calculation
+        var lessons = _lessonService.GetLessonsAsync(lesson.CourseId).Result;
+        var progress = _progressService.GetUserProgressAsync(userId, lesson.CourseId).Result;
+        
+        if (progress != null)
+        {
+            // Get Ashat's encouraging feedback
+            var ashatFeedback = _ashatGuide.GetLessonCompletionFeedback(
+                userId, 
+                lessonId, 
+                progress.CompletedLessonIds.Count, 
+                lessons.Count);
+            
+            return ashatFeedback;
+        }
+        
+        return $"Lesson {lessonId} marked as completed for user {userId}.";
     }
     
     private string ShowAchievements(string userId)
@@ -268,6 +306,23 @@ public sealed class LegendaryUserLearningModule : ModuleBase, ILearningModule
         }
         
         return string.Join(Environment.NewLine, lines);
+    }
+    
+    private string ProcessAshatCommand(string[] parts)
+    {
+        if (parts.Length == 0) return _ashatGuide.GetAshatHelpText();
+        
+        var subCommand = parts[0].ToLowerInvariant();
+        
+        return subCommand switch
+        {
+            "welcome" when parts.Length >= 2 => _ashatGuide.GetCourseWelcome("user", parts[1]),
+            "progress" when parts.Length >= 3 => _ashatGuide.GetProgressSummary(parts[1], parts[2]),
+            "motivate" => _ashatGuide.GetMotivationalMessage("user"),
+            "prepare" when parts.Length >= 2 => _ashatGuide.GetPreAssessmentMessage("user", parts[1]),
+            "help" => _ashatGuide.GetAshatHelpText(),
+            _ => _ashatGuide.GetAshatHelpText()
+        };
     }
     
     // ILearningModule interface implementation
