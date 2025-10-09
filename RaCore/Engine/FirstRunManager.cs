@@ -181,75 +181,10 @@ public class FirstRunManager
         var dotnetVersion = Environment.Version;
         Console.WriteLine($"  ✓ .NET Runtime: {dotnetVersion}");
         
-        // Scan for Apache and PHP configurations
-        Console.WriteLine("  ℹ️  Scanning for Apache and PHP configurations...");
-        
-        var apacheResult = ApacheManager.ScanForApacheConfig();
-        if (apacheResult.found)
-        {
-            Console.WriteLine($"  ✓ Apache config: {apacheResult.path}");
-            
-            // Verify Apache configuration
-            if (apacheResult.path != null)
-            {
-                var verifyResult = ApacheManager.VerifyApacheConfig(apacheResult.path);
-                if (!verifyResult.valid)
-                {
-                    warnings.Add($"Apache configuration issues: {string.Join(", ", verifyResult.issues)}");
-                    Console.WriteLine($"  ⚠️  Apache configuration issues detected");
-                }
-            }
-        }
-        else
-        {
-            warnings.Add($"Apache configuration not found: {apacheResult.message}");
-            Console.WriteLine($"  ⚠️  {apacheResult.message}");
-        }
-        
-        var phpResult = ApacheManager.ScanForPhpConfig();
-        if (phpResult.found)
-        {
-            Console.WriteLine($"  ✓ PHP config: {phpResult.path}");
-            
-            // Verify PHP configuration
-            if (phpResult.path != null)
-            {
-                var verifyResult = ApacheManager.VerifyPhpConfig(phpResult.path);
-                if (!verifyResult.valid)
-                {
-                    warnings.Add($"PHP configuration issues: {string.Join(", ", verifyResult.issues)}");
-                    Console.WriteLine($"  ⚠️  PHP configuration issues detected");
-                }
-            }
-        }
-        else
-        {
-            warnings.Add($"PHP configuration not found: {phpResult.message}");
-            Console.WriteLine($"  ⚠️  {phpResult.message}");
-        }
-        
-        // Scan for PHP folder in RaCore.exe directory
-        var phpFolderResult = ApacheManager.ScanForPhpFolder();
-        if (phpFolderResult.found)
-        {
-            Console.WriteLine($"  ✓ PHP folder: {phpFolderResult.path}");
-        }
-        else
-        {
-            warnings.Add($"PHP folder not found: {phpFolderResult.message}");
-            Console.WriteLine($"  ⚠️  {phpFolderResult.message}");
-        }
-        
-        // Check if Apache is available
-        if (ApacheManager.IsApacheAvailable())
-        {
-            Console.WriteLine("  ✓ Apache web server detected");
-        }
-        else
-        {
-            warnings.Add("Apache web server not detected");
-            Console.WriteLine("  ⚠️  Apache web server not detected");
-        }
+        // Note: RaOS now processes PHP internally via modules
+        Console.WriteLine("  ℹ️  RaOS uses internal Kestrel web server");
+        Console.WriteLine("  ℹ️  PHP processing handled by internal modules");
+        Console.WriteLine("  ℹ️  No external web server (Nginx/Apache) required");
         
         // Check disk space
         try
@@ -396,48 +331,13 @@ public class FirstRunManager
             Console.WriteLine();
             
             
-            Console.WriteLine("[FirstRunManager] Step 4/7: Configuring Apache and PHP...");
+            Console.WriteLine("[FirstRunManager] Step 4/7: Web Server Configuration");
             Console.WriteLine();
             
-            // Scan for Apache and PHP configurations
-            var apacheResult = ApacheManager.ScanForApacheConfig();
-            var phpResult = ApacheManager.ScanForPhpConfig();
-            var phpFolderResult = ApacheManager.ScanForPhpFolder();
-            
-            if (apacheResult.found && phpResult.found)
-            {
-                Console.WriteLine("[FirstRunManager] ✅ Apache and PHP configurations found");
-                Console.WriteLine($"[FirstRunManager]    Apache: {apacheResult.path}");
-                Console.WriteLine($"[FirstRunManager]    PHP: {phpResult.path}");
-                
-                // Configure PHP settings
-                Console.WriteLine("[FirstRunManager] 🔧 Configuring PHP settings...");
-                if (phpResult.path != null && ApacheManager.ConfigurePhpIni(phpResult.path))
-                {
-                    Console.WriteLine("[FirstRunManager] ✅ PHP configured successfully");
-                }
-                else
-                {
-                    Console.WriteLine("[FirstRunManager] ⚠️  PHP configuration had issues (non-critical)");
-                }
-            }
-            else
-            {
-                Console.WriteLine("[FirstRunManager] ⚠️  Apache or PHP configuration not found");
-                Console.WriteLine($"[FirstRunManager]    Please ensure configurations exist in: C:\\RaOS\\webserver\\settings");
-                Console.WriteLine($"[FirstRunManager]    Required files: httpd.conf, php.ini");
-            }
-            
-            // Report on PHP folder in RaCore.exe directory
-            if (phpFolderResult.found)
-            {
-                Console.WriteLine($"[FirstRunManager] ✅ PHP folder detected in RaCore directory: {phpFolderResult.path}");
-            }
-            else
-            {
-                Console.WriteLine($"[FirstRunManager] ℹ️  PHP folder not found in RaCore directory");
-                Console.WriteLine($"[FirstRunManager]    You can place PHP binaries in the 'php' folder next to RaCore.exe");
-            }
+            Console.WriteLine("[FirstRunManager] ℹ️  RaOS uses internal Kestrel web server");
+            Console.WriteLine("[FirstRunManager] ℹ️  PHP processing handled by internal modules");
+            Console.WriteLine("[FirstRunManager] ℹ️  No external web server (Nginx/Apache) required");
+            Console.WriteLine("[FirstRunManager] ✅ Web server configuration complete");
             
             Console.WriteLine();
             Console.WriteLine("[FirstRunManager] Step 5/7: Initialization Guidance");
@@ -478,12 +378,13 @@ public class FirstRunManager
             Console.WriteLine("  - Supported license types: Forum, CMS, GameServer, Enterprise");
             Console.WriteLine();
             
-            Console.WriteLine("[FirstRunManager] Step 7/7: Apache and PHP Verification");
+            Console.WriteLine("[FirstRunManager] Step 7/7: Server Ready");
             Console.WriteLine();
-            Console.WriteLine("Apache and PHP configuration verified:");
-            Console.WriteLine($"  - Configuration folder: C:\\RaOS\\webserver\\settings");
-            Console.WriteLine("  - Required files: httpd.conf, php.ini");
-            Console.WriteLine("  - Apache web server should be installed and running");
+            Console.WriteLine("RaOS is configured and ready:");
+            Console.WriteLine("  - Kestrel web server integrated");
+            Console.WriteLine("  - Static HTML files in wwwroot directory");
+            Console.WriteLine("  - PHP processing via internal modules");
+            Console.WriteLine("  - Control Panel accessible at /control-panel.html");
             Console.WriteLine();
             
             // Mark as initialized

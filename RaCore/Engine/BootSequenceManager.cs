@@ -113,11 +113,8 @@ public class BootSequenceManager
         // Step 1.5: Process .gguf language models
         success &= await ProcessLanguageModelsAsync();
         
-        // Step 2: Verify Nginx configuration
-        success &= VerifyWebServerConfiguration();
-        
-        // Step 3: Verify PHP configuration
-        success &= VerifyPhpConfiguration();
+        // Step 2: Generate wwwroot static files
+        success &= GenerateWwwrootFiles();
         
         Console.WriteLine();
         Console.ForegroundColor = ConsoleColor.Yellow;
@@ -332,41 +329,80 @@ public class BootSequenceManager
         }
     }
     
-    private bool VerifyWebServerConfiguration()
+    private bool GenerateWwwrootFiles()
     {
         Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine("    ╭─────────────────────────────────────╮");
-        Console.WriteLine("    │  ଘ(੭*ˊᵕˋ)੭* Step 2/4: Nginx Check!  │");
-        Console.WriteLine("    ╰─────────────────────────────────────╯");
+        Console.WriteLine("    ╭──────────────────────────────────────────────╮");
+        Console.WriteLine("    │  ଘ(੭*ˊᵕˋ)੭* Step 2/3: Wwwroot Generation! │");
+        Console.WriteLine("    ╰──────────────────────────────────────────────╯");
         Console.ResetColor();
         Console.WriteLine();
         
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine("    ⚠️  Nginx scanning disabled");
-        Console.WriteLine("    ℹ️  Nginx should be installed and configured in the host environment");
-        Console.WriteLine("    ℹ️  before running RaOS. RaOS no longer scans for Nginx.");
-        Console.ResetColor();
-        Console.WriteLine();
-        
-        return true;
-    }
-    
-    private bool VerifyPhpConfiguration()
-    {
-        Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine("    ╭─────────────────────────────────────╮");
-        Console.WriteLine("    │  ଘ(੭ˊ꒳ˋ)੭✧ Step 3/4: PHP Check!   │");
-        Console.WriteLine("    ╰─────────────────────────────────────╯");
-        Console.ResetColor();
-        Console.WriteLine();
-        
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine("    ⚠️  PHP scanning disabled");
-        Console.WriteLine("    ℹ️  PHP should be installed and configured in the host environment");
-        Console.WriteLine("    ℹ️  before running RaOS. RaOS no longer scans for PHP.");
-        Console.ResetColor();
-        Console.WriteLine();
-        
-        return true;
+        try
+        {
+            // Find SiteBuilder module
+            var siteBuilderModule = _moduleManager.Modules
+                .Select(m => m.Instance)
+                .FirstOrDefault(m => m.Name == "SiteBuilder");
+            
+            if (siteBuilderModule == null)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("    (´･ω･`) SiteBuilder module not found - skipping wwwroot generation...");
+                Console.ResetColor();
+                Console.WriteLine();
+                return true; // Not a fatal error
+            }
+            
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            Console.WriteLine("    ♡ (っ◔◡◔)っ Generating static HTML files...");
+            Console.ResetColor();
+            
+            // Call GenerateWwwroot method via reflection
+            var generateMethod = siteBuilderModule.GetType().GetMethod("GenerateWwwroot");
+            if (generateMethod != null)
+            {
+                var result = generateMethod.Invoke(siteBuilderModule, null) as string;
+                
+                // Check if generation was successful
+                if (result != null && result.Contains("✅"))
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("    ✨ Wwwroot files generated successfully! ✨");
+                    Console.ResetColor();
+                    Console.WriteLine("       (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ Control Panel ready at /control-panel.html");
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine("    (´･ω･`) Wwwroot generation completed with warnings");
+                    Console.ResetColor();
+                }
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("    (´･ω･`) GenerateWwwroot method not found");
+                Console.ResetColor();
+            }
+            
+            Console.WriteLine();
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("    ℹ️  RaOS processes PHP internally via modules");
+            Console.WriteLine("    ℹ️  No external web server (Nginx/Apache) required");
+            Console.WriteLine("    ℹ️  Kestrel handles all web serving");
+            Console.ResetColor();
+            Console.WriteLine();
+            
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"    (╥﹏╥) Oopsie! Error generating wwwroot: {ex.Message}");
+            Console.ResetColor();
+            Console.WriteLine();
+            return true; // Don't fail boot on wwwroot generation errors
+        }
     }
 }

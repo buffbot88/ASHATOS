@@ -129,6 +129,16 @@ public class TestRunner
             MemoryManagementTests.RunAll();
         }
 
+        // Run Boot Sequence Fix tests if requested
+        if (args.Length > 0 && args[0].ToLowerInvariant() == "bootsequence")
+        {
+            Console.WriteLine("\n\n╔════════════════════════════════════════════════════════╗");
+            Console.WriteLine("║   Boot Sequence Fix Test Suite                        ║");
+            Console.WriteLine("╚════════════════════════════════════════════════════════╝\n");
+            
+            BootSequenceFixTests.RunTests();
+        }
+
         Console.WriteLine("\nPress any key to exit...");
         Console.ReadKey();
     }
