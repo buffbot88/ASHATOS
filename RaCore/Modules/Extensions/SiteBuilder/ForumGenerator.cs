@@ -7,11 +7,14 @@ public class ForumGenerator
 {
     private readonly SiteBuilderModule _module;
     private readonly string _cmsRootPath;
+    private readonly string _cmsInternalPath;
 
     public ForumGenerator(SiteBuilderModule module, string cmsRootPath)
     {
         _module = module;
         _cmsRootPath = cmsRootPath;
+        // PHP files go to internal directory, not wwwroot
+        _cmsInternalPath = Path.Combine(Directory.GetCurrentDirectory(), "CMS");
     }
 
     public string GenerateForum(string phpPath)
@@ -20,7 +23,7 @@ public class ForumGenerator
         {
             _module.Log("Starting Forum generation...");
             
-            var forumPath = Path.Combine(_cmsRootPath, "community");
+            var forumPath = Path.Combine(_cmsInternalPath, "community");
             if (!Directory.Exists(forumPath))
             {
                 Directory.CreateDirectory(forumPath);

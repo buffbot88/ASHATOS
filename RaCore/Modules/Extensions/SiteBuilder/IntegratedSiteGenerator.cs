@@ -48,17 +48,21 @@ public class IntegratedSiteGenerator
             
             _module.Log("✅ Integrated CMS + Control Panel + Community generated successfully!");
             
+            var cmsInternalPath = Path.Combine(Directory.GetCurrentDirectory(), "CMS");
             return $@"✅ Integrated site generated successfully!
 
-📁 CMS Location: {_cmsRootPath}
+📁 CMS Location: {cmsInternalPath} (internal - not public)
+📁 Static Site Location: {_cmsRootPath} (public wwwroot)
 📁 Server Root: {Directory.GetCurrentDirectory()}
 
-Generated structure:
-  {_cmsRootPath}/
-    /               - CMS Homepage
-    /control/       - Control Panel
-    /community/     - Forums
-    /profile.php    - User Profiles";
+Generated structure (internal):
+  {cmsInternalPath}/
+    /               - CMS Homepage (PHP)
+    /control/       - Control Panel (PHP)
+    /community/     - Forums (PHP)
+    /profile.php    - User Profiles (PHP)
+
+Note: PHP files are kept internal for security. Static HTML in wwwroot calls API endpoints.";
         }
         catch (Exception ex)
         {

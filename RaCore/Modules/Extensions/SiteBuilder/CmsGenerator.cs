@@ -9,11 +9,15 @@ public class CmsGenerator
 {
     private readonly SiteBuilderModule _module;
     private readonly string _cmsRootPath;
+    private readonly string _cmsInternalPath;
 
     public CmsGenerator(SiteBuilderModule module, string cmsRootPath)
     {
         _module = module;
         _cmsRootPath = cmsRootPath;
+        // PHP files go to internal directory, not wwwroot
+        // This keeps CMS logic separate from public static files
+        _cmsInternalPath = Path.Combine(Directory.GetCurrentDirectory(), "CMS");
     }
 
     public string GenerateHomepage(string phpPath)
@@ -25,11 +29,12 @@ public class CmsGenerator
             var version = GetPhpVersion(phpPath);
             _module.Log($"PHP detected: {version}");
 
-            // Create CMS directory
-            if (!Directory.Exists(_cmsRootPath))
+            // Create internal CMS directory (NOT in wwwroot)
+            // PHP files are kept separate from public static files for security
+            if (!Directory.Exists(_cmsInternalPath))
             {
-                Directory.CreateDirectory(_cmsRootPath);
-                _module.Log($"Created CMS directory: {_cmsRootPath}");
+                Directory.CreateDirectory(_cmsInternalPath);
+                _module.Log($"Created internal CMS directory: {_cmsInternalPath}");
             }
 
             // Initialize SQLite database - use GetCurrentDirectory() for server root
@@ -42,7 +47,7 @@ public class CmsGenerator
             
             InitializeSQLiteDatabase(dbPath);
 
-            // Generate PHP files
+            // Generate PHP files in INTERNAL directory
             GenerateConfigFile(dbPath);
             GenerateDatabaseFile();
             GenerateIndexFile();
@@ -55,7 +60,7 @@ public class CmsGenerator
             GenerateChatFile();
             GenerateProfileFile();
 
-            return $"✅ CMS homepage generated successfully at: {_cmsRootPath}";
+            return $"✅ CMS homepage generated successfully at: {_cmsInternalPath} (internal, not public)";
         }
         catch (Exception ex)
         {
@@ -129,7 +134,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', '1');
 ?>";
 
-        File.WriteAllText(Path.Combine(_cmsRootPath, "config.php"), content);
+        File.WriteAllText(Path.Combine(_cmsInternalPath, "config.php"), content);
         _module.Log("Generated config.php");
     }
 
@@ -178,7 +183,7 @@ class Database {
 }
 ?>";
 
-        File.WriteAllText(Path.Combine(_cmsRootPath, "db.php"), content);
+        File.WriteAllText(Path.Combine(_cmsInternalPath, "db.php"), content);
         _module.Log("Generated db.php");
     }
 
@@ -225,7 +230,7 @@ $page = $pages[0] ?? ['title' => 'Welcome', 'content' => 'No content'];
 </body>
 </html>";
 
-        File.WriteAllText(Path.Combine(_cmsRootPath, "index.php"), content);
+        File.WriteAllText(Path.Combine(_cmsInternalPath, "index.php"), content);
         _module.Log("Generated index.php with full CMS navigation (Home, Blogs, Forums, Chat, Social, Settings)");
     }
 
@@ -372,7 +377,7 @@ if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in']) {
 </body>
 </html>";
 
-        File.WriteAllText(Path.Combine(_cmsRootPath, "admin.php"), content);
+        File.WriteAllText(Path.Combine(_cmsInternalPath, "admin.php"), content);
         _module.Log("Generated admin.php with RaCore Control Panel integration");
     }
 
@@ -462,13 +467,13 @@ a:hover {
     margin-left: 10px;
 }";
 
-        File.WriteAllText(Path.Combine(_cmsRootPath, "styles.css"), content);
+        File.WriteAllText(Path.Combine(_cmsInternalPath, "styles.css"), content);
         _module.Log("Generated styles.css with integrated navigation");
     }
 
     private string GetRelativeDatabasePath(string dbPath)
     {
-        var cmsUri = new Uri(_cmsRootPath + Path.DirectorySeparatorChar);
+        var cmsUri = new Uri(_cmsInternalPath + Path.DirectorySeparatorChar);
         var dbUri = new Uri(dbPath);
         var relativeUri = cmsUri.MakeRelativeUri(dbUri);
         // Always use forward slashes for PHP paths (works on all platforms, including Windows)
@@ -620,7 +625,7 @@ try {
 </body>
 </html>";
 
-        File.WriteAllText(Path.Combine(_cmsRootPath, "blogs.php"), content);
+        File.WriteAllText(Path.Combine(_cmsInternalPath, "blogs.php"), content);
         _module.Log("Generated blogs.php");
     }
 
@@ -667,7 +672,7 @@ $currentUser = $_SESSION['username'] ?? 'guest';
 </body>
 </html>";
 
-        File.WriteAllText(Path.Combine(_cmsRootPath, "forums.php"), content);
+        File.WriteAllText(Path.Combine(_cmsInternalPath, "forums.php"), content);
         _module.Log("Generated forums.php");
     }
 
@@ -918,7 +923,7 @@ try {
 </body>
 </html>";
 
-        File.WriteAllText(Path.Combine(_cmsRootPath, "chat.php"), content);
+        File.WriteAllText(Path.Combine(_cmsInternalPath, "chat.php"), content);
         _module.Log("Generated chat.php");
     }
 
@@ -1201,7 +1206,7 @@ try {
 </body>
 </html>";
 
-        File.WriteAllText(Path.Combine(_cmsRootPath, "profile.php"), content);
+        File.WriteAllText(Path.Combine(_cmsInternalPath, "profile.php"), content);
         _module.Log("Generated profile.php with MySpace-style profile");
     }
 }

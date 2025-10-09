@@ -7,11 +7,14 @@ public class ProfileGenerator
 {
     private readonly SiteBuilderModule _module;
     private readonly string _cmsRootPath;
+    private readonly string _cmsInternalPath;
 
     public ProfileGenerator(SiteBuilderModule module, string cmsRootPath)
     {
         _module = module;
         _cmsRootPath = cmsRootPath;
+        // PHP files go to internal directory, not wwwroot
+        _cmsInternalPath = Path.Combine(Directory.GetCurrentDirectory(), "CMS");
     }
 
     public string GenerateProfiles(string phpPath)
@@ -20,14 +23,14 @@ public class ProfileGenerator
         {
             _module.Log("Starting Profile system generation...");
             
-            // Generate profile files in the CMS root
+            // Generate profile files in the CMS internal directory
             GenerateProfileEditFile();
             GenerateProfileSettingsFile();
             GenerateProfileStylesFile();
             InitializeProfileDatabase();
             
             _module.Log("Profile system generated successfully");
-            return $"✅ Profile system generated at: {_cmsRootPath}";
+            return $"✅ Profile system generated at: {_cmsInternalPath}";
         }
         catch (Exception ex)
         {
@@ -214,7 +217,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </body>
 </html>";
 
-        File.WriteAllText(Path.Combine(_cmsRootPath, "profile-edit.php"), content);
+        File.WriteAllText(Path.Combine(_cmsInternalPath, "profile-edit.php"), content);
         _module.Log("Generated profile-edit.php");
     }
 
@@ -345,7 +348,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </body>
 </html>";
 
-        File.WriteAllText(Path.Combine(_cmsRootPath, "profile-settings.php"), content);
+        File.WriteAllText(Path.Combine(_cmsInternalPath, "profile-settings.php"), content);
         _module.Log("Generated profile-settings.php");
     }
 
@@ -638,7 +641,7 @@ textarea.form-control {
     }
 }";
 
-        File.WriteAllText(Path.Combine(_cmsRootPath, "profile-styles.css"), content);
+        File.WriteAllText(Path.Combine(_cmsInternalPath, "profile-styles.css"), content);
         _module.Log("Generated profile-styles.css");
     }
 }

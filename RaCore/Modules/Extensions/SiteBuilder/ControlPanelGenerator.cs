@@ -7,11 +7,14 @@ public class ControlPanelGenerator
 {
     private readonly SiteBuilderModule _module;
     private readonly string _cmsRootPath;
+    private readonly string _cmsInternalPath;
 
     public ControlPanelGenerator(SiteBuilderModule module, string cmsRootPath)
     {
         _module = module;
         _cmsRootPath = cmsRootPath;
+        // PHP files go to internal directory, not wwwroot
+        _cmsInternalPath = Path.Combine(Directory.GetCurrentDirectory(), "CMS");
     }
 
     public string GenerateControlPanel(string phpPath)
@@ -20,7 +23,7 @@ public class ControlPanelGenerator
         {
             _module.Log("Starting Control Panel generation...");
             
-            var controlPath = Path.Combine(_cmsRootPath, "control");
+            var controlPath = Path.Combine(_cmsInternalPath, "control");
             if (!Directory.Exists(controlPath))
             {
                 Directory.CreateDirectory(controlPath);
