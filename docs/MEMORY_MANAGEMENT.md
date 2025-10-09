@@ -221,3 +221,16 @@ Potential improvements:
 - Compression for old items
 - Archive to cold storage instead of deletion
 - Configurable automatic maintenance triggers
+
+## Observability and Monitoring
+
+For comprehensive observability, metrics collection, and alerting, see:
+- **[MEMORY_HYGIENE_OBSERVABILITY.md](MEMORY_HYGIENE_OBSERVABILITY.md)** - Complete observability features guide
+- **[MEMORY_HYGIENE_EVIDENCE.md](MEMORY_HYGIENE_EVIDENCE.md)** - Evidence collection template for security validation
+
+Features include:
+- Real-time metrics collection (capacity, disk usage, rates)
+- Configurable alerting system with warning/critical thresholds
+- Continuous health monitoring background service
+- Comprehensive soak tests for long-term validation
+- Evidence collection for security gate compliance

@@ -169,10 +169,11 @@ public static class MemoryManagementTests
             var beforeMaintenance = memory.Count();
             Console.WriteLine($"  Before maintenance: {beforeMaintenance} items");
             
-            memory.PerformMaintenance();
+            var results = memory.PerformMaintenance();
             
             var afterMaintenance = memory.Count();
             Console.WriteLine($"  After maintenance: {afterMaintenance} items");
+            Console.WriteLine($"  Pruned: {results.pruned}, Deduplicated: {results.deduplicated}, Limited: {results.limited}");
             Console.WriteLine("  ✓ PASS: Maintenance completed without errors");
         }
         finally
