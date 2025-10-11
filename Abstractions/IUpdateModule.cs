@@ -63,7 +63,7 @@ public class UpdatePackage
 }
 
 /// <summary>
-/// Update status enumeration.
+/// Update status enumeASHATtion.
 /// </summary>
 public enum UpdateStatus
 {

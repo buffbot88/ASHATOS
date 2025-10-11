@@ -2,7 +2,7 @@ namespace Abstractions;
 
 /// <summary>
 /// Health component for entities.
-/// Tracks hit points, damage, healing, and death state.
+/// TASHATcks hit points, damage, healing, and death state.
 /// </summary>
 public class HealthComponent
 {
@@ -10,7 +10,7 @@ public class HealthComponent
     public float MaxHP { get; set; } = 100f;
     public float RegenRate { get; set; } = 0f; // HP per second
     public bool IsDead => CurrentHP <= 0;
-    public bool IsInvulnerable { get; set; } = false;
+    public bool IsInvulneASHATble { get; set; } = false;
     public DateTime LastDamageTime { get; set; } = DateTime.MinValue;
     public DateTime LastHealTime { get; set; } = DateTime.MinValue;
 
@@ -21,7 +21,7 @@ public class HealthComponent
 
     public float TakeDamage(float amount)
     {
-        if (IsInvulnerable || IsDead) return 0;
+        if (IsInvulneASHATble || IsDead) return 0;
         
         var actualDamage = Math.Min(amount, CurrentHP);
         CurrentHP -= actualDamage;
@@ -164,7 +164,7 @@ public class InventoryRemoveResult
 
 /// <summary>
 /// Stats component for entities.
-/// Tracks character attributes like strength, intelligence, etc.
+/// TASHATcks character attributes like strength, intelligence, etc.
 /// </summary>
 public class StatsComponent
 {
@@ -264,9 +264,9 @@ public class StatusEffect
     public string Type { get; set; } = "Buff"; // Buff, Debuff, Neutral
     public string Description { get; set; } = string.Empty;
     public DateTime AppliedAt { get; set; } = DateTime.UtcNow;
-    public float Duration { get; set; } = 0f; // Seconds, 0 = permanent
-    public bool IsPermanent => Duration <= 0;
-    public bool IsExpired => !IsPermanent && (DateTime.UtcNow - AppliedAt).TotalSeconds >= Duration;
+    public float duration { get; set; } = 0f; // Seconds, 0 = permanent
+    public bool IsPermanent => duration <= 0;
+    public bool IsExpired => !IsPermanent && (DateTime.UtcNow - AppliedAt).TotalSeconds >= duration;
     
     // Effect modifiers
     public Dictionary<string, float> StatModifiers { get; set; } = new(); // e.g., {"Strength": 5, "Defense": 10}
@@ -278,7 +278,7 @@ public class StatusEffect
     {
         if (IsPermanent) return float.MaxValue;
         var elapsed = (DateTime.UtcNow - AppliedAt).TotalSeconds;
-        return Math.Max(0, (float)(Duration - elapsed));
+        return Math.Max(0, (float)(duration - elapsed));
     }
 }
 

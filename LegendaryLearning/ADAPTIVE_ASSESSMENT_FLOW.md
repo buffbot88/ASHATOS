@@ -7,7 +7,7 @@
 
 Step 1: Complete Course Lessons
 ┌──────────────────────────────────────┐
-│  Lesson 1: Welcome to RaOS      [✓]  │
+│  Lesson 1: Welcome to ASHATOS      [✓]  │
 │  Lesson 2: Creating Profile     [✓]  │
 │  Lesson 3: Using Blog System    [✓]  │
 │  Lesson 4: Forums and Chat      [✓]  │
@@ -17,7 +17,7 @@ Step 1: Complete Course Lessons
          ▼
 Step 2: Take Final Assessment
 ┌──────────────────────────────────────┐
-│  📝 RaOS Basics - Final Assessment   │
+│  📝 ASHATOS Basics - Final Assessment   │
 │                                       │
 │  10 Questions covering all lessons   │
 │  Passing Score: 70%                  │
@@ -46,7 +46,7 @@ Step 4: Adaptive Feedback
 │  📊 Assessment Results                │
 │                                       │
 │  You need to restudy these lessons:  │
-│  • Lesson 1: Welcome to RaOS         │
+│  • Lesson 1: Welcome to ASHATOS         │
 │  • Lesson 2: Creating Profile        │
 │  • Lesson 3: Using Blog System       │
 │  • Lesson 4: Forums and Chat         │
@@ -62,7 +62,7 @@ Step 5: Targeted Restudy
 ┌──────────────────────────────────────┐
 │  📚 Restudy Failed Lessons            │
 │                                       │
-│  Lesson 1: Welcome to RaOS      [✓]  │
+│  Lesson 1: Welcome to ASHATOS      [✓]  │
 │  Lesson 2: Creating Profile     [✓]  │
 │  Lesson 3: Using Blog System    [✓]  │
 │  Lesson 4: Forums and Chat      [✓]  │
@@ -102,7 +102,7 @@ Step 7: Success! 🎉
 Courses Table
 ┌────────────────────────────┐
 │ Id: course-user-basics     │
-│ Title: RaOS Basics         │
+│ Title: ASHATOS Basics         │
 │ LessonCount: 5             │
 │ PermissionLevel: User      │
 └────────────────────────────┘
@@ -113,7 +113,7 @@ Lessons Table                          Assessments Table
 ┌────────────────────────────┐        ┌────────────────────────────┐
 │ Id: lesson-user-1          │        │ Id: assessment-course-...  │
 │ CourseId: course-user-...  │◄───────│ CourseId: course-user-...  │
-│ Title: Welcome to RaOS     │        │ PassingScore: 70           │
+│ Title: Welcome to ASHATOS     │        │ PassingScore: 70           │
 │ OrderIndex: 1              │        └────────────────────────────┘
 └────────────────────────────┘                 │
          ▲                                     │ Has Many
@@ -155,7 +155,7 @@ UserAssessmentResults Table                                             │
 
 ---
 
-## Key Benefits Illustrated
+## Key Benefits IllustRated
 
 ```
 Traditional System          vs.          Adaptive System
@@ -171,7 +171,7 @@ User fails test                          User fails test
 ⏱️  Takes 45 minutes               ⏱️  Takes 18 minutes
       │                                        │
       ▼                                        ▼
-😤 User frustrated                 😊 User feels efficient
+😤 User frustRated                 😊 User feels efficient
    "I already know this!"              "Targeted learning!"
 ```
 

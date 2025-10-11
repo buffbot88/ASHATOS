@@ -42,5 +42,5 @@ public interface IAutonomousModule
     /// <summary>
     /// Execute a decision if approved
     /// </summary>
-    Task<DecisionResult> ExecuteDecisionAsync(DecisionRecommendation recommendation, bool userApproved);
+    Task<DecisionResult> ExecuteDecisionAsync(DecisionRecommendation recommendation, bool useASHATpproved);
 }

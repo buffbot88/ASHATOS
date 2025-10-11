@@ -1,9 +1,9 @@
 using Abstractions;
-using LegendaryCMS.Configuration;
 using LegendaryCMS.Plugins;
 using LegendaryCMS.API;
 using LegendaryCMS.Security;
 using Microsoft.Extensions.DependencyInjection;
+using LegendaryCMS.Configuration;
 
 namespace LegendaryCMS.Core;
 
@@ -17,7 +17,7 @@ public sealed class LegendaryCMSModule : ModuleBase, ILegendaryCMSModule
     public override string Name => "LegendaryCMS";
     public string Version => "8.0.0";
 
-    private ICMSConfiguration? _configuration;
+    private ICMSConfiguration? _Configuration;
     private PluginManager? _pluginManager;
     private CMSAPIManager? _apiManager;
     private IRBACManager? _rbacManager;
@@ -34,9 +34,9 @@ public sealed class LegendaryCMSModule : ModuleBase, ILegendaryCMSModule
         {
             LogInfo("Initializing Legendary CMS Suite v8.0.0...");
 
-            // Setup configuration
+            // Setup Configuration
             var configPath = Path.Combine(Directory.GetCurrentDirectory(), "cms-config.json");
-            _configuration = new CMSConfiguration(configPath);
+            _Configuration = new CMSConfiguration(configPath);
 
             // Setup dependency injection
             var services = new ServiceCollection();
@@ -48,14 +48,14 @@ public sealed class LegendaryCMSModule : ModuleBase, ILegendaryCMSModule
             LogInfo("RBAC system initialized with default roles and permissions");
 
             // Initialize API Manager
-            var rateLimitConfig = new CMSRateLimitConfig
+            var RateLimitConfig = new CMSRateLimitConfig
             {
-                RequestsPerMinute = _configuration.GetValue("API:RateLimit:RequestsPerMinute", 60),
-                RequestsPerHour = _configuration.GetValue("API:RateLimit:RequestsPerHour", 1000)
+                RequestsPerMinute = _Configuration.GetValue("API:RateLimit:RequestsPerMinute", 60),
+                RequestsPerHour = _Configuration.GetValue("API:RateLimit:RequestsPerHour", 1000)
             };
-            _apiManager = new CMSAPIManager(rateLimitConfig);
+            _apiManager = new CMSAPIManager(RateLimitConfig);
             RegisterCMSEndpoints();
-            LogInfo("API Manager initialized with rate limiting");
+            LogInfo("API Manager initialized with Rate limiting");
 
             // Initialize Plugin Manager
             var pluginLogger = new ConsolePluginLogger("CMS");
@@ -68,7 +68,7 @@ public sealed class LegendaryCMSModule : ModuleBase, ILegendaryCMSModule
 
             LogInfo("✅ Legendary CMS Suite initialized successfully");
             LogInfo($"   Version: {Version}");
-            LogInfo($"   Configuration: Environment={_configuration.Environment}");
+            LogInfo($"   Configuration: Environment={_Configuration.Environment}");
             LogInfo($"   API: {_apiManager.GetEndpoints().Count} endpoints registered");
             LogInfo($"   Plugins: Ready for dynamic loading");
             LogInfo($"   Security: RBAC enabled with granular permissions");
@@ -83,7 +83,7 @@ public sealed class LegendaryCMSModule : ModuleBase, ILegendaryCMSModule
     private void ConfigureServices(IServiceCollection services)
     {
         // Register core services
-        services.AddSingleton(_configuration!);
+        services.AddSingleton(_Configuration!);
         services.AddSingleton<IRBACManager>(_rbacManager!);
 
         // Add logging
@@ -193,7 +193,7 @@ public sealed class LegendaryCMSModule : ModuleBase, ILegendaryCMSModule
             Handler = async (request) =>
             {
                 await Task.CompletedTask;
-                return CMSAPIResponse.Success(_configuration!.GetSection("Site"));
+                return CMSAPIResponse.Success(_Configuration!.GetSection("Site"));
             }
         });
 
@@ -254,7 +254,7 @@ public sealed class LegendaryCMSModule : ModuleBase, ILegendaryCMSModule
         return @"Legendary CMS Suite v8.0.0 - Commands:
 
   cms status       - Show CMS status and health
-  cms config       - Display configuration
+  cms config       - Display Configuration
   cms api          - List API endpoints
   cms plugins      - Show loaded plugins
   cms rbac         - Display RBAC information
@@ -263,9 +263,9 @@ public sealed class LegendaryCMSModule : ModuleBase, ILegendaryCMSModule
 Features:
   ✓ Modular DLL architecture
   ✓ Plugin system with event hooks
-  ✓ REST API with rate limiting
+  ✓ REST API with Rate limiting
   ✓ Enhanced RBAC with granular permissions
-  ✓ Environment-aware configuration
+  ✓ Environment-aware Configuration
   ✓ OpenAPI/Swagger documentation
   ✓ Production-ready security";
     }
@@ -285,22 +285,22 @@ Features:
 
     private string GetConfigurationText()
     {
-        if (_configuration == null) return "Configuration not initialized";
+        if (_Configuration == null) return "Configuration not initialized";
 
         return $@"CMS Configuration:
-  Environment: {_configuration.Environment}
-  Site Name: {_configuration.GetValue<string>("Site:Name")}
-  Base URL: {_configuration.GetValue<string>("Site:BaseUrl")}
-  Database: {_configuration.GetValue<string>("Database:Type")}
+  Environment: {_Configuration.Environment}
+  Site Name: {_Configuration.GetValue<string>("Site:Name")}
+  Base URL: {_Configuration.GetValue<string>("Site:BaseUrl")}
+  Database: {_Configuration.GetValue<string>("Database:Type")}
   Security:
-    - CSRF Protection: {_configuration.GetValue<bool>("Security:EnableCSRF")}
-    - XSS Protection: {_configuration.GetValue<bool>("Security:EnableXSSProtection")}
-    - Session Timeout: {_configuration.GetValue<int>("Security:SessionTimeout")}s
+    - CSRF Protection: {_Configuration.GetValue<bool>("Security:EnableCSRF")}
+    - XSS Protection: {_Configuration.GetValue<bool>("Security:EnableXSSProtection")}
+    - Session Timeout: {_Configuration.GetValue<int>("Security:SessionTimeout")}s
   API:
-    - Enabled: {_configuration.GetValue<bool>("API:Enabled")}
-    - Rate Limit: {_configuration.GetValue<int>("API:RateLimit:RequestsPerMinute")}/min
-  Theme: {_configuration.GetValue<string>("Theme:Default")}
-  Locale: {_configuration.GetValue<string>("Localization:DefaultLocale")}";
+    - Enabled: {_Configuration.GetValue<bool>("API:Enabled")}
+    - Rate Limit: {_Configuration.GetValue<int>("API:RateLimit:RequestsPerMinute")}/min
+  Theme: {_Configuration.GetValue<string>("Theme:Default")}
+  Locale: {_Configuration.GetValue<string>("Localization:DefaultLocale")}";
     }
 
     private string GetAPIInfoText()
@@ -358,14 +358,14 @@ Default Roles:
   • Guest - Read-only access (view content)
 
 Permission Categories:
-  • Forum: view, post, edit, delete, moderate
+  • Forum: view, post, edit, delete, modeRate
   • Blog: view, create, edit, delete, publish
-  • Chat: join, send, moderate, kick, ban
+  • Chat: join, send, modeRate, kick, ban
   • Profile: view, edit, delete
   • Admin: access, users, settings, plugins, themes
-  • System: config, backup, migrate
+  • System: config, backup, migRate
 
-Granular permissions allow fine-tuned access control for all CMS features.";
+granular permissions allow fine-tuned access control for all CMS features.";
     }
 
     public CMSStatus GetStatus()
@@ -378,14 +378,14 @@ Granular permissions allow fine-tuned access control for all CMS features.";
             StartTime = _startTime,
             ComponentStatus = new Dictionary<string, bool>
             {
-                ["Configuration"] = _configuration != null,
+                ["Configuration"] = _Configuration != null,
                 ["API"] = _apiManager != null,
                 ["Plugins"] = _pluginManager != null,
                 ["RBAC"] = _rbacManager != null
             },
             HealthChecks = new Dictionary<string, string>
             {
-                ["Overall"] = _isInitialized && _isRunning ? "Healthy" : "Degraded",
+                ["Overall"] = _isInitialized && _isRunning ? "Healthy" : "DeGraded",
                 ["API"] = _apiManager != null ? "Operational" : "Not Available",
                 ["Plugins"] = _pluginManager != null ? "Ready" : "Not Available"
             }
@@ -394,7 +394,7 @@ Granular permissions allow fine-tuned access control for all CMS features.";
 
     public ICMSConfiguration GetConfiguration()
     {
-        return _configuration ?? throw new InvalidOperationException("Configuration not initialized");
+        return _Configuration ?? throw new InvalidOperationException("Configuration not initialized");
     }
 
     public override void Dispose()

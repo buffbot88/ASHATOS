@@ -1,6 +1,6 @@
 using LegendaryLearning.Database;
-using LegendaryLearning.Abstractions;
 using Abstractions;
+using LegendaryLearning.Abstractions;
 
 namespace LegendaryLearning.Services;
 
@@ -26,7 +26,7 @@ public class AssessmentService
         return _database.GetAssessmentByCourseId(courseId);
     }
 
-    public async Task<UserAssessmentResult> SubmitAssessmentAsync(string userId, string assessmentId, Dictionary<string, string> userAnswers)
+    public async Task<UserAssessmentResult> SubmitAssessmentAsync(string userId, string assessmentId, Dictionary<string, string> useASHATnswers)
     {
         await Task.CompletedTask;
         
@@ -46,12 +46,12 @@ public class AssessmentService
 
         foreach (var question in questions)
         {
-            if (userAnswers.TryGetValue(question.Id, out var userAnswerId))
+            if (useASHATnswers.TryGetValue(question.Id, out var useASHATnswerId))
             {
                 var answers = _database.GetAnswers(question.Id);
                 var correctAnswer = answers.FirstOrDefault(a => a.IsCorrect);
                 
-                if (correctAnswer != null && correctAnswer.Id == userAnswerId)
+                if (correctAnswer != null && correctAnswer.Id == useASHATnswerId)
                 {
                     earnedPoints += question.Points;
                 }
@@ -86,7 +86,7 @@ public class AssessmentService
             Passed = passed,
             AttemptedAt = DateTime.UtcNow,
             FailedLessonIds = passed ? new List<string>() : failedLessonIds,
-            UserAnswers = userAnswers
+            UseASHATnswers = useASHATnswers
         };
 
         _database.SaveUserAssessmentResult(result);

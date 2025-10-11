@@ -1,7 +1,7 @@
 namespace Abstractions;
 
 /// <summary>
-/// Defines the operating mode for a RaOS server instance
+/// Defines the Operating mode for a ASHATOS server instance
 /// </summary>
 public enum ServerMode
 {
@@ -22,7 +22,7 @@ public enum ServerMode
     Beta,
     
     /// <summary>
-    /// Omega mode - Main server configuration (US-Omega)
+    /// Omega mode - Main server Configuration (US-Omega)
     /// </summary>
     Omega,
     
@@ -38,7 +38,7 @@ public enum ServerMode
 }
 
 /// <summary>
-/// Configuration for RaOS server initialization and operation
+/// Configuration for ASHATOS server initialization and Operation
 /// </summary>
 public class ServerConfiguration
 {
@@ -110,7 +110,7 @@ public class ServerConfiguration
     /// <summary>
     /// Main server URL for license validation (default: US-Omega)
     /// </summary>
-    public string MainServerUrl { get; set; } = "https://us-omega.raos.io";
+    public string MainServerUrl { get; set; } = "https://us-omega.ASHATOS.io";
     
     /// <summary>
     /// Skip license server validation in Dev mode for Super Admin setup
@@ -137,13 +137,13 @@ public class ServerConfiguration
     
     /// <summary>
     /// FTP server username for local FTP server access
-    /// Used by RaOS to connect to the local FTP server at localhost:21
+    /// Used by ASHATOS to connect to the local FTP server at localhost:21
     /// </summary>
     public string? FtpUsername { get; set; }
     
     /// <summary>
     /// FTP server password for local FTP server access
-    /// Used by RaOS to connect to the local FTP server at localhost:21
+    /// Used by ASHATOS to connect to the local FTP server at localhost:21
     /// </summary>
     public string? FtpPassword { get; set; }
     

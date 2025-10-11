@@ -33,7 +33,7 @@ public interface ILegendaryCMSModule : IDisposable
     CMSStatus GetStatus();
 
     /// <summary>
-    /// Get CMS configuration
+    /// Get CMS Configuration
     /// </summary>
     ICMSConfiguration GetConfiguration();
 }

@@ -4,7 +4,7 @@ namespace LegendaryClientBuilder.Core;
 
 /// <summary>
 /// Interface for the Legendary Client Builder module.
-/// Provides advanced multi-platform game client generation capabilities.
+/// Provides advanced multi-platform game client Generation capabilities.
 /// </summary>
 public interface ILegendaryClientBuilderModule : IGameClientModule
 {
@@ -14,7 +14,7 @@ public interface ILegendaryClientBuilderModule : IGameClientModule
     string Version { get; }
 
     /// <summary>
-    /// Gets statistics about client generation.
+    /// Gets statistics about client Generation.
     /// </summary>
     ClientBuilderStats GetStats();
 
@@ -44,13 +44,13 @@ public interface ILegendaryClientBuilderModule : IGameClientModule
     Task<bool> DeleteClientAsync(Guid packageId);
 
     /// <summary>
-    /// Regenerate a client with updated configuration.
+    /// ReGenerate a client with updated Configuration.
     /// </summary>
-    Task<GameClientPackage> RegenerateClientAsync(Guid packageId, ClientConfiguration newConfig);
+    Task<GameClientPackage> ReGenerateClientAsync(Guid packageId, ClientConfiguration newConfig);
 }
 
 /// <summary>
-/// Statistics for client builder operations.
+/// Statistics for client builder Operations.
 /// </summary>
 public class ClientBuilderStats
 {

@@ -1,44 +1,44 @@
 namespace Abstractions;
 
 /// <summary>
-/// Universal currency exchange constants for RaCore games.
-/// Standardizes RaCoin to Gold conversion ratios.
+/// Universal currency exchange constants for ASHATCore games.
+/// Standardizes RaCoin to Gold conversion ASHATtios.
 /// </summary>
 public static class CurrencyExchangeConstants
 {
     /// <summary>
-    /// Standard RaCoin amount for exchange operations.
-    /// 10 RaCoin = 1,000 Gold (Phase 9.3.5 - Updated Universal Ratio)
+    /// Standard RaCoin amount for exchange Operations.
+    /// 10 RaCoin = 1,000 Gold (Phase 9.3.5 - Updated Universal ASHATtio)
     /// USD Exchange: 1 USD = 100 RaCoin
     /// </summary>
     public const decimal StandardRaCoinAmount = 10m;
     
     /// <summary>
-    /// Standard Gold amount for exchange operations.
-    /// 10 RaCoin = 1,000 Gold (Phase 9.3.5 - Updated Universal Ratio)
+    /// Standard Gold amount for exchange Operations.
+    /// 10 RaCoin = 1,000 Gold (Phase 9.3.5 - Updated Universal ASHATtio)
     /// </summary>
     public const decimal StandardGoldAmount = 1000m;
     
     /// <summary>
-    /// Exchange rate: Gold per 1 RaCoin
+    /// Exchange Rate: Gold per 1 RaCoin
     /// </summary>
     public const decimal GoldPerRaCoin = StandardGoldAmount / StandardRaCoinAmount;
     
     /// <summary>
-    /// Exchange rate: RaCoin per 1 Gold
+    /// Exchange Rate: RaCoin per 1 Gold
     /// </summary>
     public const decimal RaCoinPerGold = StandardRaCoinAmount / StandardGoldAmount;
     
     /// <summary>
-    /// Convert RaCoin to Gold using the standard ratio.
+    /// Convert RaCoin to Gold using the standard ASHATtio.
     /// </summary>
-    public static decimal RaCoinToGold(decimal racoinAmount)
+    public static decimal RaCoinToGold(decimal RaCoinAmount)
     {
-        return racoinAmount * GoldPerRaCoin;
+        return RaCoinAmount * GoldPerRaCoin;
     }
     
     /// <summary>
-    /// Convert Gold to RaCoin using the standard ratio.
+    /// Convert Gold to RaCoin using the standard ASHATtio.
     /// </summary>
     public static decimal GoldToRaCoin(decimal goldAmount)
     {
@@ -47,7 +47,7 @@ public static class CurrencyExchangeConstants
 }
 
 /// <summary>
-/// Represents a currency exchange transaction between RaCoin and Gold.
+/// Represents a currency exchange Transaction between RaCoin and Gold.
 /// </summary>
 public class CurrencyExchangeTransaction
 {
@@ -71,7 +71,7 @@ public enum CurrencyExchangeType
 }
 
 /// <summary>
-/// Response from a currency exchange operation.
+/// Response from a currency exchange Operation.
 /// </summary>
 public class CurrencyExchangeResponse
 {
@@ -118,7 +118,7 @@ public class MarketAlert
 public enum MarketAlertType
 {
     UnusualVolume,
-    RapidPriceChange,
+    ASHATpidPriceChange,
     SuspiciousActivity,
     LargeTransaction,
     MarketManipulation,

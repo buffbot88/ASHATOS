@@ -7,7 +7,7 @@ namespace LegendaryGameEngine.Database;
 
 /// <summary>
 /// Database persistence layer for Game Engine scenes and entities.
-/// Provides SQLite storage for game state across server restarts.
+/// Provides SQLite Storage for game state across server restarts.
 /// </summary>
 public class GameEngineDatabase : IDisposable
 {

@@ -3,7 +3,7 @@ namespace Abstractions;
 /// <summary>
 /// Represents a content moderation scan result.
 /// </summary>
-public class ModerationResult
+public class moderationResult
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public DateTime TimestampUtc { get; set; } = DateTime.UtcNow;
@@ -11,7 +11,7 @@ public class ModerationResult
     public string UserId { get; set; } = string.Empty;
     public string ModuleName { get; set; } = string.Empty;
     public ContentType ContentType { get; set; }
-    public ModerationAction Action { get; set; }
+    public moderationAction Action { get; set; }
     public double ConfidenceScore { get; set; }
     public List<ContentViolation> Violations { get; set; } = new();
     public string? ReviewedBy { get; set; }
@@ -32,7 +32,7 @@ public class ContentViolation
 }
 
 /// <summary>
-/// Types of content that can be moderated.
+/// Types of content that can be modeRated.
 /// </summary>
 public enum ContentType
 {
@@ -50,7 +50,7 @@ public enum ContentType
 public enum ViolationType
 {
     None,
-    Harassment,
+    HaASHATssment,
     Hate,
     Violence,
     SelfHarm,
@@ -68,7 +68,7 @@ public enum ViolationType
 /// <summary>
 /// Actions that can be taken by the moderation system.
 /// </summary>
-public enum ModerationAction
+public enum moderationAction
 {
     Approved,
     Flagged,
@@ -89,7 +89,7 @@ public class SuspensionRecord
     public string Reason { get; set; } = string.Empty;
     public string SuspendedBy { get; set; } = "System";
     public bool IsActive { get; set; } = true;
-    public List<string> ViolationIds { get; set; } = new(); // References to ModerationResult IDs
+    public List<string> ViolationIds { get; set; } = new(); // References to moderationResult IDs
     public string? AppealNotes { get; set; }
     public DateTime? AppealedAt { get; set; }
 }
@@ -97,16 +97,16 @@ public class SuspensionRecord
 /// <summary>
 /// Configuration for content moderation thresholds.
 /// </summary>
-public class ModerationPolicy
+public class moderationPolicy
 {
     public double AutoBlockThreshold { get; set; } = 0.85;
     public double AutoSuspendThreshold { get; set; } = 0.90;
     public double FlagForReviewThreshold { get; set; } = 0.60;
     public int MaxViolationsBeforeSuspension { get; set; } = 3;
-    public TimeSpan DefaultSuspensionDuration { get; set; } = TimeSpan.FromDays(7);
+    public TimeSpan DefaultSuspensionduration { get; set; } = TimeSpan.FromDays(7);
     public Dictionary<ViolationType, double> ViolationWeights { get; set; } = new()
     {
-        [ViolationType.Harassment] = 0.8,
+        [ViolationType.HaASHATssment] = 0.8,
         [ViolationType.Hate] = 0.95,
         [ViolationType.Violence] = 0.9,
         [ViolationType.SelfHarm] = 1.0,
@@ -125,12 +125,12 @@ public class ModerationPolicy
 /// <summary>
 /// Interface for content moderation module.
 /// </summary>
-public interface IContentModerationModule
+public interface IContentmoderationModule
 {
     /// <summary>
     /// Scan text content for violations.
     /// </summary>
-    Task<ModerationResult> ScanTextAsync(string text, string userId, string moduleName, string contentId);
+    Task<moderationResult> ScanTextAsync(string text, string userId, string moduleName, string contentId);
     
     /// <summary>
     /// Check if a user is currently suspended.
@@ -145,17 +145,17 @@ public interface IContentModerationModule
     /// <summary>
     /// Get moderation history for a user.
     /// </summary>
-    Task<List<ModerationResult>> GetUserModerationHistoryAsync(string userId, int limit = 50);
+    Task<List<moderationResult>> GetUsermoderationHistoryAsync(string userId, int limit = 50);
     
     /// <summary>
     /// Get pending reviews.
     /// </summary>
-    Task<List<ModerationResult>> GetPendingReviewsAsync(int limit = 100);
+    Task<List<moderationResult>> GetPendingReviewsAsync(int limit = 100);
     
     /// <summary>
     /// Review a flagged content.
     /// </summary>
-    Task<bool> ReviewContentAsync(string moderationId, ModerationAction finalAction, string reviewerId, string notes);
+    Task<bool> ReviewContentAsync(string moderationId, moderationAction finalAction, string reviewerId, string notes);
     
     /// <summary>
     /// Manually suspend a user.
@@ -170,13 +170,13 @@ public interface IContentModerationModule
     /// <summary>
     /// Get moderation statistics.
     /// </summary>
-    Task<ModerationStats> GetStatsAsync();
+    Task<moderationStats> GetStatsAsync();
 }
 
 /// <summary>
 /// Statistics for content moderation.
 /// </summary>
-public class ModerationStats
+public class moderationStats
 {
     public int TotalScans { get; set; }
     public int Approved { get; set; }

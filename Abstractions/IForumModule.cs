@@ -23,12 +23,12 @@ public interface IForumModule
     /// <summary>
     /// Delete a forum post.
     /// </summary>
-    Task<bool> DeletePostAsync(string postId, string moderatorId, string reason);
+    Task<bool> DeletePostAsync(string postId, string ModeratorId, string reason);
     
     /// <summary>
     /// Lock or unlock a forum thread.
     /// </summary>
-    Task<bool> LockThreadAsync(string postId, bool locked, string moderatorId);
+    Task<bool> LockThreadAsync(string postId, bool locked, string ModeratorId);
     
     /// <summary>
     /// Get warnings for a user.
@@ -38,12 +38,12 @@ public interface IForumModule
     /// <summary>
     /// Issue a warning to a user.
     /// </summary>
-    Task<bool> IssueWarningAsync(string userId, string reason, string moderatorId);
+    Task<bool> IssueWarningAsync(string userId, string reason, string ModeratorId);
     
     /// <summary>
     /// Ban or unban a user.
     /// </summary>
-    Task<bool> BanUserAsync(string userId, bool banned, string reason, string moderatorId);
+    Task<bool> BanUserAsync(string userId, bool banned, string reason, string ModeratorId);
     
     /// <summary>
     /// Check if a user is banned.
@@ -71,7 +71,7 @@ public class ForumPost
     public bool IsLocked { get; set; }
     public int ReplyCount { get; set; }
     public int ViewCount { get; set; }
-    public ContentRating ContentRating { get; set; } = ContentRating.Everyone; // Age rating
+    public ContentASHATting ContentASHATting { get; set; } = ContentASHATting.Everyone; // Age ASHATting
 }
 
 public class ForumWarning

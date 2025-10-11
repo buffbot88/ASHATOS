@@ -6,27 +6,27 @@ namespace LegendaryCMS.Configuration;
 public interface ICMSConfiguration
 {
     /// <summary>
-    /// Get configuration value by key
+    /// Get Configuration value by key
     /// </summary>
     T? GetValue<T>(string key, T? defaultValue = default);
 
     /// <summary>
-    /// Set configuration value
+    /// Set Configuration value
     /// </summary>
     void SetValue<T>(string key, T value);
 
     /// <summary>
-    /// Get configuration section
+    /// Get Configuration section
     /// </summary>
     Dictionary<string, object> GetSection(string section);
 
     /// <summary>
-    /// Reload configuration from source
+    /// Reload Configuration from source
     /// </summary>
     Task ReloadAsync();
 
     /// <summary>
-    /// Save configuration
+    /// Save Configuration
     /// </summary>
     Task SaveAsync();
 
@@ -59,7 +59,7 @@ public class CMSConfiguration : ICMSConfiguration
         // Database settings
         SetValue("Database:Type", "SQLite");
         SetValue("Database:ConnectionString", "Data Source=cms.db");
-        SetValue("Database:AutoMigrate", true);
+        SetValue("Database:AutoMigRate", true);
 
         // Site settings
         SetValue("Site:Name", "Legendary CMS");
@@ -87,7 +87,7 @@ public class CMSConfiguration : ICMSConfiguration
 
         // Performance settings
         SetValue("Performance:EnableCaching", true);
-        SetValue("Performance:CacheDuration", 300);
+        SetValue("Performance:Cacheduration", 300);
         SetValue("Performance:MaxConcurrentRequests", 100);
 
         // Monitoring settings

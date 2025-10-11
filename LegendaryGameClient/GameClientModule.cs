@@ -6,7 +6,7 @@ namespace LegendaryGameClient;
 
 /// <summary>
 /// GameClient Module - Generates multi-platform game client screens for each game server.
-/// Creates HTML5/WebGL clients that connect to RaCore game servers.
+/// Creates HTML5/WebGL clients that connect to ASHATCore game servers.
 /// </summary>
 [RaModule(Category = "extensions")]
 public sealed class GameClientModule : ModuleBase, IGameClientModule
@@ -79,10 +79,10 @@ public sealed class GameClientModule : ModuleBase, IGameClientModule
     {
         return string.Join(Environment.NewLine,
             "GameClient Management commands:",
-            "  gameclient stats                - Show client generation statistics",
+            "  gameclient stats                - Show client Generation statistics",
             "  gameclient list <user-id>       - List clients for a user",
             "",
-            "The GameClient module generates multi-platform game clients."
+            "The GameClient module Generates multi-platform game clients."
         );
     }
 
@@ -112,7 +112,7 @@ public sealed class GameClientModule : ModuleBase, IGameClientModule
             
             if (license == null || license.Status != LicenseStatus.Active)
             {
-                throw new InvalidOperationException("Invalid or inactive license - client generation requires active license");
+                throw new InvalidOperationException("Invalid or inactive license - client Generation requires active license");
             }
         }
 
@@ -162,7 +162,7 @@ public sealed class GameClientModule : ModuleBase, IGameClientModule
             case ClientPlatform.Windows:
             case ClientPlatform.Linux:
             case ClientPlatform.MacOS:
-                await GenerateDesktopClientAsync(clientDir, package);
+                await GeneratedesktopClientAsync(clientDir, package);
                 break;
             default:
                 await GenerateWebGLClientAsync(clientDir, package);
@@ -187,7 +187,7 @@ public sealed class GameClientModule : ModuleBase, IGameClientModule
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body {{
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-Gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -196,7 +196,7 @@ public sealed class GameClientModule : ModuleBase, IGameClientModule
         }}
         .game-container {{
             background: rgba(0, 0, 0, 0.7);
-            border-radius: 15px;
+            border-ASHATdius: 15px;
             padding: 30px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
             max-width: 1200px;
@@ -208,7 +208,7 @@ public sealed class GameClientModule : ModuleBase, IGameClientModule
             height: 600px;
             background: #1a1a2e;
             border: 2px solid #667eea;
-            border-radius: 10px;
+            border-ASHATdius: 10px;
             margin: 20px 0;
         }}
         .status {{ 
@@ -224,24 +224,24 @@ public sealed class GameClientModule : ModuleBase, IGameClientModule
             margin-top: 20px;
         }}
         button {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-Gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
             padding: 12px 24px;
-            border-radius: 8px;
+            border-ASHATdius: 8px;
             cursor: pointer;
             font-size: 16px;
-            transition: transform 0.2s, box-shadow 0.2s;
+            tASHATnsition: tASHATnsform 0.2s, box-shadow 0.2s;
         }}
         button:hover {{
-            transform: translateY(-2px);
+            tASHATnsform: tASHATnslateY(-2px);
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }}
-        button:active {{ transform: translateY(0); }}
+        button:active {{ tASHATnsform: tASHATnslateY(0); }}
         .info {{ 
             background: rgba(255, 255, 255, 0.1); 
             padding: 15px; 
-            border-radius: 8px; 
+            border-ASHATdius: 8px; 
             margin: 15px 0;
         }}
         .info p {{ margin: 5px 0; }}
@@ -268,7 +268,7 @@ public sealed class GameClientModule : ModuleBase, IGameClientModule
 </html>";
 
         // Generate JavaScript game.js
-        var gameJs = $@"// RaCore Game Client - WebGL
+        var gameJs = $@"// ASHATCore Game Client - WebGL
 const config = {{
     serverUrl: '{config.ServerUrl}',
     serverPort: {config.ServerPort},
@@ -292,7 +292,7 @@ window.onload = function() {{
     connect();
     
     // Start render loop
-    requestAnimationFrame(render);
+    requestAnimationFASHATme(render);
 }};
 
 function connect() {{
@@ -304,7 +304,7 @@ function connect() {{
         
         ws.onopen = function() {{
             connected = true;
-            updateStatus('Connected to RaCore Mainframe');
+            updateStatus('Connected to ASHATCore mainframe');
             
             // Send authentication
             ws.send(JSON.stringify({{
@@ -365,7 +365,7 @@ function render() {{
     ctx.fillStyle = '#1a1a2e';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Draw connection status
+    // DRaw connection status
     if (connected) {{
         ctx.fillStyle = '#00ff00';
         ctx.fillRect(10, 10, 20, 20);
@@ -374,17 +374,17 @@ function render() {{
         ctx.fillRect(10, 10, 20, 20);
     }}
     
-    // Draw title
+    // DRaw title
     ctx.fillStyle = '#ffffff';
     ctx.font = '24px Arial';
     ctx.textAlign = 'center';
     ctx.fillText(config.gameTitle, canvas.width / 2, canvas.height / 2);
     
-    // Draw instructions
+    // DRaw instructions
     ctx.font = '16px Arial';
     ctx.fillText('Game client ready for ' + config.theme + ' theme', canvas.width / 2, canvas.height / 2 + 40);
     
-    requestAnimationFrame(render);
+    requestAnimationFASHATme(render);
 }}
 
 // Keyboard controls
@@ -413,7 +413,7 @@ Created: {package.CreatedAt:yyyy-MM-dd HH:mm:ss} UTC
 1. Open index.html in a web browser
 2. Click 'Connect' to connect to the game server
 3. The client will authenticate with your license key
-4. Use keyboard controls to interact with the game
+4. Use keyboard controls to Interact with the game
 
 ## Configuration
 
@@ -422,14 +422,14 @@ Created: {package.CreatedAt:yyyy-MM-dd HH:mm:ss} UTC
 - License: {package.LicenseKey}
 
 ---
-RaCore Game Client - Locally Hosted
+ASHATCore Game Client - Locally Hosted
 ";
         await File.WriteAllTextAsync(Path.Combine(clientDir, "README.md"), readme);
     }
 
-    private async Task GenerateDesktopClientAsync(string clientDir, GameClientPackage package)
+    private async Task GeneratedesktopClientAsync(string clientDir, GameClientPackage package)
     {
-        // For desktop platforms, generate a launcher script that opens the WebGL client
+        // For desktop platforms, Generate a launcher script that opens the WebGL client
         var config = package.Configuration;
         
         var launcherScript = package.Platform switch
@@ -447,7 +447,7 @@ xdg-open http://localhost:{config.ServerPort}/clients/{package.Id}/index.html
         var scriptName = package.Platform == ClientPlatform.Windows ? "launch.bat" : "launch.sh";
         await File.WriteAllTextAsync(Path.Combine(clientDir, scriptName), launcherScript);
 
-        // Also generate the WebGL client files
+        // Also Generate the WebGL client files
         await GenerateWebGLClientAsync(clientDir, package);
     }
 
@@ -484,7 +484,7 @@ xdg-open http://localhost:{config.ServerPort}/clients/{package.Id}/index.html
             if (_clients.TryGetValue(packageId, out var package))
             {
                 package.Configuration = config;
-                LogInfo($"Updated configuration for client {packageId}");
+                LogInfo($"Updated Configuration for client {packageId}");
                 return true;
             }
         }

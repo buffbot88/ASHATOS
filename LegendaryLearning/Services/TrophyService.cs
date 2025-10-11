@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
-using LegendaryLearning.Abstractions;
 using Abstractions;
+using LegendaryLearning.Abstractions;
 
 namespace LegendaryLearning.Services;
 

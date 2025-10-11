@@ -5,7 +5,7 @@ namespace LegendaryGameEngine.Chat;
 
 /// <summary>
 /// In-Game Chat Manager - Manages chat rooms and messages within game instances.
-/// Separate from the main CMS website chat system.
+/// SepaRate from the main CMS website chat system.
 /// </summary>
 public class InGameChatManager : IDisposable
 {

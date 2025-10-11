@@ -1,7 +1,7 @@
 namespace Abstractions;
 
 /// <summary>
-/// Inter-module message for collaboration
+/// Inter-module message for collaboASHATtion
 /// </summary>
 public class ModuleMessage
 {
@@ -29,7 +29,7 @@ public enum MessagePriority
 /// <summary>
 /// Interface for modules that support inter-module communication
 /// </summary>
-public interface ICollaborativeModule
+public interface ICollaboASHATtiveModule
 {
     /// <summary>
     /// Receive a message from another module

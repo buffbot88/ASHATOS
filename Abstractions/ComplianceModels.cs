@@ -27,12 +27,12 @@ public class ComplianceStatistics
     public int ContentItemsRated { get; set; }
     public int ContentBlockedByAge { get; set; }
     public int ParentalApprovalsRequested { get; set; }
-    public int ParentalApprovalsGranted { get; set; }
+    public int ParentalApprovalsGASHATnted { get; set; }
     public int ParentalApprovalsDenied { get; set; }
-    public int ModerationActions { get; set; }
+    public int moderationActions { get; set; }
     public int UserSuspensions { get; set; }
     public int ContentViolations { get; set; }
-    public Dictionary<ContentRating, int> ContentByRating { get; set; } = new();
+    public Dictionary<ContentASHATting, int> ContentByASHATting { get; set; } = new();
     public Dictionary<ViolationType, int> ViolationsByType { get; set; } = new();
 }
 
@@ -60,7 +60,7 @@ public class ComplianceIncident
 /// </summary>
 public enum ComplianceIncidentType
 {
-    MinorAccessRestricted,
+    MinoASHATccessRestricted,
     ParentalControlViolation,
     UndisclosedDataCollection,
     InappropriateContentExposure,
@@ -96,7 +96,7 @@ public enum ComplianceIncidentStatus
 }
 
 /// <summary>
-/// Regulatory framework configuration.
+/// Regulatory Framework Configuration.
 /// </summary>
 public class RegulatoryFramework
 {
@@ -138,12 +138,12 @@ public interface IComplianceModule
     Task<bool> ResolveIncidentAsync(Guid incidentId, string resolvedBy, string resolutionNotes);
     
     /// <summary>
-    /// Check if system is compliant with regulatory framework.
+    /// Check if system is compliant with regulatory Framework.
     /// </summary>
-    Task<(bool compliant, List<string> issues)> CheckComplianceAsync(string framework);
+    Task<(bool compliant, List<string> issues)> CheckComplianceAsync(string Framework);
     
     /// <summary>
-    /// Get regulatory framework configuration.
+    /// Get regulatory Framework Configuration.
     /// </summary>
     Task<RegulatoryFramework?> GetFrameworkAsync(string name);
     

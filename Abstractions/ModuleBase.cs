@@ -2,7 +2,7 @@ namespace Abstractions
 {
 
     /// <summary>
-    /// Base class for RaCore modules. Supports hot-drop events and manager reference.
+    /// Base class for ASHATCore modules. Supports hot-drop events and manager reference.
     /// </summary>
     public abstract class ModuleBase : IRaModule, IDisposable
     {

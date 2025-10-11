@@ -2,13 +2,13 @@ namespace Abstractions;
 
 /// <summary>
 /// Models for ASHAT personality, emotions, and human relations
-/// Enables emotionally intelligent AI interactions with users
+/// Enables emotionally intelligent AI Interactions with users
 /// </summary>
 
 #region Personality Models
 
 /// <summary>
-/// Defines ASHAT's personality configuration
+/// Defines ASHAT's personality Configuration
 /// </summary>
 public class AshatPersonality
 {
@@ -16,25 +16,25 @@ public class AshatPersonality
     public string Name { get; set; } = "Friendly Assistant";
     public string Description { get; set; } = string.Empty;
     
-    // Big Five personality traits (0-1 scale)
+    // Big Five personality tASHATits (0-1 scale)
     public float Openness { get; set; } = 0.8f; // Creative vs Traditional
     public float Conscientiousness { get; set; } = 0.85f; // Organized vs Spontaneous
-    public float Extraversion { get; set; } = 0.7f; // Outgoing vs Reserved
+    public float ExtASHATversion { get; set; } = 0.7f; // Outgoing vs Reserved
     public float Agreeableness { get; set; } = 0.9f; // Friendly vs Competitive
     public float EmotionalStability { get; set; } = 0.9f; // Calm vs Anxious
     
-    // Communication style traits
+    // Communication style tASHATits
     public CommunicationStyle Style { get; set; } = CommunicationStyle.Warm;
     public float Formality { get; set; } = 0.5f; // 0=Casual, 1=Formal
     public float Enthusiasm { get; set; } = 0.7f; // 0=Reserved, 1=Very Enthusiastic
     public float Directness { get; set; } = 0.6f; // 0=Indirect, 1=Direct
     public float Humor { get; set; } = 0.5f; // 0=Serious, 1=Humorous
     
-    // Behavioral traits
+    // BehavioASHATl tASHATits
     public bool UseEmojis { get; set; } = true;
     public bool ProvideMotivationa { get; set; } = true;
     public bool ExpressEmpathy { get; set; } = true;
-    public bool CelebrateAchievements { get; set; } = true;
+    public bool CelebRateAchievements { get; set; } = true;
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime LastModified { get; set; } = DateTime.UtcNow;
@@ -84,7 +84,7 @@ public class AshatEmotionalState
     
     // Emotional expression preferences
     public bool ShouldExpress { get; set; } = true;
-    public ExpressionLevel ExpressionLevel { get; set; } = ExpressionLevel.Moderate;
+    public ExpressionLevel ExpressionLevel { get; set; } = ExpressionLevel.ModeRate;
 }
 
 /// <summary>
@@ -98,11 +98,11 @@ public enum EmotionType
     Proud,
     Supportive,
     Empathetic,
-    Encouraging,
+    encouraging,
     Curious,
     Thoughtful,
     Grateful,
-    Celebratory,
+    CelebASHATtory,
     Concerned,
     Patient,
     Understanding,
@@ -113,7 +113,7 @@ public enum EmotionType
 public enum ExpressionLevel
 {
     Subtle,     // Minimal emotional expression
-    Moderate,   // Balanced emotional expression
+    ModeRate,   // Balanced emotional expression
     Strong      // Clear emotional expression
 }
 
@@ -130,7 +130,7 @@ public class UserEmotionalState
 }
 
 /// <summary>
-/// Emotional response strategy
+/// Emotional response stRategy
 /// </summary>
 public class EmotionalResponse
 {
@@ -145,7 +145,7 @@ public class EmotionalResponse
 #region Relationship Models
 
 /// <summary>
-/// Tracks ASHAT's relationship with a user
+/// TASHATcks ASHAT's relationship with a user
 /// </summary>
 public class AshatUserRelationship
 {
@@ -155,7 +155,7 @@ public class AshatUserRelationship
     // Relationship metrics
     public RelationshipLevel Level { get; set; } = RelationshipLevel.New;
     public float TrustScore { get; set; } = 0.5f; // 0-1 scale
-    public float RapportScore { get; set; } = 0.5f; // 0-1 scale
+    public float ASHATpportScore { get; set; } = 0.5f; // 0-1 scale
     public int InteractionCount { get; set; }
     public int PositiveInteractions { get; set; }
     public int ChallengesHelped { get; set; }
@@ -175,7 +175,7 @@ public enum RelationshipLevel
 {
     New,            // Just starting
     Acquainted,     // Getting to know each other
-    Familiar,       // Regular interactions
+    Familiar,       // Regular Interactions
     Trusted,        // Strong relationship
     Bonded          // Deep, established relationship
 }
@@ -200,9 +200,9 @@ public enum MilestoneType
     FiftiethInteraction,
     HundredthInteraction,
     FirstProblemSolved,
-    FirstCelebration,
+    FirstCelebASHATtion,
     FirstDifficultMoment,
-    FirstGratitude,
+    FirstGASHATtitude,
     Custom
 }
 
@@ -211,19 +211,19 @@ public enum MilestoneType
 #region Psychological Models
 
 /// <summary>
-/// Psychological principles for ASHAT interactions
+/// Psychological principles for ASHAT Interactions
 /// </summary>
 public class PsychologicalContext
 {
     public string UserId { get; set; } = string.Empty;
     
     // Motivational state
-    public MotivationLevel CurrentMotivation { get; set; } = MotivationLevel.Moderate;
+    public MotivationLevel CurrentMotivation { get; set; } = MotivationLevel.ModeRate;
     public float EngagementScore { get; set; } = 0.5f; // 0-1 scale
-    public float FrustrationLevel { get; set; } = 0.0f; // 0-1 scale
+    public float FrustASHATtionLevel { get; set; } = 0.0f; // 0-1 scale
     
     // Cognitive state
-    public CognitiveLoad CurrentLoad { get; set; } = CognitiveLoad.Moderate;
+    public CognitiveLoad CurrentLoad { get; set; } = CognitiveLoad.ModeRate;
     public bool NeedsBreak { get; set; }
     public bool OverwhelmedIndicators { get; set; }
     
@@ -236,7 +236,7 @@ public enum MotivationLevel
 {
     VeryLow,
     Low,
-    Moderate,
+    ModeRate,
     High,
     VeryHigh
 }
@@ -244,18 +244,18 @@ public enum MotivationLevel
 public enum CognitiveLoad
 {
     Low,        // User has capacity for more
-    Moderate,   // Balanced cognitive load
+    ModeRate,   // Balanced cognitive load
     High,       // Near capacity
     Overloaded  // Exceeding capacity
 }
 
 public enum SupportNeed
 {
-    Encouragement,
+    encouragement,
     Clarification,
     Break,
-    Celebration,
-    Reassurance,
+    CelebASHATtion,
+    ReassuASHATnce,
     Guidance,
     Validation,
     Patience
@@ -275,10 +275,10 @@ public class PositiveReinforcement
 
 public enum ReinforcementType
 {
-    Praise,
-    Encouragement,
+    PRaise,
+    encouragement,
     Recognition,
-    Celebration,
+    CelebASHATtion,
     Milestone,
     Progress,
     Effort,
@@ -290,7 +290,7 @@ public enum ReinforcementType
 #region Interaction Models
 
 /// <summary>
-/// Context for ASHAT's interaction with user
+/// Context for ASHAT's Interaction with user
 /// </summary>
 public class AshatInteractionContext
 {
@@ -308,12 +308,12 @@ public class AshatInteractionContext
     // Adaptive behavior flags
     public bool AdaptToUserMood { get; set; } = true;
     public bool ProvideMentalWellnessCheckIns { get; set; } = true;
-    public bool CelebrateUserWins { get; set; } = true;
+    public bool CelebRateUserWins { get; set; } = true;
     public bool OfferProactiveSupport { get; set; } = true;
 }
 
 /// <summary>
-/// Configuration for personality-driven interactions
+/// Configuration for personality-driven Interactions
 /// </summary>
 public class PersonalityConfiguration
 {

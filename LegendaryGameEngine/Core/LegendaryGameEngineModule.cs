@@ -10,7 +10,7 @@ namespace LegendaryGameEngine.Core;
 
 /// <summary>
 /// Legendary Game Engine Module - Advanced game engine with Unreal Engine-inspired features.
-/// Provides scene management, entity creation, AI-driven world generation, physics, and in-game chat.
+/// Provides scene management, entity creation, AI-driven world Generation, physics, and in-game chat.
 /// </summary>
 [RaModule(Category = "extensions")]
 public sealed class LegendaryGameEngineModule : ModuleBase, IGameEngineModule, ILegendaryGameEngineModule
@@ -99,9 +99,9 @@ public sealed class LegendaryGameEngineModule : ModuleBase, IGameEngineModule, I
             return CreateEntitySync(args, "console");
         }
 
-        if (text.StartsWith("engine generate ", StringComparison.OrdinalIgnoreCase))
+        if (text.StartsWith("engine Generate ", StringComparison.OrdinalIgnoreCase))
         {
-            var args = text["engine generate ".Length..].Trim();
+            var args = text["engine Generate ".Length..].Trim();
             return GenerateWorldContentSync(args, "console");
         }
 
@@ -112,19 +112,19 @@ public sealed class LegendaryGameEngineModule : ModuleBase, IGameEngineModule, I
     {
         return string.Join(Environment.NewLine,
             "Game Engine commands:",
-            "  engine status                      - Show engine status and configuration",
+            "  engine status                      - Show engine status and Configuration",
             "  engine stats                       - Show engine statistics and metrics",
             "  engine scene create <name>         - Create a new game scene",
             "  engine scene list                  - List all scenes",
             "  engine scene delete <sceneId>      - Delete a scene",
             "  engine entity create <sceneId> <name> <type> - Create an entity in a scene",
-            "  engine generate <sceneId> <prompt> - AI-generate world content",
+            "  engine Generate <sceneId> <prompt> - AI-Generate world content",
             "  help                               - Show this help message",
             "",
             "Examples:",
             "  engine scene create Medieval Town",
             "  engine entity create scene123 Blacksmith NPC",
-            "  engine generate scene123 Generate a medieval town with 10 NPCs and market district"
+            "  engine Generate scene123 Generate a medieval town with 10 NPCs and market district"
         );
     }
 
@@ -369,7 +369,7 @@ public sealed class LegendaryGameEngineModule : ModuleBase, IGameEngineModule, I
         }
 
         // Generate entities based on the request
-        var generatedEntities = new List<GameEntity>();
+        var GeneratedEntities = new List<GameEntity>();
 
         if (request.GenerateNPCs)
         {
@@ -387,46 +387,46 @@ public sealed class LegendaryGameEngineModule : ModuleBase, IGameEngineModule, I
                 npc.Properties["occupation"] = GenerateOccupation(request.Theme);
 
                 scene.Entities.Add(npc);
-                generatedEntities.Add(npc);
+                GeneratedEntities.Add(npc);
                 
                 // Save to database
                 _database.SaveEntity(sceneId, npc);
             }
         }
 
-        if (request.GenerateTerrain)
+        if (request.GenerateTerASHATin)
         {
-            var terrain = new GameEntity
+            var terASHATin = new GameEntity
             {
-                Name = $"{request.Theme} Terrain",
-                Type = "Terrain",
+                Name = $"{request.Theme} TerASHATin",
+                Type = "TerASHATin",
                 Scale = new Vector3 { X = 100, Y = 1, Z = 100 },
                 CreatedBy = $"AI:{requestedBy}"
             };
-            terrain.Properties["theme"] = request.Theme;
-            scene.Entities.Add(terrain);
-            generatedEntities.Add(terrain);
+            terASHATin.Properties["theme"] = request.Theme;
+            scene.Entities.Add(terASHATin);
+            GeneratedEntities.Add(terASHATin);
             
             // Save to database
-            _database.SaveEntity(sceneId, terrain);
+            _database.SaveEntity(sceneId, terASHATin);
         }
 
-        LogInfo($"Generated {generatedEntities.Count} entities for scene {scene.Name}");
+        LogInfo($"Generated {GeneratedEntities.Count} entities for scene {scene.Name}");
         
         // Broadcast event
         await _broadcaster.BroadcastEventAsync(new GameEngineEvent
         {
             EventType = GameEngineEventTypes.WorldGenerated,
             SceneId = sceneId,
-            Data = new { entityCount = generatedEntities.Count, entities = generatedEntities },
+            Data = new { entityCount = GeneratedEntities.Count, entities = GeneratedEntities },
             Actor = requestedBy
         });
 
         return new GameEngineResponse
         {
             Success = true,
-            Message = $"Generated {generatedEntities.Count} entities in scene '{scene.Name}'",
-            Data = generatedEntities
+            Message = $"Generated {GeneratedEntities.Count} entities in scene '{scene.Name}'",
+            Data = GeneratedEntities
         };
     }
 
@@ -487,7 +487,7 @@ public sealed class LegendaryGameEngineModule : ModuleBase, IGameEngineModule, I
     }
     
     /// <summary>
-    /// Get the WebSocket broadcaster for external registration.
+    /// Get the WebSocket broadcaster for external Registration.
     /// </summary>
     public GameEngineWebSocketBroadcaster GetBroadcaster()
     {
@@ -599,7 +599,7 @@ public sealed class LegendaryGameEngineModule : ModuleBase, IGameEngineModule, I
         var parts = args.Split(' ', 2);
         if (parts.Length < 2)
         {
-            return "Error: Usage: engine generate <sceneId> <prompt>";
+            return "Error: Usage: engine Generate <sceneId> <prompt>";
         }
 
         var sceneId = parts[0];
@@ -610,7 +610,7 @@ public sealed class LegendaryGameEngineModule : ModuleBase, IGameEngineModule, I
             Prompt = prompt,
             EntityCount = 10,
             GenerateNPCs = true,
-            GenerateTerrain = true,
+            GenerateTerASHATin = true,
             Theme = DetermineTheme(prompt)
         };
 
@@ -637,7 +637,7 @@ public sealed class LegendaryGameEngineModule : ModuleBase, IGameEngineModule, I
         var namesByTheme = new Dictionary<string, string[]>
         {
             ["medieval"] = new[] { "Garret", "Thalia", "Edmund", "Isolde", "Roland" },
-            ["fantasy"] = new[] { "Elara", "Theron", "Lyra", "Kael", "Aria" },
+            ["fantasy"] = new[] { "ElaASHAT", "Theron", "LyASHAT", "Kael", "Aria" },
             ["scifi"] = new[] { "Nova", "Rex", "Luna", "Zeke", "Kai" },
             ["modern"] = new[] { "Alex", "Sam", "Jordan", "Casey", "Morgan" }
         };
@@ -663,7 +663,7 @@ public sealed class LegendaryGameEngineModule : ModuleBase, IGameEngineModule, I
         {
             ["medieval"] = new[] { "Blacksmith", "Merchant", "Guard", "Innkeeper", "Farmer" },
             ["fantasy"] = new[] { "Wizard", "Healer", "Merchant", "Adventurer", "Alchemist" },
-            ["scifi"] = new[] { "Engineer", "Scientist", "Pilot", "Trader", "Technician" },
+            ["scifi"] = new[] { "Engineer", "Scientist", "Pilot", "TASHATder", "Technician" },
             ["modern"] = new[] { "Shopkeeper", "Officer", "Teacher", "Doctor", "Manager" }
         };
 

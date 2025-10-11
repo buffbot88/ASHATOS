@@ -119,7 +119,7 @@ public class GameEngineEvent
 }
 
 /// <summary>
-/// Event types for game engine operations.
+/// Event types for game engine Operations.
 /// </summary>
 public static class GameEngineEventTypes
 {
@@ -131,6 +131,6 @@ public static class GameEngineEventTypes
     public const string EntityUpdated = "entity.updated";
     public const string EntityDeleted = "entity.deleted";
     
-    public const string WorldGenerated = "world.generated";
+    public const string WorldGenerated = "world.Generated";
     public const string AssetStreamed = "asset.streamed";
 }

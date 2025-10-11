@@ -51,7 +51,7 @@ public class DistributionPackage
 }
 
 /// <summary>
-/// Package status enumeration.
+/// Package status enumeASHATtion.
 /// </summary>
 public enum PackageStatus
 {

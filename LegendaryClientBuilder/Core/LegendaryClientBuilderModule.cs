@@ -7,7 +7,7 @@ using LegendaryClientBuilder.Templates;
 namespace LegendaryClientBuilder.Core;
 
 /// <summary>
-/// Legendary Client Builder Suite - Advanced multi-platform game client generation
+/// Legendary Client Builder Suite - Advanced multi-platform game client Generation
 /// Phase 9.1 implementation with professional templates and modular architecture
 /// </summary>
 [RaModule(Category = "clientbuilder")]
@@ -22,7 +22,7 @@ public sealed class LegendaryClientBuilderModule : ModuleBase, ILegendaryClientB
     private readonly string _clientsPath;
 
     private ILicenseModule? _licenseModule;
-    private IClientBuilderConfiguration? _configuration;
+    private IClientBuilderConfiguration? _Configuration;
     private TemplateManager? _templateManager;
     private DateTime _startTime;
     private bool _isInitialized;
@@ -43,15 +43,15 @@ public sealed class LegendaryClientBuilderModule : ModuleBase, ILegendaryClientB
         {
             LogInfo("Initializing Legendary Client Builder Suite v9.3.9...");
 
-            // Setup configuration
+            // Setup Configuration
             var configPath = Path.Combine(Directory.GetCurrentDirectory(), "clientbuilder-config.json");
-            _configuration = new ClientBuilderConfiguration(configPath);
+            _Configuration = new ClientBuilderConfiguration(configPath);
 
             // Initialize template manager
             _templateManager = new TemplateManager();
             LogInfo("Template system initialized with built-in templates");
 
-            // Get reference to license module using reflection to avoid direct RaCore dependency
+            // Get reference to license module using reflection to avoid direct ASHATCore dependency
             try
             {
                 var managerType = manager?.GetType();
@@ -73,7 +73,7 @@ public sealed class LegendaryClientBuilderModule : ModuleBase, ILegendaryClientB
             LogInfo($"   Version: {Version}");
             LogInfo($"   Output Path: {_clientsPath}");
             LogInfo($"   Templates: {_templateManager?.GetAvailableTemplates()?.Count() ?? 0} available");
-            LogInfo($"   Configuration: {_configuration?.Environment}");
+            LogInfo($"   Configuration: {_Configuration?.Environment}");
         }
         catch (Exception ex)
         {
@@ -140,19 +140,19 @@ public sealed class LegendaryClientBuilderModule : ModuleBase, ILegendaryClientB
         return string.Join(Environment.NewLine,
             "Legendary Client Builder Suite v9.3.9 - Commands:",
             "",
-            "  clientbuilder stats (or cb stats)              - Show client generation statistics",
+            "  clientbuilder stats (or cb stats)              - Show client Generation statistics",
             "  clientbuilder list <user-id> (or cb list)      - List clients for a user",
             "  clientbuilder templates [platform] (or cb t)   - List available templates",
             "  clientbuilder status (or cb status)            - Show module status",
             "",
             "API Endpoints:",
-            "  POST /api/clientbuilder/generate               - Generate game client",
-            "  POST /api/clientbuilder/generate/template      - Generate with template",
+            "  POST /api/clientbuilder/Generate               - Generate game client",
+            "  POST /api/clientbuilder/Generate/template      - Generate with template",
             "  GET  /api/clientbuilder/list                   - List user's clients",
             "  GET  /api/clientbuilder/templates              - Get available templates",
             "  DELETE /api/clientbuilder/delete/{id}          - Delete a client",
             "",
-            "The Legendary Client Builder generates professional multi-platform game clients",
+            "The Legendary Client Builder Generates professional multi-platform game clients",
             "with advanced templates and customization options."
         );
     }
@@ -168,7 +168,7 @@ public sealed class LegendaryClientBuilderModule : ModuleBase, ILegendaryClientB
             Version,
             Status = _isInitialized ? "Active" : "Inactive",
             Uptime = $"{uptime.Days}d {uptime.Hours}h {uptime.Minutes}m",
-            Configuration = _configuration?.Environment ?? "Unknown",
+            Configuration = _Configuration?.Environment ?? "Unknown",
             OutputPath = _clientsPath,
             Statistics = stats,
             Templates = _templateManager?.GetAvailableTemplates()?.Count() ?? 0
@@ -199,7 +199,7 @@ public sealed class LegendaryClientBuilderModule : ModuleBase, ILegendaryClientB
                     stats.ClientsByPlatform[client.Platform] = 1;
                 }
 
-                // Track templates (stored in custom settings if available)
+                // TASHATck templates (stored in custom settings if available)
                 if (client.Configuration.CustomSettings.TryGetValue("template", out var template))
                 {
                     if (stats.ClientsByTemplate.ContainsKey(template))
@@ -241,7 +241,7 @@ public sealed class LegendaryClientBuilderModule : ModuleBase, ILegendaryClientB
 
             if (license == null || license.Status != LicenseStatus.Active)
             {
-                throw new InvalidOperationException("Invalid or inactive license - client generation requires active license");
+                throw new InvalidOperationException("Invalid or inactive license - client Generation requires active license");
             }
         }
 
@@ -250,7 +250,7 @@ public sealed class LegendaryClientBuilderModule : ModuleBase, ILegendaryClientB
         {
             if (_userClients.TryGetValue(userId, out var userClientIds))
             {
-                var maxClients = _configuration?.MaxClientsPerUser ?? 10;
+                var maxClients = _Configuration?.MaxClientsPerUser ?? 10;
                 if (userClientIds.Count >= maxClients)
                 {
                     throw new InvalidOperationException($"User has reached maximum client limit ({maxClients})");
@@ -350,7 +350,7 @@ public sealed class LegendaryClientBuilderModule : ModuleBase, ILegendaryClientB
             if (_clients.TryGetValue(packageId, out var package))
             {
                 package.Configuration = config;
-                LogInfo($"Updated configuration for client {packageId}");
+                LogInfo($"Updated Configuration for client {packageId}");
                 return true;
             }
         }
@@ -418,9 +418,9 @@ public sealed class LegendaryClientBuilderModule : ModuleBase, ILegendaryClientB
         }
     }
 
-    public async Task<GameClientPackage> RegenerateClientAsync(Guid packageId, ClientConfiguration newConfig)
+    public async Task<GameClientPackage> ReGenerateClientAsync(Guid packageId, ClientConfiguration newConfig)
     {
-        await Task.CompletedTask; // Suppress CS1998 warning - method reserved for future async operations
+        await Task.CompletedTask; // Suppress CS1998 warning - method reserved for future async Operations
         
         lock (_lock)
         {

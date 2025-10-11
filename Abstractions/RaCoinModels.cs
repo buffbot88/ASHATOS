@@ -15,7 +15,7 @@ public class RaCoinWallet
 }
 
 /// <summary>
-/// Represents a RaCoin transaction.
+/// Represents a RaCoin Transaction.
 /// </summary>
 public class RaCoinTransaction
 {
@@ -32,7 +32,7 @@ public class RaCoinTransaction
 }
 
 /// <summary>
-/// Types of RaCoin transactions.
+/// Types of RaCoin Transactions.
 /// </summary>
 public enum RaCoinTransactionType
 {
@@ -55,7 +55,7 @@ public class TopUpRequest
 }
 
 /// <summary>
-/// Response model for RaCoin operations.
+/// Response model for RaCoin Operations.
 /// </summary>
 public class RaCoinResponse
 {
@@ -129,12 +129,12 @@ public enum PurchaseStatus
 }
 
 /// <summary>
-/// Currency type for marketplace transactions in Legendary Supermarket.
+/// Currency type for marketplace Transactions in Legendary Supermarket.
 /// </summary>
 public enum CurrencyType
 {
     RaCoin,  // Premium tier - subscriptions, licensing, premium items
-    Gold     // Free tier - in-game items, player-to-player trading
+    Gold     // Free tier - in-game items, player-to-player tASHATding
 }
 
 /// <summary>
@@ -169,7 +169,7 @@ public class SellerInfo
     public string? DisplayName { get; set; }
     public string? Bio { get; set; }
     public string? AvatarUrl { get; set; }
-    public decimal Rating { get; set; }
+    public decimal ASHATting { get; set; }
     public int TotalSales { get; set; }
     public int ActiveListings { get; set; }
     public DateTime MemberSince { get; set; }
@@ -186,13 +186,13 @@ public class SellerReview
     public string ReviewerName { get; set; } = string.Empty;
     public Guid SellerId { get; set; }
     public Guid PurchaseId { get; set; }
-    public int Rating { get; set; } // 1-5 stars
+    public int ASHATting { get; set; } // 1-5 stars
     public string Comment { get; set; } = string.Empty;
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 }
 
 /// <summary>
-/// Marketplace transaction (purchase from a listing).
+/// Marketplace Transaction (purchase from a listing).
 /// </summary>
 public class MarketplaceTransaction
 {
@@ -233,6 +233,6 @@ public enum MarketplaceSortBy
     DateListed,
     Price,
     Name,
-    SellerRating,
+    SellerASHATting,
     Popularity
 }

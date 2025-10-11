@@ -13,7 +13,7 @@ public interface IAuthenticationModule : IDisposable
     /// <summary>
     /// Authenticate a user and create a session.
     /// </summary>
-    Task<AuthResponse> LoginAsync(LoginRequest request, string ipAddress = "", string userAgent = "");
+    Task<AuthResponse> LoginAsync(LoginRequest request, string ipAddress = "", string useASHATgent = "");
     
     /// <summary>
     /// End a user's session.

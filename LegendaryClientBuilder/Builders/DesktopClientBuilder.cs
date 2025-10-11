@@ -105,10 +105,10 @@ Write-Host """"
 $url = ""http://localhost:{config.ServerPort}/clients/{package.Id}/index.html""
 
 # Try to launch in app mode with Chrome
-if (Get-Command chrome -ErrorAction SilentlyContinue) {{
+if (Get-Command chrome -ErroASHATction SilentlyContinue) {{
     Write-Host ""Opening with Chrome..."" -ForegroundColor Green
     Start-Process chrome ""-app=$url --window-size=1280,720""
-}} elseif (Get-Command msedge -ErrorAction SilentlyContinue) {{
+}} elseif (Get-Command msedge -ErroASHATction SilentlyContinue) {{
     Write-Host ""Opening with Edge..."" -ForegroundColor Green
     Start-Process msedge ""-app=$url --window-size=1280,720""
 }} else {{

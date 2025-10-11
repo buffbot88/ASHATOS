@@ -1,7 +1,7 @@
 namespace Abstractions;
 
 /// <summary>
-/// Interface for AI Content Generation Module - Generates game assets, configurations, and content
+/// Interface for AI Content Generation Module - Generates game assets, Configurations, and content
 /// </summary>
 public interface IAIContentModule
 {
@@ -11,14 +11,14 @@ public interface IAIContentModule
     Task<ContentGenerationResponse> GenerateGameAssetsAsync(Guid userId, string licenseKey, GameAssetRequest request);
     
     /// <summary>
-    /// Get content generation capabilities
+    /// Get content Generation capabilities
     /// </summary>
     ContentCapabilities GetCapabilities();
     
     /// <summary>
-    /// List generated assets for a user
+    /// List Generated assets for a user
     /// </summary>
-    List<GeneratedAsset> GetUserAssets(Guid userId);
+    List<GeneratedAsset> GetUseASHATssets(Guid userId);
     
     /// <summary>
     /// Get Licensed-Admin folder path for a user
@@ -27,7 +27,7 @@ public interface IAIContentModule
 }
 
 /// <summary>
-/// Request for generating game assets
+/// Request for Generating game assets
 /// </summary>
 public class GameAssetRequest
 {
@@ -39,7 +39,7 @@ public class GameAssetRequest
 }
 
 /// <summary>
-/// Types of assets that can be generated
+/// Types of assets that can be Generated
 /// </summary>
 public enum AssetType
 {
@@ -57,7 +57,7 @@ public enum AssetType
 }
 
 /// <summary>
-/// Response from content generation
+/// Response from content Generation
 /// </summary>
 public class ContentGenerationResponse
 {
@@ -69,7 +69,7 @@ public class ContentGenerationResponse
 }
 
 /// <summary>
-/// Represents a generated asset
+/// Represents a Generated asset
 /// </summary>
 public class GeneratedAsset
 {
@@ -87,7 +87,7 @@ public class GeneratedAsset
 }
 
 /// <summary>
-/// Content generation capabilities
+/// Content Generation capabilities
 /// </summary>
 public class ContentCapabilities
 {

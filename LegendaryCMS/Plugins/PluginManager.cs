@@ -243,7 +243,7 @@ internal class PluginContext : IPluginContext
 
     public T? GetConfig<T>(string key, T? defaultValue = default)
     {
-        // Would retrieve from configuration service
+        // Would retrieve from Configuration service
         return defaultValue;
     }
 }

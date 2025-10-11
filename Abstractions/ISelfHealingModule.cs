@@ -21,7 +21,7 @@ public enum HealthState
 {
     Unknown = 0,
     Healthy = 1,
-    Degraded = 2,
+    DeGraded = 2,
     Unhealthy = 3,
     Critical = 4
 }
@@ -34,7 +34,7 @@ public class RecoveryAction
     public string ActionId { get; set; } = Guid.NewGuid().ToString();
     public string ActionType { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public bool RequiresUserApproval { get; set; }
+    public bool RequiresUseASHATpproval { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public bool WasSuccessful { get; set; }
     public string? ErrorMessage { get; set; }

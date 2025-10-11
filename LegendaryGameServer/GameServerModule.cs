@@ -7,7 +7,7 @@ namespace LegendaryGameServer;
 
 /// <summary>
 /// Game Server Module - Advanced AI-driven game creation and deployment system.
-/// Orchestrates complete game development from natural language to deployed server.
+/// OrchestRates complete game development from natural language to deployed server.
 /// Eliminates need for Unity clients or manual intervention.
 /// </summary>
 [RaModule(Category = "extensions")]
@@ -47,7 +47,7 @@ public sealed class GameServerModule : ModuleBase, IGameServerModule
 
         LogInfo("GameServer module initialized - AI-driven game creation suite active");
         LogInfo($"  Projects path: {_projectsBasePath}");
-        LogInfo($"  Integrated modules: GameEngine={_gameEngine != null}, AIContent={_aiContent != null}, ServerSetup={_serverSetup != null}");
+        LogInfo($"  Intergrated modules: GameEngine={_gameEngine != null}, AIContent={_aiContent != null}, ServerSetup={_serverSetup != null}");
     }
 
     public override string Process(string input)
@@ -119,7 +119,7 @@ public sealed class GameServerModule : ModuleBase, IGameServerModule
             "GameServer Module - AI-Driven Game Creation Suite",
             "===============================================",
             "",
-            "NATURAL LANGUAGE GAME CREATION:",
+            "natural LANGUAGE GAME CREATION:",
             "  gameserver create <description>     - Create complete game from description",
             "",
             "PROJECT MANAGEMENT:",
@@ -138,16 +138,16 @@ public sealed class GameServerModule : ModuleBase, IGameServerModule
             "  help                                - Show this help",
             "",
             "EXAMPLE COMMANDS:",
-            "  gameserver create A medieval MMO with castle siege battles and crafting",
+            "  gameserver create A medieval MMO with castle siege battles and cASHATfting",
             "  gameserver create A space shooter with procedural levels and boss fights",
             "  gameserver create A fantasy RPG with quests, NPCs, and magic system",
             "",
             "FEATURES:",
-            "  ✓ Natural language game design",
-            "  ✓ Automatic front-end & back-end generation",
+            "  ✓ natural language game design",
+            "  ✓ Automatic front-end & back-end Generation",
             "  ✓ AI-powered asset creation",
             "  ✓ One-click server deployment",
-            "  ✓ Real-time preview & iteration",
+            "  ✓ Real-time preview & iteASHATtion",
             "  ✓ Full source code & documentation",
             "  ✓ Security & moderation built-in"
         );
@@ -165,7 +165,7 @@ public sealed class GameServerModule : ModuleBase, IGameServerModule
         sb.AppendLine($"Max Concurrent: {stats.MaxConcurrentServers}");
         sb.AppendLine($"Projects Path: {_projectsBasePath}");
         sb.AppendLine();
-        sb.AppendLine("Integrated Modules:");
+        sb.AppendLine("Intergrated Modules:");
         sb.AppendLine($"  GameEngine: {(_gameEngine != null ? "✓" : "✗")}");
         sb.AppendLine($"  AIContent: {(_aiContent != null ? "✓" : "✗")}");
         sb.AppendLine($"  ServerSetup: {(_serverSetup != null ? "✓" : "✗")}");
@@ -223,7 +223,7 @@ public sealed class GameServerModule : ModuleBase, IGameServerModule
             return "Error: Game description cannot be empty.";
         }
 
-        // Parse description to extract game type and features
+        // Parse description to Extract game type and features
         var request = ParseGameDescription(description);
         
         var response = CreateGameFromDescriptionAsync(request).GetAwaiter().GetResult();
@@ -278,7 +278,7 @@ public sealed class GameServerModule : ModuleBase, IGameServerModule
         var gameId = parts[0];
         var options = new DeploymentOptions();
 
-        // Parse optional parameters
+        // Parse optional Parameters
         foreach (var part in parts.Skip(1))
         {
             if (part.StartsWith("port=") && int.TryParse(part[5..], out var port))
@@ -401,25 +401,25 @@ public sealed class GameServerModule : ModuleBase, IGameServerModule
             Directory.CreateDirectory(projectPath);
 
             // Create project structure
-            var generatedFiles = new List<string>();
+            var GeneratedFiles = new List<string>();
             
-            // 1. Generate game configuration
+            // 1. Generate game Configuration
             var configFile = await GenerateGameConfigurationAsync(projectPath, gameName, request);
-            generatedFiles.Add(configFile);
+            GeneratedFiles.Add(configFile);
 
             // 2. Generate front-end code
             var frontEndFiles = await GenerateFrontEndAsync(projectPath, gameName, request);
-            generatedFiles.AddRange(frontEndFiles);
+            GeneratedFiles.AddRange(frontEndFiles);
 
             // 3. Generate back-end code
             var backEndFiles = await GenerateBackEndAsync(projectPath, gameName, request);
-            generatedFiles.AddRange(backEndFiles);
+            GeneratedFiles.AddRange(backEndFiles);
 
             // 4. Generate assets if requested
             if (request.GenerateAssets && _aiContent != null)
             {
                 var assetFiles = await GenerateGameAssetsAsync(projectPath, request);
-                generatedFiles.AddRange(assetFiles);
+                GeneratedFiles.AddRange(assetFiles);
             }
 
             // 5. Create game scenes in engine
@@ -429,8 +429,8 @@ public sealed class GameServerModule : ModuleBase, IGameServerModule
             }
 
             // 6. Generate documentation
-            var docFiles = await GenerateDocumentationAsync(projectPath, gameName, request, generatedFiles);
-            generatedFiles.AddRange(docFiles);
+            var docFiles = await GeneratedocumentationAsync(projectPath, gameName, request, GeneratedFiles);
+            GeneratedFiles.AddRange(docFiles);
 
             // Create project record
             var project = new GameProject
@@ -447,12 +447,12 @@ public sealed class GameServerModule : ModuleBase, IGameServerModule
                 Metrics = new GameMetrics
                 {
                     TotalAssets = Directory.GetFiles(projectPath, "*", SearchOption.AllDirectories).Length,
-                    LinesOfCode = CountLinesOfCode(generatedFiles),
+                    LinesOfCode = CountLinesOfCode(GeneratedFiles),
                     TotalSizeBytes = CalculateDirectorySize(projectPath)
                 }
             };
 
-            foreach (var file in generatedFiles)
+            foreach (var file in GeneratedFiles)
             {
                 project.GeneratedFiles[Path.GetFileName(file)] = file;
             }
@@ -488,7 +488,7 @@ public sealed class GameServerModule : ModuleBase, IGameServerModule
                 GameId = gameId,
                 ProjectPath = projectPath,
                 Project = project,
-                GeneratedFiles = generatedFiles
+                GeneratedFiles = GeneratedFiles
             };
         }
         catch (Exception ex)
@@ -638,7 +638,7 @@ public sealed class GameServerModule : ModuleBase, IGameServerModule
             var modifiedFiles = new List<string>();
 
             // Parse update description and apply changes
-            // This would integrate with AI to understand modifications
+            // This would integRate with AI to understand modifications
             
             // Update project metadata
             project.LastModified = DateTime.UtcNow;
@@ -747,7 +747,7 @@ public sealed class GameServerModule : ModuleBase, IGameServerModule
                 Directory.CreateDirectory(exportDir);
             }
 
-            // Create export package (simplified - would use actual zip library)
+            // Create export package (simplified - would use actual zip libASHATry)
             var sizeBytes = CalculateDirectorySize(project.ProjectPath);
 
             LogInfo($"Game exported: {gameId} as {format}");
@@ -784,7 +784,7 @@ public sealed class GameServerModule : ModuleBase, IGameServerModule
             SupportedGameTypes = Enum.GetValues<GameType>().ToList(),
             AvailableFeatures = new List<string>
             {
-                "Natural Language Design",
+                "natural Language Design",
                 "Front-End Generation",
                 "Back-End Generation",
                 "AI Asset Creation",
@@ -792,19 +792,19 @@ public sealed class GameServerModule : ModuleBase, IGameServerModule
                 "NPC Generation",
                 "Quest System",
                 "Multiplayer Support",
-                "Database Integration",
+                "Database integration",
                 "WebSocket Streaming",
                 "Real-time Preview",
                 "Source Code Export",
                 "Auto-Deployment",
-                "Security & Moderation"
+                "Security & moderation"
             },
             SystemInfo = new Dictionary<string, object>
             {
                 ["totalProjects"] = _projects.Count,
                 ["activeDeployments"] = _deployments.Count,
                 ["projectsPath"] = _projectsBasePath,
-                ["integratedModules"] = new[] { "GameEngine", "AIContent", "ServerSetup", "CodeGeneration" }
+                ["IntergratedModules"] = new[] { "GameEngine", "AIContent", "ServerSetup", "CodeGeneration" }
             }
         };
     }
@@ -831,15 +831,15 @@ public sealed class GameServerModule : ModuleBase, IGameServerModule
             request.GameType = GameType.SinglePlayer;
         else if (lower.Contains("pvp") || lower.Contains("versus"))
             request.GameType = GameType.PvP;
-        else if (lower.Contains("coop") || lower.Contains("cooperative"))
-            request.GameType = GameType.Cooperative;
+        else if (lower.Contains("coop") || lower.Contains("coOperative"))
+            request.GameType = GameType.CoOperative;
         else if (lower.Contains("sandbox"))
             request.GameType = GameType.Sandbox;
 
         // Detect theme
         if (lower.Contains("medieval") || lower.Contains("castle") || lower.Contains("knight"))
             request.Theme = "medieval";
-        else if (lower.Contains("fantasy") || lower.Contains("magic") || lower.Contains("dragon"))
+        else if (lower.Contains("fantasy") || lower.Contains("magic") || lower.Contains("dASHATgon"))
             request.Theme = "fantasy";
         else if (lower.Contains("sci-fi") || lower.Contains("space") || lower.Contains("alien"))
             request.Theme = "sci-fi";
@@ -850,14 +850,14 @@ public sealed class GameServerModule : ModuleBase, IGameServerModule
 
         // Extract features
         var features = new List<string>();
-        if (lower.Contains("craft")) features.Add("Crafting System");
+        if (lower.Contains("cASHATft")) features.Add("CASHATfting System");
         if (lower.Contains("quest")) features.Add("Quest System");
         if (lower.Contains("combat") || lower.Contains("battle")) features.Add("Combat System");
-        if (lower.Contains("trade") || lower.Contains("economy")) features.Add("Economy System");
+        if (lower.Contains("tASHATde") || lower.Contains("economy")) features.Add("Economy System");
         if (lower.Contains("guild") || lower.Contains("clan")) features.Add("Guild System");
         if (lower.Contains("pvp") || lower.Contains("arena")) features.Add("PvP System");
         if (lower.Contains("npc")) features.Add("NPC Dialogue");
-        if (lower.Contains("procedural")) features.Add("Procedural Generation");
+        if (lower.Contains("procedural")) features.Add("procedural Generation");
 
         request.Features = features;
 
@@ -887,8 +887,8 @@ public sealed class GameServerModule : ModuleBase, IGameServerModule
             theme = request.Theme,
             features = request.Features,
             description = request.Description,
-            generated_by = "RaCore GameServer Module",
-            generated_at = DateTime.UtcNow,
+            Generated_by = "ASHATCore GameServer Module",
+            Generated_at = DateTime.UtcNow,
             settings = new
             {
                 max_players = request.GameType == GameType.MMO ? 1000 : 100,
@@ -958,7 +958,7 @@ public sealed class GameServerModule : ModuleBase, IGameServerModule
     height: 600px;
     background: #0f3460;
     border: 2px solid #e94560;
-    border-radius: 8px;
+    border-ASHATdius: 8px;
 }
 
 #ui-overlay {
@@ -967,14 +967,14 @@ public sealed class GameServerModule : ModuleBase, IGameServerModule
     right: 20px;
     background: rgba(0, 0, 0, 0.7);
     padding: 15px;
-    border-radius: 8px;
+    border-ASHATdius: 8px;
 }";
         await File.WriteAllTextAsync(cssPath, css);
         files.Add(cssPath);
 
         // Generate JavaScript
         var jsPath = Path.Combine(frontEndPath, "game.js");
-        var js = $@"// {gameName} - Generated by RaCore GameServer
+        var js = $@"// {gameName} - Generated by ASHATCore GameServer
 // Game Type: {request.GameType}
 // Theme: {request.Theme}
 
@@ -1038,7 +1038,7 @@ window.addEventListener('load', () => {{
         // Generate server.cs
         var serverPath = Path.Combine(backEndPath, "Server.cs");
         var serverCode = $@"// {gameName} - Game Server
-// Generated by RaCore GameServer Module
+// Generated by ASHATCore GameServer Module
 // Game Type: {request.GameType}
 
 using System;
@@ -1124,7 +1124,7 @@ namespace {gameName.Replace(" ", "")}.Server
         var readmePath = Path.Combine(backEndPath, "README.md");
         var readme = $@"# {gameName} - Backend Server
 
-## Generated by RaCore GameServer Module
+## Generated by ASHATCore GameServer Module
 
 ### Features
 {string.Join(Environment.NewLine, request.Features.Select(f => $"- {f}"))}
@@ -1160,7 +1160,7 @@ Edit `game_config.json` to customize server settings.
             game_name = ExtractGameName(request.Description),
             theme = request.Theme,
             asset_types = new[] { "textures", "models", "audio" },
-            generated_at = DateTime.UtcNow
+            Generated_at = DateTime.UtcNow
         };
         
         await File.WriteAllTextAsync(manifestPath, JsonSerializer.Serialize(manifest, _jsonOptions));
@@ -1187,7 +1187,7 @@ Edit `game_config.json` to customize server settings.
                     Theme = request.Theme,
                     EntityCount = request.GameType == GameType.MMO ? 50 : 10,
                     GenerateNPCs = true,
-                    GenerateTerrain = true,
+                    GenerateTerASHATin = true,
                     GenerateQuests = request.Features.Contains("Quest System")
                 };
 
@@ -1200,7 +1200,7 @@ Edit `game_config.json` to customize server settings.
         }
     }
 
-    private async Task<List<string>> GenerateDocumentationAsync(string projectPath, string gameName, GameCreationRequest request, List<string> generatedFiles)
+    private async Task<List<string>> GeneratedocumentationAsync(string projectPath, string gameName, GameCreationRequest request, List<string> GeneratedFiles)
     {
         await Task.CompletedTask;
         
@@ -1239,7 +1239,7 @@ Edit `game_config.json` to customize server settings.
 │   └── README.md
 ├── assets/            # Game assets (textures, models, audio)
 ├── docs/              # Documentation
-├── game_config.json   # Game configuration
+├── game_config.json   # Game Configuration
 └── README.md          # This file
 ```
 
@@ -1248,7 +1248,7 @@ Edit `game_config.json` to customize server settings.
 ### Prerequisites
 - .NET 9.0 or later
 - Modern web browser
-- RaCore server (for deployment)
+- ASHATCore server (for deployment)
 
 ### Running Locally
 
@@ -1260,7 +1260,7 @@ dotnet run
 
 2. Open `frontend/index.html` in a web browser
 
-### Deploying to RaCore
+### Deploying to ASHATCore
 
 Use the GameServer module to deploy:
 ```
@@ -1269,20 +1269,20 @@ gameserver deploy {gameName.Replace(" ", "-").ToLowerInvariant()}
 
 ## Generated Files
 
-{string.Join(Environment.NewLine, generatedFiles.Take(20).Select(f => $"- {Path.GetFileName(f)}"))}
-{(generatedFiles.Count > 20 ? $"... and {generatedFiles.Count - 20} more files" : "")}
+{string.Join(Environment.NewLine, GeneratedFiles.Take(20).Select(f => $"- {Path.GetFileName(f)}"))}
+{(GeneratedFiles.Count > 20 ? $"... and {GeneratedFiles.Count - 20} more files" : "")}
 
 ## Customization
 
-All generated code can be modified to suit your needs. See the `docs/` folder for detailed information on extending the game.
+All Generated code can be modified to suit your needs. See the `docs/` folder for detailed information on extending the game.
 
 ## Support
 
-For issues or questions, contact RaCore support or refer to the RaCore documentation.
+For issues or questions, contact ASHATCore support or refer to the ASHATCore documentation.
 
 ---
 
-*This game was generated by RaCore GameServer Module - AI-Driven Game Creation Suite*
+*This game was Generated by ASHATCore GameServer Module - AI-Driven Game Creation Suite*
 ";
         await File.WriteAllTextAsync(readmePath, readme);
         files.Add(readmePath);

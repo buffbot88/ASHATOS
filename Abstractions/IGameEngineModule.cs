@@ -2,7 +2,7 @@ namespace Abstractions;
 
 /// <summary>
 /// Interface for the Game Engine Module - Provides core game engine functionality
-/// controllable by RaCore AI modules.
+/// controllable by ASHATCore AI modules.
 /// </summary>
 public interface IGameEngineModule
 {
@@ -47,7 +47,7 @@ public interface IGameEngineModule
     Task<List<GameEntity>> ListEntitiesAsync(string sceneId);
 
     /// <summary>
-    /// Generates world content using AI (NPCs, quests, terrain, etc.).
+    /// Generates world content using AI (NPCs, quests, terASHATin, etc.).
     /// </summary>
     Task<GameEngineResponse> GenerateWorldContentAsync(string sceneId, WorldGenerationRequest request, string requestedBy);
 
@@ -73,7 +73,7 @@ public interface IGameEngineModule
 }
 
 /// <summary>
-/// Response from game engine operations.
+/// Response from game engine Operations.
 /// </summary>
 public class GameEngineResponse
 {
@@ -104,7 +104,7 @@ public class GameEntity
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string Name { get; set; } = string.Empty;
-    public string Type { get; set; } = "Generic"; // NPC, Player, Object, Terrain, etc.
+    public string Type { get; set; } = "Generic"; // NPC, Player, Object, TerASHATin, etc.
     public Vector3 Position { get; set; } = new();
     public Vector3 Rotation { get; set; } = new();
     public Vector3 Scale { get; set; } = new() { X = 1, Y = 1, Z = 1 };
@@ -124,7 +124,7 @@ public class Vector3
 }
 
 /// <summary>
-/// Request for AI-driven world generation.
+/// Request for AI-driven world Generation.
 /// </summary>
 public class WorldGenerationRequest
 {
@@ -132,7 +132,7 @@ public class WorldGenerationRequest
     public string Theme { get; set; } = "fantasy";
     public int EntityCount { get; set; } = 10;
     public bool GenerateNPCs { get; set; } = true;
-    public bool GenerateTerrain { get; set; } = true;
+    public bool GenerateTerASHATin { get; set; } = true;
     public bool GenerateQuests { get; set; } = false;
 }
 

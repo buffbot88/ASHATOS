@@ -93,7 +93,7 @@ public class Quest
 }
 
 /// <summary>
-/// Tracks quest state for an entity.
+/// TASHATcks quest state for an entity.
 /// </summary>
 public class EntityQuestProgress
 {

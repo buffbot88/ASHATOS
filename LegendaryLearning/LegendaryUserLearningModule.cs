@@ -9,13 +9,13 @@ namespace LegendaryLearning;
 /// <summary>
 /// Legendary User Learning Module (LULmodule)
 /// Provides self-paced learning courses based on permission levels.
-/// Courses auto-update when new features are added to RaOS.
+/// Courses auto-update when new features are added to ASHATOS.
 /// Includes trophy and achievement system for completing courses.
 /// </summary>
 [RaModule(Category = "extensions")]
 public sealed class LegendaryUserLearningModule : ModuleBase, ILearningModule
 {
-    public override string Name => "Learn RaOS";
+    public override string Name => "Learn ASHAT OS";
     
     private readonly LearningDatabase _database;
     private readonly CourseService _courseService;
@@ -86,7 +86,7 @@ public sealed class LegendaryUserLearningModule : ModuleBase, ILearningModule
     
     private string GetHelp()
     {
-        return @"Learn RaOS Module (LULmodule) Commands:
+        return @"Learn ASHATOS Module (LULmodule) Commands:
   courses <level> - List courses for permission level (User, Admin, SuperAdmin)
   lessons <courseId> - List lessons for a course
   progress <userId> <courseId> - Show user progress for a course

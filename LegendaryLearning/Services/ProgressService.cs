@@ -1,6 +1,6 @@
-using LegendaryLearning.Abstractions;
 using LegendaryLearning.Database;
 using Abstractions;
+using LegendaryLearning.Abstractions;
 
 namespace LegendaryLearning.Services;
 
@@ -106,14 +106,14 @@ public class ProgressService : IProgressService
         await Task.CompletedTask;
         
         // Get all SuperAdmin courses
-        var superAdminCourses = await _courseService.GetCoursesAsync("SuperAdmin");
-        if (superAdminCourses.Count == 0)
+        var SuperAdminCourses = await _courseService.GetCoursesAsync("SuperAdmin");
+        if (SuperAdminCourses.Count == 0)
         {
             return false; // No courses to complete
         }
         
         // Check if user has completed all SuperAdmin courses
-        foreach (var course in superAdminCourses)
+        foreach (var course in SuperAdminCourses)
         {
             var progress = await GetUserProgressAsync(userId, course.Id);
             if (progress == null || progress.CompletedAt == null)
@@ -130,14 +130,14 @@ public class ProgressService : IProgressService
         await Task.CompletedTask;
         
         // Get all SuperAdmin courses
-        var superAdminCourses = await _courseService.GetCoursesAsync("SuperAdmin");
-        if (superAdminCourses.Count == 0)
+        var SuperAdminCourses = await _courseService.GetCoursesAsync("SuperAdmin");
+        if (SuperAdminCourses.Count == 0)
         {
             return false;
         }
         
         // Mark all lessons in all SuperAdmin courses as completed
-        foreach (var course in superAdminCourses)
+        foreach (var course in SuperAdminCourses)
         {
             var lessons = await _lessonService.GetLessonsAsync(course.Id);
             foreach (var lesson in lessons)

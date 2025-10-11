@@ -1,6 +1,6 @@
-using LegendaryLearning.Abstractions;
 using LegendaryLearning.Database;
 using Abstractions;
+using LegendaryLearning.Abstractions;
 
 namespace LegendaryLearning.Services;
 

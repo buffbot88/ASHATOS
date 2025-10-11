@@ -6,12 +6,12 @@ namespace LegendaryCMS.API;
 public class CMSAPIManager
 {
     private readonly Dictionary<string, CMSAPIEndpoint> _endpoints = new();
-    private readonly CMSRateLimiter _rateLimiter;
+    private readonly CMSRateLimiter _RateLimiter;
     private readonly object _lock = new();
 
-    public CMSAPIManager(CMSRateLimitConfig rateLimitConfig)
+    public CMSAPIManager(CMSRateLimitConfig RateLimitConfig)
     {
-        _rateLimiter = new CMSRateLimiter(rateLimitConfig);
+        _RateLimiter = new CMSRateLimiter(RateLimitConfig);
         RegisterDefaultEndpoints();
     }
 
@@ -95,9 +95,9 @@ public class CMSAPIManager
     /// </summary>
     public async Task<CMSAPIResponse> ProcessRequestAsync(CMSAPIRequest request)
     {
-        // Check rate limiting
+        // Check Rate limiting
         var clientId = request.UserId ?? request.Headers.GetValueOrDefault("X-Forwarded-For", "unknown");
-        if (!_rateLimiter.IsAllowed(clientId))
+        if (!_RateLimiter.IsAllowed(clientId))
         {
             return new CMSAPIResponse
             {
@@ -163,7 +163,7 @@ public class CMSAPIManager
             {
                 title = "Legendary CMS API",
                 version = "8.0.0",
-                description = "Production-ready CMS API for RaOS"
+                description = "Production-ready CMS API for ASHAT OS"
             },
             servers = new[]
             {
@@ -174,8 +174,8 @@ public class CMSAPIManager
                 path = e.Path,
                 method = e.Method.ToLower(),
                 summary = e.Description,
-                security = e.RequiresAuthentication ? new[] { new { bearerAuth = Array.Empty<string>() } } : null,
-                parameters = e.Parameters.Select(p => new
+                security = e.RequiresAuthentication ? new[] { new { bearerauth = Array.Empty<string>() } } : null,
+                Parameters = e.Parameters.Select(p => new
                 {
                     name = p.Name,
                     @in = "query",

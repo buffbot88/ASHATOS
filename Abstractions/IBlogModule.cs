@@ -69,7 +69,7 @@ public class BlogPost
     public bool IsPublished { get; set; } = true;
     public int ViewCount { get; set; }
     public int CommentCount { get; set; }
-    public ContentRating ContentRating { get; set; } = ContentRating.Everyone;
+    public ContentASHATting ContentASHATting { get; set; } = ContentASHATting.Everyone;
 }
 
 public class BlogComment
@@ -80,7 +80,7 @@ public class BlogComment
     public string Username { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
-    public ContentRating ContentRating { get; set; } = ContentRating.Everyone;
+    public ContentASHATting ContentASHATting { get; set; } = ContentASHATting.Everyone;
 }
 
 public class BlogCategory

@@ -3,13 +3,13 @@ using System.Threading.Tasks;
 namespace Abstractions;
 
 /// <summary>
-/// Interface for server setup and configuration management.
+/// Interface for server setup and Configuration management.
 /// Handles PHP, Database folders, FTP, and per-admin instance management.
 /// </summary>
 public interface IServerSetupModule
 {
     /// <summary>
-    /// Setup PHP configuration for an admin
+    /// Setup PHP Configuration for an admin
     /// </summary>
     Task<SetupResult> SetupPhpConfigAsync(string licenseNumber, string username);
     
@@ -44,18 +44,18 @@ public interface IServerSetupModule
     Task<FtpConnectionInfo> GetFtpConnectionInfoAsync(string licenseNumber, string username);
     
     /// <summary>
-    /// Create a restricted FTP user for RaOS folder access
+    /// Create a restricted FTP user for ASHATOS folder access
     /// </summary>
     Task<SetupResult> CreateRestrictedFtpUserAsync(string username, string restrictedPath);
     
     /// <summary>
-    /// Check if the live server is operational and ready for FTP setup
+    /// Check if the live server is Operational and ready for FTP setup
     /// </summary>
     Task<ServerHealthResult> CheckLiveServerHealthAsync();
 }
 
 /// <summary>
-/// Result of a setup operation
+/// Result of a setup Operation
 /// </summary>
 public class SetupResult
 {
@@ -119,9 +119,9 @@ public class ServerHealthResult
     public bool IsOperational { get; set; }
     public string Message { get; set; } = string.Empty;
     public bool DatabasesAccessible { get; set; }
-    public bool PhpFolderAccessible { get; set; }
-    public bool AdminsFolderAccessible { get; set; }
-    public bool FtpFolderAccessible { get; set; }
+    public bool PhpFoldeASHATccessible { get; set; }
+    public bool AdminsFoldeASHATccessible { get; set; }
+    public bool FtpFoldeASHATccessible { get; set; }
     public List<string> Issues { get; set; } = new();
     public Dictionary<string, string> Details { get; set; } = new();
 }

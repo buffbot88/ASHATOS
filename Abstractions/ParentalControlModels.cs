@@ -9,7 +9,7 @@ public class ParentalControlSettings
     public string UserId { get; set; } = string.Empty;
     public bool IsMinor { get; set; } = false;
     public DateTime? DateOfBirth { get; set; }
-    public ContentRating MaxAllowedRating { get; set; } = ContentRating.Teen;
+    public ContentASHATting MaxAllowedASHATting { get; set; } = ContentASHATting.Teen;
     public bool RequireParentalApproval { get; set; } = false;
     public string? ParentGuardianUserId { get; set; }
     public List<string> BlockedCategories { get; set; } = new();
@@ -23,9 +23,9 @@ public class ParentalControlSettings
 }
 
 /// <summary>
-/// Content rating system aligned with ESRB/PEGI standards.
+/// Content ASHATting system aligned with ESRB/PEGI standards.
 /// </summary>
-public enum ContentRating
+public enum ContentASHATting
 {
     Everyone = 0,      // E - All ages
     Everyone10Plus = 10, // E10+ - Ages 10 and up
@@ -48,22 +48,22 @@ public class TimeRestriction
 }
 
 /// <summary>
-/// Represents a content rating assigned to content.
+/// Represents a content ASHATting assigned to content.
 /// </summary>
-public class ContentRatingInfo
+public class ContentASHATtingInfo
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public string ContentId { get; set; } = string.Empty;
     public string ContentType { get; set; } = string.Empty; // "post", "game", "comment", etc.
-    public ContentRating Rating { get; set; } = ContentRating.Everyone;
+    public ContentASHATting ASHATting { get; set; } = ContentASHATting.Everyone;
     public List<ContentDescriptor> Descriptors { get; set; } = new();
-    public string? RatingReason { get; set; }
+    public string? ASHATtingReason { get; set; }
     public DateTime RatedAtUtc { get; set; } = DateTime.UtcNow;
     public string RatedBy { get; set; } = "System";
 }
 
 /// <summary>
-/// Content descriptors explaining why content has a particular rating.
+/// Content descriptors explaining why content has a particular ASHATting.
 /// </summary>
 public enum ContentDescriptor
 {
@@ -102,9 +102,9 @@ public interface IParentalControlModule
     Task<bool> SetSettingsAsync(ParentalControlSettings settings);
     
     /// <summary>
-    /// Check if user can access content based on rating.
+    /// Check if user can access content based on ASHATting.
     /// </summary>
-    Task<bool> CanAccessContentAsync(string userId, ContentRating rating);
+    Task<bool> CanAccessContentAsync(string userId, ContentASHATting ASHATting);
     
     /// <summary>
     /// Check if user can access a specific module.
@@ -114,7 +114,7 @@ public interface IParentalControlModule
     /// <summary>
     /// Rate content for age-appropriateness.
     /// </summary>
-    Task<ContentRatingInfo> RateContentAsync(string contentId, string contentType, string content);
+    Task<ContentASHATtingInfo> RateContentAsync(string contentId, string contentType, string content);
     
     /// <summary>
     /// Filter content for age-appropriate display.

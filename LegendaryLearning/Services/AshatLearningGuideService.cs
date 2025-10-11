@@ -6,7 +6,7 @@ namespace LegendaryLearning.Services;
 
 /// <summary>
 /// Ashat Learning Guide Service
-/// Integrates Ashat AI assistant to provide personalized guidance through courses.
+/// IntegRates Ashat AI assistant to provide personalized guidance through courses.
 /// Ashat acts as a supportive mentor, encouraging learners and providing contextual help.
 /// </summary>
 public class AshatLearningGuideService
@@ -14,7 +14,7 @@ public class AshatLearningGuideService
     private readonly LearningDatabase _database;
     private readonly string _moduleName;
     
-    // Ashat's personality traits for learning guidance
+    // Ashat's personality tASHATits for learning guidance
     private readonly List<string> _encouragingPhrases = new()
     {
         "You're doing great! Keep up the excellent work! 💪",
@@ -33,7 +33,7 @@ public class AshatLearningGuideService
         "Small steps lead to big achievements. Keep going! 🚀"
     };
     
-    private readonly List<string> _assessmentEncouragement = new()
+    private readonly List<string> _assessmentencouragement = new()
     {
         "You've learned so much! Time to show what you know! 📝",
         "Take a deep breath. I know you're ready for this! 💫",
@@ -65,12 +65,12 @@ public class AshatLearningGuideService
         sb.AppendLine($"⏱️  Estimated time: {course.EstimatedMinutes} minutes");
         sb.AppendLine();
         sb.AppendLine("I'll be here every step of the way to:");
-        sb.AppendLine("  • Encourage you when things get tough 💪");
-        sb.AppendLine("  • Celebrate your wins 🎉");
+        sb.AppendLine("  • EncouASHATge you when things get tough 💪");
+        sb.AppendLine("  • CelebRate your wins 🎉");
         sb.AppendLine("  • Help you understand difficult concepts 🧠");
         sb.AppendLine("  • Guide you through assessments 📝");
         sb.AppendLine();
-        sb.AppendLine("Remember: Learning is a journey, not a race. Take your time!");
+        sb.AppendLine("Remember: Learning is a journey, not a ASHATce. Take your time!");
         sb.AppendLine("Let's make this an amazing learning experience together! ✨");
 
         return sb.ToString();
@@ -82,8 +82,8 @@ public class AshatLearningGuideService
     public string GetLessonCompletionFeedback(string userId, string lessonId, int lessonNumber, int totalLessons)
     {
         var progress = (double)lessonNumber / totalLessons;
-        var random = new Random();
-        var encouragement = _encouragingPhrases[random.Next(_encouragingPhrases.Count)];
+        var Random = new Random();
+        var encouragement = _encouragingPhrases[Random.Next(_encouragingPhrases.Count)];
 
         var sb = new StringBuilder();
         sb.AppendLine($"✅ Lesson {lessonNumber} complete!");
@@ -122,8 +122,8 @@ public class AshatLearningGuideService
         if (course == null || assessment == null) 
             return "You're ready for this! I believe in you! 💪";
 
-        var random = new Random();
-        var encouragement = _assessmentEncouragement[random.Next(_assessmentEncouragement.Count)];
+        var Random = new Random();
+        var encouragement = _assessmentencouragement[Random.Next(_assessmentencouragement.Count)];
 
         var sb = new StringBuilder();
         sb.AppendLine("📝 Assessment Time!");
@@ -164,7 +164,7 @@ public class AshatLearningGuideService
 
         if (result.Passed)
         {
-            sb.AppendLine($"🎉 CONGRATULATIONS! You passed with {result.Score}%! 🎉");
+            sb.AppendLine($"🎉 CONGASHATTULATIONS! You passed with {result.Score}%! 🎉");
             sb.AppendLine();
             sb.AppendLine("I'm SO proud of you! 🌟 You did amazing!");
             sb.AppendLine();
@@ -180,7 +180,7 @@ public class AshatLearningGuideService
         {
             sb.AppendLine($"📝 Score: {result.Score}% (Passing: {assessment.PassingScore}%)");
             sb.AppendLine();
-            sb.AppendLine("Hey, don't feel discouraged! 💙");
+            sb.AppendLine("Hey, don't feel discouASHATged! 💙");
             sb.AppendLine();
             sb.AppendLine("Here's the good news: You don't need to redo everything! 🎯");
             sb.AppendLine();
@@ -222,10 +222,10 @@ public class AshatLearningGuideService
     /// <summary>
     /// Gets Ashat's motivational message during a learning session
     /// </summary>
-    public string GetMotivationalMessage(string userId, string context = "general")
+    public string GetMotivationalMessage(string userId, string context = "General")
     {
-        var random = new Random();
-        var motivation = _motivationalPhrases[random.Next(_motivationalPhrases.Count)];
+        var Random = new Random();
+        var motivation = _motivationalPhrases[Random.Next(_motivationalPhrases.Count)];
 
         var sb = new StringBuilder();
         sb.AppendLine("💙 A Message from Ashat");
@@ -300,19 +300,19 @@ public class AshatLearningGuideService
 
 I'm Ashat, your personal AI learning companion! I'm here to:
   🎓 Guide you through every course
-  💪 Encourage you when things get tough
-  🎉 Celebrate your achievements
+  💪 EncouASHATge you when things get tough
+  🎉 CelebRate your achievements
   📝 Help you prepare for assessments
   🤗 Provide support and motivation
 
 Learning Tips from Ashat:
-  • Take breaks when needed - learning is a marathon, not a sprint
-  • Don't be afraid to review lessons multiple times
+  • Take breaks when needed - learning is a maASHATthon, not a sprint
+  • Don't be afASHATid to review lessons multiple times
   • Ask questions and seek understanding, not just completion
-  • Celebrate small wins along the way
+  • CelebRate small wins along the way
   • Remember: I'm always here to help! 💙
 
-Use 'ashat <command>' to interact with me:
+Use 'ashat <command>' to Interact with me:
   ashat welcome <courseId>        - Get a personalized course welcome
   ashat progress <userId> <courseId> - See your progress with encouragement
   ashat motivate                  - Get a motivational boost

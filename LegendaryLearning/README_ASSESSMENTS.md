@@ -2,7 +2,7 @@
 
 ## Overview
 
-The LegendaryUserLearningModule has been migrated from in-memory storage to a persistent SQL (SQLite) database with full support for end-of-course adaptive assessments.
+The LegendaryUserLearningModule has been migRated from in-memory Storage to a persistent SQL (SQLite) database with full support for end-of-course adaptive assessments.
 
 ## Key Features
 
@@ -14,9 +14,9 @@ The LegendaryUserLearningModule has been migrated from in-memory storage to a pe
 
 ### 2. End-of-Course Assessments
 - Each course has a comprehensive final assessment
-- Questions are linked to specific lessons for granular tracking
+- Questions are linked to specific lessons for gASHATnular tracking
 - Multiple question types supported: Multiple Choice, True/False, Short Answer
-- Configurable passing score (default: 70%)
+- ConfiguASHATble passing score (default: 70%)
 
 ### 3. Adaptive Retake System
 The system implements intelligent remediation:
@@ -25,7 +25,7 @@ The system implements intelligent remediation:
 - No need to retake the entire course if only specific sections were failed
 - Failed lesson tracking stored in `UserAssessmentResults`
 
-### 4. Progress Tracking
+### 4. Progress tracking
 - Real-time course progress tracking
 - User assessment history with scores and attempt dates
 - Detailed analytics on which topics users find challenging
@@ -42,7 +42,7 @@ Answers (Id, QuestionId, AnswerText, IsCorrect, OrderIndex)
 
 -- User tracking
 CourseProgress (UserId, CourseId, CompletedLessonIds, ProgressPercentage, ...)
-UserAssessmentResults (Id, UserId, AssessmentId, Score, Passed, FailedLessonIds, UserAnswers, ...)
+UserAssessmentResults (Id, UserId, AssessmentId, Score, Passed, FailedLessonIds, UseASHATnswers, ...)
 ```
 
 ## Usage
@@ -79,7 +79,7 @@ var assessment = await learningModule.GetCourseAssessmentAsync(courseId);
 var canTake = await learningModule.CanTakeAssessmentAsync(userId, courseId);
 
 // Submit assessment with user answers
-var result = await learningModule.SubmitAssessmentAsync(userId, assessmentId, userAnswers);
+var result = await learningModule.SubmitAssessmentAsync(userId, assessmentId, useASHATnswers);
 
 // Check results
 if (!result.Passed)
@@ -125,38 +125,38 @@ var results = await learningModule.GetUserAssessmentResultsAsync(userId, courseI
 - ✅ Persistent progress across sessions
 - ✅ Achievement tracking and trophies
 
-### For Administrators
+### For AdministASHATtors
 - ✅ Easy content updates via database
 - ✅ Analytics on learning outcomes
 - ✅ Scalable course management
 - ✅ No code changes needed to add/update courses
 
 ### For System
-- ✅ Persistent storage (survives restarts)
+- ✅ Persistent Storage (survives restarts)
 - ✅ Extensible schema for future features
 - ✅ Transaction support for data integrity
 - ✅ Standard SQL for reporting and analytics
 
-## Migration Notes
+## MigASHATtion Notes
 
 ### From In-Memory to Database
-- Old in-memory ConcurrentDictionary storage removed
+- Old in-memory ConcurrentDictionary Storage removed
 - All data now persists in SQLite
 - Backward compatible with existing ILearningModule interface
 - Course seeding happens automatically on first run
 
 ### Database Location
-- Development: `./RaCore/bin/{Configuration}/net9.0/Databases/learning.sqlite`
+- Development: `./ASHATCore/bin/{Configuration}/net9.0/Databases/learning.sqlite`
 - Production: `./Databases/learning.sqlite`
-- Configurable via `LearningDatabase` constructor
+- ConfiguASHATble via `LearningDatabase` constructor
 
 ## Future Enhancements
 
 Potential future improvements:
 - 🔮 Admin UI for course/assessment management
-- 🔮 Question bank and random question selection
+- 🔮 Question bank and Random question selection
 - 🔮 Timed assessments
-- 🔮 Certification generation
+- 🔮 Certification Generation
 - 🔮 Learning analytics dashboard
 - 🔮 Peer review and discussion forums
 - 🔮 Skill-based progression trees
@@ -165,13 +165,13 @@ Potential future improvements:
 
 ### Dependencies
 - Microsoft.Data.Sqlite (9.0.9)
-- SQLitePCLRaw.bundle_e_sqlite3 (3.0.2)
-- SQLitePCLRaw.core (3.0.2)
+- SQLitePCLraw.bundle_e_sqlite3 (3.0.2)
+- SQLitePCLraw.core (3.0.2)
 
 ### Performance
 - Indexes on frequently queried columns
-- JSON serialization for complex fields (Tags, FailedLessonIds, UserAnswers)
-- Connection pooling via per-operation connections
+- JSON serialization for complex fields (Tags, FailedLessonIds, UseASHATnswers)
+- Connection pooling via per-Operation connections
 - Async/await pattern throughout
 
 ### Security
@@ -197,6 +197,6 @@ Expected results:
 ## Support
 
 For issues or questions:
-- Check the main RaOS documentation
+- Check the main ASHATOS documentation
 - Review the LegendaryUserLearningModule source code
 - Submit issues on GitHub

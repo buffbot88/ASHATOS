@@ -2,7 +2,7 @@ namespace Abstractions;
 
 
 /// <summary>
-/// Minimal interface for RaCore modules. All modules must implement this for manager compatibility.
+/// Minimal interface for ASHATCore modules. All modules must implement this for manager compatibility.
 /// </summary>
 public interface IRaModule : IDisposable
 {

@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <OutputType>Library</OutputType>
-    <Description>Legendary Game Server Module - AI-driven game creation and deployment system for RaOS</Description>
+    <Description>Legendary Game Server Module - AI-driven game creation and deployment system for ASHATOS</Description>
     <Version>1.0.0</Version>
   </PropertyGroup>
 

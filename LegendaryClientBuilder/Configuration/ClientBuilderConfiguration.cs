@@ -13,7 +13,7 @@ public interface IClientBuilderConfiguration
 }
 
 /// <summary>
-/// Implementation of client builder configuration.
+/// Implementation of client builder Configuration.
 /// </summary>
 public class ClientBuilderConfiguration : IClientBuilderConfiguration
 {

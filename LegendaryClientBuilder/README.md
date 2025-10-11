@@ -2,18 +2,18 @@
 
 ## Overview
 
-The **Legendary Client Builder Suite** is a production-ready, modular game client generation system built as an external DLL for RaOS. It represents Phase 9.1 of the RaOS development roadmap and provides enterprise-grade features for generating professional multi-platform game clients.
+The **Legendary Client Builder Suite** is a production-ready, modular game client Generation system built as an external DLL for ASHATOS. It represents Phase 9.1 of the ASHATOS development roadmap and provides enterprise-Grade features for Generating professional multi-platform game clients.
 
 ## Key Features
 
 - 🎨 **Multiple Templates** - Professional, Gaming, Mobile, and Basic templates for different use cases
 - 🖥️ **Multi-Platform Support** - WebGL/HTML5, Windows, Linux, macOS with platform-specific launchers
-- 🔧 **Advanced Customization** - Theme support, custom settings, and configurable server connections
-- 📦 **Modular Architecture** - Separate builders for each platform with clean separation of concerns
+- 🔧 **Advanced Customization** - Theme support, custom settings, and configuASHATble server connections
+- 📦 **Modular Architecture** - SepaRate builders for each platform with clean sepaASHATtion of concerns
 - ⚙️ **Configuration System** - Environment-aware settings and user limits
-- 🔒 **License Integration** - Automatic license validation and user quotas
-- 🚀 **Enhanced API** - RESTful API with template management, deletion, and regeneration
-- 📊 **Statistics & Monitoring** - Track client generation by platform, template, and user
+- 🔒 **License integration** - Automatic license validation and user quotas
+- 🚀 **Enhanced API** - RESTful API with template management, deletion, and reGeneration
+- 📊 **Statistics & Monitoring** - TASHATck client Generation by platform, template, and user
 
 ## Architecture
 
@@ -52,7 +52,7 @@ LegendaryClientBuilder/
 ### Prerequisites
 
 - .NET 9.0 SDK
-- RaCore (TheRaProject repository)
+- ASHATCore (TheASHATProject repository)
 
 ### Building
 
@@ -60,8 +60,8 @@ LegendaryClientBuilder/
 # Build LegendaryClientBuilder module
 dotnet build LegendaryClientBuilder/LegendaryClientBuilder.csproj
 
-# Build RaCore with LegendaryClientBuilder
-dotnet build RaCore/RaCore.csproj
+# Build ASHATCore with LegendaryClientBuilder
+dotnet build ASHATCore/ASHATCore.csproj
 ```
 
 ## Usage
@@ -92,13 +92,13 @@ cb status
 #### Generate Client (Basic - Backward Compatible)
 
 ```bash
-POST /api/gameclient/generate
+POST /api/gameclient/Generate
 Authorization: Bearer <token>
 
 {
   "licenseKey": "ABC-123",
   "platform": "WebGL",
-  "configuration": {
+  "Configuration": {
     "serverUrl": "localhost",
     "serverPort": 5000,
     "gameTitle": "My Game",
@@ -110,14 +110,14 @@ Authorization: Bearer <token>
 #### Generate Client with Template (Enhanced)
 
 ```bash
-POST /api/clientbuilder/generate
+POST /api/clientbuilder/Generate
 Authorization: Bearer <token>
 
 {
   "licenseKey": "ABC-123",
   "platform": "WebGL",
   "templateName": "WebGL-Professional",
-  "configuration": {
+  "Configuration": {
     "serverUrl": "localhost",
     "serverPort": 5000,
     "gameTitle": "Epic MMORPG",
@@ -159,14 +159,14 @@ http://localhost:5000/clients/{package-id}/index.html
 ### 1. Generate Professional WebGL Client
 
 ```bash
-curl -X POST http://localhost:5000/api/clientbuilder/generate \
+curl -X POST http://localhost:5000/api/clientbuilder/Generate \
   -H "Authorization: Bearer USER_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "licenseKey": "ABC-123",
     "platform": "WebGL",
     "templateName": "WebGL-Professional",
-    "configuration": {
+    "Configuration": {
       "serverUrl": "localhost",
       "serverPort": 5000,
       "gameTitle": "Legendary Quest",
@@ -178,14 +178,14 @@ curl -X POST http://localhost:5000/api/clientbuilder/generate \
 ### 2. Generate Gaming-Focused Client
 
 ```bash
-curl -X POST http://localhost:5000/api/clientbuilder/generate \
+curl -X POST http://localhost:5000/api/clientbuilder/Generate \
   -H "Authorization: Bearer USER_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "licenseKey": "ABC-123",
     "platform": "WebGL",
     "templateName": "WebGL-Gaming",
-    "configuration": {
+    "Configuration": {
       "serverUrl": "game.example.com",
       "serverPort": 443,
       "gameTitle": "Battle Arena",
@@ -197,14 +197,14 @@ curl -X POST http://localhost:5000/api/clientbuilder/generate \
 ### 3. Generate Desktop Client (Windows)
 
 ```bash
-curl -X POST http://localhost:5000/api/clientbuilder/generate \
+curl -X POST http://localhost:5000/api/clientbuilder/Generate \
   -H "Authorization: Bearer USER_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "licenseKey": "ABC-123",
     "platform": "Windows",
     "templateName": "Desktop-Standard",
-    "configuration": {
+    "Configuration": {
       "serverUrl": "localhost",
       "serverPort": 5000,
       "gameTitle": "Desktop Game",
@@ -215,7 +215,7 @@ curl -X POST http://localhost:5000/api/clientbuilder/generate \
 
 ## Configuration
 
-Create `clientbuilder-config.json` in RaCore directory:
+Create `clientbuilder-config.json` in ASHATCore directory:
 
 ```json
 {
@@ -274,20 +274,20 @@ Create `clientbuilder-config.json` in RaCore directory:
 
 ## Security
 
-- **License Validation** - All operations require valid, active licenses
-- **User Quotas** - Configurable maximum clients per user (default: 10)
+- **License Validation** - All Operations require valid, active licenses
+- **User Quotas** - ConfiguASHATble maximum clients per user (default: 10)
 - **Ownership Verification** - Users can only delete their own clients (Admins can delete any)
 - **Authentication** - All API endpoints require Bearer token authentication
 - **Path Validation** - Secure file serving with path sanitization
 
 ## Statistics
 
-The module tracks:
-- Total clients generated
+The module tASHATcks:
+- Total clients Generated
 - Clients by platform (WebGL, Windows, Linux, macOS)
 - Clients by template
 - Total users
-- Total storage used
+- Total Storage used
 - Module uptime
 
 ## Backward Compatibility
@@ -299,7 +299,7 @@ Phase 9.1 maintains 100% backward compatibility with Phase 4.5:
 - ✅ No breaking changes to data structures
 
 New enhanced endpoints are additive:
-- `/api/clientbuilder/generate` - Template support
+- `/api/clientbuilder/Generate` - Template support
 - `/api/clientbuilder/templates` - Template listing
 - `/api/clientbuilder/delete/{id}` - Client deletion
 - `/api/clientbuilder/list` - Enhanced listing
@@ -312,9 +312,9 @@ New enhanced endpoints are additive:
 | **Platforms** | Basic WebGL + Desktop | Enhanced multi-platform |
 | **Customization** | Limited | Extensive theme & settings |
 | **API** | 2 endpoints | 5+ endpoints |
-| **Features** | Basic generation | Advanced features, deletion |
+| **Features** | Basic Generation | Advanced features, deletion |
 | **Architecture** | Monolithic | Modular builders |
-| **UI Quality** | Basic | Professional grade |
+| **UI Quality** | Basic | Professional Grade |
 | **Mobile Support** | None | Touch-optimized templates |
 | **Version** | 4.5.0 | 9.1.0 |
 
@@ -322,7 +322,7 @@ New enhanced endpoints are additive:
 
 ### Module Loading
 
-The module is automatically discovered by RaCore's ModuleManager through the `[RaModule]` attribute:
+The module is automatically discovered by ASHATCore's ModuleManager through the `[RaModule]` attribute:
 
 ```csharp
 [RaModule(Category = "clientbuilder")]
@@ -334,8 +334,8 @@ public sealed class LegendaryClientBuilderModule : ModuleBase, ILegendaryClientB
 Developers can extend the system by:
 1. Creating custom templates with `RegisterTemplate()`
 2. Implementing new builders by extending `ClientBuilderBase`
-3. Adding custom configuration options
-4. Implementing custom client generation logic
+3. Adding custom Configuration options
+4. Implementing custom client Generation logic
 
 ### Generated Client Structure
 
@@ -376,7 +376,7 @@ public class MyCustomBuilder : ClientBuilderBase
         GameClientPackage package,
         ClientTemplate? template = null)
     {
-        // Custom generation logic
+        // Custom Generation logic
         var clientDir = Path.Combine(OutputPath, package.Id.ToString());
         Directory.CreateDirectory(clientDir);
         
@@ -390,8 +390,8 @@ public class MyCustomBuilder : ClientBuilderBase
 ## Future Enhancements
 
 Planned additions:
-- [ ] Android APK generation
-- [ ] iOS app generation
+- [ ] Android APK Generation
+- [ ] iOS app Generation
 - [ ] Progressive Web App (PWA) support
 - [ ] Custom theme builder UI
 - [ ] Template marketplace
@@ -415,14 +415,14 @@ When extending the Legendary Client Builder:
 1. Follow existing patterns in `LegendaryClientBuilderModule.cs`
 2. Add new builders to `Builders/` directory
 3. Register templates in `TemplateManager.cs`
-4. Update API endpoints in `RaCore/Program.cs`
+4. Update API endpoints in `ASHATCore/Program.cs`
 5. Document new features in this README
 6. Add examples and use cases
 7. Write tests for new functionality
 
 ## License
 
-Part of the RaCore AI Mainframe system. See main project LICENSE.
+Part of the ASHATCore AI mainframe system. See main project LICENSE.
 
 ---
 
@@ -434,4 +434,4 @@ Part of the RaCore AI Mainframe system. See main project LICENSE.
 
 ---
 
-**Built with ❤️ for the RaOS ecosystem**
+**Built with ❤️ for the ASHATOS ecosystem**

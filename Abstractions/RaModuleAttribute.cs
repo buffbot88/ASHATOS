@@ -1,7 +1,7 @@
 namespace Abstractions;
 
 /// <summary>
-/// Attribute for marking classes as RaCore modules. Used for discovery and categorization.
+/// Attribute for marking classes as ASHATCore modules. Used for discovery and categorization.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
 public sealed class RaModuleAttribute : Attribute

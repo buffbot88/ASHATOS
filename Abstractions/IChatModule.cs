@@ -70,7 +70,7 @@ public class ChatMessage
     public string Username { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
     public DateTime Timestamp { get; set; }
-    public ContentRating ContentRating { get; set; } = ContentRating.Everyone;
+    public ContentASHATting ContentASHATting { get; set; } = ContentASHATting.Everyone;
 }
 
 public class ChatUser

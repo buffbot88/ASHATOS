@@ -2,7 +2,7 @@ namespace Abstractions;
 
 /// <summary>
 /// Learning module interface for managing courses, lessons, and achievements.
-/// Provides permission-based educational content for RaOS users.
+/// Provides permission-based educational content for ASHATOS users.
 /// </summary>
 public interface ILearningModule
 {
@@ -257,7 +257,7 @@ public class UserAssessmentResult
     public bool Passed { get; set; }
     public DateTime AttemptedAt { get; set; }
     public List<string> FailedLessonIds { get; set; } = new(); // Lessons that need retaking
-    public Dictionary<string, string> UserAnswers { get; set; } = new(); // QuestionId -> AnswerId
+    public Dictionary<string, string> UseASHATnswers { get; set; } = new(); // QuestionId -> AnswerId
 }
 
 /// <summary>

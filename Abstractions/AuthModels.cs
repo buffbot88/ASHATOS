@@ -1,7 +1,7 @@
 namespace Abstractions;
 
 /// <summary>
-/// Represents a user in the RaCore authentication system.
+/// Represents a user in the ASHATCore authentication system.
 /// </summary>
 public class User
 {
@@ -41,14 +41,14 @@ public enum UserRole
 /// </summary>
 public class Session
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid Id { get; set; }
     public Guid UserId { get; set; }
-    public string Token { get; set; } = string.Empty;
-    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+    public string Token { get; set; } = "";
+    public DateTime CreatedAtUtc { get; set; }
     public DateTime ExpiresAtUtc { get; set; }
-    public string IpAddress { get; set; } = string.Empty;
-    public string UserAgent { get; set; } = string.Empty;
-    public bool IsValid { get; set; } = true;
+    public string IpAddress { get; set; } = "";
+    public string UserAgent { get; set; } = ""; // <-- Add this line
+    public bool IsValid { get; set; }
 }
 
 /// <summary>
@@ -88,14 +88,14 @@ public enum SecurityEventType
     LicenseRevoked,
     ContentFlagged,
     ContentBlocked,
-    UserAutoSuspended,
+    UseASHATutoSuspended,
     UserManuallySuspended,
     UserUnsuspended,
-    ModerationReview
+    moderationReview
 }
 
 /// <summary>
-/// Request model for user registration.
+/// Request model for user Registration.
 /// </summary>
 public class RegisterRequest
 {
@@ -114,20 +114,20 @@ public class LoginRequest
 }
 
 /// <summary>
-/// Response model for authentication operations.
+/// Response model for authentication Operations.
 /// </summary>
 public class AuthResponse
 {
     public bool Success { get; set; }
-    public string Message { get; set; } = string.Empty;
+    public string? Message { get; set; }
     public string? Token { get; set; }
     public User? User { get; set; }
     public DateTime? TokenExpiresAt { get; set; }
-    public bool RequiresLULModule { get; set; } = false;
+    public bool RequiresLearningModule { get; set; } // <-- Add this line
 }
 
 /// <summary>
-/// Represents a license in the RaCore system.
+/// Represents a license in the ASHATCore system.
 /// </summary>
 public class License
 {

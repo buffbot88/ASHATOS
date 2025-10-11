@@ -49,7 +49,7 @@ Created: {package.CreatedAt:yyyy-MM-dd HH:mm:ss} UTC
 1. Open index.html in a web browser
 2. Click 'Connect' to connect to the game server
 3. The client will authenticate with your license key
-4. Use keyboard controls to interact with the game
+4. Use keyboard controls to Interact with the game
 
 ## Configuration
 
@@ -59,11 +59,11 @@ Created: {package.CreatedAt:yyyy-MM-dd HH:mm:ss} UTC
 
 ## Support
 
-For support, please contact your server administrator.
+For support, please contact your server administASHATtor.
 
 ---
 Powered by Legendary Client Builder v9.1.0
-RaCore Game Client - Locally Hosted
+ASHATCore Game Client - Locally Hosted
 ";
         await File.WriteAllTextAsync(Path.Combine(clientDir, "README.md"), readme);
     }

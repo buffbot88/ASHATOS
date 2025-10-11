@@ -31,14 +31,14 @@ public interface IRaCoinModule : IDisposable
     Task<RaCoinResponse> TransferAsync(Guid fromUserId, Guid toUserId, decimal amount, string description);
     
     /// <summary>
-    /// Get transaction history for a user.
+    /// Get Transaction history for a user.
     /// </summary>
     List<RaCoinTransaction> GetTransactionHistory(Guid userId, int limit = 50);
     
     /// <summary>
-    /// Refund a transaction.
+    /// Refund a Transaction.
     /// </summary>
-    Task<RaCoinResponse> RefundAsync(Guid transactionId);
+    Task<RaCoinResponse> RefundAsync(Guid TransactionId);
     
     /// <summary>
     /// Get total RaCoins in the system across all wallets.

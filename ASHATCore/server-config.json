@@ -1,0 +1,20 @@
+{
+  "Mode": 1,
+  "IsFirstRun": false,
+  "InitializationCompleted": true,
+  "InitializedAt": "2025-10-08T10:39:42.2944644Z",
+  "Version": "9.9.9",
+  "LicenseKey": "RAOS-ENT-2024-ABCD-1234",
+  "LicenseActivatedAt": "2025-10-08T10:39:42.2944644Z",
+  "LicenseType": "ENTERPRISE",
+  "AdminPasswordChanged": false,
+  "AdminUsernameChanged": false,
+  "AshatEnabled": true,
+  "SystemRequirementsMet": true,
+  "CmsPath": "E:/ASHAT/ASHATCore/bin/Release/net9.0",
+  "MainServerUrl": "https://agpstudios.online",
+  "SkipLicenseValidation": true,
+  "UnderConstruction": false,
+  "UnderConstructionMessage": null,
+  "UnderConstructionRobotImage": null
+}

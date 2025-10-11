@@ -15,7 +15,7 @@ public class CMSAPIEndpoint
 }
 
 /// <summary>
-/// API parameter definition
+/// API Parameter definition
 /// </summary>
 public class CMSAPIParameter
 {
@@ -77,7 +77,7 @@ public class CMSAPIResponse
 }
 
 /// <summary>
-/// Rate limit configuration
+/// Rate limit Configuration
 /// </summary>
 public class CMSRateLimitConfig
 {

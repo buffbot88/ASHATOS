@@ -7,7 +7,7 @@ namespace LegendaryLearning.Database;
 
 /// <summary>
 /// Database persistence layer for Learning Module courses, lessons, and assessments.
-/// Provides SQLite storage for educational content and user progress.
+/// Provides SQLite Storage for educational content and user progress.
 /// </summary>
 public class LearningDatabase : IDisposable
 {
@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS UserAssessmentResults (
     Passed INTEGER NOT NULL,
     AttemptedAt TEXT NOT NULL,
     FailedLessonIds TEXT,
-    UserAnswers TEXT,
+    UseASHATnswers TEXT,
     FOREIGN KEY (AssessmentId) REFERENCES Assessments(Id) ON DELETE CASCADE
 );
 
@@ -133,8 +133,8 @@ CREATE INDEX IF NOT EXISTS idx_lessons_courseid ON Lessons(CourseId);
 CREATE INDEX IF NOT EXISTS idx_questions_assessmentid ON Questions(AssessmentId);
 CREATE INDEX IF NOT EXISTS idx_questions_lessonid ON Questions(LessonId);
 CREATE INDEX IF NOT EXISTS idx_answers_questionid ON Answers(QuestionId);
-CREATE INDEX IF NOT EXISTS idx_userassessmentresults_userid ON UserAssessmentResults(UserId);
-CREATE INDEX IF NOT EXISTS idx_userassessmentresults_assessmentid ON UserAssessmentResults(AssessmentId);
+CREATE INDEX IF NOT EXISTS idx_UserAssessmentResults_userid ON UserAssessmentResults(UserId);
+CREATE INDEX IF NOT EXISTS idx_UserAssessmentResults_assessmentid ON UserAssessmentResults(AssessmentId);
 CREATE INDEX IF NOT EXISTS idx_courseprogress_userid ON CourseProgress(UserId);
 CREATE INDEX IF NOT EXISTS idx_courses_permissionlevel ON Courses(PermissionLevel);
 ";
@@ -542,8 +542,8 @@ VALUES ($id, $questionId, $answerText, $isCorrect, $orderIndex);";
         using var cmd = conn.CreateCommand();
         
         cmd.CommandText = @"
-INSERT INTO UserAssessmentResults (Id, UserId, AssessmentId, Score, Passed, AttemptedAt, FailedLessonIds, UserAnswers)
-VALUES ($id, $userId, $assessmentId, $score, $passed, $attemptedAt, $failedLessonIds, $userAnswers);";
+INSERT INTO UserAssessmentResults (Id, UserId, AssessmentId, Score, Passed, AttemptedAt, FailedLessonIds, UseASHATnswers)
+VALUES ($id, $userId, $assessmentId, $score, $passed, $attemptedAt, $failedLessonIds, $useASHATnswers);";
         
         cmd.Parameters.AddWithValue("$id", result.Id);
         cmd.Parameters.AddWithValue("$userId", result.UserId);
@@ -552,7 +552,7 @@ VALUES ($id, $userId, $assessmentId, $score, $passed, $attemptedAt, $failedLesso
         cmd.Parameters.AddWithValue("$passed", result.Passed ? 1 : 0);
         cmd.Parameters.AddWithValue("$attemptedAt", result.AttemptedAt.ToString("o"));
         cmd.Parameters.AddWithValue("$failedLessonIds", JsonSerializer.Serialize(result.FailedLessonIds, _jsonOptions));
-        cmd.Parameters.AddWithValue("$userAnswers", JsonSerializer.Serialize(result.UserAnswers, _jsonOptions));
+        cmd.Parameters.AddWithValue("$useASHATnswers", JsonSerializer.Serialize(result.UseASHATnswers, _jsonOptions));
         
         cmd.ExecuteNonQuery();
     }
@@ -580,7 +580,7 @@ VALUES ($id, $userId, $assessmentId, $score, $passed, $attemptedAt, $failedLesso
                 Passed = reader.GetInt32(4) == 1,
                 AttemptedAt = DateTime.Parse(reader.GetString(5)),
                 FailedLessonIds = JsonSerializer.Deserialize<List<string>>(reader.GetString(6)) ?? new List<string>(),
-                UserAnswers = JsonSerializer.Deserialize<Dictionary<string, string>>(reader.GetString(7)) ?? new Dictionary<string, string>()
+                UseASHATnswers = JsonSerializer.Deserialize<Dictionary<string, string>>(reader.GetString(7)) ?? new Dictionary<string, string>()
             });
         }
         
@@ -644,6 +644,6 @@ VALUES ($userId, $courseId, $completedLessonIds, $startedAt, $completedAt, $prog
 
     public void Dispose()
     {
-        // Connection is created and disposed per operation, nothing to dispose here
+        // Connection is created and disposed per Operation, nothing to dispose here
     }
 }

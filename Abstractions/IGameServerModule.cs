@@ -2,13 +2,13 @@ namespace Abstractions;
 
 /// <summary>
 /// Interface for the Game Server Module - Provides unified AI-driven game creation and deployment system.
-/// Orchestrates AICodeGen, GameEngine, AIContent, and ServerSetup modules for complete game development.
+/// OrchestRates AICodeGen, GameEngine, AIContent, and ServerSetup modules for complete game development.
 /// </summary>
 public interface IGameServerModule
 {
     /// <summary>
     /// Creates a complete game from natural language description.
-    /// Generates front-end, back-end, assets, and deployment configuration.
+    /// Generates front-end, back-end, assets, and deployment Configuration.
     /// </summary>
     Task<GameCreationResponse> CreateGameFromDescriptionAsync(GameCreationRequest request);
     
@@ -77,13 +77,13 @@ public enum GameType
     SinglePlayer,
     Multiplayer,
     MMO,
-    Cooperative,
+    CoOperative,
     PvP,
     Sandbox
 }
 
 /// <summary>
-/// Response from game creation operation.
+/// Response from game creation Operation.
 /// </summary>
 public class GameCreationResponse
 {
@@ -110,7 +110,7 @@ public class DeploymentOptions
 }
 
 /// <summary>
-/// Response from server deployment operation.
+/// Response from server deployment Operation.
 /// </summary>
 public class ServerDeploymentResponse
 {
@@ -148,7 +148,7 @@ public class GamePreview
 }
 
 /// <summary>
-/// Response from game update operation.
+/// Response from game update Operation.
 /// </summary>
 public class GameUpdateResponse
 {
@@ -205,7 +205,7 @@ public class GameMetrics
 }
 
 /// <summary>
-/// Response from generic game server operations.
+/// Response from generic game server Operations.
 /// </summary>
 public class GameServerResponse
 {
@@ -215,7 +215,7 @@ public class GameServerResponse
 }
 
 /// <summary>
-/// Response from game export operation.
+/// Response from game export Operation.
 /// </summary>
 public class GameExportResponse
 {

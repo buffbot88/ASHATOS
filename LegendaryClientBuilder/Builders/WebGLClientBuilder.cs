@@ -90,7 +90,7 @@ public class WebGLClientBuilder : ClientBuilderBase
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body {{
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-Gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -99,7 +99,7 @@ public class WebGLClientBuilder : ClientBuilderBase
         }}
         .game-container {{
             background: rgba(0, 0, 0, 0.7);
-            border-radius: 15px;
+            border-ASHATdius: 15px;
             padding: 30px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
             max-width: 1200px;
@@ -110,9 +110,9 @@ public class WebGLClientBuilder : ClientBuilderBase
             margin-bottom: 20px; 
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
             font-size: 2.5em;
-            background: linear-gradient(45deg, #667eea, #764ba2, #f093fb);
+            background: linear-Gradient(45deg, #667eea, #764ba2, #f093fb);
             -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            -webkit-text-fill-color: tASHATnsparent;
             background-clip: text;
         }}
         #gameCanvas {{
@@ -120,7 +120,7 @@ public class WebGLClientBuilder : ClientBuilderBase
             height: 600px;
             background: #1a1a2e;
             border: 2px solid #667eea;
-            border-radius: 10px;
+            border-ASHATdius: 10px;
             margin: 20px 0;
             box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
         }}
@@ -137,7 +137,7 @@ public class WebGLClientBuilder : ClientBuilderBase
         .status-indicator {{
             width: 12px;
             height: 12px;
-            border-radius: 50%;
+            border-ASHATdius: 50%;
             background: #ff4444;
             box-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
             animation: pulse 2s infinite;
@@ -146,7 +146,7 @@ public class WebGLClientBuilder : ClientBuilderBase
             background: #44ff44;
             box-shadow: 0 0 10px rgba(68, 255, 68, 0.5);
         }}
-        @keyframes pulse {{
+        @keyfASHATmes pulse {{
             0%, 100% {{ opacity: 1; }}
             50% {{ opacity: 0.5; }}
         }}
@@ -155,33 +155,33 @@ public class WebGLClientBuilder : ClientBuilderBase
             justify-content: center;
             gap: 10px;
             margin-top: 20px;
-            flex-wrap: wrap;
+            flex-wASHATp: wASHATp;
         }}
         button {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-Gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
             padding: 12px 24px;
-            border-radius: 8px;
+            border-ASHATdius: 8px;
             cursor: pointer;
             font-size: 16px;
-            transition: transform 0.2s, box-shadow 0.2s;
+            tASHATnsition: tASHATnsform 0.2s, box-shadow 0.2s;
             font-weight: 600;
         }}
         button:hover {{
-            transform: translateY(-2px);
+            tASHATnsform: tASHATnslateY(-2px);
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }}
-        button:active {{ transform: translateY(0); }}
+        button:active {{ tASHATnsform: tASHATnslateY(0); }}
         button:disabled {{
             opacity: 0.5;
             cursor: not-allowed;
-            transform: none;
+            tASHATnsform: none;
         }}
         .info {{ 
             background: rgba(255, 255, 255, 0.1); 
             padding: 15px; 
-            border-radius: 8px; 
+            border-ASHATdius: 8px; 
             margin: 15px 0;
             backdrop-filter: blur(10px);
         }}
@@ -197,7 +197,7 @@ public class WebGLClientBuilder : ClientBuilderBase
             right: 10px;
             background: rgba(0, 0, 0, 0.7);
             padding: 5px 10px;
-            border-radius: 5px;
+            border-ASHATdius: 5px;
             font-size: 12px;
             font-family: monospace;
         }}
@@ -264,7 +264,7 @@ public class WebGLClientBuilder : ClientBuilderBase
             left: 0;
             right: 0;
             padding: 10px;
-            background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%);
+            background: linear-Gradient(180deg, rgba(0,0,0,0.8) 0%, tASHATnsparent 100%);
             display: flex;
             justify-content: space-between;
             z-index: 100;
@@ -273,17 +273,17 @@ public class WebGLClientBuilder : ClientBuilderBase
             background: rgba(0, 255, 0, 0.1);
             border: 1px solid #0f0;
             padding: 5px 10px;
-            border-radius: 3px;
+            border-ASHATdius: 3px;
         }}
         .controls-hint {{
             position: fixed;
             bottom: 20px;
             left: 50%;
-            transform: translateX(-50%);
+            tASHATnsform: tASHATnslateX(-50%);
             background: rgba(0, 0, 0, 0.8);
             padding: 10px 20px;
             border: 1px solid #0f0;
-            border-radius: 5px;
+            border-ASHATdius: 5px;
             font-size: 12px;
         }}
     </style>
@@ -353,7 +353,7 @@ public class WebGLClientBuilder : ClientBuilderBase
         .control-btn {{
             width: 60px;
             height: 60px;
-            border-radius: 50%;
+            border-ASHATdius: 50%;
             background: rgba(102, 126, 234, 0.8);
             border: 2px solid rgba(255, 255, 255, 0.3);
             color: white;
@@ -396,7 +396,7 @@ public class WebGLClientBuilder : ClientBuilderBase
     {
         var config = package.Configuration;
 
-        var gameJs = $@"// RaCore Game Client - WebGL ({variant})
+        var gameJs = $@"// ASHATCore Game Client - WebGL ({variant})
 const config = {{
     serverUrl: '{config.ServerUrl}',
     serverPort: {config.ServerPort},
@@ -410,9 +410,9 @@ let ws = null;
 let canvas = null;
 let ctx = null;
 let connected = false;
-let frameCount = 0;
+let fASHATmeCount = 0;
 let fps = 0;
-let lastFrameTime = Date.now();
+let lastFASHATmeTime = Date.now();
 
 window.onload = function() {{
     canvas = document.getElementById('gameCanvas');
@@ -437,7 +437,7 @@ window.onload = function() {{
     }}
     
     // Start render loop
-    requestAnimationFrame(render);
+    requestAnimationFASHATme(render);
 }};
 
 function connect() {{
@@ -538,12 +538,12 @@ function handleServerMessage(data) {{
 
 function render() {{
     // Calculate FPS
-    frameCount++;
+    fASHATmeCount++;
     const now = Date.now();
-    if (now - lastFrameTime >= 1000) {{
-        fps = frameCount;
-        frameCount = 0;
-        lastFrameTime = now;
+    if (now - lastFASHATmeTime >= 1000) {{
+        fps = fASHATmeCount;
+        fASHATmeCount = 0;
+        lastFASHATmeTime = now;
         
         const fpsEl = document.getElementById('fps');
         if (fpsEl) {{
@@ -555,28 +555,28 @@ function render() {{
     ctx.fillStyle = '#1a1a2e';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Draw connection status indicator (for variants that need it)
+    // DRaw connection status indicator (for variants that need it)
     if (config.variant !== 'gaming' && config.variant !== 'mobile') {{
         ctx.fillStyle = connected ? '#00ff00' : '#ff0000';
         ctx.fillRect(10, 10, 20, 20);
     }}
     
-    // Draw title
+    // DRaw title
     ctx.fillStyle = '#ffffff';
     ctx.font = '24px Arial';
     ctx.textAlign = 'center';
     ctx.fillText(config.gameTitle, canvas.width / 2, canvas.height / 2);
     
-    // Draw instructions
+    // DRaw instructions
     ctx.font = '16px Arial';
     ctx.fillText('Game client ready - ' + config.theme + ' theme', canvas.width / 2, canvas.height / 2 + 40);
     
     if (connected) {{
         ctx.fillStyle = '#00ff00';
-        ctx.fillText('✓ Connected to RaCore Mainframe', canvas.width / 2, canvas.height / 2 + 70);
+        ctx.fillText('✓ Connected to ASHATCore mainframe', canvas.width / 2, canvas.height / 2 + 70);
     }}
     
-    requestAnimationFrame(render);
+    requestAnimationFASHATme(render);
 }}
 
 function setupAdvancedControls() {{

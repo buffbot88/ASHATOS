@@ -1,7 +1,7 @@
 namespace Abstractions;
 
 /// <summary>
-/// Interface for game client generation functionality.
+/// Interface for game client Generation functionality.
 /// Generates multi-platform game client screens for each game server.
 /// </summary>
 public interface IGameClientModule : IDisposable
@@ -22,13 +22,13 @@ public interface IGameClientModule : IDisposable
     IEnumerable<GameClientPackage> GetUserClientPackages(Guid userId);
     
     /// <summary>
-    /// Update client configuration.
+    /// Update client Configuration.
     /// </summary>
     Task<bool> UpdateClientConfigAsync(Guid packageId, ClientConfiguration config);
 }
 
 /// <summary>
-/// Game client package containing the generated client.
+/// Game client package containing the Generated client.
 /// </summary>
 public class GameClientPackage
 {
@@ -44,13 +44,13 @@ public class GameClientPackage
 }
 
 /// <summary>
-/// Client configuration for game server connection.
+/// Client Configuration for game server connection.
 /// </summary>
 public class ClientConfiguration
 {
     public string ServerUrl { get; set; } = string.Empty;
     public int ServerPort { get; set; } = 80;
-    public string GameTitle { get; set; } = "RaCore Game";
+    public string GameTitle { get; set; } = "ASHATCore Game";
     public string Theme { get; set; } = "fantasy";
     public Dictionary<string, string> CustomSettings { get; set; } = new();
 }

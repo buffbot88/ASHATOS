@@ -31,9 +31,9 @@ public interface ICMSComponent
     Task<ComponentHealth> GetHealthAsync();
 
     /// <summary>
-    /// Handle component-specific operations
+    /// Handle component-specific Operations
     /// </summary>
-    Task<string> ProcessAsync(string operation, Dictionary<string, object>? parameters = null);
+    Task<string> ProcessAsync(string Operation, Dictionary<string, object>? Parameters = null);
 }
 
 /// <summary>

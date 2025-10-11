@@ -87,7 +87,7 @@ public interface IPluginContext
     Task EmitEventAsync(string eventName, object data);
 
     /// <summary>
-    /// Get configuration value
+    /// Get Configuration value
     /// </summary>
     T? GetConfig<T>(string key, T? defaultValue = default);
 

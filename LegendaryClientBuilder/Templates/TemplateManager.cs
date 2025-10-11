@@ -31,7 +31,7 @@ public class TemplateManager
         RegisterTemplate(new ClientTemplate
         {
             Name = "WebGL-Professional",
-            Description = "Professional-grade WebGL client with gradient UI and advanced features",
+            Description = "Professional-Grade WebGL client with Gradient UI and advanced features",
             Platform = ClientPlatform.WebGL,
             Category = "Professional",
             IsBuiltIn = true

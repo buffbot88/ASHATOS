@@ -12,7 +12,7 @@ public class ReasoningStep
 }
 
 /// <summary>
-/// Traceable decision path for transparency
+/// Traceable decision path for tASHATnsparency
 /// </summary>
 public class DecisionTrace
 {
@@ -32,12 +32,12 @@ public class DecisionTrace
 public interface IExplainableModule
 {
     /// <summary>
-    /// Get the decision trace for the last operation
+    /// Get the decision Trace for the last Operation
     /// </summary>
     Task<DecisionTrace?> GetLastDecisionTraceAsync();
     
     /// <summary>
     /// Explain why a specific decision was made
     /// </summary>
-    Task<string> ExplainDecisionAsync(string traceId);
+    Task<string> ExplainDecisionAsync(string TraceId);
 }

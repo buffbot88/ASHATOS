@@ -56,7 +56,7 @@ public static class CMSPermissions
     public const string ForumPost = "forum.post";
     public const string ForumEdit = "forum.edit";
     public const string ForumDelete = "forum.delete";
-    public const string ForumModerate = "forum.moderate";
+    public const string ForumModeRate = "forum.modeRate";
 
     // Blog permissions
     public const string BlogView = "blog.view";
@@ -68,7 +68,7 @@ public static class CMSPermissions
     // Chat permissions
     public const string ChatJoin = "chat.join";
     public const string ChatSend = "chat.send";
-    public const string ChatModerate = "chat.moderate";
+    public const string ChatModeRate = "chat.modeRate";
     public const string ChatKick = "chat.kick";
     public const string ChatBan = "chat.ban";
 
@@ -87,7 +87,7 @@ public static class CMSPermissions
     // System permissions
     public const string SystemConfig = "system.config";
     public const string SystemBackup = "system.backup";
-    public const string SystemMigrate = "system.migrate";
+    public const string SystemMigRate = "system.migRate";
 }
 
 /// <summary>
@@ -95,9 +95,9 @@ public static class CMSPermissions
 /// </summary>
 public static class CMSRoles
 {
-    public const string SuperAdmin = "superadmin";
+    public const string SuperAdmin = "SuperAdmin";
     public const string Admin = "admin";
-    public const string Moderator = "moderator";
+    public const string Moderator = "Moderator";
     public const string User = "user";
     public const string Guest = "guest";
 }
@@ -123,25 +123,25 @@ public class RBACManager : IRBACManager
         _rolePermissions[CMSRoles.SuperAdmin] = new List<string>
         {
             CMSPermissions.ForumView, CMSPermissions.ForumPost, CMSPermissions.ForumEdit,
-            CMSPermissions.ForumDelete, CMSPermissions.ForumModerate,
+            CMSPermissions.ForumDelete, CMSPermissions.ForumModeRate,
             CMSPermissions.BlogView, CMSPermissions.BlogCreate, CMSPermissions.BlogEdit,
             CMSPermissions.BlogDelete, CMSPermissions.BlogPublish,
-            CMSPermissions.ChatJoin, CMSPermissions.ChatSend, CMSPermissions.ChatModerate,
+            CMSPermissions.ChatJoin, CMSPermissions.ChatSend, CMSPermissions.ChatModeRate,
             CMSPermissions.ChatKick, CMSPermissions.ChatBan,
             CMSPermissions.ProfileView, CMSPermissions.ProfileEdit, CMSPermissions.ProfileDelete,
             CMSPermissions.AdminAccess, CMSPermissions.AdminUsers, CMSPermissions.AdminSettings,
             CMSPermissions.AdminPlugins, CMSPermissions.AdminThemes,
-            CMSPermissions.SystemConfig, CMSPermissions.SystemBackup, CMSPermissions.SystemMigrate
+            CMSPermissions.SystemConfig, CMSPermissions.SystemBackup, CMSPermissions.SystemMigRate
         };
 
         // Admin - most permissions except system-level
         _rolePermissions[CMSRoles.Admin] = new List<string>
         {
             CMSPermissions.ForumView, CMSPermissions.ForumPost, CMSPermissions.ForumEdit,
-            CMSPermissions.ForumDelete, CMSPermissions.ForumModerate,
+            CMSPermissions.ForumDelete, CMSPermissions.ForumModeRate,
             CMSPermissions.BlogView, CMSPermissions.BlogCreate, CMSPermissions.BlogEdit,
             CMSPermissions.BlogDelete, CMSPermissions.BlogPublish,
-            CMSPermissions.ChatJoin, CMSPermissions.ChatSend, CMSPermissions.ChatModerate,
+            CMSPermissions.ChatJoin, CMSPermissions.ChatSend, CMSPermissions.ChatModeRate,
             CMSPermissions.ChatKick, CMSPermissions.ChatBan,
             CMSPermissions.ProfileView, CMSPermissions.ProfileEdit,
             CMSPermissions.AdminAccess, CMSPermissions.AdminUsers, CMSPermissions.AdminSettings
@@ -151,9 +151,9 @@ public class RBACManager : IRBACManager
         _rolePermissions[CMSRoles.Moderator] = new List<string>
         {
             CMSPermissions.ForumView, CMSPermissions.ForumPost, CMSPermissions.ForumEdit,
-            CMSPermissions.ForumModerate,
+            CMSPermissions.ForumModeRate,
             CMSPermissions.BlogView, CMSPermissions.BlogCreate, CMSPermissions.BlogEdit,
-            CMSPermissions.ChatJoin, CMSPermissions.ChatSend, CMSPermissions.ChatModerate,
+            CMSPermissions.ChatJoin, CMSPermissions.ChatSend, CMSPermissions.ChatModeRate,
             CMSPermissions.ChatKick,
             CMSPermissions.ProfileView, CMSPermissions.ProfileEdit
         };

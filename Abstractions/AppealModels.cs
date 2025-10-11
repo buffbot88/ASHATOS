@@ -28,7 +28,7 @@ public class AppealSession
 }
 
 /// <summary>
-/// Represents a single Q&A interaction in an appeal session.
+/// Represents a single Q&A Interaction in an appeal session.
 /// </summary>
 public class AppealInteraction
 {
@@ -85,7 +85,7 @@ public enum AppealOutcome
     Approved,           // Suspension lifted
     PartiallyApproved,  // Suspension reduced
     Denied,             // Appeal rejected
-    EscalateToHuman,    // Requires human moderator review
+    EscalateToHuman,    // Requires human Moderator review
     RequiresMoreInfo    // Need additional information
 }
 
