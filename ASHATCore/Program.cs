@@ -37,7 +37,7 @@ if (firstRunManager.IsFirstRun())
 else
 {
     // Always ensure (SiteBuilder) is initialized on boot
-    Console.WriteLine("[ASHATCore] Initializing Window of Ra (SiteBuilder)...");
+    Console.WriteLine("[ASHATCore] Initializing (SiteBuilder)...");
     await firstRunManager.EnsureWwwrootAsync();
 }
 
@@ -68,7 +68,30 @@ await bootSequence.ExecuteBootSequenceAsync();
 
 // 6. Configure port - use detected port from Nginx config or fallback to default
 // Nginx Configuration is the source of truth for port management
-var port = Environment.GetEnvironmentVariable("ASHATCore_DETECTED_PORT") ?? "80";
+// Assume 'config' is loaded from server-config.json
+
+// 1. Try environment variable
+string port = Environment.GetEnvironmentVariable("ASHATCore_DETECTED_PORT");
+
+// 2. If not set, try config file
+if (string.IsNullOrEmpty(port))
+{
+    var serverRoot = Directory.GetCurrentDirectory();
+    var configPath = Path.Combine(serverRoot, "server-config.json");
+    if (File.Exists(configPath))
+    {
+        var json = File.ReadAllText(configPath);
+        using var doc = JsonDocument.Parse(json);
+        if (doc.RootElement.TryGetProperty("Port", out var portProp))
+        {
+            port = portProp.ToString();
+        }
+    }
+}
+
+// 3. Default fallback
+if (string.IsNullOrEmpty(port))
+    port = "7077";
 var urls = $"http://0.0.0.0:{port}";
 
 Console.WriteLine($"[ASHATCore] Configuring Kestrel to listen on: {urls}");
