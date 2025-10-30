@@ -29,8 +29,8 @@ public class Windows11KestrelTests
     {
         Console.WriteLine("Test 1: Apache Config Skipped on Windows");
         
-        // Test ApacheManager.ScanFoASHATpacheConfig() behavior on Windows
-        var (found, path, message) = ApacheManager.ScanFoASHATpacheConfig();
+        // Test ApacheManager.ScanForApacheConfig() behavior on Windows
+        var (found, path, message) = ApacheManager.ScanForApacheConfig();
         
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {

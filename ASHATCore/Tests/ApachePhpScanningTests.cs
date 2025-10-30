@@ -51,7 +51,7 @@ namespace ASHATCore.Tests
             Console.WriteLine("[Test 2/5] Testing Apache Configuration scanning...");
             try
             {
-                var result = ApacheManager.ScanFoASHATpacheConfig();
+                var result = ApacheManager.ScanForApacheConfig();
                 
                 if (result.found && result.path != null)
                 {

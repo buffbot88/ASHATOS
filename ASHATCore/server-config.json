@@ -1,21 +1,26 @@
 {
-  "Mode": 1,
-  "IsFirstRun": false,//Set to false after first run
-  "InitializationCompleted": true,//Set to true after first run
-  "InitializedAt": "2025-10-08T10:39:42.2944644Z", //UTC time
-  "Version": "9.9.9", //Don't touch this, it's automatically updated by the build process
-  "LicenseKey": "RAOS-ENT-2024-ABCD-1234",//Your license key here
-  "LicenseActivatedAt": "2025-10-08T10:39:42.2944644Z",//UTC time
-  "LicenseType": "Lifetime",//License type here
-  "AdminPasswordChanged": false,//Set to true after first run
-  "AdminUsernameChanged": false,//Set to true after first run
-  "AshatEnabled": true,//Set to false to disable ASHAT
-  "SystemRequirementsMet": true,//Set to false if system requirements are not met
-  "CmsPath": "/home/ashatos/wwwroot",//Path to your CMS installation
-  "MainServerUrl": "https://raos.io",//Main server
-  "SkipLicenseValidation": true,//Set to true to skip license validation (for offline use)
-  "UnderConstruction": false,//Set to true to enable under construction mode
-  "UnderConstructionMessage": null,//Message to display in under construction mode
-  "UnderConstructionRobotImage": null,//Path to robot image for under construction mode
-  "Port": 7077//The Port your server listens on
+  "Mode": 5,
+  "IsFirstRun": false,
+  "InitializationCompleted": true,
+  "InitializedAt": "2025-10-30T19:16:24.190156Z",
+  "Version": "1.0",
+  "LicenseKey": null,
+  "LicenseType": null,
+  "AdminPasswordChanged": false,
+  "AdminUsernameChanged": false,
+  "AshatEnabled": false,
+  "SystemRequirementsMet": true,
+  "SystemWarnings": [],
+  "CmsPath": "/home/runner/work/ASHATOS/ASHATOS/ASHATCore/wwwroot",
+  "MainServerUrl": "https://us-omega.ASHATOS.io",
+  "SkipLicenseValidation": false,
+  "UnderConstruction": true,
+  "UnderConstructionMessage": null,
+  "UnderConstructionRobotImage": null,
+  "FtpUsername": null,
+  "FtpPassword": null,
+  "FtpHost": "localhost",
+  "FtpPort": 21,
+  "ServerActivated": false,
+  "ActivatedAt": null
 }

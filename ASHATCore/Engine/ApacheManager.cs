@@ -27,7 +27,7 @@ public class ApacheManager
     /// Scans for Apache httpd.conf in the static Configuration folder
     /// Note: On Windows 11, this is not required as Kestrel handles all web serving
     /// </summary>
-    public static (bool found, string? path, string? message) ScanFoASHATpacheConfig()
+    public static (bool found, string? path, string? message) ScanForApacheConfig()
     {
         // On Windows, Apache is not needed
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
