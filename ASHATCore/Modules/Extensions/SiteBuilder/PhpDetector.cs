@@ -4,9 +4,12 @@ using System.Runtime.InteropServices;
 namespace ASHATCore.Modules.Extensions.SiteBuilder;
 
 /// <summary>
-/// Handles PHP8 runtime detection and validation for executing Generated PHP files.
-/// ASHATOS Generates PHP files (CMS, forums, profiles) that require external PHP8 with development ini defaults.
+/// DEPRECATED: Handles PHP8 runtime detection and validation for executing Generated PHP files.
+/// LegendaryCMS now uses pure .NET (Razor Pages/Blazor) - PHP is no longer required.
+/// This class is kept for backward compatibility with legacy Linux deployments only.
 /// </summary>
+[Obsolete("PHP support is deprecated. LegendaryCMS now uses pure .NET with Razor Pages/Blazor. " +
+          "This class will be removed in a future version.")]
 public class PhpDetector(SiteBuilderModule module)
 {
     private readonly SiteBuilderModule _module = module;
@@ -176,12 +179,14 @@ public class PhpDetector(SiteBuilderModule module)
         var serverRoot = Directory.GetCurrentDirectory();
         var localPhpFolder = Path.Combine(serverRoot, "php");
         
-        return "PHP runtime not found. Please install PHP 8.0 or higher.\n" +
-               "Recommended: Place PHP in the local 'php' folder:\n" +
-               $"  {localPhpFolder}\n" +
-               "\nAlternative installation:\n" +
-               "  - Linux: sudo apt install php8.2-cli php8.2-sqlite3\n" +
-               "  - macOS: brew install php\n" +
-               "  - Windows: Download from https://windows.php.net/download/";
+        return "DEPRECATED: PHP runtime is no longer required for LegendaryCMS.\n" +
+               "LegendaryCMS now uses pure .NET with Razor Pages and Blazor components.\n" +
+               "For legacy PHP support (if needed):\n" +
+               $"  Place PHP in: {localPhpFolder}\n" +
+               "  Or install system-wide:\n" +
+               "    - Linux: sudo apt install php8.2-cli php8.2-sqlite3\n" +
+               "    - macOS: brew install php\n" +
+               "    - Windows: Download from https://windows.php.net/download/\n" +
+               "\nRecommended: Migrate to pure .NET CMS features.";
     }
 }

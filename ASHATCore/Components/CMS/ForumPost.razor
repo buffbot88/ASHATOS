@@ -1,0 +1,43 @@
+@* Blazor Component for Forum Post Display - Pure .NET alternative to PHP templates *@
+
+<div class="forum-post @CssClass">
+    <div class="post-header">
+        <span class="post-author">@Author</span>
+        <span class="post-date">@PostDate.ToString("MMM dd, yyyy HH:mm")</span>
+    </div>
+    
+    <div class="post-content">
+        @((MarkupString)Content)
+    </div>
+    
+    @if (AllowEdit)
+    {
+        <div class="post-actions">
+            <button @onclick="OnEdit">Edit</button>
+            <button @onclick="OnDelete">Delete</button>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string Author { get; set; } = string.Empty;
+    
+    [Parameter]
+    public DateTime PostDate { get; set; }
+    
+    [Parameter]
+    public string Content { get; set; } = string.Empty;
+    
+    [Parameter]
+    public bool AllowEdit { get; set; }
+    
+    [Parameter]
+    public string CssClass { get; set; } = string.Empty;
+    
+    [Parameter]
+    public EventCallback OnEdit { get; set; }
+    
+    [Parameter]
+    public EventCallback OnDelete { get; set; }
+}

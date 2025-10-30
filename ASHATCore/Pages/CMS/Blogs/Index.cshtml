@@ -1,0 +1,24 @@
+@page
+@model ASHATCore.Pages.CMS.Blogs.IndexModel
+@{
+    ViewData["Title"] = "Blogs";
+}
+
+<div class="container">
+    <h1>@ViewData["Title"]</h1>
+    
+    <div class="blog-posts">
+        @foreach (var post in Model.RecentPosts)
+        {
+            <article class="blog-post">
+                <h2><a asp-page="./Post" asp-route-id="@post.Id">@post.Title</a></h2>
+                <div class="post-meta">
+                    <span>By @post.Author</span>
+                    <span>@post.PublishedDate.ToString("MMM dd, yyyy")</span>
+                </div>
+                <p>@post.Excerpt</p>
+                <a asp-page="./Post" asp-route-id="@post.Id" class="read-more">Read More</a>
+            </article>
+        }
+    </div>
+</div>

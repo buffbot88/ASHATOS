@@ -1,0 +1,29 @@
+@page
+@model ASHATCore.Pages.CMS.Forums.IndexModel
+@{
+    ViewData["Title"] = "Forums";
+}
+
+<div class="container">
+    <h1>@ViewData["Title"]</h1>
+    
+    <div class="forum-categories">
+        @foreach (var category in Model.Categories)
+        {
+            <div class="category">
+                <h2>@category.Name</h2>
+                <p>@category.Description</p>
+                <div class="forums">
+                    @foreach (var forum in category.Forums)
+                    {
+                        <div class="forum-item">
+                            <h3><a asp-page="./Forum" asp-route-id="@forum.Id">@forum.Title</a></h3>
+                            <p>@forum.Description</p>
+                            <span>Topics: @forum.TopicCount | Posts: @forum.PostCount</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
