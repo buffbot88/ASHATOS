@@ -104,11 +104,16 @@ Learn RaOS courses SuperAdmin  # Master Classes (4 courses, 29 lessons)
 | Document | Description |
 |----------|-------------|
 | [LegendaryCMS/README.md](LegendaryCMS/README.md) | Complete CMS module documentation (10,000+ words) |
+| [PHP_TO_RAZOR_MIGRATION.md](PHP_TO_RAZOR_MIGRATION.md) | **NEW** Migration from PHP to pure .NET (Razor/Blazor) |
+| [RAZOR_BLAZOR_QUICKSTART.md](RAZOR_BLAZOR_QUICKSTART.md) | **NEW** Quick start guide for Razor Pages and Blazor |
+| [ASHATCore/Pages/CMS/README.md](ASHATCore/Pages/CMS/README.md) | **NEW** Razor Pages documentation and examples |
 | [PHASE8_LEGENDARY_CMS.md](PHASE8_LEGENDARY_CMS.md) | Technical implementation details |
 | [PHASE8_SUMMARY.md](PHASE8_SUMMARY.md) | Executive overview (16,000+ words) |
 | [PHASE8_STRUCTURE.md](PHASE8_STRUCTURE.md) | File organization and structure |
 | [CMS_QUICKSTART.md](CMS_QUICKSTART.md) | Quick start guide for CMS features |
 | [CMS_CONTROL_PANEL_INTEGRATION.md](CMS_CONTROL_PANEL_INTEGRATION.md) | Control panel integration guide |
+
+**Note:** LegendaryCMS now uses pure .NET architecture with Razor Pages/Blazor. PHP support is deprecated.
 
 ### Legendary Game Engine Suite (Phase 9)
 
