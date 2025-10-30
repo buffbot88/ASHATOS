@@ -17,6 +17,11 @@ public class HttpHelper : IDisposable
 
     public HttpHelper(int timeoutSeconds = 30)
     {
+        if (timeoutSeconds <= 0)
+        {
+            throw new ArgumentException("Timeout must be greater than zero", nameof(timeoutSeconds));
+        }
+        
         _timeoutSeconds = timeoutSeconds;
         _httpClient = new HttpClient
         {
@@ -243,6 +248,15 @@ public class HttpHelper : IDisposable
     /// </summary>
     public void SetHeader(string name, string value)
     {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("Header name cannot be null or empty", nameof(name));
+        }
+        if (value == null)
+        {
+            throw new ArgumentNullException(nameof(value), "Header value cannot be null");
+        }
+        
         if (_httpClient.DefaultRequestHeaders.Contains(name))
         {
             _httpClient.DefaultRequestHeaders.Remove(name);

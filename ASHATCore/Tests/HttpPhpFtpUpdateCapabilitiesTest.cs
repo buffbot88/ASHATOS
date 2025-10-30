@@ -219,7 +219,7 @@ public class HttpPhpFtpUpdateCapabilitiesTest
             using var httpHelper = new HttpHelper(10);
             
             var testUrl = "https://httpbin.org/robots.txt";
-            var testFile = Path.Combine(Path.GetTempPath(), "http_test_download.txt");
+            var testFile = Path.Combine(Path.GetTempPath(), $"http_test_download_{Guid.NewGuid()}.txt");
             
             var result = await httpHelper.DownloadToFileAsync(testUrl, testFile);
             
@@ -571,6 +571,9 @@ public class HttpPhpFtpUpdateCapabilitiesTest
         {
             updateModule?.Dispose();
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"⚠️  Cleanup exception: {ex.Message}");
+        }
     }
 }
