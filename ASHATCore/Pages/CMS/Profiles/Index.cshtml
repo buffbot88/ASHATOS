@@ -1,0 +1,42 @@
+@page "{username?}"
+@model ASHATCore.Pages.CMS.Profiles.IndexModel
+@{
+    ViewData["Title"] = Model.Profile?.Username ?? "User Profile";
+}
+
+<div class="container">
+    @if (Model.Profile != null)
+    {
+        <div class="profile-header">
+            <h1>@Model.Profile.Username</h1>
+            <p>@Model.Profile.Bio</p>
+        </div>
+        
+        <div class="profile-stats">
+            <div class="stat">
+                <span class="stat-value">@Model.Profile.PostCount</span>
+                <span class="stat-label">Posts</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value">@Model.Profile.JoinDate.ToString("MMM yyyy")</span>
+                <span class="stat-label">Joined</span>
+            </div>
+        </div>
+        
+        <div class="profile-content">
+            <h2>Recent Activity</h2>
+            @foreach (var activity in Model.RecentActivity)
+            {
+                <div class="activity-item">
+                    <span>@activity.Type</span>
+                    <span>@activity.Date.ToString("MMM dd, yyyy")</span>
+                    <p>@activity.Description</p>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <p>User profile not found.</p>
+    }
+</div>

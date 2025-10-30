@@ -1,0 +1,52 @@
+@* Blazor Component for Blog Post Card - Pure .NET alternative to PHP templates *@
+
+<article class="blog-post-card @CssClass">
+    <h3><a href="/cms/blogs/post/@PostId">@Title</a></h3>
+    
+    <div class="post-meta">
+        <span class="author">@Author</span>
+        <span class="date">@PublishedDate.ToString("MMM dd, yyyy")</span>
+        @if (!string.IsNullOrEmpty(Category))
+        {
+            <span class="category">@Category</span>
+        }
+    </div>
+    
+    <div class="excerpt">
+        <p>@Excerpt</p>
+    </div>
+    
+    <div class="post-footer">
+        <span class="views">@ViewCount views</span>
+        <span class="comments">@CommentCount comments</span>
+    </div>
+</article>
+
+@code {
+    [Parameter]
+    public int PostId { get; set; }
+    
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+    
+    [Parameter]
+    public string Author { get; set; } = string.Empty;
+    
+    [Parameter]
+    public DateTime PublishedDate { get; set; }
+    
+    [Parameter]
+    public string Excerpt { get; set; } = string.Empty;
+    
+    [Parameter]
+    public string? Category { get; set; }
+    
+    [Parameter]
+    public int ViewCount { get; set; }
+    
+    [Parameter]
+    public int CommentCount { get; set; }
+    
+    [Parameter]
+    public string CssClass { get; set; } = string.Empty;
+}

@@ -5,11 +5,11 @@ using System.Text.RegularExpressions;
 namespace ASHATCore.Engine;
 
 /// <summary>
-/// Manages Apache and PHP Configuration scanning for external PHP execution on Linux
+/// Manages Apache Configuration scanning for external webserver on Linux
 /// ASHATOS uses internal Kestrel webserver on all platforms
 /// On Windows 11, Apache is NOT required - Kestrel handles all web serving
-/// On Linux, external Apache/PHP8 is optional for PHP file execution only
-/// Scans for Apache and PHP Configurations from C:\ASHATOS\webserver\settings (Linux only)
+/// On Linux, external Apache/Nginx can be used as reverse proxy to Kestrel
+/// Note: PHP support is DEPRECATED - LegendaryCMS uses pure .NET (Razor/Blazor)
 /// </summary>
 public class ApacheManager
 {
@@ -72,15 +72,17 @@ public class ApacheManager
     }
     
     /// <summary>
-    /// Scans for PHP php.ini in the static Configuration folder
-    /// Note: On Windows 11, this is optional as Kestrel can serve static/dynamic content
+    /// DEPRECATED: Scans for PHP php.ini in the static Configuration folder
+    /// LegendaryCMS now uses pure .NET (Razor/Blazor) - PHP is no longer required
+    /// This method is kept for backward compatibility with legacy deployments only
     /// </summary>
+    [Obsolete("PHP support is deprecated. LegendaryCMS now uses pure .NET with Razor Pages/Blazor.")]
     public static (bool found, string? path, string? message) ScanForPhpConfig()
     {
-        // On Windows, PHP scanning is optional (Kestrel handles web serving)
+        // On Windows, PHP is not needed
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            var message = "PHP Configuration is optional on Windows - ASHATOS uses Kestrel webserver";
+            var message = "PHP is not required - LegendaryCMS uses pure .NET (Razor/Blazor)";
             Console.WriteLine($"[ApacheManager] ℹ️  {message}");
             return (false, null, message);
         }
@@ -120,8 +122,11 @@ public class ApacheManager
     }
     
     /// <summary>
-    /// Scans for PHP folder in the ASHATCore.exe directory
+    /// DEPRECATED: Scans for PHP folder in the ASHATCore.exe directory
+    /// LegendaryCMS now uses pure .NET (Razor/Blazor) - PHP is no longer required
+    /// This method is kept for backward compatibility with legacy deployments only
     /// </summary>
+    [Obsolete("PHP support is deprecated. LegendaryCMS now uses pure .NET with Razor Pages/Blazor.")]
     public static (bool found, string? path, string? message) ScanForPhpFolder()
     {
         try
@@ -236,8 +241,11 @@ public class ApacheManager
     }
     
     /// <summary>
-    /// Verifies PHP Configuration is valid and contains required settings
+    /// DEPRECATED: Verifies PHP Configuration is valid and contains required settings
+    /// LegendaryCMS now uses pure .NET (Razor/Blazor) - PHP is no longer required
+    /// This method is kept for backward compatibility with legacy deployments only
     /// </summary>
+    [Obsolete("PHP support is deprecated. LegendaryCMS now uses pure .NET with Razor Pages/Blazor.")]
     public static (bool valid, List<string> issues, string? message) VerifyPhpConfig(string configPath)
     {
         var issues = new List<string>();
@@ -291,8 +299,11 @@ public class ApacheManager
     }
     
     /// <summary>
-    /// Configures PHP settings in php.ini file
+    /// DEPRECATED: Configures PHP settings in php.ini file
+    /// LegendaryCMS now uses pure .NET (Razor/Blazor) - PHP is no longer required
+    /// This method is kept for backward compatibility with legacy deployments only
     /// </summary>
+    [Obsolete("PHP support is deprecated. LegendaryCMS now uses pure .NET with Razor Pages/Blazor.")]
     public static bool ConfigurePhpIni(string phpIniPath)
     {
         try

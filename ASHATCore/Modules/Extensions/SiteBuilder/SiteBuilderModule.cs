@@ -102,7 +102,8 @@ public class SiteBuilderModule : ModuleBase
             "  help                 - Show this help message",
             "",
             "Note: CMS functionality is provided by LegendaryCMS module (v8.0.0)",
-            "      No PHP files are generated - CMS runs as internal ASHATOS module"
+            "      Pure .NET architecture - uses Razor Pages/Blazor components",
+            "      No PHP required - all content served dynamically via Kestrel"
         );
     }
 
@@ -113,7 +114,7 @@ public class SiteBuilderModule : ModuleBase
             if (_legendaryCMS == null)
             {
                 return "❌ LegendaryCMS module not loaded. CMS features unavailable.\n" +
-                       "   LegendaryCMS runs as a C# module within ASHATOS - no PHP needed.";
+                       "   LegendaryCMS runs as a C# module within ASHATOS using Razor/Blazor.";
             }
 
             var status = _legendaryCMS.GetStatus();
@@ -122,12 +123,14 @@ public class SiteBuilderModule : ModuleBase
                 return $"✅ LegendaryCMS is already running (v{status.Version})\n" +
                        $"   Started: {status.StartTime:yyyy-MM-dd HH:mm:ss UTC}\n" +
                        "   API endpoints available at /api/*\n" +
+                       "   Razor Pages available at /cms/*\n" +
                        "   Use 'cms status' for detailed information";
             }
 
             return "✅ LegendaryCMS module is loaded and ready\n" +
                    "   Use 'cms' commands to interact with CMS features\n" +
-                   "   API endpoints: /api/forums, /api/blogs, /api/chat, etc.";
+                   "   API endpoints: /api/forums, /api/blogs, /api/chat, etc.\n" +
+                   "   Razor Pages: /cms/forums, /cms/blogs, /cms/profiles";
         }
     }
 
