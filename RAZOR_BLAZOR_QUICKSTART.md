@@ -193,7 +193,7 @@ LegendaryCMS provides these API endpoints:
 
 ## Migration from PHP
 
-See [PHP_TO_RAZOR_MIGRATION.md](../PHP_TO_RAZOR_MIGRATION.md) for complete migration guide.
+See [PHP_TO_RAZOR_MIGRATION.md](./PHP_TO_RAZOR_MIGRATION.md) for complete migration guide.
 
 ### Quick Conversion
 
@@ -296,10 +296,10 @@ ProxyPassReverse / http://localhost:7077/
 
 ## Resources
 
-- [ASP.NET Core Razor Pages](https://docs.microsoft.com/aspnet/core/razor-pages)
-- [Blazor Documentation](https://docs.microsoft.com/aspnet/core/blazor)
-- [LegendaryCMS Module](../LegendaryCMS/README.md)
-- [Migration Guide](../PHP_TO_RAZOR_MIGRATION.md)
+- [ASP.NET Core Razor Pages](https://learn.microsoft.com/aspnet/core/razor-pages)
+- [Blazor Documentation](https://learn.microsoft.com/aspnet/core/blazor)
+- [LegendaryCMS Module](./LegendaryCMS/README.md)
+- [Migration Guide](./PHP_TO_RAZOR_MIGRATION.md)
 
 ## Status
 

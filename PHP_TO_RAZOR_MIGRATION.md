@@ -205,8 +205,8 @@ public class IndexModel : PageModel
 
 ## Resources
 
-- [ASP.NET Core Razor Pages](https://docs.microsoft.com/aspnet/core/razor-pages)
-- [Blazor Documentation](https://docs.microsoft.com/aspnet/core/blazor)
+- [ASP.NET Core Razor Pages](https://learn.microsoft.com/aspnet/core/razor-pages)
+- [Blazor Documentation](https://learn.microsoft.com/aspnet/core/blazor)
 - [LegendaryCMS Module](../../../LegendaryCMS/README.md)
 - [Razor Pages Examples](../Pages/CMS/README.md)
 

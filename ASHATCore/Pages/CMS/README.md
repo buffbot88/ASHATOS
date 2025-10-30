@@ -115,8 +115,8 @@ Assert.NotEmpty(pageModel.Categories);
 
 ## Documentation
 
-- [Razor Pages Documentation](https://docs.microsoft.com/aspnet/core/razor-pages)
-- [Blazor Documentation](https://docs.microsoft.com/aspnet/core/blazor)
+- [Razor Pages Documentation](https://learn.microsoft.com/aspnet/core/razor-pages)
+- [Blazor Documentation](https://learn.microsoft.com/aspnet/core/blazor)
 - [LegendaryCMS Module](../../LegendaryCMS/README.md)
 
 ## Status
