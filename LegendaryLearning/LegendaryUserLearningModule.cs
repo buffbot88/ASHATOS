@@ -57,6 +57,8 @@ public sealed class LegendaryUserLearningModule : ModuleBase, ILearningModule
         Console.WriteLine($"[{Name}] Ashat AI learning guide: ACTIVE 💙");
         
         // Get RaCoin module for rewarding course completion
+        // Note: We use reflection here to avoid direct dependency on ASHATCore types,
+        // maintaining the separation between LegendaryLearning and ASHATCore projects.
         if (manager != null)
         {
             try
