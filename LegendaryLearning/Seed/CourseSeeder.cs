@@ -791,24 +791,26 @@ ASHATOS is now production-ready with comprehensive tooling and AI assistance.", 
         // Add assessments for SuperAdmin courses
         AddAssessment(course1Id, "ASHATOS Architecture & Development", new List<string> 
         { 
-            "lesson-SuperAdmin-arch-1", "lesson-SuperAdmin-arch-2", "lesson-SuperAdmin-arch-3", 
-            "lesson-SuperAdmin-arch-4", "lesson-SuperAdmin-arch-5" 
+            "lesson-sa-arch-1", "lesson-sa-arch-2", "lesson-sa-arch-3", 
+            "lesson-sa-arch-4", "lesson-sa-arch-5", "lesson-sa-arch-6",
+            "lesson-sa-arch-7", "lesson-sa-arch-8", "lesson-sa-arch-9" 
         });
         AddAssessment(course2Id, "Advanced Security & Operations", new List<string> 
         { 
-            "lesson-SuperAdmin-sec-1", "lesson-SuperAdmin-sec-2", "lesson-SuperAdmin-sec-3", 
-            "lesson-SuperAdmin-sec-4", "lesson-SuperAdmin-sec-5" 
+            "lesson-sa-sys-1", "lesson-sa-sys-2", "lesson-sa-sys-3", 
+            "lesson-sa-sys-4", "lesson-sa-sys-5", "lesson-sa-sys-6", 
+            "lesson-sa-sys-7" 
         });
         AddAssessment(course3Id, "ASHATOS Deployment Mastery", new List<string> 
         { 
-            "lesson-SuperAdmin-deploy-1", "lesson-SuperAdmin-deploy-2", "lesson-SuperAdmin-deploy-3", 
-            "lesson-SuperAdmin-deploy-4", "lesson-SuperAdmin-deploy-5" 
+            "lesson-sa-ai-1", "lesson-sa-ai-2", "lesson-sa-ai-3", 
+            "lesson-sa-ai-4", "lesson-sa-ai-5" 
         });
         AddAssessment(course4Id, "ASHATOS Comprehensive Guide", new List<string> 
         { 
-            "lesson-SuperAdmin-comp-1", "lesson-SuperAdmin-comp-2", "lesson-SuperAdmin-comp-3", 
-            "lesson-SuperAdmin-comp-4", "lesson-SuperAdmin-comp-5", "lesson-SuperAdmin-comp-6", 
-            "lesson-SuperAdmin-comp-7", "lesson-SuperAdmin-comp-8" 
+            "lesson-history-1", "lesson-history-2", "lesson-history-3", 
+            "lesson-history-4", "lesson-history-5", "lesson-history-6", 
+            "lesson-history-7", "lesson-history-8" 
         });
     }
 
