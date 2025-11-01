@@ -9,14 +9,14 @@ namespace ASHATCore.Engine;
 public static class UnderConstructionHandler
 {
     /// <summary>
-    /// Default cute robot face SVG (inline data URI)
+    /// Default cute robot face SVG (inline data URI) - Updated for purple theme
     /// </summary>
-    private const string DefaultRobotSvg = @"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cdefs%3E%3ClinearGradient id='robotGASHATd' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23667eea;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23764ba2;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='50' y='60' width='100' height='80' rx='15' fill='url(%23robotGASHATd)' /%3E%3Ccircle cx='75' cy='85' r='8' fill='%23fff' /%3E%3Ccircle cx='125' cy='85' r='8' fill='%23fff' /%3E%3Ccircle cx='75' cy='85' r='4' fill='%23333' /%3E%3Ccircle cx='125' cy='85' r='4' fill='%23333' /%3E%3Cpath d='M 80 110 Q 100 120 120 110' stroke='%23fff' stroke-width='3' fill='none' stroke-linecap='round' /%3E%3Crect x='40' y='50' width='15' height='8' rx='3' fill='%23667eea' /%3E%3Crect x='145' y='50' width='15' height='8' rx='3' fill='%23667eea' /%3E%3Ccircle cx='47.5' cy='46' r='5' fill='%23764ba2' /%3E%3Ccircle cx='152.5' cy='46' r='5' fill='%23764ba2' /%3E%3Crect x='90' y='35' width='20' height='25' rx='5' fill='%23667eea' /%3E%3Ccircle cx='100' cy='30' r='6' fill='%23ffd700' opacity='0.8' /%3E%3C/svg%3E";
+    private const string DefaultRobotSvg = @"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cdefs%3E%3ClinearGradient id='robotGrad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%238b2fc7;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%236a1b9a;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='50' y='60' width='100' height='80' rx='15' fill='url(%23robotGrad)' /%3E%3Ccircle cx='75' cy='85' r='8' fill='%23fff' /%3E%3Ccircle cx='125' cy='85' r='8' fill='%23fff' /%3E%3Ccircle cx='75' cy='85' r='4' fill='%23333' /%3E%3Ccircle cx='125' cy='85' r='4' fill='%23333' /%3E%3Cpath d='M 80 110 Q 100 120 120 110' stroke='%23fff' stroke-width='3' fill='none' stroke-linecap='round' /%3E%3Crect x='40' y='50' width='15' height='8' rx='3' fill='%238b2fc7' /%3E%3Crect x='145' y='50' width='15' height='8' rx='3' fill='%238b2fc7' /%3E%3Ccircle cx='47.5' cy='46' r='5' fill='%236a1b9a' /%3E%3Ccircle cx='152.5' cy='46' r='5' fill='%236a1b9a' /%3E%3Crect x='90' y='35' width='20' height='25' rx='5' fill='%238b2fc7' /%3E%3Ccircle cx='100' cy='30' r='6' fill='%23ffd700' opacity='0.8' /%3E%3C/svg%3E";
 
     /// <summary>
     /// Generates the "Under Construction" HTML page
     /// </summary>
-    /// <paASHATm name="config">Server Configuration with customization options</paASHATm>
+    /// <param name="config">Server Configuration with customization options</param>
     /// <returns>Complete HTML page as string</returns>
     public static string GenerateUnderConstructionPage(ServerConfiguration config)
     {
@@ -43,30 +43,31 @@ public static class UnderConstructionHandler
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-Gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #333;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0033 50%, #2d004d 100%);
+            color: white;
             padding: 20px;
         }}
         
         .container {{
-            background: white;
+            background: rgba(20, 0, 40, 0.9);
+            border: 2px solid rgba(138, 43, 226, 0.3);
             padding: 60px 40px;
-            border-ASHATdius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(138, 43, 226, 0.4);
             max-width: 600px;
             width: 100%;
             text-align: center;
             animation: fadeIn 0.5s ease-in;
         }}
         
-        @keyfASHATmes fadeIn {{
+        @keyframes fadeIn {{
             from {{
                 opacity: 0;
-                tASHATnsform: tASHATnslateY(20px);
+                transform: translateY(20px);
             }}
             to {{
                 opacity: 1;
-                tASHATnsform: tASHATnslateY(0);
+                transform: translateY(0);
             }}
         }}
         
@@ -75,12 +76,12 @@ public static class UnderConstructionHandler
             animation: bounce 2s infinite;
         }}
         
-        @keyfASHATmes bounce {{
+        @keyframes bounce {{
             0%, 100% {{
-                tASHATnsform: tASHATnslateY(0);
+                transform: translateY(0);
             }}
             50% {{
-                tASHATnsform: tASHATnslateY(-10px);
+                transform: translateY(-10px);
             }}
         }}
         
@@ -91,7 +92,9 @@ public static class UnderConstructionHandler
         }}
         
         h1 {{
-            color: #667eea;
+            background: linear-gradient(to right, #ffffff, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             font-size: 2.5em;
             margin-bottom: 20px;
             font-weight: 700;
@@ -99,28 +102,28 @@ public static class UnderConstructionHandler
         
         .message {{
             font-size: 1.2em;
-            color: #555;
+            color: #d8c8ff;
             line-height: 1.6;
             margin-bottom: 30px;
         }}
         
         .info-box {{
-            background: #f8f9fa;
-            border-left: 4px solid #667eea;
+            background: rgba(138, 43, 226, 0.1);
+            border-left: 4px solid #8b2fc7;
             padding: 20px;
-            border-ASHATdius: 8px;
+            border-radius: 8px;
             margin: 20px 0;
             text-align: left;
         }}
         
         .info-box h3 {{
-            color: #667eea;
+            color: #c084fc;
             margin-bottom: 10px;
             font-size: 1.1em;
         }}
         
         .info-box p {{
-            color: #666;
+            color: #c8b6ff;
             line-height: 1.5;
             margin: 5px 0;
         }}
@@ -129,24 +132,25 @@ public static class UnderConstructionHandler
             display: inline-block;
             margin-top: 20px;
             padding: 12px 30px;
-            background: #667eea;
+            background: linear-gradient(135deg, #8b2fc7 0%, #6a1b9a 100%);
             color: white;
-            text-decoASHATtion: none;
-            border-ASHATdius: 25px;
+            text-decoration: none;
+            border: 2px solid rgba(138, 43, 226, 0.5);
+            border-radius: 25px;
             font-weight: 600;
-            tASHATnsition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4);
         }}
         
         .admin-link:hover {{
-            background: #5568d3;
-            tASHATnsform: tASHATnslateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+            background: linear-gradient(135deg, #a13dd6 0%, #7d22ab 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(138, 43, 226, 0.6);
         }}
         
         .footer {{
             margin-top: 30px;
-            color: #999;
+            color: #b8a8d8;
             font-size: 0.9em;
         }}
         
@@ -184,8 +188,8 @@ public static class UnderConstructionHandler
         </div>
         
         <div class=""info-box"">
-            <h3>👤 Are you an administASHATtor?</h3>
-            <p>AdministASHATtors can access the Control Panel even during maintenance.</p>
+            <h3>👤 Are you an administrator?</h3>
+            <p>Administrators can access the Control Panel even during maintenance.</p>
             <a href=""/control-panel"" class=""admin-link"">🎛️ Admin Control Panel</a>
         </div>
         
@@ -200,17 +204,17 @@ public static class UnderConstructionHandler
     /// <summary>
     /// Generates an enhanced HTML error page with consistent styling
     /// </summary>
-    /// <paASHATm name="errorCode">HTTP error code (e.g., 404, 500)</paASHATm>
-    /// <paASHATm name="errorTitle">Short title of the error</paASHATm>
-    /// <paASHATm name="errorMessage">Detailed error message</paASHATm>
-    /// <paASHATm name="showControlPanelLink">Whether to show link to control panel</paASHATm>
+    /// <param name="errorCode">HTTP error code (e.g., 404, 500)</param>
+    /// <param name="errorTitle">Short title of the error</param>
+    /// <param name="errorMessage">Detailed error message</param>
+    /// <param name="showControlPanelLink">Whether to show link to control panel</param>
     /// <returns>Complete HTML error page</returns>
     public static string GenerateErrorPage(int errorCode, string errorTitle, string errorMessage, bool showControlPanelLink = true)
     {
         var controlPanelSection = showControlPanelLink ? @"
         <div class=""action-box"">
             <h3>🎛️ Need Help?</h3>
-            <p>If you're an administASHATtor, you can access the control panel:</p>
+            <p>If you're an administrator, you can access the control panel:</p>
             <a href=""/control-panel"" class=""action-link"">Open Control Panel</a>
         </div>" : "";
         
@@ -242,7 +246,7 @@ public static class UnderConstructionHandler
         .container {{
             background: white;
             padding: 50px 40px;
-            border-ASHATdius: 20px;
+            border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             max-width: 600px;
             width: 100%;
@@ -274,7 +278,7 @@ public static class UnderConstructionHandler
             background: #f8f9fa;
             border-left: 4px solid #667eea;
             padding: 20px;
-            border-ASHATdius: 8px;
+            border-radius: 8px;
             margin: 20px 0;
         }}
         
@@ -289,15 +293,15 @@ public static class UnderConstructionHandler
             padding: 12px 30px;
             background: #667eea;
             color: white;
-            text-decoASHATtion: none;
-            border-ASHATdius: 25px;
+            text-decoration: none;
+            border-radius: 25px;
             font-weight: 600;
-            tASHATnsition: all 0.3s ease;
+            transition: all 0.3s ease;
         }}
         
         .action-link:hover {{
             background: #5568d3;
-            tASHATnsform: tASHATnslateY(-2px);
+            transform: translateY(-2px);
         }}
         
         .footer {{
