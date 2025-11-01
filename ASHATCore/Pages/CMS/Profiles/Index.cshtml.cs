@@ -12,28 +12,46 @@ public class IndexModel : PageModel
 
     public void OnGet(string? username)
     {
-        // TODO: Load from LegendaryCMS API or UserProfiles module
-        // This demonstrates the pure .NET architecture
+        // Load user profile data
+        // This demonstrates the pure .NET architecture with Razor Pages
         if (!string.IsNullOrEmpty(username))
         {
-            Profile = new UserProfile
-            {
-                Username = username,
-                Bio = "ASHATOS user",
-                PostCount = 42,
-                JoinDate = DateTime.UtcNow.AddMonths(-6)
-            };
-            
-            RecentActivity = new List<ActivityItem>
-            {
-                new ActivityItem
-                {
-                    Type = "Post",
-                    Date = DateTime.UtcNow.AddDays(-1),
-                    Description = "Posted in General Discussion"
-                }
-            };
+            Profile = LoadUserProfile(username);
+            RecentActivity = LoadRecentActivity(username);
         }
+    }
+
+    private UserProfile? LoadUserProfile(string username)
+    {
+        // In production, this would call the LegendaryCMS API or UserProfiles module
+        // For now, return sample data to demonstrate the page structure
+        return new UserProfile
+        {
+            Username = username,
+            Bio = "ASHATOS user - Welcome to the Legendary CMS community",
+            PostCount = 42,
+            JoinDate = DateTime.UtcNow.AddMonths(-6)
+        };
+    }
+
+    private List<ActivityItem> LoadRecentActivity(string username)
+    {
+        // In production, this would fetch from the database via LegendaryCMS API
+        return new List<ActivityItem>
+        {
+            new ActivityItem
+            {
+                Type = "Post",
+                Date = DateTime.UtcNow.AddDays(-1),
+                Description = "Posted in General Discussion"
+            },
+            new ActivityItem
+            {
+                Type = "Comment",
+                Date = DateTime.UtcNow.AddDays(-2),
+                Description = "Commented on 'Welcome to ASHATOS'"
+            }
+        };
     }
 }
 

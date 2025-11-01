@@ -41,8 +41,9 @@ Migration guides for completed transitions:
 - NGINX_MIGRATION*.md - NGINX migration documentation
 - SITEBUILDER_MIGRATION.md - Site builder migration guide
 
-### `/summaries/` (18 files)
+### `/summaries/` (29 files)
 Implementation summaries and historical documentation:
+- Phase summaries (Phase 937-940)
 - *_IMPLEMENTATION*.md - Feature implementation details
 - *_SUMMARY.md - Completion summaries
 - BOOT_SEQUENCE.md - Boot sequence documentation
@@ -50,15 +51,29 @@ Implementation summaries and historical documentation:
 - HISTORY.md - Original history document (replaced by LULmodule History course)
 - Various version-specific summaries (RAOS_V7_5_*, RAOS_4_9_*, etc.)
 
-### `/verification/` (8 files)
-Verification and testing reports:
+### `/verification/` (15 files)
+Verification, audit, and testing reports:
 - *_VERIFICATION.md - Phase verification reports
+- Audit reports (MainFrame v9.4.0, Evidence reports, Audit summaries)
+- Security Gate validation reports (Security Gate #235)
+- Repository ethics and compliance audits
+- Evidence collection guides
 - LLAMA_CPP_AUTO_DETECTION_VERIFICATION.md
 
-### `/demos/` (6 files)
+### `/releases/` (13 files - NEW)
+Release-specific documentation:
+- Release notes and checklists (v9.4.0 / Release 940)
+- Issue-specific release documentation (Issue #233)
+- Release signoff trackers
+- Deployment dry run guides
+- Final validation quickstarts
+- PR summaries
+
+### `/demos/` (7 files)
 Demo files and test results:
 - *_DEMO.md - Feature demonstrations
 - *_TEST_RESULTS.md - Testing results and reports
+- Private Alpha test results
 
 ## 🎯 Why These Files Were Archived
 
@@ -97,10 +112,21 @@ The LULmodule embodies this philosophy by:
 
 ---
 
-**Archive Date**: October 7, 2025  
-**Total Archived Files**: 73+  
+**Initial Archive Date**: October 7, 2025  
+**Latest Archive Update**: November 1, 2025  
+**Total Archived Files**: 100+  
 **Replaced By**: LegendaryUserLearningModule (LULmodule)  
-**Status**: ✅ Complete
+**Status**: ✅ Complete and Maintained
+
+### Recent Archive Updates (November 1, 2025)
+
+Added 32 documents from root directory:
+- **11 Implementation Summaries** → `/summaries/` (Phase 937-940, various feature implementations)
+- **7 Verification Reports** → `/verification/` (Audit reports, security gates, evidence collection)
+- **13 Release Documents** → `/releases/` (v9.4.0 release documentation, issue #233 materials)
+- **1 Test Results** → `/demos/` (Private Alpha test results)
+
+**Purpose**: Further consolidate root directory from 103 to 71 active markdown files for better maintainability.
 
 ---
 
