@@ -168,6 +168,16 @@ public class TestRunner
             await HttpPhpFtpUpdateCapabilitiesTest.RunTests();
         }
 
+        // Run Coding Agent Natural Language tests if requested
+        if (args.Length > 0 && args[0].ToLowerInvariant() == "codingagent")
+        {
+            Console.WriteLine("\n\n╔════════════════════════════════════════════════════════╗");
+            Console.WriteLine("║   AI Coding Agent Natural Language Test Suite         ║");
+            Console.WriteLine("╚════════════════════════════════════════════════════════╝\n");
+            
+            CodingAgentTests.RunTests();
+        }
+
         Console.WriteLine("\nPress any key to exit...");
         Console.ReadKey();
     }
