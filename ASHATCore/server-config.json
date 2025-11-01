@@ -14,7 +14,7 @@
   "CmsPath": "/home/runner/work/ASHATOS/ASHATOS/ASHATCore/wwwroot",
   "MainServerUrl": "https://us-omega.ASHATOS.io",
   "SkipLicenseValidation": false,
-  "UnderConstruction": true,
+  "UnderConstruction": false,
   "UnderConstructionMessage": null,
   "UnderConstructionRobotImage": null,
   "FtpUsername": null,
