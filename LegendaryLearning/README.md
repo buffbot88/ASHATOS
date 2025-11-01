@@ -1,6 +1,32 @@
 # LegendaryUserLearningModule (LULmodule)
 
-The Legendary User Learning Module provides self-paced learning courses based on permission levels. It includes a trophy and achievement system for completing courses and auto-updates when new features are added to ASHATOS.
+The Legendary User Learning Module is a **voluntary school system** that provides self-paced learning courses based on permission levels. It includes a trophy and achievement system for completing courses, and **awards RaCoins** upon course completion based on course difficulty and duration. Courses auto-update when new features are added to ASHATOS.
+
+## 🎓 Voluntary Learning System
+
+The learning module is **no longer required** for server initialization or SuperAdmin login. It serves as a free educational resource where users can:
+- Learn about ASHATOS features and capabilities
+- Earn RaCoins as rewards for completing courses
+- Collect achievements and trophies
+- Access courses based on their permission level
+
+## 🪙 RaCoin Rewards
+
+Users earn RaCoins upon completing courses based on a formula that considers course difficulty and time investment:
+
+**Reward Formula:** `EstimatedMinutes × PermissionMultiplier × 10 RaCoins`
+
+**Permission Multipliers:**
+- **Beginner Classes** (User level): 1.0× multiplier
+- **Advanced Classes** (Admin level): 2.0× multiplier
+- **Master Classes** (SuperAdmin level): 3.0× multiplier
+
+**Example Rewards:**
+- 45-minute User course: 45 × 1.0 × 10 = **450 RaCoins**
+- 120-minute Admin course: 120 × 2.0 × 10 = **2,400 RaCoins**
+- 180-minute SuperAdmin course: 180 × 3.0 × 10 = **5,400 RaCoins**
+
+Based on the USD to RaCoin exchange rate (1 USD = 100 RaCoins), these rewards represent significant value for learners.
 
 ## 📁 Directory Structure
 
@@ -49,12 +75,13 @@ Each service focuses on a single responsibility:
 - Lesson retrieval by course
 - Course-lesson relationship management
 
-#### ProgressService.cs (~200 lines)
+#### ProgressService.cs (~240 lines)
 - User progress tracking
 - Lesson completion logic
 - Course completion detection
 - SuperAdmin course bulk Operations
 - Coordinates with Achievement and Trophy services
+- **RaCoin reward distribution on course completion**
 
 #### AchievementService.cs (~45 lines)
 - Achievement Storage and retrieval
