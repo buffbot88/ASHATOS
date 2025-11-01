@@ -26,7 +26,7 @@ public class AssessmentService
         return _database.GetAssessmentByCourseId(courseId);
     }
 
-    public async Task<UserAssessmentResult> SubmitAssessmentAsync(string userId, string assessmentId, Dictionary<string, string> useASHATnswers)
+    public async Task<UserAssessmentResult> SubmitAssessmentAsync(string userId, string assessmentId, Dictionary<string, string> userASHATAnswers)
     {
         await Task.CompletedTask;
         
@@ -46,12 +46,12 @@ public class AssessmentService
 
         foreach (var question in questions)
         {
-            if (useASHATnswers.TryGetValue(question.Id, out var useASHATnswerId))
+            if (userASHATAnswers.TryGetValue(question.Id, out var userASHATAnswerId))
             {
                 var answers = _database.GetAnswers(question.Id);
                 var correctAnswer = answers.FirstOrDefault(a => a.IsCorrect);
                 
-                if (correctAnswer != null && correctAnswer.Id == useASHATnswerId)
+                if (correctAnswer != null && correctAnswer.Id == userASHATAnswerId)
                 {
                     earnedPoints += question.Points;
                 }
@@ -86,7 +86,7 @@ public class AssessmentService
             Passed = passed,
             AttemptedAt = DateTime.UtcNow,
             FailedLessonIds = passed ? new List<string>() : failedLessonIds,
-            UseASHATnswers = useASHATnswers
+            UserASHATAnswers = userASHATAnswers
         };
 
         _database.SaveUserAssessmentResult(result);

@@ -683,7 +683,7 @@ VALUES ($id, $userId, $assessmentId, $score, $passed, $attemptedAt, $failedLesso
         while (reader.Read())
         {
             var failedLessonIds = new List<string>();
-            var UserASHATAnswers = new Dictionary<string, string>();
+            var userASHATAnswers = new Dictionary<string, string>();
 
             if (!reader.IsDBNull(6))
             {
@@ -699,7 +699,7 @@ VALUES ($id, $userId, $assessmentId, $score, $passed, $attemptedAt, $failedLesso
                 var ashaJson = reader.GetString(7);
                 if (!string.IsNullOrWhiteSpace(ashaJson))
                 {
-                    UserASHATAnswers = JsonSerializer.Deserialize<Dictionary<string, string>>(ashaJson) ?? new Dictionary<string, string>();
+                    userASHATAnswers = JsonSerializer.Deserialize<Dictionary<string, string>>(ashaJson) ?? new Dictionary<string, string>();
                 }
             }
 
@@ -712,7 +712,7 @@ VALUES ($id, $userId, $assessmentId, $score, $passed, $attemptedAt, $failedLesso
                 Passed = reader.GetInt32(4) == 1,
                 AttemptedAt = DateTime.Parse(reader.GetString(5)),
                 FailedLessonIds = failedLessonIds,
-                UserASHATAnswers = UserASHATAnswers
+                UserASHATAnswers = userASHATAnswers
             });
         }
 
