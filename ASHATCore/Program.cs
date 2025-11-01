@@ -1733,44 +1733,62 @@ app.MapGet("/", async (HttpContext context) =>
     <style>
         body {{
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 800px;
+            max-width: 900px;
             margin: 50px auto;
             padding: 20px;
-            background: rgba(20, 0, 40, 0.9); border-bottom: 2px solid rgba(138, 43, 226, 0.3);
-            color: #333;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0033 50%, #2d004d 100%);
+            min-height: 100vh;
+            color: #e0d0ff;
         }}
         .container {{
-            background: white;
+            background: rgba(20, 0, 40, 0.9);
             padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            border-radius: 15px;
+            border: 2px solid rgba(138, 43, 226, 0.3);
+            box-shadow: 0 10px 40px rgba(138, 43, 226, 0.4);
         }}
         h1 {{
-            color: #667eea;
+            background: linear-gradient(to right, #ffffff, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             margin-bottom: 10px;
+            font-size: 2.5em;
+        }}
+        h3 {{
+            color: #c084fc;
+            margin-bottom: 15px;
+        }}
+        h4 {{
+            color: #a855f7;
+            margin-bottom: 8px;
+        }}
+        p {{
+            color: #d8c8ff;
         }}
         .info {{
-            background: #d1ecf1;
-            border-left: 4px solid #17a2b8;
+            background: rgba(138, 43, 226, 0.1);
+            border-left: 4px solid #8b2fc7;
             padding: 15px;
             margin: 20px 0;
             border-radius: 5px;
         }}
         .success {{
-            background: #d4edda;
-            border-left: 4px solid #28a745;
+            background: rgba(34, 197, 94, 0.1);
+            border-left: 4px solid #22c55e;
             padding: 15px;
             margin: 20px 0;
             border-radius: 5px;
         }}
         code {{
-            background: #f4f4f4;
+            background: rgba(0, 0, 0, 0.3);
             padding: 2px 6px;
             border-radius: 3px;
             font-family: 'Courier New', monospace;
+            color: #c084fc;
         }}
         ul {{
             line-height: 1.8;
+            color: #d8c8ff;
         }}
         .features {{
             display: grid;
@@ -1780,9 +1798,16 @@ app.MapGet("/", async (HttpContext context) =>
         }}
         .feature {{
             padding: 15px;
-            background: #f8f9fa;
-            border-radius: 5px;
-            border-left: 3px solid #667eea;
+            background: rgba(138, 43, 226, 0.1);
+            border-radius: 8px;
+            border-left: 3px solid #8b2fc7;
+            border: 1px solid rgba(138, 43, 226, 0.3);
+            transition: all 0.3s;
+        }}
+        .feature:hover {{
+            background: rgba(138, 43, 226, 0.2);
+            border-color: rgba(138, 43, 226, 0.6);
+            transform: translateY(-3px);
         }}
     </style>
 </head>
