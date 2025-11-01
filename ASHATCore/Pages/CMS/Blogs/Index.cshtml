@@ -11,6 +11,7 @@
         @foreach (var post in Model.RecentPosts)
         {
             <article class="blog-post">
+                @* TODO: Add link to blog post detail page when implemented: <a asp-page="./Post" asp-route-id="@post.Id">@post.Title</a> *@
                 <h2>@post.Title</h2>
                 <div class="post-meta">
                     <span>By @post.Author</span>

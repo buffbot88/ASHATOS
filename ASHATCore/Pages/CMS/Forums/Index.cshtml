@@ -17,6 +17,7 @@
                     @foreach (var forum in category.Forums)
                     {
                         <div class="forum-item">
+                            @* TODO: Add link to forum detail page when implemented: <a asp-page="./Forum" asp-route-id="@forum.Id">@forum.Title</a> *@
                             <h3>@forum.Title</h3>
                             <p>@forum.Description</p>
                             <span>Topics: @forum.TopicCount | Posts: @forum.PostCount</span>
