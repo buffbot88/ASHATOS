@@ -17,7 +17,7 @@
                     @foreach (var forum in category.Forums)
                     {
                         <div class="forum-item">
-                            <h3><a asp-page="./Forum" asp-route-id="@forum.Id">@forum.Title</a></h3>
+                            <h3>@forum.Title</h3>
                             <p>@forum.Description</p>
                             <span>Topics: @forum.TopicCount | Posts: @forum.PostCount</span>
                         </div>
