@@ -21,7 +21,7 @@ public class LearningDatabase : IDisposable
         _dbPath = string.IsNullOrWhiteSpace(dbPath)
             ? Path.Combine(AppContext.BaseDirectory, "Databases", "learning.sqlite")
             : dbPath;
-        
+
         // Ensure Databases directory exists
         var directory = Path.GetDirectoryName(_dbPath);
         if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
@@ -37,8 +37,16 @@ public class LearningDatabase : IDisposable
     {
         using var conn = new SqliteConnection(_connectionString);
         conn.Open();
+
+        // Ensure foreign keys are enforced for this connection
+        using (var pragmaCmd = conn.CreateCommand())
+        {
+            pragmaCmd.CommandText = "PRAGMA foreign_keys = ON;";
+            pragmaCmd.ExecuteNonQuery();
+        }
+
         using var cmd = conn.CreateCommand();
-        
+
         // Courses table
         cmd.CommandText = @"
 CREATE TABLE IF NOT EXISTS Courses (
@@ -113,7 +121,7 @@ CREATE TABLE IF NOT EXISTS UserAssessmentResults (
     Passed INTEGER NOT NULL,
     AttemptedAt TEXT NOT NULL,
     FailedLessonIds TEXT,
-    UseASHATnswers TEXT,
+    UserASHATAnswers TEXT,
     FOREIGN KEY (AssessmentId) REFERENCES Assessments(Id) ON DELETE CASCADE
 );
 
@@ -147,12 +155,18 @@ CREATE INDEX IF NOT EXISTS idx_courses_permissionlevel ON Courses(PermissionLeve
     {
         using var conn = new SqliteConnection(_connectionString);
         conn.Open();
+        using (var pragmaCmd = conn.CreateCommand())
+        {
+            pragmaCmd.CommandText = "PRAGMA foreign_keys = ON;";
+            pragmaCmd.ExecuteNonQuery();
+        }
+
         using var cmd = conn.CreateCommand();
-        
+
         cmd.CommandText = @"
 INSERT OR REPLACE INTO Courses (Id, Title, Description, PermissionLevel, Category, LessonCount, EstimatedMinutes, CreatedAt, UpdatedAt, IsActive, PrerequisiteCourseId)
 VALUES ($id, $title, $description, $permissionLevel, $category, $lessonCount, $estimatedMinutes, $createdAt, $updatedAt, $isActive, $prerequisiteCourseId);";
-        
+
         cmd.Parameters.AddWithValue("$id", course.Id);
         cmd.Parameters.AddWithValue("$title", course.Title);
         cmd.Parameters.AddWithValue("$description", course.Description ?? "");
@@ -164,7 +178,7 @@ VALUES ($id, $title, $description, $permissionLevel, $category, $lessonCount, $e
         cmd.Parameters.AddWithValue("$updatedAt", course.UpdatedAt?.ToString("o") ?? (object)DBNull.Value);
         cmd.Parameters.AddWithValue("$isActive", course.IsActive ? 1 : 0);
         cmd.Parameters.AddWithValue("$prerequisiteCourseId", course.PrerequisiteCourseId ?? (object)DBNull.Value);
-        
+
         cmd.ExecuteNonQuery();
     }
 
@@ -172,11 +186,17 @@ VALUES ($id, $title, $description, $permissionLevel, $category, $lessonCount, $e
     {
         using var conn = new SqliteConnection(_connectionString);
         conn.Open();
+        using (var pragmaCmd = conn.CreateCommand())
+        {
+            pragmaCmd.CommandText = "PRAGMA foreign_keys = ON;";
+            pragmaCmd.ExecuteNonQuery();
+        }
+
         using var cmd = conn.CreateCommand();
-        
+
         cmd.CommandText = "SELECT * FROM Courses WHERE Id = $id";
         cmd.Parameters.AddWithValue("$id", courseId);
-        
+
         using var reader = cmd.ExecuteReader();
         if (reader.Read())
         {
@@ -195,7 +215,7 @@ VALUES ($id, $title, $description, $permissionLevel, $category, $lessonCount, $e
                 PrerequisiteCourseId = reader.IsDBNull(10) ? null : reader.GetString(10)
             };
         }
-        
+
         return null;
     }
 
@@ -203,8 +223,14 @@ VALUES ($id, $title, $description, $permissionLevel, $category, $lessonCount, $e
     {
         using var conn = new SqliteConnection(_connectionString);
         conn.Open();
+        using (var pragmaCmd = conn.CreateCommand())
+        {
+            pragmaCmd.CommandText = "PRAGMA foreign_keys = ON;";
+            pragmaCmd.ExecuteNonQuery();
+        }
+
         using var cmd = conn.CreateCommand();
-        
+
         if (permissionLevel != null)
         {
             cmd.CommandText = "SELECT * FROM Courses WHERE PermissionLevel = $permissionLevel AND IsActive = 1 ORDER BY Title";
@@ -214,7 +240,7 @@ VALUES ($id, $title, $description, $permissionLevel, $category, $lessonCount, $e
         {
             cmd.CommandText = "SELECT * FROM Courses WHERE IsActive = 1 ORDER BY Title";
         }
-        
+
         var courses = new List<Course>();
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
@@ -234,7 +260,7 @@ VALUES ($id, $title, $description, $permissionLevel, $category, $lessonCount, $e
                 PrerequisiteCourseId = reader.IsDBNull(10) ? null : reader.GetString(10)
             });
         }
-        
+
         return courses;
     }
 
@@ -242,8 +268,14 @@ VALUES ($id, $title, $description, $permissionLevel, $category, $lessonCount, $e
     {
         using var conn = new SqliteConnection(_connectionString);
         conn.Open();
+        using (var pragmaCmd = conn.CreateCommand())
+        {
+            pragmaCmd.CommandText = "PRAGMA foreign_keys = ON;";
+            pragmaCmd.ExecuteNonQuery();
+        }
+
         using var cmd = conn.CreateCommand();
-        
+
         cmd.CommandText = "SELECT COUNT(*) FROM Courses WHERE IsActive = 1";
         return Convert.ToInt32(cmd.ExecuteScalar());
     }
@@ -256,12 +288,18 @@ VALUES ($id, $title, $description, $permissionLevel, $category, $lessonCount, $e
     {
         using var conn = new SqliteConnection(_connectionString);
         conn.Open();
+        using (var pragmaCmd = conn.CreateCommand())
+        {
+            pragmaCmd.CommandText = "PRAGMA foreign_keys = ON;";
+            pragmaCmd.ExecuteNonQuery();
+        }
+
         using var cmd = conn.CreateCommand();
-        
+
         cmd.CommandText = @"
 INSERT OR REPLACE INTO Lessons (Id, CourseId, Title, Content, OrderIndex, EstimatedMinutes, CreatedAt, UpdatedAt, Type, VideoUrl, CodeExample, Tags)
 VALUES ($id, $courseId, $title, $content, $orderIndex, $estimatedMinutes, $createdAt, $updatedAt, $type, $videoUrl, $codeExample, $tags);";
-        
+
         cmd.Parameters.AddWithValue("$id", lesson.Id);
         cmd.Parameters.AddWithValue("$courseId", lesson.CourseId);
         cmd.Parameters.AddWithValue("$title", lesson.Title);
@@ -274,7 +312,7 @@ VALUES ($id, $courseId, $title, $content, $orderIndex, $estimatedMinutes, $creat
         cmd.Parameters.AddWithValue("$videoUrl", lesson.VideoUrl ?? (object)DBNull.Value);
         cmd.Parameters.AddWithValue("$codeExample", lesson.CodeExample ?? (object)DBNull.Value);
         cmd.Parameters.AddWithValue("$tags", JsonSerializer.Serialize(lesson.Tags, _jsonOptions));
-        
+
         cmd.ExecuteNonQuery();
     }
 
@@ -282,11 +320,17 @@ VALUES ($id, $courseId, $title, $content, $orderIndex, $estimatedMinutes, $creat
     {
         using var conn = new SqliteConnection(_connectionString);
         conn.Open();
+        using (var pragmaCmd = conn.CreateCommand())
+        {
+            pragmaCmd.CommandText = "PRAGMA foreign_keys = ON;";
+            pragmaCmd.ExecuteNonQuery();
+        }
+
         using var cmd = conn.CreateCommand();
-        
+
         cmd.CommandText = "SELECT * FROM Lessons WHERE Id = $id";
         cmd.Parameters.AddWithValue("$id", lessonId);
-        
+
         using var reader = cmd.ExecuteReader();
         if (reader.Read())
         {
@@ -303,10 +347,10 @@ VALUES ($id, $courseId, $title, $content, $orderIndex, $estimatedMinutes, $creat
                 Type = Enum.Parse<LessonType>(reader.GetString(8)),
                 VideoUrl = reader.IsDBNull(9) ? null : reader.GetString(9),
                 CodeExample = reader.IsDBNull(10) ? null : reader.GetString(10),
-                Tags = JsonSerializer.Deserialize<List<string>>(reader.GetString(11)) ?? new List<string>()
+                Tags = reader.IsDBNull(11) ? new List<string>() : JsonSerializer.Deserialize<List<string>>(reader.GetString(11)) ?? new List<string>()
             };
         }
-        
+
         return null;
     }
 
@@ -314,11 +358,17 @@ VALUES ($id, $courseId, $title, $content, $orderIndex, $estimatedMinutes, $creat
     {
         using var conn = new SqliteConnection(_connectionString);
         conn.Open();
+        using (var pragmaCmd = conn.CreateCommand())
+        {
+            pragmaCmd.CommandText = "PRAGMA foreign_keys = ON;";
+            pragmaCmd.ExecuteNonQuery();
+        }
+
         using var cmd = conn.CreateCommand();
-        
+
         cmd.CommandText = "SELECT * FROM Lessons WHERE CourseId = $courseId ORDER BY OrderIndex";
         cmd.Parameters.AddWithValue("$courseId", courseId);
-        
+
         var lessons = new List<Lesson>();
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
@@ -336,10 +386,10 @@ VALUES ($id, $courseId, $title, $content, $orderIndex, $estimatedMinutes, $creat
                 Type = Enum.Parse<LessonType>(reader.GetString(8)),
                 VideoUrl = reader.IsDBNull(9) ? null : reader.GetString(9),
                 CodeExample = reader.IsDBNull(10) ? null : reader.GetString(10),
-                Tags = JsonSerializer.Deserialize<List<string>>(reader.GetString(11)) ?? new List<string>()
+                Tags = reader.IsDBNull(11) ? new List<string>() : JsonSerializer.Deserialize<List<string>>(reader.GetString(11)) ?? new List<string>()
             });
         }
-        
+
         return lessons;
     }
 
@@ -347,8 +397,14 @@ VALUES ($id, $courseId, $title, $content, $orderIndex, $estimatedMinutes, $creat
     {
         using var conn = new SqliteConnection(_connectionString);
         conn.Open();
+        using (var pragmaCmd = conn.CreateCommand())
+        {
+            pragmaCmd.CommandText = "PRAGMA foreign_keys = ON;";
+            pragmaCmd.ExecuteNonQuery();
+        }
+
         using var cmd = conn.CreateCommand();
-        
+
         cmd.CommandText = "SELECT COUNT(*) FROM Lessons";
         return Convert.ToInt32(cmd.ExecuteScalar());
     }
@@ -361,12 +417,18 @@ VALUES ($id, $courseId, $title, $content, $orderIndex, $estimatedMinutes, $creat
     {
         using var conn = new SqliteConnection(_connectionString);
         conn.Open();
+        using (var pragmaCmd = conn.CreateCommand())
+        {
+            pragmaCmd.CommandText = "PRAGMA foreign_keys = ON;";
+            pragmaCmd.ExecuteNonQuery();
+        }
+
         using var cmd = conn.CreateCommand();
-        
+
         cmd.CommandText = @"
 INSERT OR REPLACE INTO Assessments (Id, CourseId, Title, Description, PassingScore, CreatedAt, UpdatedAt, IsActive)
 VALUES ($id, $courseId, $title, $description, $passingScore, $createdAt, $updatedAt, $isActive);";
-        
+
         cmd.Parameters.AddWithValue("$id", assessment.Id);
         cmd.Parameters.AddWithValue("$courseId", assessment.CourseId);
         cmd.Parameters.AddWithValue("$title", assessment.Title);
@@ -375,7 +437,7 @@ VALUES ($id, $courseId, $title, $description, $passingScore, $createdAt, $update
         cmd.Parameters.AddWithValue("$createdAt", assessment.CreatedAt.ToString("o"));
         cmd.Parameters.AddWithValue("$updatedAt", assessment.UpdatedAt?.ToString("o") ?? (object)DBNull.Value);
         cmd.Parameters.AddWithValue("$isActive", assessment.IsActive ? 1 : 0);
-        
+
         cmd.ExecuteNonQuery();
     }
 
@@ -383,11 +445,17 @@ VALUES ($id, $courseId, $title, $description, $passingScore, $createdAt, $update
     {
         using var conn = new SqliteConnection(_connectionString);
         conn.Open();
+        using (var pragmaCmd = conn.CreateCommand())
+        {
+            pragmaCmd.CommandText = "PRAGMA foreign_keys = ON;";
+            pragmaCmd.ExecuteNonQuery();
+        }
+
         using var cmd = conn.CreateCommand();
-        
+
         cmd.CommandText = "SELECT * FROM Assessments WHERE Id = $id AND IsActive = 1";
         cmd.Parameters.AddWithValue("$id", assessmentId);
-        
+
         using var reader = cmd.ExecuteReader();
         if (reader.Read())
         {
@@ -403,7 +471,7 @@ VALUES ($id, $courseId, $title, $description, $passingScore, $createdAt, $update
                 IsActive = reader.GetInt32(7) == 1
             };
         }
-        
+
         return null;
     }
 
@@ -411,11 +479,17 @@ VALUES ($id, $courseId, $title, $description, $passingScore, $createdAt, $update
     {
         using var conn = new SqliteConnection(_connectionString);
         conn.Open();
+        using (var pragmaCmd = conn.CreateCommand())
+        {
+            pragmaCmd.CommandText = "PRAGMA foreign_keys = ON;";
+            pragmaCmd.ExecuteNonQuery();
+        }
+
         using var cmd = conn.CreateCommand();
-        
+
         cmd.CommandText = "SELECT * FROM Assessments WHERE CourseId = $courseId AND IsActive = 1 LIMIT 1";
         cmd.Parameters.AddWithValue("$courseId", courseId);
-        
+
         using var reader = cmd.ExecuteReader();
         if (reader.Read())
         {
@@ -431,7 +505,7 @@ VALUES ($id, $courseId, $title, $description, $passingScore, $createdAt, $update
                 IsActive = reader.GetInt32(7) == 1
             };
         }
-        
+
         return null;
     }
 
@@ -439,12 +513,18 @@ VALUES ($id, $courseId, $title, $description, $passingScore, $createdAt, $update
     {
         using var conn = new SqliteConnection(_connectionString);
         conn.Open();
+        using (var pragmaCmd = conn.CreateCommand())
+        {
+            pragmaCmd.CommandText = "PRAGMA foreign_keys = ON;";
+            pragmaCmd.ExecuteNonQuery();
+        }
+
         using var cmd = conn.CreateCommand();
-        
+
         cmd.CommandText = @"
 INSERT OR REPLACE INTO Questions (Id, AssessmentId, LessonId, QuestionText, Type, OrderIndex, Points, CreatedAt)
 VALUES ($id, $assessmentId, $lessonId, $questionText, $type, $orderIndex, $points, $createdAt);";
-        
+
         cmd.Parameters.AddWithValue("$id", question.Id);
         cmd.Parameters.AddWithValue("$assessmentId", question.AssessmentId);
         cmd.Parameters.AddWithValue("$lessonId", question.LessonId);
@@ -453,7 +533,7 @@ VALUES ($id, $assessmentId, $lessonId, $questionText, $type, $orderIndex, $point
         cmd.Parameters.AddWithValue("$orderIndex", question.OrderIndex);
         cmd.Parameters.AddWithValue("$points", question.Points);
         cmd.Parameters.AddWithValue("$createdAt", question.CreatedAt.ToString("o"));
-        
+
         cmd.ExecuteNonQuery();
     }
 
@@ -461,11 +541,17 @@ VALUES ($id, $assessmentId, $lessonId, $questionText, $type, $orderIndex, $point
     {
         using var conn = new SqliteConnection(_connectionString);
         conn.Open();
+        using (var pragmaCmd = conn.CreateCommand())
+        {
+            pragmaCmd.CommandText = "PRAGMA foreign_keys = ON;";
+            pragmaCmd.ExecuteNonQuery();
+        }
+
         using var cmd = conn.CreateCommand();
-        
+
         cmd.CommandText = "SELECT * FROM Questions WHERE AssessmentId = $assessmentId ORDER BY OrderIndex";
         cmd.Parameters.AddWithValue("$assessmentId", assessmentId);
-        
+
         var questions = new List<Question>();
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
@@ -482,7 +568,7 @@ VALUES ($id, $assessmentId, $lessonId, $questionText, $type, $orderIndex, $point
                 CreatedAt = DateTime.Parse(reader.GetString(7))
             });
         }
-        
+
         return questions;
     }
 
@@ -490,18 +576,24 @@ VALUES ($id, $assessmentId, $lessonId, $questionText, $type, $orderIndex, $point
     {
         using var conn = new SqliteConnection(_connectionString);
         conn.Open();
+        using (var pragmaCmd = conn.CreateCommand())
+        {
+            pragmaCmd.CommandText = "PRAGMA foreign_keys = ON;";
+            pragmaCmd.ExecuteNonQuery();
+        }
+
         using var cmd = conn.CreateCommand();
-        
+
         cmd.CommandText = @"
 INSERT OR REPLACE INTO Answers (Id, QuestionId, AnswerText, IsCorrect, OrderIndex)
 VALUES ($id, $questionId, $answerText, $isCorrect, $orderIndex);";
-        
+
         cmd.Parameters.AddWithValue("$id", answer.Id);
         cmd.Parameters.AddWithValue("$questionId", answer.QuestionId);
         cmd.Parameters.AddWithValue("$answerText", answer.AnswerText);
         cmd.Parameters.AddWithValue("$isCorrect", answer.IsCorrect ? 1 : 0);
         cmd.Parameters.AddWithValue("$orderIndex", answer.OrderIndex);
-        
+
         cmd.ExecuteNonQuery();
     }
 
@@ -509,11 +601,17 @@ VALUES ($id, $questionId, $answerText, $isCorrect, $orderIndex);";
     {
         using var conn = new SqliteConnection(_connectionString);
         conn.Open();
+        using (var pragmaCmd = conn.CreateCommand())
+        {
+            pragmaCmd.CommandText = "PRAGMA foreign_keys = ON;";
+            pragmaCmd.ExecuteNonQuery();
+        }
+
         using var cmd = conn.CreateCommand();
-        
+
         cmd.CommandText = "SELECT * FROM Answers WHERE QuestionId = $questionId ORDER BY OrderIndex";
         cmd.Parameters.AddWithValue("$questionId", questionId);
-        
+
         var answers = new List<Answer>();
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
@@ -527,7 +625,7 @@ VALUES ($id, $questionId, $answerText, $isCorrect, $orderIndex);";
                 OrderIndex = reader.GetInt32(4)
             });
         }
-        
+
         return answers;
     }
 
@@ -539,21 +637,28 @@ VALUES ($id, $questionId, $answerText, $isCorrect, $orderIndex);";
     {
         using var conn = new SqliteConnection(_connectionString);
         conn.Open();
+        using (var pragmaCmd = conn.CreateCommand())
+        {
+            pragmaCmd.CommandText = "PRAGMA foreign_keys = ON;";
+            pragmaCmd.ExecuteNonQuery();
+        }
+
         using var cmd = conn.CreateCommand();
-        
+
+        // Use INSERT OR REPLACE to be consistent with other save methods
         cmd.CommandText = @"
-INSERT INTO UserAssessmentResults (Id, UserId, AssessmentId, Score, Passed, AttemptedAt, FailedLessonIds, UseASHATnswers)
-VALUES ($id, $userId, $assessmentId, $score, $passed, $attemptedAt, $failedLessonIds, $useASHATnswers);";
-        
+INSERT OR REPLACE INTO UserAssessmentResults (Id, UserId, AssessmentId, Score, Passed, AttemptedAt, FailedLessonIds, UserASHATAnswers)
+VALUES ($id, $userId, $assessmentId, $score, $passed, $attemptedAt, $failedLessonIds, $userASHATAnswers);";
+
         cmd.Parameters.AddWithValue("$id", result.Id);
         cmd.Parameters.AddWithValue("$userId", result.UserId);
         cmd.Parameters.AddWithValue("$assessmentId", result.AssessmentId);
         cmd.Parameters.AddWithValue("$score", result.Score);
         cmd.Parameters.AddWithValue("$passed", result.Passed ? 1 : 0);
         cmd.Parameters.AddWithValue("$attemptedAt", result.AttemptedAt.ToString("o"));
-        cmd.Parameters.AddWithValue("$failedLessonIds", JsonSerializer.Serialize(result.FailedLessonIds, _jsonOptions));
-        cmd.Parameters.AddWithValue("$useASHATnswers", JsonSerializer.Serialize(result.UseASHATnswers, _jsonOptions));
-        
+        cmd.Parameters.AddWithValue("$failedLessonIds", JsonSerializer.Serialize(result.FailedLessonIds ?? new List<string>(), _jsonOptions));
+        cmd.Parameters.AddWithValue("$userASHATAnswers", JsonSerializer.Serialize(result.UserASHATAnswers ?? new Dictionary<string, string>(), _jsonOptions));
+
         cmd.ExecuteNonQuery();
     }
 
@@ -561,16 +666,43 @@ VALUES ($id, $userId, $assessmentId, $score, $passed, $attemptedAt, $failedLesso
     {
         using var conn = new SqliteConnection(_connectionString);
         conn.Open();
+        using (var pragmaCmd = conn.CreateCommand())
+        {
+            pragmaCmd.CommandText = "PRAGMA foreign_keys = ON;";
+            pragmaCmd.ExecuteNonQuery();
+        }
+
         using var cmd = conn.CreateCommand();
-        
+
         cmd.CommandText = "SELECT * FROM UserAssessmentResults WHERE UserId = $userId AND AssessmentId = $assessmentId ORDER BY AttemptedAt DESC";
         cmd.Parameters.AddWithValue("$userId", userId);
         cmd.Parameters.AddWithValue("$assessmentId", assessmentId);
-        
+
         var results = new List<UserAssessmentResult>();
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
         {
+            var failedLessonIds = new List<string>();
+            var UserASHATAnswers = new Dictionary<string, string>();
+
+            if (!reader.IsDBNull(6))
+            {
+                var failedJson = reader.GetString(6);
+                if (!string.IsNullOrWhiteSpace(failedJson))
+                {
+                    failedLessonIds = JsonSerializer.Deserialize<List<string>>(failedJson) ?? new List<string>();
+                }
+            }
+
+            if (!reader.IsDBNull(7))
+            {
+                var ashaJson = reader.GetString(7);
+                if (!string.IsNullOrWhiteSpace(ashaJson))
+                {
+                    UserASHATAnswers = JsonSerializer.Deserialize<Dictionary<string, string>>(ashaJson) ?? new Dictionary<string, string>();
+                }
+            }
+
             results.Add(new UserAssessmentResult
             {
                 Id = reader.GetString(0),
@@ -579,11 +711,11 @@ VALUES ($id, $userId, $assessmentId, $score, $passed, $attemptedAt, $failedLesso
                 Score = reader.GetInt32(3),
                 Passed = reader.GetInt32(4) == 1,
                 AttemptedAt = DateTime.Parse(reader.GetString(5)),
-                FailedLessonIds = JsonSerializer.Deserialize<List<string>>(reader.GetString(6)) ?? new List<string>(),
-                UseASHATnswers = JsonSerializer.Deserialize<Dictionary<string, string>>(reader.GetString(7)) ?? new Dictionary<string, string>()
+                FailedLessonIds = failedLessonIds,
+                UserASHATAnswers = UserASHATAnswers
             });
         }
-        
+
         return results;
     }
 
@@ -595,20 +727,26 @@ VALUES ($id, $userId, $assessmentId, $score, $passed, $attemptedAt, $failedLesso
     {
         using var conn = new SqliteConnection(_connectionString);
         conn.Open();
+        using (var pragmaCmd = conn.CreateCommand())
+        {
+            pragmaCmd.CommandText = "PRAGMA foreign_keys = ON;";
+            pragmaCmd.ExecuteNonQuery();
+        }
+
         using var cmd = conn.CreateCommand();
-        
+
         cmd.CommandText = @"
 INSERT OR REPLACE INTO CourseProgress (UserId, CourseId, CompletedLessonIds, StartedAt, CompletedAt, ProgressPercentage, LastAccessedAt)
 VALUES ($userId, $courseId, $completedLessonIds, $startedAt, $completedAt, $progressPercentage, $lastAccessedAt);";
-        
+
         cmd.Parameters.AddWithValue("$userId", progress.UserId);
         cmd.Parameters.AddWithValue("$courseId", progress.CourseId);
-        cmd.Parameters.AddWithValue("$completedLessonIds", JsonSerializer.Serialize(progress.CompletedLessonIds, _jsonOptions));
+        cmd.Parameters.AddWithValue("$completedLessonIds", JsonSerializer.Serialize(progress.CompletedLessonIds ?? new List<string>(), _jsonOptions));
         cmd.Parameters.AddWithValue("$startedAt", progress.StartedAt.ToString("o"));
         cmd.Parameters.AddWithValue("$completedAt", progress.CompletedAt?.ToString("o") ?? (object)DBNull.Value);
         cmd.Parameters.AddWithValue("$progressPercentage", progress.ProgressPercentage);
         cmd.Parameters.AddWithValue("$lastAccessedAt", progress.LastAccessedAt.ToString("o"));
-        
+
         cmd.ExecuteNonQuery();
     }
 
@@ -616,27 +754,43 @@ VALUES ($userId, $courseId, $completedLessonIds, $startedAt, $completedAt, $prog
     {
         using var conn = new SqliteConnection(_connectionString);
         conn.Open();
+        using (var pragmaCmd = conn.CreateCommand())
+        {
+            pragmaCmd.CommandText = "PRAGMA foreign_keys = ON;";
+            pragmaCmd.ExecuteNonQuery();
+        }
+
         using var cmd = conn.CreateCommand();
-        
+
         cmd.CommandText = "SELECT * FROM CourseProgress WHERE UserId = $userId AND CourseId = $courseId";
         cmd.Parameters.AddWithValue("$userId", userId);
         cmd.Parameters.AddWithValue("$courseId", courseId);
-        
+
         using var reader = cmd.ExecuteReader();
         if (reader.Read())
         {
+            var completedLessonIds = new List<string>();
+            if (!reader.IsDBNull(2))
+            {
+                var completedJson = reader.GetString(2);
+                if (!string.IsNullOrWhiteSpace(completedJson))
+                {
+                    completedLessonIds = JsonSerializer.Deserialize<List<string>>(completedJson) ?? new List<string>();
+                }
+            }
+
             return new CourseProgress
             {
                 UserId = reader.GetString(0),
                 CourseId = reader.GetString(1),
-                CompletedLessonIds = JsonSerializer.Deserialize<List<string>>(reader.GetString(2)) ?? new List<string>(),
+                CompletedLessonIds = completedLessonIds,
                 StartedAt = DateTime.Parse(reader.GetString(3)),
                 CompletedAt = reader.IsDBNull(4) ? null : DateTime.Parse(reader.GetString(4)),
                 ProgressPercentage = reader.GetInt32(5),
                 LastAccessedAt = DateTime.Parse(reader.GetString(6))
             };
         }
-        
+
         return null;
     }
 
