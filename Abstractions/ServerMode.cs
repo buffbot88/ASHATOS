@@ -45,7 +45,7 @@ public class ServerConfiguration
     /// <summary>
     /// Current server mode
     /// </summary>
-    public ServerMode Mode { get; set; } = ServerMode.Production;
+    public ServerMode Mode { get; set; } = ServerMode.Dev;
     
     /// <summary>
     /// Indicates if this is the first run of the server
@@ -164,9 +164,9 @@ public class ServerConfiguration
     
     /// <summary>
     /// Indicates if the server has been activated with a valid license
-    /// Server activation is required after onboarding to access the control panel
+    /// Server activation is pre-enabled in enterprise development mode
     /// </summary>
-    public bool ServerActivated { get; set; } = false;
+    public bool ServerActivated { get; set; } = true;
     
     /// <summary>
     /// Timestamp when the server was activated

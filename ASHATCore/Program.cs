@@ -1449,42 +1449,8 @@ static string GenerateControlPanelUI()
                 return;
             }
             
-            // Check if SuperAdmin needs to complete onboarding
-            try {
-                const response = await fetch('/api/learning/SuperAdmin/status', {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    if (!data.hasCompleted) {
-                        // Redirect to onboarding if not completed
-                        window.location.href = '/onboarding';
-                        return;
-                    }
-                }
-            } catch (err) {
-                // If not SuperAdmin or learning module unavailable, continue to control panel
-                console.log('Onboarding check skipped:', err);
-            }
-            
-            // Check if server is activated
-            try {
-                const activationResponse = await fetch('/api/control/activation-status', {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-                
-                if (activationResponse.ok) {
-                    const activationData = await activationResponse.json();
-                    if (!activationData.activated) {
-                        // Redirect to activation if not activated
-                        window.location.href = '/activation';
-                        return;
-                    }
-                }
-            } catch (err) {
-                console.log('Activation check skipped:', err);
-            }
+            // Enterprise development mode: onboarding and activation checks removed
+            // SuperAdmins can access control panel immediately after login
         }
         async function loadStats() {
             try {
