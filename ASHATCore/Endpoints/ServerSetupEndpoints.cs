@@ -101,57 +101,9 @@ public static class ServerSetupEndpoints
             }
         });
 
-        // Setup PHP Configuration
-        app.MapPost("/api/serversetup/php", async (HttpContext context) =>
-        {
-            try
-            {
-                var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Replace("Bearer ", "");
-                if (string.IsNullOrEmpty(token))
-                {
-                    context.Response.StatusCode = 401;
-                    await context.Response.WriteAsJsonAsync(new { success = false, message = "Unauthorized" });
-                    return;
-                }
-
-                var user = await authModule.GetUserByTokenAsync(token);
-                if (user == null || !authModule.HasPermission(user, "ServerSetup", UserRole.Admin))
-                {
-                    context.Response.StatusCode = 403;
-                    await context.Response.WriteAsJsonAsync(new { success = false, message = "Admin role required" });
-                    return;
-                }
-
-                var request = await context.Request.ReadFromJsonAsync<SetupConfigRequest>();
-                if (request == null || string.IsNullOrEmpty(request.LicenseNumber) || string.IsNullOrEmpty(request.Username))
-                {
-                    context.Response.StatusCode = 400;
-                    await context.Response.WriteAsJsonAsync(new { success = false, message = "Invalid request: licenseNumber and username required" });
-                    return;
-                }
-
-                var result = await serverSetupModule.SetupPhpConfigAsync(request.LicenseNumber, request.Username);
-                if (result.Success)
-                {
-                    await context.Response.WriteAsJsonAsync(new { success = true, message = result.Message, data = result.Details });
-                }
-                else
-                {
-                    context.Response.StatusCode = 400;
-                    await context.Response.WriteAsJsonAsync(new { success = false, message = result.Message });
-                }
-            }
-            catch (Exception ex)
-            {
-                context.Response.StatusCode = 500;
-                await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
-            }
-        });
-
         Console.WriteLine("[ASHATCore] ServerSetup API endpoints registered:");
         Console.WriteLine("  GET  /api/serversetup/discover - Discover server folders");
         Console.WriteLine("  POST /api/serversetup/admin - Create admin instance (admin only)");
-        Console.WriteLine("  POST /api/serversetup/php - Setup PHP config (admin only)");
 
         return app;
     }

@@ -57,7 +57,6 @@ namespace ASHATCore.Tests
                 Console.WriteLine($"✓ Server Health Check Completed");
                 Console.WriteLine($"  Is Operational: {health.IsOperational}");
                 Console.WriteLine($"  Databases Accessible: {health.DatabasesAccessible}");
-                Console.WriteLine($"  PHP Folder Accessible: {health.PhpFoldeASHATccessible}");
                 Console.WriteLine($"  Admins Folder Accessible: {health.AdminsFoldeASHATccessible}");
                 Console.WriteLine($"  FTP Folder Accessible: {health.FtpFoldeASHATccessible}");
                 
