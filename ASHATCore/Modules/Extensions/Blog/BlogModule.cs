@@ -382,10 +382,10 @@ public sealed class BlogModule : ModuleBase, IBlogModule
         var post1 = new BlogPost
         {
             Id = post1Id,
-            UserId = "user1",
-            Username = "ASHATAI",
+            UserId = "admin",
+            Username = "Admin",
             Title = "Welcome to ASHATCore Blogs",
-            Content = "This is the first blog post on ASHATCore. Share your thoughts, stories, and ideas with the community!",
+            Content = "This is the first blog post on ASHATCore. Share your thoughts, stories, and ideas with the community! This blogging platform is powered by the Legendary CMS Suite and features content moderation, user profiles, and social features.",
             Category = "Announcements",
             CreatedAt = DateTime.UtcNow.AddDays(-7),
             IsPublished = true,
@@ -399,10 +399,10 @@ public sealed class BlogModule : ModuleBase, IBlogModule
         var post2 = new BlogPost
         {
             Id = post2Id,
-            UserId = "user2",
-            Username = "TechUser",
+            UserId = "admin",
+            Username = "Admin",
             Title = "Getting Started with ASHATCore",
-            Content = "A comprehensive guide to using ASHATCore's blogging features.",
+            Content = "A comprehensive guide to using ASHATCore's blogging features. Learn how to create posts, manage your profile, and engage with the community.",
             Category = "Tutorials",
             CreatedAt = DateTime.UtcNow.AddDays(-3),
             IsPublished = true,

@@ -413,17 +413,17 @@ public sealed class ForumModule : ModuleBase, IForumModule
     
     private void SeedExampleData()
     {
-        // Create some example posts
+        // Create some example posts - default to Admin user
         var posts = new[]
         {
             new ForumPost
             {
                 Id = "post_1",
                 ThreadId = "thread_1",
-                UserId = "user_1",
-                Username = "JohnDoe",
+                UserId = "admin",
+                Username = "Admin",
                 Title = "Welcome to ASHATCore Forums!",
-                Content = "This is the first post on our new forum system.",
+                Content = "This is the first post on our new forum system. Feel free to introduce yourself and explore the community!",
                 CreatedAt = DateTime.UtcNow.AddDays(-7),
                 ReplyCount = 15,
                 ViewCount = 234
@@ -432,10 +432,10 @@ public sealed class ForumModule : ModuleBase, IForumModule
             {
                 Id = "post_2",
                 ThreadId = "thread_2",
-                UserId = "user_2",
-                Username = "JaneSmith",
+                UserId = "admin",
+                Username = "Admin",
                 Title = "How to use AI Content Generation",
-                Content = "Tutorial on using the AI content Generation system.",
+                Content = "Tutorial on using the AI content Generation system. Check out the documentation for more details.",
                 CreatedAt = DateTime.UtcNow.AddDays(-5),
                 ReplyCount = 8,
                 ViewCount = 156
@@ -444,10 +444,10 @@ public sealed class ForumModule : ModuleBase, IForumModule
             {
                 Id = "post_3",
                 ThreadId = "thread_3",
-                UserId = "user_3",
-                Username = "GameMaster",
+                UserId = "admin",
+                Username = "Admin",
                 Title = "Server Maintenance Schedule",
-                Content = "Scheduled maintenance for this weekend.",
+                Content = "Scheduled maintenance for this weekend. The system will be offline briefly.",
                 CreatedAt = DateTime.UtcNow.AddDays(-2),
                 ReplyCount = 3,
                 ViewCount = 89,

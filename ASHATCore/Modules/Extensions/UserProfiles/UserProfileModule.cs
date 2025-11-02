@@ -17,6 +17,33 @@ public sealed class UserProfileModule : ModuleBase
     private string? _currentUserId;
     private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
 
+    public override void Initialize(object? manager)
+    {
+        base.Initialize(manager);
+        
+        // Create default Admin profile on startup
+        CreateAdminProfile();
+        
+        LogInfo("UserProfile module initialized with Admin profile");
+    }
+
+    private void CreateAdminProfile()
+    {
+        var adminProfile = new UserProfile
+        {
+            UserId = "admin",
+            DisplayName = "Admin",
+            CreatedAt = DateTime.UtcNow,
+            LastActiveAt = DateTime.UtcNow,
+            Role = "Administrator",
+            Bio = "System Administrator - Managing ASHATOS platform",
+            AvatarUrl = "/images/admin-avatar.png"
+        };
+        
+        _profiles.AddOrUpdate("admin", adminProfile, (_, existing) => existing);
+        _currentUserId = "admin";
+    }
+
     public override string Process(string input)
     {
         if (string.IsNullOrWhiteSpace(input))

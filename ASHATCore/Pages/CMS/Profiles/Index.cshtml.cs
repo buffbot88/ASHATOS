@@ -1,71 +1,86 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using ASHATCore.Engine.Manager;
+using ASHATCore.Modules.Extensions.UserProfiles;
+using Abstractions;
 
 namespace ASHATCore.Pages.CMS.Profiles;
 
 /// <summary>
-/// Razor Page Model for User Profiles - replaces legacy PHP profile templates
+/// Razor Page Model for User Profiles - MySpace-style social profiles
 /// </summary>
 public class IndexModel : PageModel
 {
-    public UserProfile? Profile { get; set; }
-    public List<ActivityItem> RecentActivity { get; set; } = new();
+    public Abstractions.UserProfile? Profile { get; set; }
+    public List<Abstractions.Activity> RecentActivity { get; set; } = new();
+    public List<SocialPost> Posts { get; set; } = new();
+    public List<string> Friends { get; set; } = new();
 
-    public void OnGet(string? username)
+    public IndexModel()
     {
-        // Load user profile data
-        // This demonstrates the pure .NET architecture with Razor Pages
-        if (!string.IsNullOrEmpty(username))
+        // Try to get ModuleManager from HttpContext if available
+        // In a production scenario, this would be injected via DI
+    }
+
+    public async Task OnGet(string? username)
+    {
+        // Default to Admin if no username provided
+        if (string.IsNullOrEmpty(username))
         {
-            Profile = LoadUserProfile(username);
-            RecentActivity = LoadRecentActivity(username);
+            username = "admin";
+        }
+        
+        // Try to get the UserProfile module from ModuleManager
+        var userProfileModule = GetUserProfileModule();
+        
+        if (userProfileModule != null)
+        {
+            Profile = await userProfileModule.GetProfileAsync(username);
+            
+            if (Profile != null)
+            {
+                RecentActivity = await userProfileModule.GetActivityFeedAsync(username, 10);
+                Posts = await userProfileModule.GetSocialPostsAsync(username);
+                Friends = await userProfileModule.GetFriendsAsync(username);
+            }
+        }
+        
+        // Fallback to sample data if profile not found
+        if (Profile == null)
+        {
+            Profile = new Abstractions.UserProfile
+            {
+                UserId = username,
+                DisplayName = username,
+                Bio = "ASHATOS user - Welcome to the Legendary CMS community",
+                CreatedAt = DateTime.UtcNow.AddMonths(-6),
+                LastActiveAt = DateTime.UtcNow,
+                Role = "User"
+            };
         }
     }
 
-    private UserProfile? LoadUserProfile(string username)
+    private UserProfileModule? GetUserProfileModule()
     {
-        // In production, this would call the LegendaryCMS API or UserProfiles module
-        // For now, return sample data to demonstrate the page structure
-        return new UserProfile
+        try
         {
-            Username = username,
-            Bio = "ASHATOS user - Welcome to the Legendary CMS community",
-            PostCount = 42,
-            JoinDate = DateTime.UtcNow.AddMonths(-6)
-        };
-    }
-
-    private List<ActivityItem> LoadRecentActivity(string username)
-    {
-        // In production, this would fetch from the database via LegendaryCMS API
-        return new List<ActivityItem>
-        {
-            new ActivityItem
+            // Try to get from HttpContext if available
+            if (HttpContext?.RequestServices != null)
             {
-                Type = "Post",
-                Date = DateTime.UtcNow.AddDays(-1),
-                Description = "Posted in General Discussion"
-            },
-            new ActivityItem
-            {
-                Type = "Comment",
-                Date = DateTime.UtcNow.AddDays(-2),
-                Description = "Commented on 'Welcome to ASHATOS'"
+                var manager = HttpContext.RequestServices.GetService(typeof(ModuleManager)) as ModuleManager;
+                if (manager != null)
+                {
+                    return manager.Modules
+                        .Select(m => m.Instance)
+                        .OfType<UserProfileModule>()
+                        .FirstOrDefault();
+                }
             }
-        };
+        }
+        catch
+        {
+            // Ignore errors, will use fallback data
+        }
+        
+        return null;
     }
-}
-
-public class UserProfile
-{
-    public string Username { get; set; } = string.Empty;
-    public string Bio { get; set; } = string.Empty;
-    public int PostCount { get; set; }
-    public DateTime JoinDate { get; set; }
-}
-
-public class ActivityItem
-{
-    public string Type { get; set; } = string.Empty;
-    public DateTime Date { get; set; }
-    public string Description { get; set; } = string.Empty;
 }
