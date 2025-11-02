@@ -1630,14 +1630,48 @@ app.MapGet("/api/control/cms/settings", async (HttpContext context) =>
         .Select(m => m.Instance)
         .FirstOrDefault(m => m.GetType().Name.Contains("LegendaryCMS"));
     
-    // Default CMS settings
+    // Load settings from server-config.json if available
+    var serverRoot = Directory.GetCurrentDirectory();
+    var configPath = Path.Combine(serverRoot, "cms-config.json");
+    
+    string theme = "classic";
+    bool allowCustomThemes = true;
+    string siteName = "Legendary CMS";
+    string adminEmail = "admin@legendarycms.local";
+    string baseUrl = "http://localhost:8080";
+    
+    if (File.Exists(configPath))
+    {
+        try
+        {
+            var json = File.ReadAllText(configPath);
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            
+            if (root.TryGetProperty("theme", out var themeEl))
+                theme = themeEl.GetString() ?? "classic";
+            if (root.TryGetProperty("allowCustomThemes", out var customEl))
+                allowCustomThemes = customEl.GetBoolean();
+            if (root.TryGetProperty("siteName", out var nameEl))
+                siteName = nameEl.GetString() ?? "Legendary CMS";
+            if (root.TryGetProperty("adminEmail", out var emailEl))
+                adminEmail = emailEl.GetString() ?? "admin@legendarycms.local";
+            if (root.TryGetProperty("baseUrl", out var urlEl))
+                baseUrl = urlEl.GetString() ?? "http://localhost:8080";
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[CMS Settings] Error loading config: {ex.Message}");
+        }
+    }
+    
     var settings = new
     {
-        theme = "classic",
-        allowCustomThemes = true,
-        siteName = "Legendary CMS",
-        adminEmail = "admin@legendarycms.local",
-        baseUrl = "http://localhost:8080"
+        theme,
+        allowCustomThemes,
+        siteName,
+        adminEmail,
+        baseUrl
     };
     
     return Results.Json(new { success = true, settings });
@@ -1665,9 +1699,43 @@ app.MapPost("/api/control/cms/settings/theme", async (HttpContext context) =>
     var theme = body.ContainsKey("theme") ? body["theme"].GetString() : "classic";
     var allowCustomThemes = body.ContainsKey("allowCustomThemes") ? body["allowCustomThemes"].GetBoolean() : true;
     
-    // TODO: Persist theme settings to CMS configuration
-    Console.WriteLine($"[CMS Settings] Theme updated to: {theme}");
-    Console.WriteLine($"[CMS Settings] Allow custom themes: {allowCustomThemes}");
+    // Load existing config or create new one
+    var serverRoot = Directory.GetCurrentDirectory();
+    var configPath = Path.Combine(serverRoot, "cms-config.json");
+    
+    var config = new Dictionary<string, object>();
+    
+    if (File.Exists(configPath))
+    {
+        try
+        {
+            var json = File.ReadAllText(configPath);
+            config = JsonSerializer.Deserialize<Dictionary<string, object>>(json) ?? new Dictionary<string, object>();
+        }
+        catch { }
+    }
+    
+    // Update theme settings
+    config["theme"] = theme ?? "classic";
+    config["allowCustomThemes"] = allowCustomThemes;
+    config["lastUpdated"] = DateTime.UtcNow.ToString("o");
+    config["updatedBy"] = user.Username;
+    
+    // Save to file
+    try
+    {
+        var jsonOptions = new JsonSerializerOptions { WriteIndented = true };
+        var jsonString = JsonSerializer.Serialize(config, jsonOptions);
+        File.WriteAllText(configPath, jsonString);
+        
+        Console.WriteLine($"[CMS Settings] Theme updated to: {theme} by {user.Username}");
+        Console.WriteLine($"[CMS Settings] Allow custom themes: {allowCustomThemes}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[CMS Settings] Error saving config: {ex.Message}");
+        return Results.Json(new { success = false, message = "Failed to save settings" });
+    }
     
     return Results.Json(new 
     { 
@@ -1700,9 +1768,43 @@ app.MapPost("/api/control/cms/settings/site", async (HttpContext context) =>
     var siteName = body.ContainsKey("siteName") ? body["siteName"].GetString() : "Legendary CMS";
     var adminEmail = body.ContainsKey("adminEmail") ? body["adminEmail"].GetString() : "";
     
-    // TODO: Persist site settings to CMS configuration
-    Console.WriteLine($"[CMS Settings] Site name updated to: {siteName}");
-    Console.WriteLine($"[CMS Settings] Admin email updated to: {adminEmail}");
+    // Load existing config or create new one
+    var serverRoot = Directory.GetCurrentDirectory();
+    var configPath = Path.Combine(serverRoot, "cms-config.json");
+    
+    var config = new Dictionary<string, object>();
+    
+    if (File.Exists(configPath))
+    {
+        try
+        {
+            var json = File.ReadAllText(configPath);
+            config = JsonSerializer.Deserialize<Dictionary<string, object>>(json) ?? new Dictionary<string, object>();
+        }
+        catch { }
+    }
+    
+    // Update site settings
+    config["siteName"] = siteName ?? "Legendary CMS";
+    config["adminEmail"] = adminEmail ?? "";
+    config["lastUpdated"] = DateTime.UtcNow.ToString("o");
+    config["updatedBy"] = user.Username;
+    
+    // Save to file
+    try
+    {
+        var jsonOptions = new JsonSerializerOptions { WriteIndented = true };
+        var jsonString = JsonSerializer.Serialize(config, jsonOptions);
+        File.WriteAllText(configPath, jsonString);
+        
+        Console.WriteLine($"[CMS Settings] Site name updated to: {siteName} by {user.Username}");
+        Console.WriteLine($"[CMS Settings] Admin email updated to: {adminEmail}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[CMS Settings] Error saving config: {ex.Message}");
+        return Results.Json(new { success = false, message = "Failed to save settings" });
+    }
     
     return Results.Json(new 
     { 
