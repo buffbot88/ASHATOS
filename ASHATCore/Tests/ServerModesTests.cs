@@ -112,6 +112,7 @@ public class ServerModesTests
         Assert(config.InitializationCompleted == false, "InitializationCompleted should default to false");
         Assert(config.Version == "1.0", "Version should default to 1.0");
         Assert(config.MainServerUrl == "https://us-omega.ASHATOS.io", "MainServerUrl should have default value");
+        Assert(config.Port == 7077, "Port should default to 7077");
         Assert(config.SkipLicenseValidation == false, "SkipLicenseValidation should default to false");
         
         // Test property modifications
@@ -129,6 +130,9 @@ public class ServerModesTests
         
         config.InitializationCompleted = true;
         Assert(config.InitializationCompleted == true, "InitializationCompleted should be changeable");
+        
+        config.Port = 8080;
+        Assert(config.Port == 8080, "Port should be settable");
         
         Console.WriteLine("  ✓ ServerConfiguration works correctly");
     }

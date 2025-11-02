@@ -113,6 +113,11 @@ public class ServerConfiguration
     public string MainServerUrl { get; set; } = "https://us-omega.ASHATOS.io";
     
     /// <summary>
+    /// Server port for Kestrel web server (default: 7077)
+    /// </summary>
+    public int Port { get; set; } = 7077;
+    
+    /// <summary>
     /// Skip license server validation in Dev mode for Super Admin setup
     /// </summary>
     public bool SkipLicenseValidation { get; set; } = false;
