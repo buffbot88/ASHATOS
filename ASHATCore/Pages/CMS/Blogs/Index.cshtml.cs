@@ -57,4 +57,7 @@ public class BlogPost
     public string Author { get; set; } = string.Empty;
     public DateTime PublishedDate { get; set; }
     public string Excerpt { get; set; } = string.Empty;
+    public string Content { get; set; } = string.Empty;
+    public int ViewCount { get; set; }
+    public int CommentCount { get; set; }
 }
