@@ -183,14 +183,14 @@
                 
                 if (data.success && data.courses && data.courses.length > 0) {
                     container.innerHTML = data.courses.map(course => `
-                        <div class="course-card" onclick="viewCourse('${course.id}')">
+                        <div class="course-card">
                             <h3>${course.title || 'Course'}</h3>
                             <p>${course.description || 'Learn about ASHATOS'}</p>
                             <div class="course-meta">
                                 <span>📝 ${course.lessonCount || 0} Lessons</span>
                                 <span>⏱️ ${course.duration || 'Self-paced'}</span>
                             </div>
-                            <a href="/cms/learning/course/${course.id}" class="btn-primary">Start Learning</a>
+                            <p style="margin-top: 15px; color: #c8b6ff; font-size: 0.9em;">Course details coming soon</p>
                         </div>
                     `).join('');
                 } else {
@@ -210,10 +210,6 @@
                     </div>
                 `;
             }
-        }
-
-        function viewCourse(courseId) {
-            window.location.href = `/cms/learning/course/${courseId}`;
         }
 
         // Load courses on page load

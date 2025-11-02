@@ -1625,7 +1625,13 @@ static string GenerateControlPanelUI()
             
             // Show selected tab
             document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
+            // Find and activate the clicked button
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(btn => {
+                if (btn.textContent.toLowerCase().includes(tabName.replace('-', ' '))) {
+                    btn.classList.add('active');
+                }
+            });
             currentTab = tabName;
             
             // Load tab-specific data
@@ -1681,8 +1687,8 @@ static string GenerateControlPanelUI()
         
         function previewTheme() {
             const theme = document.getElementById('theme-select').value;
-            // Theme preview could be implemented here
-            console.log('Preview theme:', theme);
+            // Theme preview functionality can be implemented in future
+            // For now, just log the selected theme
         }
         
         async function saveThemeSettings() {

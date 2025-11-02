@@ -1626,10 +1626,6 @@ app.MapGet("/api/control/cms/settings", async (HttpContext context) =>
         return Results.Json(new { error = "Admin role required" });
     }
     
-    var cmsModule = moduleManager.Modules
-        .Select(m => m.Instance)
-        .FirstOrDefault(m => m.GetType().Name.Contains("LegendaryCMS"));
-    
     // Load settings from server-config.json if available
     var serverRoot = Directory.GetCurrentDirectory();
     var configPath = Path.Combine(serverRoot, "cms-config.json");
