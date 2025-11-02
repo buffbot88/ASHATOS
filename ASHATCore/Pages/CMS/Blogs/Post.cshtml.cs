@@ -22,6 +22,8 @@ public class PostModel : PageModel
     private BlogPost? LoadBlogPost(int id)
     {
         // In production, this would call the LegendaryCMS API
+        // NOTE: Content retrieved from the API should be sanitized to prevent XSS attacks
+        // The BlogModule already handles content moderation for user-submitted content
         // For now, return sample data based on ID
         var posts = new Dictionary<int, BlogPost>
         {
