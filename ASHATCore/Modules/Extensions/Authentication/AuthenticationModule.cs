@@ -20,7 +20,6 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
     private readonly List<SecurityEvent> _securityEvents = new();
     private readonly object _lock = new();
     private ILicenseModule? _licenseModule;
-    private ILearningModule? _learningModule;
 
     // Security Configuration
     private const int SaltSize = 32; // 256 bits
@@ -35,11 +34,10 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
     {
         base.Initialize(manager);
 
-        // Get reference to license module and learning module
+        // Get reference to license module
         if (manager is ModuleManager moduleManager)
         {
             _licenseModule = moduleManager.GetModuleByName("License") as ILicenseModule;
-            _learningModule = moduleManager.GetModuleByName("Learn ASHATOS") as ILearningModule;
         }
 
         LogInfo("Authentication module initialized with secure password hashing (PBKDF2)");
@@ -235,19 +233,7 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
             LogInfo($"User logged in: {user.Username}");
         }
 
-        // Check if SuperAdmin needs to complete learning module courses (outside lock)
-        bool requiresLearningModule = false;
-        if (user.Role == UserRole.SuperAdmin && _learningModule != null)
-        {
-            var hasCompleted = await _learningModule.HasCompletedSuperAdminCoursesAsync(user.Id.ToString());
-            requiresLearningModule = !hasCompleted;
-
-            if (requiresLearningModule)
-            {
-                LogInfo($"SuperAdmin {user.Username} needs to complete learning module courses");
-            }
-        }
-
+        // Learning module is now a voluntary school system - no longer required
         return new AuthResponse
         {
             Success = true,
@@ -255,7 +241,7 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
             Token = token,
             User = SanitizeUser(user),
             TokenExpiresAt = session?.ExpiresAtUtc,
-            RequiresLearningModule = requiresLearningModule
+            RequiresLearningModule = false
         };
     }
 

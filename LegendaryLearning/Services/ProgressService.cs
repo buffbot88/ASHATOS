@@ -5,7 +5,7 @@ using LegendaryLearning.Abstractions;
 namespace LegendaryLearning.Services;
 
 /// <summary>
-/// Service for user progress management.
+/// Service for user progress management and RaCoin rewards.
 /// </summary>
 public class ProgressService : IProgressService
 {
@@ -15,6 +15,7 @@ public class ProgressService : IProgressService
     private readonly IAchievementService _achievementService;
     private readonly ITrophyService _trophyService;
     private readonly string _moduleName;
+    private IRaCoinModule? _racoinModule;
 
     public ProgressService(
         LearningDatabase database,
@@ -30,6 +31,14 @@ public class ProgressService : IProgressService
         _achievementService = achievementService;
         _trophyService = trophyService;
         _moduleName = moduleName;
+    }
+
+    /// <summary>
+    /// Set the RaCoin module for awarding rewards on course completion.
+    /// </summary>
+    public void SetRaCoinModule(IRaCoinModule? racoinModule)
+    {
+        _racoinModule = racoinModule;
     }
 
     public async Task<bool> CompleteLessonAsync(string userId, string lessonId)
@@ -152,8 +161,6 @@ public class ProgressService : IProgressService
 
     private async Task AwardCourseCompletionAsync(string userId, string courseId)
     {
-        await Task.CompletedTask;
-        
         var course = await _courseService.GetCourseByIdAsync(courseId);
         if (course == null) return;
         
@@ -191,5 +198,31 @@ public class ProgressService : IProgressService
         };
         
         await _trophyService.AwardTrophyAsync(userId, trophy);
+        
+        // Award RaCoins based on course level and estimated time
+        // Formula: EstimatedMinutes * PermissionLevelMultiplier * 10 RaCoins
+        // This rewards learning based on effort and complexity
+        if (_racoinModule != null && Guid.TryParse(userId, out var userGuid))
+        {
+            decimal permissionMultiplier = course.PermissionLevel switch
+            {
+                "SuperAdmin" => 3.0m,  // Master classes worth 3x
+                "Admin" => 2.0m,       // Advanced classes worth 2x
+                _ => 1.0m              // Beginner classes worth 1x
+            };
+            
+            // Base reward: 10 RaCoins per estimated minute of learning
+            decimal racoinReward = course.EstimatedMinutes * permissionMultiplier * 10;
+            
+            var result = await _racoinModule.TopUpAsync(
+                userGuid, 
+                racoinReward, 
+                $"Course completion reward: {course.Title}");
+            
+            if (result.Success)
+            {
+                Console.WriteLine($"[{_moduleName}] Awarded {racoinReward} RaCoins to user {userId} for completing {course.Title}");
+            }
+        }
     }
 }

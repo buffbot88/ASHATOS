@@ -8,9 +8,11 @@ namespace LegendaryLearning;
 
 /// <summary>
 /// Legendary User Learning Module (LULmodule)
-/// Provides self-paced learning courses based on permission levels.
+/// Provides self-paced, voluntary learning courses based on permission levels.
+/// This is a free school module that teaches users about the ASHATOS system.
 /// Courses auto-update when new features are added to ASHATOS.
 /// Includes trophy and achievement system for completing courses.
+/// Earns RaCoins upon course completion based on course level and duration.
 /// </summary>
 [RaModule(Category = "extensions")]
 public sealed class LegendaryUserLearningModule : ModuleBase, ILearningModule
@@ -53,6 +55,31 @@ public sealed class LegendaryUserLearningModule : ModuleBase, ILearningModule
         Console.WriteLine($"[{Name}] Trophy and achievement system enabled");
         Console.WriteLine($"[{Name}] End-of-course adaptive assessments enabled");
         Console.WriteLine($"[{Name}] Ashat AI learning guide: ACTIVE 💙");
+        
+        // Get RaCoin module for rewarding course completion
+        // Note: We use reflection here to avoid direct dependency on ASHATCore types,
+        // maintaining the separation between LegendaryLearning and ASHATCore projects.
+        if (manager != null)
+        {
+            try
+            {
+                // Use reflection to call GetModuleByName without direct type dependency
+                var getModuleMethod = manager.GetType().GetMethod("GetModuleByName");
+                if (getModuleMethod != null)
+                {
+                    var racoinModule = getModuleMethod.Invoke(manager, new object[] { "RaCoin" }) as IRaCoinModule;
+                    if (racoinModule != null)
+                    {
+                        _progressService.SetRaCoinModule(racoinModule);
+                        Console.WriteLine($"[{Name}] RaCoin reward system enabled 🪙");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[{Name}] Could not initialize RaCoin rewards: {ex.Message}");
+            }
+        }
         
         var seeder = new CourseSeeder(_courseService, _lessonService, _assessmentService, Name);
         seeder.SeedInitialCourses();
