@@ -411,7 +411,7 @@
                 <div class="post-container">
                     <div class="post-user-panel">
                         <div class="user-avatar">
-                            @post.Author.Substring(0, 1).ToUpper()
+                            @(string.IsNullOrEmpty(post.Author) ? "?" : post.Author.Substring(0, 1).ToUpper())
                         </div>
                         <div class="user-name">@post.Author</div>
                         <div class="user-title">@post.UserTitle</div>
@@ -426,12 +426,18 @@
                     </div>
                     <div class="post-content">
                         <div class="post-text">
-                            @Html.Raw(post.Content.Replace("\n", "<br/>"))
+                            @foreach (var line in post.Content.Split('\n'))
+                            {
+                                @line<br/>
+                            }
                         </div>
                         @if (!string.IsNullOrEmpty(post.Signature))
                         {
                             <div class="post-signature">
-                                @Html.Raw(post.Signature.Replace("\n", "<br/>"))
+                                @foreach (var line in post.Signature.Split('\n'))
+                                {
+                                    @line<br/>
+                                }
                             </div>
                         }
                     </div>

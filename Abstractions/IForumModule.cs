@@ -31,7 +31,8 @@ public interface IForumModule
     Task<bool> LockThreadAsync(string postId, bool locked, string ModeratorId);
     
     /// <summary>
-    /// Pin/Sticky a thread.
+    /// Pin or unpin a thread to make it sticky at the top of the forum listing.
+    /// Pinned threads appear before regular threads regardless of last post date.
     /// </summary>
     Task<bool> PinThreadAsync(string postId, bool pinned, string ModeratorId);
     
