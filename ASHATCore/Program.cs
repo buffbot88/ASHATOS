@@ -138,12 +138,18 @@ builder.Services.AddCors(options =>
     }
 });
 
+// Add Razor Pages support for CMS homepage
+builder.Services.AddRazorPages();
+
 // Configure URLs with dynamic port
 builder.WebHost.UseUrls(urls);
 
 var app = builder.Build();
 app.UseCors(); // Enable CORS
 app.UseWebSockets();
+
+// Enable Razor Pages routing
+app.UseRouting();
 
 Console.WriteLine($"[ASHATCore] Kestrel webserver starting...");
 Console.WriteLine($"[ASHATCore] Server will be accessible at:");
@@ -1691,13 +1697,12 @@ app.MapGet("/", async (HttpContext context) =>
         
         // Phase 9.3.9: Check if LegendaryCMS is available
         // LegendaryCMS runs as C# module, serves content via API endpoints
-        // All UI is served dynamically through (SiteBuilder) - no static files
+        // All UI is served dynamically through Razor Pages CMS homepage
         if (IsCmsAvailable(moduleManager))
         {
-            Console.WriteLine("[ASHATCore] LegendaryCMS available - serving homepage via (SiteBuilder)");
-            // Serve homepage dynamically through internal routing
-            context.Response.ContentType = "text/html";
-            await context.Response.WriteAsync(GeneratedynamicHomepage());
+            Console.WriteLine("[ASHATCore] LegendaryCMS available - redirecting to CMS homepage (Razor Pages)");
+            // Redirect to the full CMS homepage (Razor Page)
+            context.Response.Redirect("/Index");
             return;
         }
         
@@ -2242,5 +2247,15 @@ var gameClientModule = moduleManager.Modules
     .FirstOrDefault();
 
 app.MapGameClientEndpoints(gameClientModule, authModule);
+
+// ============================================================================
+// Razor Pages for CMS
+// ============================================================================
+app.MapRazorPages();
+Console.WriteLine("[ASHATCore] Razor Pages CMS enabled:");
+Console.WriteLine("  GET  /Index - CMS Homepage (full content management system)");
+Console.WriteLine("  GET  /cms/blogs - Blog system");
+Console.WriteLine("  GET  /cms/forums - Forum platform");
+Console.WriteLine("  GET  /cms/profiles - User profiles");
 
 app.Run();
