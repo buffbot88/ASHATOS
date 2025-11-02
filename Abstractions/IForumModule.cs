@@ -31,6 +31,11 @@ public interface IForumModule
     Task<bool> LockThreadAsync(string postId, bool locked, string ModeratorId);
     
     /// <summary>
+    /// Pin/Sticky a thread.
+    /// </summary>
+    Task<bool> PinThreadAsync(string postId, bool pinned, string ModeratorId);
+    
+    /// <summary>
     /// Get warnings for a user.
     /// </summary>
     Task<List<ForumWarning>> GetUserWarningsAsync(string userId);
@@ -69,6 +74,8 @@ public class ForumPost
     public string? DeletedBy { get; set; }
     public string? DeleteReason { get; set; }
     public bool IsLocked { get; set; }
+    public bool IsPinned { get; set; } // Sticky/Pinned thread
+    public string? Prefix { get; set; } // Thread prefix (e.g., "Announcement", "Question", "Solved")
     public int ReplyCount { get; set; }
     public int ViewCount { get; set; }
     public ContentASHATting ContentASHATting { get; set; } = ContentASHATting.Everyone; // Age ASHATting

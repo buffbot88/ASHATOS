@@ -56,6 +56,8 @@ public sealed class ForumModule : ModuleBase, IForumModule
             "delete" => parts.Length > 1 ? DeletePost(parts[1]) : "Usage: forum delete <postId>",
             "lock" => parts.Length > 1 ? LockPost(parts[1]) : "Usage: forum lock <postId>",
             "unlock" => parts.Length > 1 ? UnlockPost(parts[1]) : "Usage: forum unlock <postId>",
+            "pin" => parts.Length > 1 ? PinPost(parts[1]) : "Usage: forum pin <postId>",
+            "unpin" => parts.Length > 1 ? UnpinPost(parts[1]) : "Usage: forum unpin <postId>",
             "warn" => parts.Length > 2 ? WarnUser(parts[1], string.Join(" ", parts.Skip(2))) : "Usage: forum warn <userId> <reason>",
             "ban" => parts.Length > 2 ? BanUser(parts[1], string.Join(" ", parts.Skip(2))) : "Usage: forum ban <userId> <reason>",
             "unban" => parts.Length > 1 ? UnbanUser(parts[1]) : "Usage: forum unban <userId>",
@@ -71,6 +73,8 @@ public sealed class ForumModule : ModuleBase, IForumModule
   forum delete <postId>    - Delete a post
   forum lock <postId>      - Lock a thread
   forum unlock <postId>    - Unlock a thread
+  forum pin <postId>       - Pin a thread (sticky)
+  forum unpin <postId>     - Unpin a thread
   forum warn <userId> <reason> - Issue warning to user
   forum ban <userId> <reason>  - Ban a user
   forum unban <userId>     - Unban a user
@@ -243,6 +247,17 @@ public sealed class ForumModule : ModuleBase, IForumModule
         return await Task.FromResult(false);
     }
     
+    public async Task<bool> PinThreadAsync(string postId, bool pinned, string ModeratorId)
+    {
+        if (_posts.TryGetValue(postId, out var post))
+        {
+            post.IsPinned = pinned;
+            Console.WriteLine($"[{Name}] Thread {postId} {(pinned ? "pinned" : "unpinned")} by {ModeratorId}");
+            return await Task.FromResult(true);
+        }
+        return await Task.FromResult(false);
+    }
+    
     public async Task<List<ForumWarning>> GetUserWarningsAsync(string userId)
     {
         if (_userWarnings.TryGetValue(userId, out var warnings))
@@ -363,6 +378,18 @@ public sealed class ForumModule : ModuleBase, IForumModule
     {
         var result = LockThreadAsync(postId, false, "console").Result;
         return result ? $"Thread {postId} unlocked." : $"Post {postId} not found.";
+    }
+    
+    private string PinPost(string postId)
+    {
+        var result = PinThreadAsync(postId, true, "console").Result;
+        return result ? $"Thread {postId} pinned." : $"Post {postId} not found.";
+    }
+    
+    private string UnpinPost(string postId)
+    {
+        var result = PinThreadAsync(postId, false, "console").Result;
+        return result ? $"Thread {postId} unpinned." : $"Post {postId} not found.";
     }
     
     private string WarnUser(string userId, string reason)
