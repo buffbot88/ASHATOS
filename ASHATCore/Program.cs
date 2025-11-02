@@ -488,6 +488,9 @@ static string GenerateLoginUI()
         .back-link { text-align: center; margin-top: 25px; }
         .back-link a { color: #c084fc; text-decoration: none; transition: color 0.3s; }
         .back-link a:hover { color: #d8b4fe; }
+        .register-link { text-align: center; margin-top: 15px; color: #d8c8ff; }
+        .register-link a { color: #c084fc; text-decoration: none; font-weight: 600; }
+        .register-link a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -505,6 +508,9 @@ static string GenerateLoginUI()
             <button type=""submit"">Login</button>
             <div class=""error"" id=""error""></div>
         </form>
+        <div class=""register-link"">
+            Don't have an account? <a href=""/register"">Register here</a>
+        </div>
         <div class=""back-link"">
             <a href=""/"">← Back to Home</a>
         </div>
