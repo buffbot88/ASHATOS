@@ -4,22 +4,17 @@ namespace Abstractions;
 
 /// <summary>
 /// Interface for server setup and Configuration management.
-/// Handles PHP, Database folders, FTP, and per-admin instance management.
+/// Handles Database folders, FTP, and per-admin instance management.
 /// </summary>
 public interface IServerSetupModule
 {
-    /// <summary>
-    /// Setup PHP Configuration for an admin
-    /// </summary>
-    Task<SetupResult> SetupPhpConfigAsync(string licenseNumber, string username);
-    
     /// <summary>
     /// Create admin folder structure
     /// </summary>
     Task<SetupResult> CreateAdminFolderStructureAsync(string licenseNumber, string username);
     
     /// <summary>
-    /// Discover and validate required folders (Databases, php)
+    /// Discover and validate required folders (Databases)
     /// </summary>
     Task<DiscoveryResult> DiscoverServerFoldersAsync();
     
@@ -73,9 +68,6 @@ public class DiscoveryResult
     public bool DatabasesFolderExists { get; set; }
     public string? DatabasesFolderPath { get; set; }
     
-    public bool PhpFolderExists { get; set; }
-    public string? PhpFolderPath { get; set; }
-    
     public bool AdminsFolderExists { get; set; }
     public string? AdminsFolderPath { get; set; }
     
@@ -119,7 +111,6 @@ public class ServerHealthResult
     public bool IsOperational { get; set; }
     public string Message { get; set; } = string.Empty;
     public bool DatabasesAccessible { get; set; }
-    public bool PhpFoldeASHATccessible { get; set; }
     public bool AdminsFoldeASHATccessible { get; set; }
     public bool FtpFoldeASHATccessible { get; set; }
     public List<string> Issues { get; set; } = new();

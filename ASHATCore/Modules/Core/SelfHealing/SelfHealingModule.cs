@@ -467,46 +467,6 @@ public sealed class SelfHealingModule : ModuleBase, ISelfHealingModule
 
         var baseDirectory = Directory.GetCurrentDirectory();
 
-        // Check for Nginx config if Nginx folder exists
-        var nginxDir = Path.Combine(baseDirectory, "Nginx");
-        if (Directory.Exists(nginxDir))
-        {
-            var configFiles = Directory.GetFiles(nginxDir, "*.conf", SearchOption.AllDirectories);
-            if (configFiles.Length == 0)
-            {
-                result.Warnings.Add("Nginx directory exists but no .conf files found");
-            }
-            else
-            {
-                foreach (var configFile in configFiles)
-                {
-                    try
-                    {
-                        var content = File.ReadAllText(configFile);
-                        if (string.IsNullOrWhiteSpace(content))
-                        {
-                            result.Warnings.Add($"Empty Configuration file: {Path.GetFileName(configFile)}");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        result.Issues.Add($"Cannot read config file {Path.GetFileName(configFile)}: {ex.Message}");
-                    }
-                }
-            }
-        }
-
-        // Check for PHP config if PHP folder exists
-        var phpDir = Path.Combine(baseDirectory, "php");
-        if (Directory.Exists(phpDir))
-        {
-            var phpIniFiles = Directory.GetFiles(phpDir, "php.ini", SearchOption.AllDirectories);
-            if (phpIniFiles.Length == 0)
-            {
-                result.Warnings.Add("PHP directory exists but no php.ini found");
-            }
-        }
-
         result.Passed = result.Issues.Count == 0;
         return result;
     }
