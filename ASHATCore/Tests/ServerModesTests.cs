@@ -106,18 +106,19 @@ public class ServerModesTests
         
         var config = new ServerConfiguration();
         
-        // Test defaults
-        Assert(config.Mode == ServerMode.Production, "Default mode should be Production");
+        // Test defaults - Enterprise development mode
+        Assert(config.Mode == ServerMode.Dev, "Default mode should be Dev (enterprise development mode)");
         Assert(config.IsFirstRun == true, "IsFirstRun should default to true");
         Assert(config.InitializationCompleted == false, "InitializationCompleted should default to false");
         Assert(config.Version == "1.0", "Version should default to 1.0");
         Assert(config.MainServerUrl == "https://us-omega.ASHATOS.io", "MainServerUrl should have default value");
         Assert(config.Port == 7077, "Port should default to 7077");
         Assert(config.SkipLicenseValidation == false, "SkipLicenseValidation should default to false");
+        Assert(config.ServerActivated == true, "ServerActivated should default to true in enterprise development mode");
         
         // Test property modifications
-        config.Mode = ServerMode.Dev;
-        Assert(config.Mode == ServerMode.Dev, "Mode should be changeable to Dev");
+        config.Mode = ServerMode.Production;
+        Assert(config.Mode == ServerMode.Production, "Mode should be changeable to Production");
         
         config.SkipLicenseValidation = true;
         Assert(config.SkipLicenseValidation == true, "SkipLicenseValidation should be settable");
@@ -166,7 +167,7 @@ public class ServerModesTests
             // Test GetServerConfiguration
             var config = firstRunManager.GetServerConfiguration();
             Assert(config != null, "ServerConfiguration should not be null");
-            Assert(config!.Mode == ServerMode.Production, "Default mode should be Production");
+            Assert(config!.Mode == ServerMode.Dev, "Default mode should be Dev (enterprise development mode)");
             
             // Test SetServerMode
             firstRunManager.SetServerMode(ServerMode.Beta);
