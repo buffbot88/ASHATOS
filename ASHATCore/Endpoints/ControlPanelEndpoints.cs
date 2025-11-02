@@ -1956,6 +1956,89 @@ app.MapPost("/api/control/activate", async (HttpContext context) =>
     return Results.Json(new { success = false, message = "License activation failed" });
 });
 
+// ============================================================================
+// Module Settings API Endpoints
+// ============================================================================
+
+// Get Settings module reference
+var settingsModule = moduleManager.Modules
+    .Select(m => m.Instance)
+    .FirstOrDefault(m => m.Name == "Settings");
+
+// Get settings for a specific module (Admin+)
+app.MapGet("/api/control/modules/{moduleName}/settings", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null || user.Role < UserRole.Admin)
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "Admin role required" });
+    }
+    
+    var moduleName = context.Request.RouteValues["moduleName"]?.ToString() ?? "";
+    
+    if (settingsModule == null)
+    {
+        return Results.Json(new { success = true, settings = new Dictionary<string, string>() });
+    }
+    
+    try
+    {
+        var getMethod = settingsModule.GetType().GetMethod("GetModuleSettings");
+        var settings = getMethod?.Invoke(settingsModule, new object[] { moduleName }) as Dictionary<string, string>;
+        
+        return Results.Json(new { success = true, settings = settings ?? new Dictionary<string, string>() });
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[Settings] Error getting settings for {moduleName}: {ex.Message}");
+        return Results.Json(new { success = false, error = ex.Message });
+    }
+});
+
+// Save settings for a specific module (Admin+)
+app.MapPost("/api/control/modules/{moduleName}/settings", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null || user.Role < UserRole.Admin)
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { success = false, error = "Admin role required" });
+    }
+    
+    var moduleName = context.Request.RouteValues["moduleName"]?.ToString() ?? "";
+    
+    var body = await context.Request.ReadFromJsonAsync<Dictionary<string, string>>();
+    if (body == null)
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { success = false, error = "Invalid request body" });
+    }
+    
+    if (settingsModule == null)
+    {
+        return Results.Json(new { success = false, error = "Settings module not available" });
+    }
+    
+    try
+    {
+        var setMethod = settingsModule.GetType().GetMethod("SetModuleSettings");
+        setMethod?.Invoke(settingsModule, new object[] { moduleName, body });
+        
+        Console.WriteLine($"[Settings] Settings updated for {moduleName} by {user.Username}");
+        return Results.Json(new { success = true, message = "Settings saved successfully" });
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[Settings] Error saving settings for {moduleName}: {ex.Message}");
+        return Results.Json(new { success = false, error = ex.Message });
+    }
+});
+
         Console.WriteLine("[ASHATCore] Control Panel API endpoints registered");
 
         return app;

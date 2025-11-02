@@ -1659,11 +1659,39 @@ static string GenerateControlPanelUI()
                 const data = await response.json();
                 if (data.success) {
                     document.getElementById('status').textContent = 'Online';
-                    document.getElementById('modules').textContent = 'Loading...';
                     document.getElementById('users').textContent = data.stats?.totalUsers || '0';
+                    
+                    // Load modules count and list
+                    await loadModules();
                 }
             } catch (err) {
                 console.error('Error loading stats:', err);
+            }
+        }
+        
+        async function loadModules() {
+            try {
+                const token = localStorage.getItem('ASHATCore_token');
+                const response = await fetch('/api/control/modules', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+                if (data.success && data.modules) {
+                    document.getElementById('modules').textContent = data.modules.length;
+                    
+                    const moduleList = document.getElementById('moduleList');
+                    if (data.modules.length === 0) {
+                        moduleList.innerHTML = '<p style=""color: #d8c8ff;"">No modules loaded</p>';
+                    } else {
+                        moduleList.innerHTML = data.modules.map(mod => 
+                            '<div class=""module""><strong>' + mod.name + '</strong> - ' + mod.description + 
+                            ' <span style=""color: #c084fc; margin-left: 10px;"">[' + mod.category + ']</span></div>'
+                        ).join('');
+                    }
+                }
+            } catch (err) {
+                console.error('Error loading modules:', err);
+                document.getElementById('moduleList').innerHTML = '<p style=""color: #ef4444;"">Error loading modules</p>';
             }
         }
         
