@@ -1359,10 +1359,42 @@ static string GenerateControlPanelUI()
             color: #c8b6ff;
             margin-top: 10px;
         }
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .tab-button {
+            padding: 12px 24px;
+            background: rgba(20, 0, 40, 0.9);
+            border: 2px solid rgba(138, 43, 226, 0.3);
+            border-radius: 8px;
+            color: #c8b6ff;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        .tab-button:hover {
+            border-color: rgba(138, 43, 226, 0.6);
+            background: rgba(40, 0, 60, 0.9);
+        }
+        .tab-button.active {
+            background: linear-gradient(135deg, #8b2fc7 0%, #6a1b9a 100%);
+            border-color: rgba(138, 43, 226, 0.8);
+            color: white;
+        }
         .container {
             max-width: 1200px;
             margin: 20px auto;
             padding: 20px;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
         }
         .stats {
             display: grid;
@@ -1397,6 +1429,53 @@ static string GenerateControlPanelUI()
             border-bottom: 1px solid rgba(138, 43, 226, 0.2);
             color: #d8c8ff;
         }
+        .setting-group {
+            background: rgba(20, 0, 40, 0.9);
+            border: 2px solid rgba(138, 43, 226, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .setting-group h3 { color: #c084fc; margin-bottom: 15px; }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            color: #c8b6ff;
+            margin-bottom: 5px;
+        }
+        .form-group select, .form-group input {
+            width: 100%;
+            padding: 10px;
+            background: rgba(10, 0, 20, 0.9);
+            border: 1px solid rgba(138, 43, 226, 0.3);
+            border-radius: 5px;
+            color: #e0d0ff;
+            font-size: 14px;
+        }
+        .btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #8b2fc7 0%, #6a1b9a 100%);
+            border: 2px solid rgba(138, 43, 226, 0.5);
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            background: linear-gradient(135deg, #a13dd6 0%, #7d22ab 100%);
+            box-shadow: 0 4px 15px rgba(138, 43, 226, 0.6);
+        }
+        .success-msg {
+            padding: 10px;
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid rgba(16, 185, 129, 0.5);
+            border-radius: 5px;
+            color: #6ee7b7;
+            margin-top: 10px;
+            display: none;
+        }
         .logout { 
             position: absolute;
             top: 20px;
@@ -1413,6 +1492,21 @@ static string GenerateControlPanelUI()
             background: linear-gradient(135deg, #a13dd6 0%, #7d22ab 100%);
             box-shadow: 0 4px 15px rgba(138, 43, 226, 0.6);
         }
+        .learning-link {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border: 2px solid rgba(59, 130, 246, 0.5);
+            border-radius: 8px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .learning-link:hover {
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.6);
+        }
     </style>
 </head>
 <body>
@@ -1421,37 +1515,141 @@ static string GenerateControlPanelUI()
         <p>SiteBuilder - Internal Module Interface</p>
         <a href=""#"" class=""logout"" onclick=""logout()"">Logout</a>
     </div>
+    
+    <div class=""nav-tabs"">
+        <button class=""tab-button active"" onclick=""switchTab('dashboard')"">📊 Dashboard</button>
+        <button class=""tab-button"" onclick=""switchTab('cms-settings')"">⚙️ CMS Settings</button>
+        <button class=""tab-button"" onclick=""switchTab('learning')"">📚 Learning Module</button>
+    </div>
+    
     <div class=""container"">
-        <div class=""stats"">
-            <div class=""stat-card"">
-                <h3>System Status</h3>
-                <p id=""status"">Loading...</p>
+        <!-- Dashboard Tab -->
+        <div id=""dashboard"" class=""tab-content active"">
+            <div class=""stats"">
+                <div class=""stat-card"">
+                    <h3>System Status</h3>
+                    <p id=""status"">Loading...</p>
+                </div>
+                <div class=""stat-card"">
+                    <h3>Loaded Modules</h3>
+                    <p id=""modules"">Loading...</p>
+                </div>
+                <div class=""stat-card"">
+                    <h3>Active Users</h3>
+                    <p id=""users"">Loading...</p>
+                </div>
             </div>
-            <div class=""stat-card"">
-                <h3>Loaded Modules</h3>
-                <p id=""modules"">Loading...</p>
-            </div>
-            <div class=""stat-card"">
-                <h3>Active Users</h3>
-                <p id=""users"">Loading...</p>
+            <div class=""modules"">
+                <h2>Available Modules</h2>
+                <div id=""moduleList"">Loading modules...</div>
             </div>
         </div>
-        <div class=""modules"">
-            <h2>Available Modules</h2>
-            <div id=""moduleList"">Loading modules...</div>
+
+        <!-- CMS Settings Tab -->
+        <div id=""cms-settings"" class=""tab-content"">
+            <div class=""setting-group"">
+                <h3>🎨 Theme Configuration</h3>
+                <p style=""color: #c8b6ff; margin-bottom: 20px;"">Configure the theme for the entire website including CMS and Learning Module</p>
+                <div class=""form-group"">
+                    <label for=""theme-select"">Website Theme:</label>
+                    <select id=""theme-select"" onchange=""previewTheme()"">
+                        <option value=""classic"">Classic (Purple/Dark)</option>
+                        <option value=""light"">Light Theme</option>
+                        <option value=""dark"">Dark Theme</option>
+                        <option value=""blue"">Blue Ocean</option>
+                        <option value=""green"">Forest Green</option>
+                    </select>
+                </div>
+                <div class=""form-group"">
+                    <label>
+                        <input type=""checkbox"" id=""custom-themes"" checked> 
+                        <span style=""color: #c8b6ff;"">Allow users to override theme</span>
+                    </label>
+                </div>
+                <button class=""btn"" onclick=""saveThemeSettings()"">Save Theme Settings</button>
+                <div id=""theme-success"" class=""success-msg"">Theme settings saved successfully!</div>
+            </div>
+            
+            <div class=""setting-group"">
+                <h3>🌐 Site Configuration</h3>
+                <div class=""form-group"">
+                    <label for=""site-name"">Site Name:</label>
+                    <input type=""text"" id=""site-name"" value=""Legendary CMS"">
+                </div>
+                <div class=""form-group"">
+                    <label for=""admin-email"">Admin Email:</label>
+                    <input type=""email"" id=""admin-email"" value=""admin@legendarycms.local"">
+                </div>
+                <button class=""btn"" onclick=""saveSiteSettings()"">Save Site Settings</button>
+                <div id=""site-success"" class=""success-msg"">Site settings saved successfully!</div>
+            </div>
+        </div>
+
+        <!-- Learning Module Tab -->
+        <div id=""learning"" class=""tab-content"">
+            <div class=""modules"">
+                <h2>📚 Learning Module (Class System)</h2>
+                <p style=""color: #c8b6ff; margin-bottom: 20px;"">
+                    Welcome to the Learning Module! Access courses, track your progress, and earn achievements.
+                </p>
+                <div class=""stat-card"">
+                    <h3>🎓 Available Courses</h3>
+                    <p id=""course-count"">Loading...</p>
+                    <a href=""/cms/learning"" class=""learning-link"">📖 Browse All Courses</a>
+                </div>
+                <div class=""stat-card"" style=""margin-top: 20px;"">
+                    <h3>📋 Your Progress</h3>
+                    <p id=""user-progress"">Loading...</p>
+                    <a href=""/cms/learning/progress"" class=""learning-link"">📊 View Progress</a>
+                </div>
+                <div class=""stat-card"" style=""margin-top: 20px;"">
+                    <h3>🏆 Achievements</h3>
+                    <p id=""achievements"">Loading...</p>
+                    <a href=""/cms/learning/achievements"" class=""learning-link"">🎖️ View Achievements</a>
+                </div>
+            </div>
         </div>
     </div>
+    
     <script>
+        let currentTab = 'dashboard';
+        
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            // Find and activate the clicked button
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(btn => {
+                if (btn.textContent.toLowerCase().includes(tabName.replace('-', ' '))) {
+                    btn.classList.add('active');
+                }
+            });
+            currentTab = tabName;
+            
+            // Load tab-specific data
+            if (tabName === 'cms-settings') {
+                loadCmsSettings();
+            } else if (tabName === 'learning') {
+                loadLearningModuleData();
+            }
+        }
+        
         async function checkAuth() {
             const token = localStorage.getItem('ASHATCore_token');
             if (!token) {
                 window.location.href = '/login';
                 return;
             }
-            
-            // Enterprise development mode: onboarding and activation checks removed
-            // SuperAdmins can access control panel immediately after login
         }
+        
         async function loadStats() {
             try {
                 const token = localStorage.getItem('ASHATCore_token');
@@ -1468,10 +1666,116 @@ static string GenerateControlPanelUI()
                 console.error('Error loading stats:', err);
             }
         }
+        
+        async function loadCmsSettings() {
+            try {
+                const token = localStorage.getItem('ASHATCore_token');
+                const response = await fetch('/api/control/cms/settings', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+                if (data.success && data.settings) {
+                    document.getElementById('theme-select').value = data.settings.theme || 'classic';
+                    document.getElementById('custom-themes').checked = data.settings.allowCustomThemes !== false;
+                    document.getElementById('site-name').value = data.settings.siteName || 'Legendary CMS';
+                    document.getElementById('admin-email').value = data.settings.adminEmail || '';
+                }
+            } catch (err) {
+                console.error('Error loading CMS settings:', err);
+            }
+        }
+        
+        function previewTheme() {
+            const theme = document.getElementById('theme-select').value;
+            // Theme preview functionality can be implemented in future
+            // For now, just log the selected theme
+        }
+        
+        async function saveThemeSettings() {
+            try {
+                const token = localStorage.getItem('ASHATCore_token');
+                const settings = {
+                    theme: document.getElementById('theme-select').value,
+                    allowCustomThemes: document.getElementById('custom-themes').checked
+                };
+                
+                const response = await fetch('/api/control/cms/settings/theme', {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    const msg = document.getElementById('theme-success');
+                    msg.style.display = 'block';
+                    setTimeout(() => msg.style.display = 'none', 3000);
+                }
+            } catch (err) {
+                console.error('Error saving theme settings:', err);
+                alert('Error saving theme settings');
+            }
+        }
+        
+        async function saveSiteSettings() {
+            try {
+                const token = localStorage.getItem('ASHATCore_token');
+                const settings = {
+                    siteName: document.getElementById('site-name').value,
+                    adminEmail: document.getElementById('admin-email').value
+                };
+                
+                const response = await fetch('/api/control/cms/settings/site', {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    const msg = document.getElementById('site-success');
+                    msg.style.display = 'block';
+                    setTimeout(() => msg.style.display = 'none', 3000);
+                }
+            } catch (err) {
+                console.error('Error saving site settings:', err);
+                alert('Error saving site settings');
+            }
+        }
+        
+        async function loadLearningModuleData() {
+            try {
+                const token = localStorage.getItem('ASHATCore_token');
+                const response = await fetch('/api/learning/courses/User', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+                if (data.success && data.courses) {
+                    document.getElementById('course-count').textContent = data.courses.length + ' courses available';
+                } else {
+                    document.getElementById('course-count').textContent = 'No courses available';
+                }
+                
+                // Load user progress (placeholder)
+                document.getElementById('user-progress').textContent = '0% complete';
+                document.getElementById('achievements').textContent = '0 achievements unlocked';
+            } catch (err) {
+                console.error('Error loading learning module data:', err);
+                document.getElementById('course-count').textContent = 'Error loading courses';
+            }
+        }
+        
         function logout() {
             localStorage.removeItem('ASHATCore_token');
             window.location.href = '/login';
         }
+        
         checkAuth();
         loadStats();
     </script>
