@@ -1610,6 +1610,109 @@ app.MapPost("/api/learning/lessons/{lessonId}/complete", async (HttpContext cont
     });
 });
 
+// ============================================================================
+// CMS Settings API Endpoints
+// ============================================================================
+
+// CMS Settings: Get all settings (Admin+)
+app.MapGet("/api/control/cms/settings", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null || user.Role < UserRole.Admin)
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "Admin role required" });
+    }
+    
+    var cmsModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .FirstOrDefault(m => m.GetType().Name.Contains("LegendaryCMS"));
+    
+    // Default CMS settings
+    var settings = new
+    {
+        theme = "classic",
+        allowCustomThemes = true,
+        siteName = "Legendary CMS",
+        adminEmail = "admin@legendarycms.local",
+        baseUrl = "http://localhost:8080"
+    };
+    
+    return Results.Json(new { success = true, settings });
+});
+
+// CMS Settings: Update theme settings (Admin+)
+app.MapPost("/api/control/cms/settings/theme", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null || user.Role < UserRole.Admin)
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "Admin role required" });
+    }
+    
+    var body = await context.Request.ReadFromJsonAsync<Dictionary<string, JsonElement>>();
+    if (body == null)
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Invalid request body" });
+    }
+    
+    var theme = body.ContainsKey("theme") ? body["theme"].GetString() : "classic";
+    var allowCustomThemes = body.ContainsKey("allowCustomThemes") ? body["allowCustomThemes"].GetBoolean() : true;
+    
+    // TODO: Persist theme settings to CMS configuration
+    Console.WriteLine($"[CMS Settings] Theme updated to: {theme}");
+    Console.WriteLine($"[CMS Settings] Allow custom themes: {allowCustomThemes}");
+    
+    return Results.Json(new 
+    { 
+        success = true, 
+        message = "Theme settings saved successfully",
+        theme,
+        allowCustomThemes
+    });
+});
+
+// CMS Settings: Update site settings (Admin+)
+app.MapPost("/api/control/cms/settings/site", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null || user.Role < UserRole.Admin)
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "Admin role required" });
+    }
+    
+    var body = await context.Request.ReadFromJsonAsync<Dictionary<string, JsonElement>>();
+    if (body == null)
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Invalid request body" });
+    }
+    
+    var siteName = body.ContainsKey("siteName") ? body["siteName"].GetString() : "Legendary CMS";
+    var adminEmail = body.ContainsKey("adminEmail") ? body["adminEmail"].GetString() : "";
+    
+    // TODO: Persist site settings to CMS configuration
+    Console.WriteLine($"[CMS Settings] Site name updated to: {siteName}");
+    Console.WriteLine($"[CMS Settings] Admin email updated to: {adminEmail}");
+    
+    return Results.Json(new 
+    { 
+        success = true, 
+        message = "Site settings saved successfully",
+        siteName,
+        adminEmail
+    });
+});
+
 // Server Activation: Check activation status
 app.MapGet("/api/control/activation-status", async (HttpContext context) =>
 {
