@@ -163,6 +163,7 @@ public class ProfileSystemTests
         var module = new UserProfileModule();
         module.Initialize(null);
         module.CreateProfileAsync("activeuser", "Active User").Wait();
+        module.CreateProfileAsync("friend1", "Friend One").Wait(); // Create friend profile first
         module.AddFriendAsync("activeuser", "friend1").Wait();
         module.CreateSocialPostAsync("activeuser", "My first post!").Wait();
         

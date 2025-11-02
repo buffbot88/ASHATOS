@@ -10,6 +10,11 @@ namespace ASHATCore.Pages.CMS.Profiles;
 /// </summary>
 public class IndexModel : PageModel
 {
+    private const string DefaultUsername = "admin";
+    private const string DefaultBio = "ASHATOS user - Welcome to the Legendary CMS community";
+    private const string DefaultRole = "User";
+    private const int DefaultJoinMonthsAgo = 6;
+    
     public Abstractions.UserProfile? Profile { get; set; }
     public List<Abstractions.Activity> RecentActivity { get; set; } = new();
     public List<SocialPost> Posts { get; set; } = new();
@@ -26,7 +31,7 @@ public class IndexModel : PageModel
         // Default to Admin if no username provided
         if (string.IsNullOrEmpty(username))
         {
-            username = "admin";
+            username = DefaultUsername;
         }
         
         // Try to get the UserProfile module from ModuleManager
@@ -51,10 +56,10 @@ public class IndexModel : PageModel
             {
                 UserId = username,
                 DisplayName = username,
-                Bio = "ASHATOS user - Welcome to the Legendary CMS community",
-                CreatedAt = DateTime.UtcNow.AddMonths(-6),
+                Bio = DefaultBio,
+                CreatedAt = DateTime.UtcNow.AddMonths(-DefaultJoinMonthsAgo),
                 LastActiveAt = DateTime.UtcNow,
-                Role = "User"
+                Role = DefaultRole
             };
         }
     }
