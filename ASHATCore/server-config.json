@@ -13,6 +13,7 @@
   "SystemWarnings": [],
   "CmsPath": "/home/runner/work/ASHATOS/ASHATOS/ASHATCore/wwwroot",
   "MainServerUrl": "https://us-omega.ASHATOS.io",
+  "Port": 7077,
   "SkipLicenseValidation": false,
   "UnderConstruction": false,
   "UnderConstructionMessage": null,
