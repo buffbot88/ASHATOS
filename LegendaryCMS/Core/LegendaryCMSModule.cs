@@ -237,7 +237,7 @@ public sealed class LegendaryCMSModule : ModuleBase, ILegendaryCMSModule
             Handler = async (request) =>
             {
                 var userId = request.UserId ?? "anonymous";
-                var username = request.Body.GetValueOrDefault("username", userId);
+                var username = request.BodyData.GetValueOrDefault("username", userId);
                 var conversation = await _chatbotManager.StartConversationAsync(userId, username);
                 return CMSAPIResponse.Success(conversation);
             }
@@ -252,8 +252,8 @@ public sealed class LegendaryCMSModule : ModuleBase, ILegendaryCMSModule
             RequiresAuthentication = true,
             Handler = async (request) =>
             {
-                var conversationId = request.Body.GetValueOrDefault("conversationId", "");
-                var message = request.Body.GetValueOrDefault("message", "");
+                var conversationId = request.BodyData.GetValueOrDefault("conversationId", "");
+                var message = request.BodyData.GetValueOrDefault("message", "");
                 var userId = request.UserId ?? "anonymous";
 
                 if (string.IsNullOrEmpty(conversationId) || string.IsNullOrEmpty(message))
@@ -316,7 +316,7 @@ public sealed class LegendaryCMSModule : ModuleBase, ILegendaryCMSModule
             RequiresAuthentication = true,
             Handler = async (request) =>
             {
-                var conversationId = request.Body.GetValueOrDefault("conversationId", "");
+                var conversationId = request.BodyData.GetValueOrDefault("conversationId", "");
                 var userId = request.UserId ?? "anonymous";
 
                 if (string.IsNullOrEmpty(conversationId))
@@ -345,7 +345,7 @@ public sealed class LegendaryCMSModule : ModuleBase, ILegendaryCMSModule
             }
         });
 
-        LogInfo($"Registered {_apiManager.GetEndpoints().Count - _apiManager.GetEndpoints().Count(e => e.Path.StartsWith("/api/chatbot/"))} standard + 6 chatbot API endpoints");
+        LogInfo("Registered 6 chatbot API endpoints");
     }
 
     public override string Process(string input)
