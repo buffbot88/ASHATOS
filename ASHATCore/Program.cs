@@ -1520,6 +1520,7 @@ static string GenerateControlPanelUI()
         <button class=""tab-button active"" onclick=""switchTab('dashboard')"">📊 Dashboard</button>
         <button class=""tab-button"" onclick=""switchTab('cms-settings')"">⚙️ CMS Settings</button>
         <button class=""tab-button"" onclick=""switchTab('learning')"">📚 Learning Module</button>
+        <button class=""tab-button"" onclick=""switchTab('module-settings')"">🔧 Module Settings</button>
     </div>
     
     <div class=""container"">
@@ -1609,10 +1610,24 @@ static string GenerateControlPanelUI()
                 </div>
             </div>
         </div>
+
+        <!-- Module Settings Tab -->
+        <div id=""module-settings"" class=""tab-content"">
+            <div class=""modules"">
+                <h2>🔧 Module Settings</h2>
+                <p style=""color: #c8b6ff; margin-bottom: 20px;"">
+                    Configure settings for each loaded module. Changes are saved to the database.
+                </p>
+                <div id=""module-settings-container"">
+                    <p style=""color: #c8b6ff;"">Loading module settings...</p>
+                </div>
+            </div>
+        </div>
     </div>
     
     <script>
         let currentTab = 'dashboard';
+        let loadedModules = [];
         
         function switchTab(tabName) {
             // Hide all tabs
@@ -1639,6 +1654,8 @@ static string GenerateControlPanelUI()
                 loadCmsSettings();
             } else if (tabName === 'learning') {
                 loadLearningModuleData();
+            } else if (tabName === 'module-settings') {
+                loadModuleSettings();
             }
         }
         
@@ -1659,11 +1676,144 @@ static string GenerateControlPanelUI()
                 const data = await response.json();
                 if (data.success) {
                     document.getElementById('status').textContent = 'Online';
-                    document.getElementById('modules').textContent = 'Loading...';
                     document.getElementById('users').textContent = data.stats?.totalUsers || '0';
+                    
+                    // Load modules count and list
+                    await loadModules();
                 }
             } catch (err) {
                 console.error('Error loading stats:', err);
+            }
+        }
+        
+        async function loadModules() {
+            try {
+                const token = localStorage.getItem('ASHATCore_token');
+                const response = await fetch('/api/control/modules', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+                if (data.success && data.modules) {
+                    loadedModules = data.modules;
+                    document.getElementById('modules').textContent = data.modules.length;
+                    
+                    const moduleList = document.getElementById('moduleList');
+                    if (data.modules.length === 0) {
+                        moduleList.innerHTML = '<p style=""color: #d8c8ff;"">No modules loaded</p>';
+                    } else {
+                        moduleList.innerHTML = data.modules.map(mod => 
+                            '<div class=""module""><strong>' + mod.name + '</strong> - ' + mod.description + 
+                            ' <span style=""color: #c084fc; margin-left: 10px;"">[' + mod.category + ']</span></div>'
+                        ).join('');
+                    }
+                }
+            } catch (err) {
+                console.error('Error loading modules:', err);
+                document.getElementById('moduleList').innerHTML = '<p style=""color: #ef4444;"">Error loading modules</p>';
+            }
+        }
+        
+        async function loadModuleSettings() {
+            const container = document.getElementById('module-settings-container');
+            
+            if (loadedModules.length === 0) {
+                container.innerHTML = '<p style=""color: #d8c8ff;"">No modules available. Please load the dashboard first.</p>';
+                return;
+            }
+            
+            try {
+                const token = localStorage.getItem('ASHATCore_token');
+                container.innerHTML = '<p style=""color: #c8b6ff;"">Loading settings...</p>';
+                
+                // Group modules by category
+                const categories = {};
+                loadedModules.forEach(mod => {
+                    if (!categories[mod.category]) {
+                        categories[mod.category] = [];
+                    }
+                    categories[mod.category].push(mod);
+                });
+                
+                let html = '';
+                
+                for (const [category, modules] of Object.entries(categories)) {
+                    html += '<div class=""setting-group""><h3>Category: ' + category + '</h3>';
+                    
+                    for (const module of modules) {
+                        html += '<div style=""margin-bottom: 30px; padding: 15px; background: rgba(40, 0, 60, 0.5); border-radius: 8px;"">';
+                        html += '<h4 style=""color: #c084fc; margin-bottom: 15px;"">' + module.name + ' Module</h4>';
+                        
+                        // Fetch settings for this module
+                        try {
+                            const settingsResponse = await fetch('/api/control/modules/' + module.name + '/settings', {
+                                headers: { 'Authorization': 'Bearer ' + token }
+                            });
+                            const settingsData = await settingsResponse.json();
+                            
+                            if (settingsData.success && settingsData.settings && Object.keys(settingsData.settings).length > 0) {
+                                html += '<div id=""settings-' + module.name + '"">';
+                                for (const [key, value] of Object.entries(settingsData.settings)) {
+                                    html += '<div class=""form-group""><label>' + key + ':</label>';
+                                    html += '<input type=""text"" id=""setting-' + module.name + '-' + key + '"" value=""' + value + '"" /></div>';
+                                }
+                                html += '</div>';
+                            } else {
+                                html += '<p style=""color: #999; font-size: 14px;"">No settings configured for this module.</p>';
+                                html += '<div class=""form-group""><label>Sample Setting:</label>';
+                                html += '<input type=""text"" id=""setting-' + module.name + '-enabled"" value=""true"" />';
+                                html += '<small style=""color: #999; display: block; margin-top: 5px;"">This is an example. Module-specific settings can be added.</small>';
+                                html += '</div>';
+                            }
+                            
+                            html += '<button class=""btn"" onclick=""saveModuleSettings(\'' + module.name + '\')"">Save ' + module.name + ' Settings</button>';
+                        } catch (err) {
+                            console.error('Error loading settings for ' + module.name + ':', err);
+                            html += '<p style=""color: #ef4444;"">Error loading settings</p>';
+                        }
+                        
+                        html += '</div>';
+                    }
+                    
+                    html += '</div>';
+                }
+                
+                container.innerHTML = html;
+            } catch (err) {
+                console.error('Error loading module settings:', err);
+                container.innerHTML = '<p style=""color: #ef4444;"">Error loading module settings</p>';
+            }
+        }
+        
+        async function saveModuleSettings(moduleName) {
+            try {
+                const token = localStorage.getItem('ASHATCore_token');
+                const settings = {};
+                
+                // Collect all settings for this module
+                const inputs = document.querySelectorAll('[id^=""setting-' + moduleName + '-""]');
+                inputs.forEach(input => {
+                    const key = input.id.replace('setting-' + moduleName + '-', '');
+                    settings[key] = input.value;
+                });
+                
+                const response = await fetch('/api/control/modules/' + moduleName + '/settings', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    alert(moduleName + ' settings saved successfully!');
+                } else {
+                    alert('Error saving settings: ' + data.error);
+                }
+            } catch (err) {
+                console.error('Error saving settings:', err);
+                alert('Error saving settings');
             }
         }
         
