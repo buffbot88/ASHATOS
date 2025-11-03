@@ -144,6 +144,7 @@ Learn RaOS courses SuperAdmin  # Master Classes (4 courses, 29 lessons)
 |----------|-------------|
 | [CONTENT_MODERATION_QUICKSTART.md](CONTENT_MODERATION_QUICKSTART.md) | Content moderation guide |
 | [SUPPORT_CHAT_QUICKSTART.md](SUPPORT_CHAT_QUICKSTART.md) | Support chat system |
+| [AI_CHATBOT_QUICKSTART.md](AI_CHATBOT_QUICKSTART.md) | **NEW** AI chatbot for CMS support 🆕 |
 
 ### Economy & Commerce
 
