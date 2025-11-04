@@ -324,4 +324,57 @@ public static class UnderConstructionHandler
 </body>
 </html>";
     }
+    
+    /// <summary>
+    /// Generates HTML for the server activation warning banner
+    /// Shows a white banner with red text when server is not activated
+    /// </summary>
+    /// <param name="daysRemaining">Number of days remaining to activate</param>
+    /// <returns>HTML banner string</returns>
+    public static string GenerateActivationWarningBanner(int daysRemaining)
+    {
+        var urgencyClass = daysRemaining <= 7 ? "urgent" : "";
+        var message = daysRemaining > 0 
+            ? $"⚠️ SERVER NOT ACTIVATED - {daysRemaining} days remaining to activate this server. <a href=\"/activation\">Activate Now</a>"
+            : "⚠️ SERVER ACTIVATION EXPIRED - This server must be activated immediately. <a href=\"/activation\">Activate Now</a>";
+            
+        return $@"
+<div class=""activation-warning-banner {urgencyClass}"" style=""
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    color: #dc2626;
+    padding: 12px 20px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    z-index: 9999;
+    border-bottom: 3px solid #dc2626;
+"">
+    {message}
+</div>
+<div style=""height: 50px;""></div>
+<style>
+.activation-warning-banner a {{
+    color: #dc2626;
+    text-decoration: underline;
+    font-weight: 700;
+}}
+.activation-warning-banner a:hover {{
+    color: #991b1b;
+}}
+.activation-warning-banner.urgent {{
+    background: #fef2f2;
+    animation: pulse-red 2s ease-in-out infinite;
+}}
+@keyframes pulse-red {{
+    0%, 100% {{ background: white; }}
+    50% {{ background: #fee2e2; }}
+}}
+</style>
+";
+    }
 }

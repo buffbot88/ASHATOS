@@ -1661,13 +1661,22 @@ app.MapGet("/api/control/cms/settings", async (HttpContext context) =>
         }
     }
     
+    // Get Under Construction status from server config
+    bool underConstruction = false;
+    if (firstRunManager != null)
+    {
+        var serverConfig = firstRunManager.GetServerConfiguration();
+        underConstruction = serverConfig.UnderConstruction;
+    }
+    
     var settings = new
     {
         theme,
         allowCustomThemes,
         siteName,
         adminEmail,
-        baseUrl
+        baseUrl,
+        underConstruction
     };
     
     return Results.Json(new { success = true, settings });
@@ -1811,149 +1820,44 @@ app.MapPost("/api/control/cms/settings/site", async (HttpContext context) =>
     });
 });
 
-// Server Activation: Check activation status
-app.MapGet("/api/control/activation-status", async (HttpContext context) =>
+// CMS Settings: Toggle Under Construction mode (Admin+)
+app.MapPost("/api/control/cms/settings/underconstruction", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
     var user = await authModule?.GetUserByTokenAsync(token)!;
     
-    if (user == null || user.Role != UserRole.SuperAdmin)
+    if (user == null || user.Role < UserRole.Admin)
     {
         context.Response.StatusCode = 403;
-        return Results.Json(new { error = "SuperAdmin role required" });
+        return Results.Json(new { error = "Admin role required" });
+    }
+    
+    var body = await context.Request.ReadFromJsonAsync<Dictionary<string, JsonElement>>();
+    if (body == null)
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Invalid request body" });
     }
     
     if (firstRunManager == null)
     {
-        context.Response.StatusCode = 503;
-        return Results.Json(new { error = "FirstRunManager not available" });
+        return Results.Json(new { success = false, message = "Server configuration not available" });
     }
     
+    var enabled = body.ContainsKey("enabled") && body["enabled"].GetBoolean();
+    
     var config = firstRunManager.GetServerConfiguration();
+    config.UnderConstruction = enabled;
+    firstRunManager.SaveConfiguration();
+    
+    Console.WriteLine($"[CMS Settings] Under Construction mode {(enabled ? "enabled" : "disabled")} by {user.Username}");
     
     return Results.Json(new 
     { 
-        activated = config.ServerActivated,
-        activatedAt = config.ActivatedAt,
-        licenseKey = config.LicenseKey,
-        licenseType = config.LicenseType,
-        devMode = config.Mode == ServerMode.Dev
+        success = true, 
+        message = $"Under Construction mode {(enabled ? "enabled" : "disabled")}",
+        underConstruction = enabled
     });
-});
-
-// Server Activation: Activate server with license key
-app.MapPost("/api/control/activate", async (HttpContext context) =>
-{
-    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
-    
-    if (user == null || user.Role != UserRole.SuperAdmin)
-    {
-        context.Response.StatusCode = 403;
-        return Results.Json(new { success = false, message = "SuperAdmin role required" });
-    }
-    
-    if (firstRunManager == null)
-    {
-        context.Response.StatusCode = 503;
-        return Results.Json(new { success = false, message = "FirstRunManager not available" });
-    }
-    
-    // Read request body
-    using var reader = new StreamReader(context.Request.Body);
-    var body = await reader.ReadToEndAsync();
-    var requestData = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(body);
-    
-    if (requestData == null || !requestData.ContainsKey("licenseKey"))
-    {
-        return Results.Json(new { success = false, message = "License key is required" });
-    }
-    
-    var licenseKey = requestData["licenseKey"].GetString();
-    
-    if (string.IsNullOrWhiteSpace(licenseKey))
-    {
-        return Results.Json(new { success = false, message = "License key cannot be empty" });
-    }
-    
-    var config = firstRunManager.GetServerConfiguration();
-    
-    // Validate license format
-    if (!IsValidLicenseFormat(licenseKey))
-    {
-        return Results.Json(new { success = false, message = "Invalid license key format. Expected: ASHATOS-XXXX-XXXX-XXXX-XXXX" });
-    }
-    
-    // In Dev mode, bypass external validation
-    bool validationSuccess;
-    string licenseType = "Enterprise";
-    
-    if (config.Mode == ServerMode.Dev || config.SkipLicenseValidation)
-    {
-        // Dev mode: accept any valid format
-        validationSuccess = true;
-        licenseType = "Development";
-        Console.WriteLine($"[Activation] Dev mode: License validation bypassed for key: {licenseKey}");
-    }
-    else
-    {
-        // Production mode: validate with license server
-        try
-        {
-            var validationResult = await ValidateLicenseWithServerAsync(licenseKey, config.MainServerUrl);
-            validationSuccess = validationResult.success;
-            licenseType = validationResult.licenseType ?? "Unknown";
-            
-            if (!validationSuccess)
-            {
-                return Results.Json(new { success = false, message = "License validation failed: " + validationResult.message });
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[Activation] License validation error: {ex.Message}");
-            return Results.Json(new { success = false, message = "License validation server unreachable. Please check your connection or contact support." });
-        }
-    }
-    
-    if (validationSuccess)
-    {
-        // Update server Configuration
-        config.LicenseKey = licenseKey;
-        config.LicenseType = licenseType;
-        config.ServerActivated = true;
-        config.ActivatedAt = DateTime.UtcNow;
-        
-        // Save Configuration
-        firstRunManager.SaveConfiguration();
-        
-        // Log activation event
-        if (licenseModule != null)
-        {
-            await licenseModule.LogLicenseEventAsync(
-                user.Id,
-                "ServeASHATctivation",
-                $"Server activated with {licenseType} license",
-                true
-            );
-        }
-        
-        Console.WriteLine($"[Activation] Server activated successfully");
-        Console.WriteLine($"[Activation] License Type: {licenseType}");
-        Console.WriteLine($"[Activation] License Key: {licenseKey}");
-        Console.WriteLine($"[Activation] Activated By: {user.Username}");
-        Console.WriteLine($"[Activation] Activated At: {config.ActivatedAt}");
-        
-        return Results.Json(new 
-        { 
-            success = true, 
-            message = "Server activated successfully",
-            licenseType,
-            activatedAt = config.ActivatedAt
-        });
-    }
-    
-    return Results.Json(new { success = false, message = "License activation failed" });
 });
 
 // ============================================================================
@@ -2036,6 +1940,158 @@ app.MapPost("/api/control/modules/{moduleName}/settings", async (HttpContext con
     {
         Console.WriteLine($"[Settings] Error saving settings for {moduleName}: {ex.Message}");
         return Results.Json(new { success = false, error = ex.Message });
+    }
+});
+
+// Server Activation Status (Admin+)
+app.MapGet("/api/control/activation-status", async (HttpContext context) =>
+{
+    try
+    {
+        if (authModule == null)
+        {
+            context.Response.StatusCode = 503;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Authentication not available" });
+            return;
+        }
+
+        var authHeader = context.Request.Headers["Authorization"].ToString();
+        var token = authHeader.StartsWith("Bearer ") ? authHeader[7..] : authHeader;
+        var user = await authModule.GetUserByTokenAsync(token);
+
+        if (user == null || user.Role < UserRole.Admin)
+        {
+            context.Response.StatusCode = 403;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Admin role required" });
+            return;
+        }
+
+        if (firstRunManager == null)
+        {
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Server configuration not available" });
+            return;
+        }
+
+        var config = firstRunManager.GetServerConfiguration();
+        var daysRemaining = 30;
+        
+        if (config.ServerFirstStarted.HasValue && !config.ServerActivated)
+        {
+            var daysSinceStart = (DateTime.UtcNow - config.ServerFirstStarted.Value).TotalDays;
+            daysRemaining = Math.Max(0, 30 - (int)Math.Ceiling(daysSinceStart));
+        }
+
+        await context.Response.WriteAsJsonAsync(new
+        {
+            success = true,
+            activated = config.ServerActivated,
+            activatedAt = config.ActivatedAt,
+            daysRemaining = config.ServerActivated ? (int?)null : daysRemaining,
+            forcedUnderConstruction = !config.ServerActivated && daysRemaining <= 0,
+            devMode = config.Mode == ServerMode.Dev
+        });
+    }
+    catch (Exception ex)
+    {
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+    }
+});
+
+// Activate Server (Admin+)
+app.MapPost("/api/control/activate", async (HttpContext context) =>
+{
+    try
+    {
+        if (authModule == null)
+        {
+            context.Response.StatusCode = 503;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Authentication not available" });
+            return;
+        }
+
+        var authHeader = context.Request.Headers["Authorization"].ToString();
+        var token = authHeader.StartsWith("Bearer ") ? authHeader[7..] : authHeader;
+        var user = await authModule.GetUserByTokenAsync(token);
+
+        if (user == null || user.Role < UserRole.Admin)
+        {
+            context.Response.StatusCode = 403;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Admin role required" });
+            return;
+        }
+
+        if (firstRunManager == null)
+        {
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Server configuration not available" });
+            return;
+        }
+
+        var request = await context.Request.ReadFromJsonAsync<Dictionary<string, string>>();
+        var licenseKey = request?.GetValueOrDefault("licenseKey");
+
+        if (string.IsNullOrWhiteSpace(licenseKey))
+        {
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "License key is required" });
+            return;
+        }
+
+        var config = firstRunManager.GetServerConfiguration();
+        
+        // In Dev mode, accept any valid format
+        if (config.Mode == ServerMode.Dev)
+        {
+            if (IsValidLicenseFormat(licenseKey))
+            {
+                config.ServerActivated = true;
+                config.ActivatedAt = DateTime.UtcNow;
+                config.LicenseKey = licenseKey;
+                config.LicenseType = "Development";
+                firstRunManager.SaveConfiguration();
+                
+                await context.Response.WriteAsJsonAsync(new
+                {
+                    success = true,
+                    message = "Server activated successfully (Development mode)",
+                    activatedAt = config.ActivatedAt
+                });
+                return;
+            }
+            else
+            {
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Invalid license key format" });
+                return;
+            }
+        }
+
+        // In production, validate with license server
+        var (valid, licenseType, validationMessage) = await ValidateLicenseWithServerAsync(licenseKey, config.MainServerUrl);
+        
+        if (valid)
+        {
+            config.ServerActivated = true;
+            config.ActivatedAt = DateTime.UtcNow;
+            config.LicenseKey = licenseKey;
+            config.LicenseType = licenseType;
+            firstRunManager.SaveConfiguration();
+            
+            await context.Response.WriteAsJsonAsync(new
+            {
+                success = true,
+                message = "Server activated successfully",
+                activatedAt = config.ActivatedAt,
+                licenseType
+            });
+        }
+        else
+        {
+            await context.Response.WriteAsJsonAsync(new { success = false, message = validationMessage });
+        }
+    }
+    catch (Exception ex)
+    {
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
     }
 });
 

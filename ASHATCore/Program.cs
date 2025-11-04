@@ -1281,6 +1281,15 @@ static string GenerateControlPanelUI()
                     <label for=""admin-email"">Admin Email:</label>
                     <input type=""email"" id=""admin-email"" value=""admin@legendarycms.local"">
                 </div>
+                <div class=""form-group"">
+                    <label>
+                        <input type=""checkbox"" id=""under-construction""> 
+                        <span style=""color: #c8b6ff;"">Enable Under Construction Mode</span>
+                    </label>
+                    <small style=""display: block; color: #999; margin-top: 5px;"">
+                        When enabled, non-admin users will see an &quot;Under Construction&quot; page
+                    </small>
+                </div>
                 <button class=""btn"" onclick=""saveSiteSettings()"">Save Site Settings</button>
                 <div id=""site-success"" class=""success-msg"">Site settings saved successfully!</div>
             </div>
@@ -1529,6 +1538,7 @@ static string GenerateControlPanelUI()
                     document.getElementById('custom-themes').checked = data.settings.allowCustomThemes !== false;
                     document.getElementById('site-name').value = data.settings.siteName || 'Legendary CMS';
                     document.getElementById('admin-email').value = data.settings.adminEmail || '';
+                    document.getElementById('under-construction').checked = data.settings.underConstruction || false;
                 }
             } catch (err) {
                 console.error('Error loading CMS settings:', err);
@@ -1573,22 +1583,37 @@ static string GenerateControlPanelUI()
         async function saveSiteSettings() {
             try {
                 const token = localStorage.getItem('ASHATCore_token');
-                const settings = {
+                
+                // Save site settings
+                const siteSettings = {
                     siteName: document.getElementById('site-name').value,
                     adminEmail: document.getElementById('admin-email').value
                 };
                 
-                const response = await fetch('/api/control/cms/settings/site', {
+                const siteResponse = await fetch('/api/control/cms/settings/site', {
                     method: 'POST',
                     headers: { 
                         'Authorization': 'Bearer ' + token,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(settings)
+                    body: JSON.stringify(siteSettings)
                 });
                 
-                const data = await response.json();
-                if (data.success) {
+                // Save under construction setting separately
+                const underConstruction = document.getElementById('under-construction').checked;
+                const ucResponse = await fetch('/api/control/cms/settings/underconstruction', {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ enabled: underConstruction })
+                });
+                
+                const data = await siteResponse.json();
+                const ucData = await ucResponse.json();
+                
+                if (data.success && ucData.success) {
                     const msg = document.getElementById('site-success');
                     msg.style.display = 'block';
                     setTimeout(() => msg.style.display = 'none', 3000);
@@ -1794,14 +1819,29 @@ app.MapGet("/", async (HttpContext context) =>
 {
     try
     {
+        var serverConfig = firstRunManager.GetServerConfiguration();
+        
+        // Calculate days remaining for activation
+        var daysRemaining = 30;
+        if (serverConfig.ServerFirstStarted.HasValue && !serverConfig.ServerActivated)
+        {
+            var daysSinceStart = (DateTime.UtcNow - serverConfig.ServerFirstStarted.Value).TotalDays;
+            daysRemaining = Math.Max(0, 30 - (int)Math.Ceiling(daysSinceStart));
+        }
+        
+        // Force under construction if not activated after 30 days
+        var forcedUnderConstruction = !serverConfig.ServerActivated && daysRemaining <= 0;
+        
         // Phase 9.3.8: Check for Under Construction mode FIRST
         // This check must happen before any response headers or body are written
-        var serverConfig = firstRunManager.GetServerConfiguration();
-        if (serverConfig.UnderConstruction)
+        if (serverConfig.UnderConstruction || forcedUnderConstruction)
         {
             // Check if user is an admin - admins can still access during construction
             var authHeader = context.Request.Headers["Authorization"].ToString();
-            var token = authHeader.StartsWith("Bearer ") ? authHeader[7..] : authHeader;
+            var cookieToken = context.Request.Cookies["authToken"];
+            var token = !string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ") 
+                ? authHeader[7..] 
+                : cookieToken ?? "";
             
             User? user = null;
             if (!string.IsNullOrWhiteSpace(token) && authModule != null)
@@ -1814,7 +1854,17 @@ app.MapGet("/", async (HttpContext context) =>
             {
                 // Set ContentType only when we're about to write the response
                 context.Response.ContentType = "text/html";
-                await context.Response.WriteAsync(UnderConstructionHandler.GenerateUnderConstructionPage(serverConfig));
+                var message = forcedUnderConstruction 
+                    ? "This server has not been activated and the 30-day trial period has expired. Please contact the administrator to activate the server."
+                    : serverConfig.UnderConstructionMessage;
+                    
+                var tempConfig = new ServerConfiguration
+                {
+                    UnderConstructionMessage = message,
+                    UnderConstructionRobotImage = serverConfig.UnderConstructionRobotImage
+                };
+                
+                await context.Response.WriteAsync(UnderConstructionHandler.GenerateUnderConstructionPage(tempConfig));
                 return;
             }
             
