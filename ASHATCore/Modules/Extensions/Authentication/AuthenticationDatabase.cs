@@ -154,12 +154,12 @@ VALUES ($id, $username, $email, $passwordHash, $passwordSalt, $role, $createdAtU
         {
             Id = Guid.Parse(reader.GetString(0)),
             Username = reader.GetString(1),
-            Email = reader.GetString(2),
+            Email = reader.IsDBNull(2) ? null : reader.GetString(2),
             PasswordHash = reader.GetString(3),
             PasswordSalt = reader.GetString(4),
             Role = (UserRole)reader.GetInt32(5),
             CreatedAtUtc = DateTime.Parse(reader.GetString(6)),
-            LastLoginUtc = string.IsNullOrWhiteSpace(reader.GetString(7)) ? null : DateTime.Parse(reader.GetString(7)),
+            LastLoginUtc = reader.IsDBNull(7) || string.IsNullOrWhiteSpace(reader.GetString(7)) ? null : DateTime.Parse(reader.GetString(7)),
             IsActive = reader.GetInt32(8) == 1
         };
     }
@@ -258,8 +258,8 @@ VALUES ($id, $userId, $token, $createdAtUtc, $expiresAtUtc, $ipAddress, $userAge
             Token = reader.GetString(2),
             CreatedAtUtc = DateTime.Parse(reader.GetString(3)),
             ExpiresAtUtc = DateTime.Parse(reader.GetString(4)),
-            IpAddress = reader.GetString(5),
-            UserAgent = reader.GetString(6),
+            IpAddress = reader.IsDBNull(5) ? null : reader.GetString(5),
+            UserAgent = reader.IsDBNull(6) ? null : reader.GetString(6),
             IsValid = reader.GetInt32(7) == 1
         };
     }
