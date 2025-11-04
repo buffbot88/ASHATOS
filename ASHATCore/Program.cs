@@ -1841,7 +1841,7 @@ app.MapGet("/", async (HttpContext context) =>
             var cookieToken = context.Request.Cookies["authToken"];
             var token = !string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ") 
                 ? authHeader[7..] 
-                : cookieToken ?? "";
+                : (cookieToken ?? string.Empty);
             
             User? user = null;
             if (!string.IsNullOrWhiteSpace(token) && authModule != null)

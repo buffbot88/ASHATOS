@@ -239,7 +239,11 @@
                 }
             }
         }
-        catch { /* Silently fail if config can't be read */ }
+        catch (Exception ex) 
+        { 
+            // Log configuration read failure for debugging
+            System.Diagnostics.Debug.WriteLine($"Failed to read server config for activation banner: {ex.Message}");
+        }
         
         if (showActivationWarning)
         {

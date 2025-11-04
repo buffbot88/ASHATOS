@@ -66,10 +66,14 @@ public static class AuthEndpoints
                 // Set HTTP-only cookie for session persistence
                 if (response.Success && response.Token != null)
                 {
+                    // Use HTTPS in production, HTTP allowed in development
+                    var isProduction = context.Request.Host.Host != "localhost" && 
+                                      context.Request.Host.Host != "127.0.0.1";
+                    
                     context.Response.Cookies.Append("authToken", response.Token, new CookieOptions
                     {
                         HttpOnly = true,
-                        Secure = false, // Set to true in production with HTTPS
+                        Secure = isProduction, // HTTPS required in production
                         SameSite = SameSiteMode.Lax,
                         Expires = response.TokenExpiresAt
                     });

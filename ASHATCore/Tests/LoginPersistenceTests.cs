@@ -22,7 +22,10 @@ public static class LoginPersistenceTests
         var testsPassed = 0;
         var testsFailed = 0;
 
-        var testDbPath = Path.Combine(Path.GetTempPath(), $"test_auth_{Guid.NewGuid()}.sqlite");
+        // Use a test directory in the current directory for better compatibility
+        var testDir = Path.Combine(Directory.GetCurrentDirectory(), "test_data");
+        Directory.CreateDirectory(testDir);
+        var testDbPath = Path.Combine(testDir, $"test_auth_{Guid.NewGuid()}.sqlite");
         
         try
         {
