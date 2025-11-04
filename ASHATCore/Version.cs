@@ -9,40 +9,40 @@ public static class ASHATVersion
     /// <summary>
     /// Current version of ASHATOS
     /// </summary>
-    public const string Current = "9.9.9";
+    public const string Current = "1.1.0";
     
     /// <summary>
     /// Full version string with phase prefix
     /// </summary>
-    public const string FullVersion = "Phase 9.9.9";
+    public const string FullVersion = "Beta v1.1.0";
     
     /// <summary>
     /// Major version number
     /// </summary>
-    public const int Major = 9;
+    public const int Major = 1;
     
     /// <summary>
     /// Minor version number
     /// </summary>
-    public const int Minor = 9;
+    public const int Minor = 1;
     
     /// <summary>
     /// Patch version number
     /// </summary>
-    public const int Patch = 9;
+    public const int Patch = 0;
     
     /// <summary>
     /// Version status/label
     /// </summary>
-    public const string Label = "Staging Ready";
+    public const string Label = "Beta";
     
     /// <summary>
     /// Last update date
     /// </summary>
-    public const string LastUpdated = "October 11 2025";
+    public const string LastUpdated = "November 4 2025";
     
     /// <summary>
-    /// Gets version as a compaASHATble tuple
+    /// Gets version as a comparable tuple
     /// </summary>
     public static (int major, int minor, int patch) GetVersionTuple() => (Major, Minor, Patch);
     

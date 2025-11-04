@@ -3,11 +3,11 @@
 **Production-Ready Modular Content Management System**
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
-[![Version](https://img.shields.io/badge/version-9.4.0-blue)]()
+[![Version](https://img.shields.io/badge/version-Beta%20v1.1.0-blue)]()
 [![.NET](https://img.shields.io/badge/.NET-9.0-purple)]()
 [![License](https://img.shields.io/badge/license-MIT-orange)]()
 [![Security Gate](https://img.shields.io/badge/security-gate%20active-red)](./SECURITY_GATE_940.md)
-[![Last Updated](https://img.shields.io/badge/updated-October_2025-green)]()
+[![Last Updated](https://img.shields.io/badge/updated-November_2025-green)]()
 
 > Enterprise-grade modular CMS with plugin architecture, REST API, enhanced RBAC, ASHAT AI Core Module, and comprehensive security features.
 

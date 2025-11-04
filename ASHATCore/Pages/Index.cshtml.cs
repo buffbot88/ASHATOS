@@ -8,7 +8,7 @@ namespace ASHATCore.Pages;
 /// </summary>
 public class IndexModel : PageModel
 {
-    public string Version { get; set; } = "9.4.0";
+    public string Version { get; set; } = ASHATVersion.Current;
     public int ServerPort { get; set; } = 7077;
     public int TotalModules { get; set; } = 0;
     public int TotalPosts { get; set; } = 0;
@@ -69,7 +69,7 @@ public class IndexModel : PageModel
             new BlogPost
             {
                 Id = 2,
-                Title = "LegendaryCMS v8.0.0 - Production Ready Features",
+                Title = "LegendaryCMS Beta v1.2.0 - Production Ready Features",
                 Author = "Developer",
                 PublishedDate = DateTime.UtcNow.AddDays(-2),
                 Excerpt = "The latest version of LegendaryCMS brings production-ready features including plugin architecture, REST API with rate limiting, enhanced RBAC with 25+ permissions, and comprehensive security features. Learn how these features can power your applications."

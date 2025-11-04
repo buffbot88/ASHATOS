@@ -8,7 +8,7 @@ using ASHATCore.Modules.Core.Ashat.RuntimeMonitoring;
 namespace ASHATCore.Tests;
 
 /// <summary>
-/// Tests for ASHAT Core Module v9.9.9
+/// Tests for ASHAT Core Module Beta v1.1.0
 /// Verifies AI consciousness, Guardian Angel, and self-healing capabilities
 /// </summary>
 public class AshatCoreTests
@@ -16,7 +16,7 @@ public class AshatCoreTests
     public static void RunTests()
     {
         Console.WriteLine("╔══════════════════════════════════════════════════════════╗");
-        Console.WriteLine("║         ASHAT Core Module v9.9.9 Tests                  ║");
+        Console.WriteLine("║         ASHAT Core Module Beta v1.1.0 Tests             ║");
         Console.WriteLine("╚══════════════════════════════════════════════════════════╝");
         Console.WriteLine();
         
