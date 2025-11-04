@@ -12,7 +12,7 @@ namespace ASHATCore.Tests
     {
         public static void RunTests()
         {
-            Console.WriteLine("=== ASHAT Os 9.9.9 Environment Discovery Test ===\n");
+            Console.WriteLine("=== ASHAT OS Beta v1.1.0 Environment Discovery Test ===\n");
 
             var moduleManager = new ModuleManager();
             moduleManager.DebugLoggingEnabled = true;

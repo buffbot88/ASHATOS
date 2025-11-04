@@ -354,7 +354,7 @@ public class FirstRunManager
             Console.WriteLine(result);
             Console.WriteLine();
             
-            Console.WriteLine("[FirstRunManager] ℹ️  CMS runs as LegendaryCMS module (v8.0.0)");
+            Console.WriteLine("[FirstRunManager] ℹ️  CMS runs as LegendaryCMS module (Beta v1.2.0)");
             Console.WriteLine("[FirstRunManager] ℹ️  No PHP files Generated - C# module handles all CMS features");
             Console.WriteLine();
             

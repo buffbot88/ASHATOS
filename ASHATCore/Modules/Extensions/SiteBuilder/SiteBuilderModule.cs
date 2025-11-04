@@ -101,7 +101,7 @@ public class SiteBuilderModule : ModuleBase
             "  site status          - Show site deployment status",
             "  help                 - Show this help message",
             "",
-            "Note: CMS functionality is provided by LegendaryCMS module (v8.0.0)",
+            "Note: CMS functionality is provided by LegendaryCMS module (Beta v1.2.0)",
             "      Pure .NET architecture - uses Razor Pages/Blazor components",
             "      No PHP required - all content served dynamically via Kestrel"
         );
