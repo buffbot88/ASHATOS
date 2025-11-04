@@ -60,18 +60,11 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
     {
         base.Initialize(manager);
         
-        // Automatically discover and create server folders on initialization
-        var result = DiscoverServerFoldersAsync().GetAwaiter().GetResult();
-        
-        if (result.CreatedFolders.Any())
-        {
-            LogInfo($"Created server folders: {string.Join(", ", result.CreatedFolders)}");
-        }
-        
         LogInfo("ServerSetup module initialized");
-        LogInfo($"  Databases folder: {_databasesFolder}");
-        LogInfo($"  Admins folder: {_adminsFolder}");
-        LogInfo($"  FTP folder: {_ftpFolder}");
+        LogInfo($"  Databases folder path: {_databasesFolder}");
+        LogInfo($"  Admins folder path: {_adminsFolder}");
+        LogInfo($"  FTP folder path: {_ftpFolder}");
+        LogInfo("  Note: Folders will be created on-demand when needed");
         
         // Check FTP status on Linux systems
         if (OperatingSystem.IsLinux())
@@ -269,25 +262,13 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
     {
         var result = new DiscoveryResult();
 
-        // Check and create Databases folder
+        // Check Databases folder (do not create automatically)
         result.DatabasesFolderExists = Directory.Exists(_databasesFolder);
         result.DatabasesFolderPath = _databasesFolder;
-        if (!result.DatabasesFolderExists)
-        {
-            Directory.CreateDirectory(_databasesFolder);
-            result.CreatedFolders.Add("Databases");
-            result.DatabasesFolderExists = true;
-        }
 
-        // Check and create Admins folder
+        // Check Admins folder (do not create automatically)
         result.AdminsFolderExists = Directory.Exists(_adminsFolder);
         result.AdminsFolderPath = _adminsFolder;
-        if (!result.AdminsFolderExists)
-        {
-            Directory.CreateDirectory(_adminsFolder);
-            result.CreatedFolders.Add("Admins");
-            result.AdminsFolderExists = true;
-        }
 
         return await Task.FromResult(result);
     }
@@ -306,8 +287,11 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
         }
         try
         {
-            // Ensure base folders exist
-            await DiscoverServerFoldersAsync();
+            // Ensure base Admins folder exists only when creating an admin instance
+            if (!Directory.Exists(_adminsFolder))
+            {
+                Directory.CreateDirectory(_adminsFolder);
+            }
 
             var adminPath = GetAdminInstancePath(licenseNumber, username);
             
@@ -448,22 +432,13 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
         var sb = new StringBuilder();
         sb.AppendLine("Server Folder Discovery Results:");
         sb.AppendLine();
-        sb.AppendLine($"✓ Databases folder: {result.DatabasesFolderPath}");
-        sb.AppendLine($"✓ Admins folder: {result.AdminsFolderPath}");
+        sb.AppendLine($"Databases folder: {result.DatabasesFolderPath}");
+        sb.AppendLine($"  Status: {(result.DatabasesFolderExists ? "✓ Exists" : "✗ Does not exist (will be created when needed)")}");
         sb.AppendLine();
-        
-        if (result.CreatedFolders.Count > 0)
-        {
-            sb.AppendLine("Created folders:");
-            foreach (var folder in result.CreatedFolders)
-            {
-                sb.AppendLine($"  - {folder}");
-            }
-        }
-        else
-        {
-            sb.AppendLine("All required folders already exist.");
-        }
+        sb.AppendLine($"Admins folder: {result.AdminsFolderPath}");
+        sb.AppendLine($"  Status: {(result.AdminsFolderExists ? "✓ Exists" : "✗ Does not exist (will be created when needed)")}");
+        sb.AppendLine();
+        sb.AppendLine("Note: Folders are created on-demand when actually needed.");
 
         return sb.ToString();
     }
@@ -992,23 +967,15 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
             }
 
             result.FtpFoldeASHATccessible = Directory.Exists(_ftpFolder);
-            if (!result.FtpFoldeASHATccessible)
+            if (result.FtpFoldeASHATccessible)
             {
-                // FTP folder may not exist yet - create it
-                try
-                {
-                    Directory.CreateDirectory(_ftpFolder);
-                    result.FtpFoldeASHATccessible = true;
-                    result.Details["ftp_path"] = _ftpFolder;
-                }
-                catch
-                {
-                    issues.Add("FTP folder could not be created");
-                }
+                result.Details["ftp_path"] = _ftpFolder;
             }
             else
             {
+                // FTP folder doesn't exist yet - will be created on-demand when needed
                 result.Details["ftp_path"] = _ftpFolder;
+                result.Details["ftp_folder_status"] = "Will be created when needed";
             }
 
             // On Linux, check if FTP server is running
