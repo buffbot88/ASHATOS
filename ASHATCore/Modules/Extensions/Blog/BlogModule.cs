@@ -417,7 +417,8 @@ public sealed class BlogModule : ModuleBase, IBlogModule
             {
                 Name = g.Key!,
                 Description = $"{g.Key} posts",
-                PostCount = g.Count()
+                PostCount = g.Count(),
+                CreatedAt = DateTime.UtcNow
             });
         
         foreach (var cat in categoriesFromPosts)
@@ -479,13 +480,15 @@ public sealed class BlogModule : ModuleBase, IBlogModule
         { 
             Name = "Announcements", 
             Description = "Official announcements and news",
-            PostCount = 1
+            PostCount = 1,
+            CreatedAt = DateTime.UtcNow.AddDays(-30)
         };
         _categories["Tutorials"] = new BlogCategory 
         { 
             Name = "Tutorials", 
             Description = "How-to guides and tutorials",
-            PostCount = 1
+            PostCount = 1,
+            CreatedAt = DateTime.UtcNow.AddDays(-30)
         };
         
         Console.WriteLine($"[{Name}] Seeded {_posts.Count} example blog posts and {_categories.Count} categories");
@@ -500,12 +503,21 @@ public sealed class BlogModule : ModuleBase, IBlogModule
             return false;
         }
         
-        _categories[categoryName] = new BlogCategory
+        if (_categories.TryGetValue(categoryName, out var existingCategory))
         {
-            Name = categoryName,
-            Description = description,
-            PostCount = _posts.Values.Count(p => p.Category == categoryName)
-        };
+            existingCategory.Description = description;
+            existingCategory.PostCount = _posts.Values.Count(p => p.Category == categoryName);
+        }
+        else
+        {
+            _categories[categoryName] = new BlogCategory
+            {
+                Name = categoryName,
+                Description = description,
+                PostCount = _posts.Values.Count(p => p.Category == categoryName),
+                CreatedAt = DateTime.UtcNow
+            };
+        }
         
         Console.WriteLine($"[{Name}] Category '{categoryName}' created/updated");
         return true;
