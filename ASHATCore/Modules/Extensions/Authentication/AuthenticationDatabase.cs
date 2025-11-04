@@ -91,12 +91,14 @@ PRAGMA table_info(Sessions);
         
         if (!hasLastActivityUtc)
         {
-            // Add column with default empty string
+            // Add column with default value (empty string is used temporarily for the migration)
+            // SQLite requires a default value for NOT NULL columns when adding to existing table
             cmd.CommandText = "ALTER TABLE Sessions ADD COLUMN LastActivityUtc TEXT NOT NULL DEFAULT '';";
             cmd.ExecuteNonQuery();
             
-            // Update all existing rows to use CreatedAtUtc as the initial LastActivityUtc
-            cmd.CommandText = "UPDATE Sessions SET LastActivityUtc = CreatedAtUtc WHERE LastActivityUtc = '';";
+            // Immediately update all existing rows to use CreatedAtUtc as the initial LastActivityUtc
+            // This ensures all sessions have a valid datetime value
+            cmd.CommandText = "UPDATE Sessions SET LastActivityUtc = CreatedAtUtc;";
             cmd.ExecuteNonQuery();
         }
     }
@@ -285,6 +287,23 @@ FROM Sessions WHERE IsValid = 1 AND ExpiresAtUtc > $now;";
 
     private static Session ReadSession(SqliteDataReader reader)
     {
+        // Helper to safely read LastActivityUtc with fallback to CreatedAtUtc
+        DateTime GetLastActivityUtc()
+        {
+            if (reader.IsDBNull(5))
+            {
+                return DateTime.Parse(reader.GetString(3)); // Use CreatedAtUtc
+            }
+            
+            var lastActivityStr = reader.GetString(5);
+            if (string.IsNullOrWhiteSpace(lastActivityStr))
+            {
+                return DateTime.Parse(reader.GetString(3)); // Use CreatedAtUtc
+            }
+            
+            return DateTime.Parse(lastActivityStr);
+        }
+        
         return new Session
         {
             Id = Guid.Parse(reader.GetString(0)),
@@ -292,9 +311,7 @@ FROM Sessions WHERE IsValid = 1 AND ExpiresAtUtc > $now;";
             Token = reader.GetString(2),
             CreatedAtUtc = DateTime.Parse(reader.GetString(3)),
             ExpiresAtUtc = DateTime.Parse(reader.GetString(4)),
-            LastActivityUtc = reader.IsDBNull(5) || string.IsNullOrWhiteSpace(reader.GetString(5)) 
-                ? DateTime.Parse(reader.GetString(3)) // Fall back to CreatedAtUtc if not set
-                : DateTime.Parse(reader.GetString(5)),
+            LastActivityUtc = GetLastActivityUtc(),
             IpAddress = reader.IsDBNull(6) ? null : reader.GetString(6),
             UserAgent = reader.IsDBNull(7) ? null : reader.GetString(7),
             IsValid = reader.GetInt32(8) == 1
