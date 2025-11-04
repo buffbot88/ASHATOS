@@ -490,7 +490,7 @@ app.MapDelete("/api/control/forum/posts/{postId}", async (HttpContext context) =
             if (allowThreadDeletion.ToLower() != "true")
             {
                 context.Response.StatusCode = 403;
-                return Results.Json(new { error = "Thread deletion is disabled in forum settings" });
+                return Results.Json(new { error = "Post deletion is disabled in forum settings" });
             }
             
             // Check if moderator deletion is allowed (for non-admin users)
@@ -500,7 +500,7 @@ app.MapDelete("/api/control/forum/posts/{postId}", async (HttpContext context) =
                 if (allowModeratorThreadDeletion.ToLower() != "true")
                 {
                     context.Response.StatusCode = 403;
-                    return Results.Json(new { error = "Moderators are not allowed to delete threads in forum settings" });
+                    return Results.Json(new { error = "Moderators are not allowed to delete posts in forum settings" });
                 }
             }
         }
