@@ -1426,14 +1426,26 @@ static string GenerateControlPanelUI()
         async function loadModuleSettings() {
             const container = document.getElementById('module-settings-container');
             
-            if (loadedModules.length === 0) {
-                container.innerHTML = '<p style=""color: #d8c8ff;"">No modules available. Please load the dashboard first.</p>';
-                return;
-            }
-            
             try {
                 const token = localStorage.getItem('ASHATCore_token');
                 container.innerHTML = '<p style=""color: #c8b6ff;"">Loading settings...</p>';
+                
+                // Load modules if not already loaded
+                if (loadedModules.length === 0) {
+                    try {
+                        await loadModules();
+                    } catch (err) {
+                        console.error('Failed to load modules:', err);
+                        container.innerHTML = '<p style=""color: #ef4444;"">Failed to load modules. Please check your connection and try again.</p>';
+                        return;
+                    }
+                }
+                
+                // Check again after loading
+                if (loadedModules.length === 0) {
+                    container.innerHTML = '<p style=""color: #d8c8ff;"">No modules are currently loaded on this server.</p>';
+                    return;
+                }
                 
                 // Group modules by category
                 const categories = {};
