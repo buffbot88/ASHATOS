@@ -91,7 +91,7 @@ if (string.IsNullOrEmpty(port))
 
 // 3. Default fallback
 if (string.IsNullOrEmpty(port))
-    port = "7077";
+    port = "80";
 var urls = $"http://0.0.0.0:{port}";
 
 Console.WriteLine($"[ASHATCore] Configuring Kestrel to listen on: {urls}");
