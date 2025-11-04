@@ -24,7 +24,7 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
     private const int SaltSize = 32; // 256 bits
     private const int HashSize = 64; // 512 bits
     private const int Iterations = 100_000; // PBKDF2 iterations
-    private const int SessionExpiryHours = 24;
+    private const int SessionInactivityTimeoutHours = 3; // Session expires after 3 hours of inactivity
     private const int TokenLength = 64;
 
     private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
@@ -226,7 +226,8 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
                 UserId = user.Id,
                 Token = token,
                 CreatedAtUtc = DateTime.UtcNow,
-                ExpiresAtUtc = DateTime.UtcNow.AddHours(SessionExpiryHours),
+                ExpiresAtUtc = DateTime.UtcNow.AddHours(SessionInactivityTimeoutHours),
+                LastActivityUtc = DateTime.UtcNow,
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
                 IsValid = true
@@ -284,14 +285,23 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
             var session = _database.GetSessionByToken(token);
             if (session != null)
             {
-                if (session.IsValid && session.ExpiresAtUtc > DateTime.UtcNow)
+                var now = DateTime.UtcNow;
+                
+                // Check if session is still valid and not expired due to inactivity
+                if (session.IsValid && session.ExpiresAtUtc > now)
                 {
+                    // Update last activity time and extend expiry
+                    session.LastActivityUtc = now;
+                    session.ExpiresAtUtc = now.AddHours(SessionInactivityTimeoutHours);
+                    _database.SaveSession(session);
+                    
                     return session;
                 }
-                else if (session.ExpiresAtUtc <= DateTime.UtcNow && session.IsValid)
+                else if (session.ExpiresAtUtc <= now && session.IsValid)
                 {
+                    // Session expired due to inactivity
                     _database.InvalidateSession(token);
-                    LogSecurityEvent(SecurityEventType.SessionExpired, "", session.UserId, "", "Session expired", false);
+                    LogSecurityEvent(SecurityEventType.SessionExpired, "", session.UserId, "", "Session expired due to inactivity", false);
                 }
             }
             return null;
@@ -496,7 +506,8 @@ Security Features:
   - Secure session tokens (512-bit Random)
   - Role-based access control (User, Admin, SuperAdmin)
   - Comprehensive security event logging
-  - Session expiry (24 hours)
+  - Session inactivity timeout (3 hours)
+  - Automatic session extension on activity
 
 Default Admin:
   Username: admin

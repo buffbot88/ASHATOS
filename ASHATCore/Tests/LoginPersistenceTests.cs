@@ -68,7 +68,8 @@ public static class LoginPersistenceTests
                         UserId = testUserId,
                         Token = testToken,
                         CreatedAtUtc = DateTime.UtcNow,
-                        ExpiresAtUtc = DateTime.UtcNow.AddHours(24),
+                        ExpiresAtUtc = DateTime.UtcNow.AddHours(3),
+                        LastActivityUtc = DateTime.UtcNow,
                         IpAddress = "127.0.0.1",
                         UserAgent = "Test Browser",
                         IsValid = true

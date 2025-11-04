@@ -58,6 +58,7 @@ CREATE TABLE IF NOT EXISTS Sessions (
     Token TEXT NOT NULL UNIQUE,
     CreatedAtUtc TEXT NOT NULL,
     ExpiresAtUtc TEXT NOT NULL,
+    LastActivityUtc TEXT NOT NULL,
     IpAddress TEXT,
     UserAgent TEXT,
     IsValid INTEGER NOT NULL DEFAULT 1,
@@ -70,6 +71,32 @@ CREATE INDEX IF NOT EXISTS idx_sessions_userid ON Sessions(UserId);
 CREATE INDEX IF NOT EXISTS idx_sessions_expiresAt ON Sessions(ExpiresAtUtc);
 ";
         cmd.ExecuteNonQuery();
+        
+        // Add LastActivityUtc column to existing Sessions table if it doesn't exist
+        cmd.CommandText = @"
+PRAGMA table_info(Sessions);
+";
+        using var reader = cmd.ExecuteReader();
+        bool hasLastActivityUtc = false;
+        while (reader.Read())
+        {
+            var columnName = reader.GetString(1);
+            if (columnName == "LastActivityUtc")
+            {
+                hasLastActivityUtc = true;
+                break;
+            }
+        }
+        reader.Close();
+        
+        if (!hasLastActivityUtc)
+        {
+            cmd.CommandText = @"
+ALTER TABLE Sessions ADD COLUMN LastActivityUtc TEXT NOT NULL DEFAULT '';
+UPDATE Sessions SET LastActivityUtc = CreatedAtUtc WHERE LastActivityUtc = '';
+";
+            cmd.ExecuteNonQuery();
+        }
     }
 
     #region User Operations
@@ -175,14 +202,15 @@ VALUES ($id, $username, $email, $passwordHash, $passwordSalt, $role, $createdAtU
         using var cmd = conn.CreateCommand();
         
         cmd.CommandText = @"
-INSERT OR REPLACE INTO Sessions (Id, UserId, Token, CreatedAtUtc, ExpiresAtUtc, IpAddress, UserAgent, IsValid)
-VALUES ($id, $userId, $token, $createdAtUtc, $expiresAtUtc, $ipAddress, $userAgent, $isValid);";
+INSERT OR REPLACE INTO Sessions (Id, UserId, Token, CreatedAtUtc, ExpiresAtUtc, LastActivityUtc, IpAddress, UserAgent, IsValid)
+VALUES ($id, $userId, $token, $createdAtUtc, $expiresAtUtc, $lastActivityUtc, $ipAddress, $userAgent, $isValid);";
         
         cmd.Parameters.AddWithValue("$id", session.Id.ToString());
         cmd.Parameters.AddWithValue("$userId", session.UserId.ToString());
         cmd.Parameters.AddWithValue("$token", session.Token);
         cmd.Parameters.AddWithValue("$createdAtUtc", session.CreatedAtUtc.ToString("o"));
         cmd.Parameters.AddWithValue("$expiresAtUtc", session.ExpiresAtUtc.ToString("o"));
+        cmd.Parameters.AddWithValue("$lastActivityUtc", session.LastActivityUtc.ToString("o"));
         cmd.Parameters.AddWithValue("$ipAddress", session.IpAddress ?? "");
         cmd.Parameters.AddWithValue("$userAgent", session.UserAgent ?? "");
         cmd.Parameters.AddWithValue("$isValid", session.IsValid ? 1 : 0);
@@ -258,9 +286,12 @@ VALUES ($id, $userId, $token, $createdAtUtc, $expiresAtUtc, $ipAddress, $userAge
             Token = reader.GetString(2),
             CreatedAtUtc = DateTime.Parse(reader.GetString(3)),
             ExpiresAtUtc = DateTime.Parse(reader.GetString(4)),
-            IpAddress = reader.IsDBNull(5) ? null : reader.GetString(5),
-            UserAgent = reader.IsDBNull(6) ? null : reader.GetString(6),
-            IsValid = reader.GetInt32(7) == 1
+            LastActivityUtc = reader.IsDBNull(5) || string.IsNullOrWhiteSpace(reader.GetString(5)) 
+                ? DateTime.Parse(reader.GetString(3)) // Fall back to CreatedAtUtc if not set
+                : DateTime.Parse(reader.GetString(5)),
+            IpAddress = reader.IsDBNull(6) ? null : reader.GetString(6),
+            UserAgent = reader.IsDBNull(7) ? null : reader.GetString(7),
+            IsValid = reader.GetInt32(8) == 1
         };
     }
 

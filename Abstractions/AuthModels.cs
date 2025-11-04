@@ -46,6 +46,7 @@ public class Session
     public string Token { get; set; } = "";
     public DateTime CreatedAtUtc { get; set; }
     public DateTime ExpiresAtUtc { get; set; }
+    public DateTime LastActivityUtc { get; set; }
     public string IpAddress { get; set; } = "";
     public string UserAgent { get; set; } = ""; // <-- Add this line
     public bool IsValid { get; set; }
