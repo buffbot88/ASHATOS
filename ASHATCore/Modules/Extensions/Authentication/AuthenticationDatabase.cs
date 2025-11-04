@@ -91,10 +91,12 @@ PRAGMA table_info(Sessions);
         
         if (!hasLastActivityUtc)
         {
-            cmd.CommandText = @"
-ALTER TABLE Sessions ADD COLUMN LastActivityUtc TEXT NOT NULL DEFAULT '';
-UPDATE Sessions SET LastActivityUtc = CreatedAtUtc WHERE LastActivityUtc = '';
-";
+            // Add column with default empty string
+            cmd.CommandText = "ALTER TABLE Sessions ADD COLUMN LastActivityUtc TEXT NOT NULL DEFAULT '';";
+            cmd.ExecuteNonQuery();
+            
+            // Update all existing rows to use CreatedAtUtc as the initial LastActivityUtc
+            cmd.CommandText = "UPDATE Sessions SET LastActivityUtc = CreatedAtUtc WHERE LastActivityUtc = '';";
             cmd.ExecuteNonQuery();
         }
     }

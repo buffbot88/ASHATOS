@@ -119,8 +119,13 @@ public static class SessionInactivityTimeoutTest
                 Password = registerRequest.Password
             }, "127.0.0.1", "TestAgent");
 
-            var token = loginResponse.Token!;
-            var initialExpiry = loginResponse.TokenExpiresAt!.Value;
+            if (loginResponse.Token == null || !loginResponse.TokenExpiresAt.HasValue)
+            {
+                throw new Exception("Login response missing token or expiry");
+            }
+
+            var token = loginResponse.Token;
+            var initialExpiry = loginResponse.TokenExpiresAt.Value;
 
             Console.WriteLine($"✓ Initial session created");
             Console.WriteLine($"  Initial expiry: {initialExpiry}");
