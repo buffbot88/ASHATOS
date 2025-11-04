@@ -572,6 +572,17 @@ The AI chatbot helps users with content management, forums, blogs, permissions, 
         return _Configuration ?? throw new InvalidOperationException("Configuration not initialized");
     }
 
+    /// <summary>
+    /// Save current configuration to file
+    /// </summary>
+    public async Task SaveConfigurationAsync()
+    {
+        if (_Configuration != null)
+        {
+            await _Configuration.SaveAsync();
+        }
+    }
+
     public override void Dispose()
     {
         _isRunning = false;

@@ -127,16 +127,86 @@ public class CMSConfiguration : ICMSConfiguration
         return result;
     }
 
-    public Task ReloadAsync()
+    public async Task ReloadAsync()
     {
-        // In a real implementation, this would reload from file
+        // Load defaults first
         LoadDefaults();
-        return Task.CompletedTask;
+        
+        // Try to load from file if it exists
+        if (File.Exists(_configFilePath))
+        {
+            try
+            {
+                var json = await File.ReadAllTextAsync(_configFilePath);
+                var doc = System.Text.Json.JsonDocument.Parse(json);
+                
+                foreach (var property in doc.RootElement.EnumerateObject())
+                {
+                    var key = property.Name;
+                    var value = property.Value;
+                    
+                    // Handle different value types
+                    if (value.ValueKind == System.Text.Json.JsonValueKind.String)
+                    {
+                        var stringValue = value.GetString();
+                        if (stringValue != null)
+                        {
+                            _settings[key] = stringValue;
+                        }
+                    }
+                    else if (value.ValueKind == System.Text.Json.JsonValueKind.Number)
+                    {
+                        _settings[key] = value.GetInt32();
+                    }
+                    else if (value.ValueKind == System.Text.Json.JsonValueKind.True || 
+                             value.ValueKind == System.Text.Json.JsonValueKind.False)
+                    {
+                        _settings[key] = value.GetBoolean();
+                    }
+                    else if (value.ValueKind == System.Text.Json.JsonValueKind.Array)
+                    {
+                        var array = value.EnumerateArray().Select(e => e.GetString() ?? "").ToArray();
+                        _settings[key] = array;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error - in production this should use ILogger
+                System.Diagnostics.Debug.WriteLine($"[CMSConfiguration] Error loading config from {_configFilePath}: {ex.Message}");
+            }
+        }
     }
 
-    public Task SaveAsync()
+    public async Task SaveAsync()
     {
-        // In a real implementation, this would save to file
-        return Task.CompletedTask;
+        try
+        {
+            // Ensure directory exists
+            var directory = Path.GetDirectoryName(_configFilePath);
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+            
+            // Serialize settings to JSON
+            var options = new System.Text.Json.JsonSerializerOptions
+            {
+                WriteIndented = true,
+                PropertyNamingPolicy = null
+            };
+            
+            var json = System.Text.Json.JsonSerializer.Serialize(_settings, options);
+            await File.WriteAllTextAsync(_configFilePath, json);
+            
+            // Log success - in production this should use ILogger
+            System.Diagnostics.Debug.WriteLine($"[CMSConfiguration] Settings saved to {_configFilePath}");
+        }
+        catch (Exception ex)
+        {
+            // Log error - in production this should use ILogger
+            System.Diagnostics.Debug.WriteLine($"[CMSConfiguration] Error saving config to {_configFilePath}: {ex.Message}");
+            throw;
+        }
     }
 }
