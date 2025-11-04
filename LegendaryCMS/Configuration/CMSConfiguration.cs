@@ -148,7 +148,11 @@ public class CMSConfiguration : ICMSConfiguration
                     // Handle different value types
                     if (value.ValueKind == System.Text.Json.JsonValueKind.String)
                     {
-                        _settings[key] = value.GetString()!;
+                        var stringValue = value.GetString();
+                        if (stringValue != null)
+                        {
+                            _settings[key] = stringValue;
+                        }
                     }
                     else if (value.ValueKind == System.Text.Json.JsonValueKind.Number)
                     {
@@ -168,7 +172,8 @@ public class CMSConfiguration : ICMSConfiguration
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[CMSConfiguration] Error loading config from {_configFilePath}: {ex.Message}");
+                // Log error - in production this should use ILogger
+                System.Diagnostics.Debug.WriteLine($"[CMSConfiguration] Error loading config from {_configFilePath}: {ex.Message}");
             }
         }
     }
@@ -194,11 +199,13 @@ public class CMSConfiguration : ICMSConfiguration
             var json = System.Text.Json.JsonSerializer.Serialize(_settings, options);
             await File.WriteAllTextAsync(_configFilePath, json);
             
-            Console.WriteLine($"[CMSConfiguration] Settings saved to {_configFilePath}");
+            // Log success - in production this should use ILogger
+            System.Diagnostics.Debug.WriteLine($"[CMSConfiguration] Settings saved to {_configFilePath}");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[CMSConfiguration] Error saving config to {_configFilePath}: {ex.Message}");
+            // Log error - in production this should use ILogger
+            System.Diagnostics.Debug.WriteLine($"[CMSConfiguration] Error saving config to {_configFilePath}: {ex.Message}");
             throw;
         }
     }

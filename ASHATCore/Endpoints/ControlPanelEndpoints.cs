@@ -440,7 +440,7 @@ app.MapGet("/api/control/game/stats", async (HttpContext context) =>
 app.MapGet("/api/control/forum/posts", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null || !authModule!.HasPermission(user, "Forum", UserRole.ForumModerator))
     {
@@ -466,7 +466,7 @@ app.MapGet("/api/control/forum/posts", async (HttpContext context) =>
 app.MapDelete("/api/control/forum/posts/{postId}", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null || !authModule!.HasPermission(user, "Forum", UserRole.ForumModerator))
     {
@@ -506,7 +506,7 @@ app.MapDelete("/api/control/forum/posts/{postId}", async (HttpContext context) =
 app.MapPut("/api/control/forum/posts/{postId}/lock", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null || !authModule!.HasPermission(user, "Forum", UserRole.ForumModerator))
     {
@@ -546,7 +546,7 @@ app.MapPut("/api/control/forum/posts/{postId}/lock", async (HttpContext context)
 app.MapGet("/api/control/forum/users/{userId}/warnings", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null || !authModule!.HasPermission(user, "Forum", UserRole.ForumModerator))
     {
@@ -579,7 +579,7 @@ app.MapGet("/api/control/forum/users/{userId}/warnings", async (HttpContext cont
 app.MapPost("/api/control/forum/users/{userId}/warnings", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null || !authModule!.HasPermission(user, "Forum", UserRole.ForumModerator))
     {
@@ -619,7 +619,7 @@ app.MapPost("/api/control/forum/users/{userId}/warnings", async (HttpContext con
 app.MapPut("/api/control/forum/users/{userId}/ban", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null || !authModule!.HasPermission(user, "Forum", UserRole.ForumModerator))
     {
@@ -659,7 +659,7 @@ app.MapPut("/api/control/forum/users/{userId}/ban", async (HttpContext context) 
 app.MapGet("/api/control/forum/stats", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null || !authModule!.HasPermission(user, "Forum", UserRole.Admin))
     {
@@ -740,7 +740,7 @@ app.MapGet("/api/blog/posts/{postId}", async (HttpContext context) =>
 app.MapPost("/api/blog/posts", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null)
     {
@@ -797,7 +797,7 @@ app.MapGet("/api/blog/posts/{postId}/comments", async (HttpContext context) =>
 app.MapPost("/api/blog/posts/{postId}/comments", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null)
     {
@@ -1089,7 +1089,7 @@ app.MapGet("/api/social/profile/{userId}", async (HttpContext context) =>
 app.MapPost("/api/social/profile/{userId}/friends", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null)
     {
@@ -1153,7 +1153,7 @@ app.MapGet("/api/social/profile/{userId}/posts", async (HttpContext context) =>
 app.MapPost("/api/social/profile/{userId}/posts", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null)
     {
@@ -1437,7 +1437,7 @@ app.MapGet("/api/market/history/{userId}", async (HttpContext context) =>
 app.MapGet("/api/control/system/health", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null || !authModule!.HasPermission(user, "System", UserRole.Admin))
     {
@@ -1467,7 +1467,7 @@ app.MapGet("/api/control/system/health", async (HttpContext context) =>
 app.MapGet("/api/control/audit/logs", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null || !authModule!.HasPermission(user, "Audit", UserRole.SuperAdmin))
     {
@@ -1486,7 +1486,7 @@ app.MapGet("/api/control/audit/logs", async (HttpContext context) =>
 app.MapGet("/api/learning/SuperAdmin/status", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null || user.Role != UserRole.SuperAdmin)
     {
@@ -1514,7 +1514,7 @@ app.MapGet("/api/learning/SuperAdmin/status", async (HttpContext context) =>
 app.MapPost("/api/learning/SuperAdmin/complete", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null || user.Role != UserRole.SuperAdmin)
     {
@@ -1540,7 +1540,7 @@ app.MapPost("/api/learning/SuperAdmin/complete", async (HttpContext context) =>
 app.MapGet("/api/learning/courses/{level}", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null)
     {
@@ -1563,7 +1563,7 @@ app.MapGet("/api/learning/courses/{level}", async (HttpContext context) =>
 app.MapGet("/api/learning/courses/{courseId}/lessons", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null)
     {
@@ -1586,7 +1586,7 @@ app.MapGet("/api/learning/courses/{courseId}/lessons", async (HttpContext contex
 app.MapPost("/api/learning/lessons/{lessonId}/complete", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null)
     {
@@ -1618,7 +1618,7 @@ app.MapPost("/api/learning/lessons/{lessonId}/complete", async (HttpContext cont
 app.MapGet("/api/control/cms/settings", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null || user.Role < UserRole.Admin)
     {
@@ -1686,7 +1686,7 @@ app.MapGet("/api/control/cms/settings", async (HttpContext context) =>
 app.MapPost("/api/control/cms/settings/theme", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null || user.Role < UserRole.Admin)
     {
@@ -1755,7 +1755,7 @@ app.MapPost("/api/control/cms/settings/theme", async (HttpContext context) =>
 app.MapPost("/api/control/cms/settings/site", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null || user.Role < UserRole.Admin)
     {
@@ -1824,7 +1824,7 @@ app.MapPost("/api/control/cms/settings/site", async (HttpContext context) =>
 app.MapPost("/api/control/cms/settings/underconstruction", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null || user.Role < UserRole.Admin)
     {
@@ -1868,7 +1868,7 @@ app.MapPost("/api/control/cms/settings/underconstruction", async (HttpContext co
 app.MapGet("/api/control/forums/settings", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null || user.Role < UserRole.Admin)
     {
@@ -1916,7 +1916,7 @@ app.MapGet("/api/control/forums/settings", async (HttpContext context) =>
 app.MapPost("/api/control/forums/settings", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null || user.Role < UserRole.Admin)
     {
@@ -1963,7 +1963,7 @@ app.MapPost("/api/control/forums/settings", async (HttpContext context) =>
 app.MapGet("/api/control/blogs/settings", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null || user.Role < UserRole.Admin)
     {
@@ -2011,7 +2011,7 @@ app.MapGet("/api/control/blogs/settings", async (HttpContext context) =>
 app.MapPost("/api/control/blogs/settings", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null || user.Role < UserRole.Admin)
     {
@@ -2058,7 +2058,7 @@ app.MapPost("/api/control/blogs/settings", async (HttpContext context) =>
 app.MapGet("/api/control/profiles/settings", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null || user.Role < UserRole.Admin)
     {
@@ -2106,7 +2106,7 @@ app.MapGet("/api/control/profiles/settings", async (HttpContext context) =>
 app.MapPost("/api/control/profiles/settings", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null || user.Role < UserRole.Admin)
     {
@@ -2153,7 +2153,7 @@ app.MapPost("/api/control/profiles/settings", async (HttpContext context) =>
 app.MapGet("/api/control/users/{userId}/permissions", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null || user.Role < UserRole.Admin)
     {
@@ -2209,7 +2209,7 @@ app.MapGet("/api/control/users/{userId}/permissions", async (HttpContext context
 app.MapPost("/api/control/users/{userId}/permissions", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null || user.Role < UserRole.Admin)
     {
@@ -2259,7 +2259,7 @@ app.MapPost("/api/control/users/{userId}/permissions", async (HttpContext contex
 app.MapGet("/api/control/account/settings", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null)
     {
@@ -2307,7 +2307,7 @@ app.MapGet("/api/control/account/settings", async (HttpContext context) =>
 app.MapPost("/api/control/account/settings", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null)
     {
@@ -2359,7 +2359,7 @@ var settingsModule = moduleManager.Modules
 app.MapGet("/api/control/modules/{moduleName}/settings", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null || user.Role < UserRole.Admin)
     {
@@ -2392,7 +2392,7 @@ app.MapGet("/api/control/modules/{moduleName}/settings", async (HttpContext cont
 app.MapPost("/api/control/modules/{moduleName}/settings", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token)!;
+    var user = await authModule?.GetUserByTokenAsync(token);
     
     if (user == null || user.Role < UserRole.Admin)
     {
