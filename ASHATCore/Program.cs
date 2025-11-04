@@ -1410,10 +1410,11 @@ static string GenerateControlPanelUI()
                     if (data.modules.length === 0) {
                         moduleList.innerHTML = '<p style=""color: #d8c8ff;"">No modules loaded</p>';
                     } else {
-                        moduleList.innerHTML = data.modules.map(mod => 
-                            '<div class=""module""><strong>' + mod.name + '</strong> - ' + mod.description + 
-                            ' <span style=""color: #c084fc; margin-left: 10px;"">[' + mod.category + ']</span></div>'
-                        ).join('');
+                        moduleList.innerHTML = data.modules.map(mod => {
+                            const desc = mod.description ? ' - ' + mod.description : '';
+                            return '<div class=""module""><strong>' + mod.name + '</strong>' + desc + 
+                                ' <span style=""color: #c084fc; margin-left: 10px;"">[' + mod.category + ']</span></div>';
+                        }).join('');
                     }
                 }
             } catch (err) {
@@ -2096,6 +2097,88 @@ app.MapGet("/api/control/server/modes", async (HttpContext context) =>
     }
 });
 
+// Control Panel Stats API
+app.MapGet("/api/control/stats", async (HttpContext context) =>
+{
+    try
+    {
+        if (authModule == null)
+        {
+            context.Response.StatusCode = 503;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Authentication not available" });
+            return;
+        }
+
+        var authHeader = context.Request.Headers["Authorization"].ToString();
+        var token = authHeader.StartsWith("Bearer ") ? authHeader[7..] : authHeader;
+        var user = await authModule.GetUserByTokenAsync(token);
+
+        if (user == null || user.Role < UserRole.Admin)
+        {
+            context.Response.StatusCode = 403;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Insufficient permissions" });
+            return;
+        }
+
+        // Get total users count
+        var totalUsers = authModule.GetAllUsers().Count();
+
+        var stats = new
+        {
+            totalUsers = totalUsers,
+            serverStatus = "Online",
+            timestamp = DateTime.UtcNow.ToString("o")
+        };
+
+        await context.Response.WriteAsJsonAsync(new { success = true, stats });
+    }
+    catch (Exception ex)
+    {
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+    }
+});
+
+// Control Panel Modules API
+app.MapGet("/api/control/modules", async (HttpContext context) =>
+{
+    try
+    {
+        if (authModule == null)
+        {
+            context.Response.StatusCode = 503;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Authentication not available" });
+            return;
+        }
+
+        var authHeader = context.Request.Headers["Authorization"].ToString();
+        var token = authHeader.StartsWith("Bearer ") ? authHeader[7..] : authHeader;
+        var user = await authModule.GetUserByTokenAsync(token);
+
+        if (user == null || user.Role < UserRole.Admin)
+        {
+            context.Response.StatusCode = 403;
+            await context.Response.WriteAsJsonAsync(new { success = false, message = "Insufficient permissions" });
+            return;
+        }
+
+        // Get all loaded modules
+        var modules = moduleManager.Modules.Select(m => new
+        {
+            name = m.Name,
+            description = string.Empty, // Module system doesn't have description property
+            category = m.Category
+        }).ToList();
+
+        await context.Response.WriteAsJsonAsync(new { success = true, modules });
+    }
+    catch (Exception ex)
+    {
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsJsonAsync(new { success = false, message = ex.Message });
+    }
+});
+
 // Under Construction Mode API endpoints (Phase 9.3.8)
 app.MapPost("/api/control/server/underconstruction", async (HttpContext context) =>
 {
@@ -2198,6 +2281,8 @@ Console.WriteLine("  POST /api/control/server/mode - Change server mode (SuperAd
 Console.WriteLine("  GET  /api/control/server/modes - List available server modes (Admin+)");
 Console.WriteLine("  POST /api/control/server/underconstruction - Toggle Under Construction mode (Admin+)");
 Console.WriteLine("  GET  /api/control/server/underconstruction - Get Under Construction status (Admin+)");
+Console.WriteLine("  GET  /api/control/stats - Get control panel statistics (Admin+)");
+Console.WriteLine("  GET  /api/control/modules - Get loaded modules list (Admin+)");
 
 
 
