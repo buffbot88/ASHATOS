@@ -683,6 +683,105 @@ app.MapGet("/api/control/forum/stats", async (HttpContext context) =>
 });
 
 // ============================================================================
+// Forum Category Management API Endpoints (Admin+)
+// ============================================================================
+
+app.MapGet("/api/control/forum/categories", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token);
+    
+    if (user == null || user.Role < UserRole.Admin)
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "Admin role required" });
+    }
+    
+    var forumModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<IForumModule>()
+        .FirstOrDefault();
+    
+    if (forumModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Forum module not available" });
+    }
+    
+    var categories = await forumModule.GetCategoriesAsync();
+    return Results.Json(new { success = true, categories });
+});
+
+app.MapPost("/api/control/forum/categories", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token);
+    
+    if (user == null || user.Role < UserRole.Admin)
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "Admin role required" });
+    }
+    
+    var body = await context.Request.ReadFromJsonAsync<Dictionary<string, string>>();
+    if (body == null || !body.ContainsKey("name"))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Category name required" });
+    }
+    
+    var categoryName = body["name"];
+    var description = body.GetValueOrDefault("description", "");
+    
+    var forumModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<IForumModule>()
+        .FirstOrDefault();
+    
+    if (forumModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Forum module not available" });
+    }
+    
+    var success = await forumModule.ManageCategoryAsync(categoryName, description);
+    return Results.Json(new { success, message = success ? "Category created/updated" : "Failed to create category" });
+});
+
+app.MapDelete("/api/control/forum/categories/{categoryName}", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token);
+    
+    if (user == null || user.Role < UserRole.Admin)
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "Admin role required" });
+    }
+    
+    var categoryName = context.Request.RouteValues["categoryName"]?.ToString();
+    if (string.IsNullOrEmpty(categoryName))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Category name required" });
+    }
+    
+    var forumModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<IForumModule>()
+        .FirstOrDefault();
+    
+    if (forumModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Forum module not available" });
+    }
+    
+    var success = await forumModule.DeleteCategoryAsync(categoryName);
+    return Results.Json(new { success, message = success ? "Category deleted" : "Cannot delete category (posts may exist in it)" });
+});
+
+// ============================================================================
 // Blog API Endpoints
 // ============================================================================
 
@@ -849,6 +948,255 @@ app.MapGet("/api/blog/categories", async (HttpContext context) =>
     
     var categories = await blogModule.GetCategoriesAsync();
     return Results.Json(new { categories });
+});
+
+// ============================================================================
+// Blog Control Panel API Endpoints (Admin/Moderator)
+// ============================================================================
+
+// Get all blog posts for moderation (Admin+)
+app.MapGet("/api/control/blog/posts", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token);
+    
+    if (user == null || user.Role < UserRole.Admin)
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "Admin role required" });
+    }
+    
+    var blogModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<IBlogModule>()
+        .FirstOrDefault();
+    
+    if (blogModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Blog module not available" });
+    }
+    
+    var pageStr = context.Request.Query["page"].ToString();
+    var page = int.TryParse(pageStr, out var p) ? p : 1;
+    
+    var posts = await blogModule.GetPostsAsync(page, 50); // Get more posts for admin view
+    return Results.Json(new { success = true, posts });
+});
+
+// Delete blog post (Admin+)
+app.MapDelete("/api/control/blog/posts/{postId}", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token);
+    
+    if (user == null || user.Role < UserRole.Admin)
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "Admin role required" });
+    }
+    
+    var postId = context.Request.RouteValues["postId"]?.ToString();
+    if (string.IsNullOrEmpty(postId))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Post ID required" });
+    }
+    
+    var blogModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<IBlogModule>()
+        .FirstOrDefault();
+    
+    if (blogModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Blog module not available" });
+    }
+    
+    // Use admin delete method to bypass ownership check
+    var success = await blogModule.AdminDeletePostAsync(postId, user.Id.ToString());
+    
+    if (success)
+    {
+        Console.WriteLine($"[Blog Control] Post {postId} deleted by admin {user.Username}");
+    }
+    
+    return Results.Json(new { success, message = success ? "Post deleted successfully" : "Post not found or unauthorized" });
+});
+
+// Get comments for a blog post (Admin+)
+app.MapGet("/api/control/blog/posts/{postId}/comments", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token);
+    
+    if (user == null || user.Role < UserRole.Admin)
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "Admin role required" });
+    }
+    
+    var postId = context.Request.RouteValues["postId"]?.ToString();
+    if (string.IsNullOrEmpty(postId))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Post ID required" });
+    }
+    
+    var blogModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<IBlogModule>()
+        .FirstOrDefault();
+    
+    if (blogModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Blog module not available" });
+    }
+    
+    var comments = await blogModule.GetCommentsAsync(postId);
+    return Results.Json(new { success = true, comments });
+});
+
+// Delete blog comment (Admin+)
+app.MapDelete("/api/control/blog/comments/{commentId}", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token);
+    
+    if (user == null || user.Role < UserRole.Admin)
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "Admin role required" });
+    }
+    
+    var commentId = context.Request.RouteValues["commentId"]?.ToString();
+    if (string.IsNullOrEmpty(commentId))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Comment ID required" });
+    }
+    
+    var blogModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<IBlogModule>()
+        .FirstOrDefault();
+    
+    if (blogModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Blog module not available" });
+    }
+    
+    // Use admin delete method to bypass ownership check
+    var success = await blogModule.AdminDeleteCommentAsync(commentId, user.Id.ToString());
+    
+    if (success)
+    {
+        Console.WriteLine($"[Blog Control] Comment {commentId} deleted by admin {user.Username}");
+    }
+    
+    return Results.Json(new { success, message = success ? "Comment deleted successfully" : "Comment not found or unauthorized" });
+});
+
+// ============================================================================
+// Blog Category Management API Endpoints (Admin+)
+// ============================================================================
+
+app.MapGet("/api/control/blog/categories", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token);
+    
+    if (user == null || user.Role < UserRole.Admin)
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "Admin role required" });
+    }
+    
+    var blogModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<IBlogModule>()
+        .FirstOrDefault();
+    
+    if (blogModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Blog module not available" });
+    }
+    
+    var categories = await blogModule.GetCategoriesAsync();
+    return Results.Json(new { success = true, categories });
+});
+
+app.MapPost("/api/control/blog/categories", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token);
+    
+    if (user == null || user.Role < UserRole.Admin)
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "Admin role required" });
+    }
+    
+    var body = await context.Request.ReadFromJsonAsync<Dictionary<string, string>>();
+    if (body == null || !body.ContainsKey("name"))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Category name required" });
+    }
+    
+    var categoryName = body["name"];
+    var description = body.GetValueOrDefault("description", "");
+    
+    var blogModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<IBlogModule>()
+        .FirstOrDefault();
+    
+    if (blogModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Blog module not available" });
+    }
+    
+    var success = await blogModule.ManageCategoryAsync(categoryName, description);
+    return Results.Json(new { success, message = success ? "Category created/updated" : "Failed to create category" });
+});
+
+app.MapDelete("/api/control/blog/categories/{categoryName}", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token);
+    
+    if (user == null || user.Role < UserRole.Admin)
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "Admin role required" });
+    }
+    
+    var categoryName = context.Request.RouteValues["categoryName"]?.ToString();
+    if (string.IsNullOrEmpty(categoryName))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "Category name required" });
+    }
+    
+    var blogModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .OfType<IBlogModule>()
+        .FirstOrDefault();
+    
+    if (blogModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Blog module not available" });
+    }
+    
+    var success = await blogModule.DeleteCategoryAsync(categoryName);
+    return Results.Json(new { success, message = success ? "Category deleted" : "Cannot delete category (posts may exist in it)" });
 });
 
 // ============================================================================

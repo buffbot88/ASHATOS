@@ -60,6 +60,21 @@ public interface IForumModule
     /// Get forum statistics.
     /// </summary>
     Task<ForumStats> GetStatsAsync();
+    
+    /// <summary>
+    /// Get all forum categories.
+    /// </summary>
+    Task<List<ForumCategory>> GetCategoriesAsync();
+    
+    /// <summary>
+    /// Create or update a forum category.
+    /// </summary>
+    Task<bool> ManageCategoryAsync(string categoryName, string description);
+    
+    /// <summary>
+    /// Delete a forum category.
+    /// </summary>
+    Task<bool> DeleteCategoryAsync(string categoryName);
 }
 
 public class ForumPost
@@ -70,6 +85,7 @@ public class ForumPost
     public string Username { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
+    public string? Category { get; set; } // Forum category/section
     public DateTime CreatedAt { get; set; }
     public bool IsDeleted { get; set; }
     public string? DeletedBy { get; set; }
@@ -100,4 +116,12 @@ public class ForumStats
     public int LockedThreads { get; set; }
     public int BannedUsers { get; set; }
     public int TotalWarnings { get; set; }
+}
+
+public class ForumCategory
+{
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public int ThreadCount { get; set; }
+    public DateTime CreatedAt { get; set; }
 }

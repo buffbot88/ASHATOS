@@ -12,6 +12,7 @@ public sealed class ForumModule : ModuleBase, IForumModule
     private readonly ConcurrentDictionary<string, ForumPost> _posts = new();
     private readonly ConcurrentDictionary<string, List<ForumWarning>> _userWarnings = new();
     private readonly ConcurrentDictionary<string, BanRecord> _bannedUsers = new();
+    private readonly ConcurrentDictionary<string, ForumCategory> _categories = new();
     private ModuleManager? _manager;
     private IContentmoderationModule? _moderationModule;
     private IParentalControlModule? _parentalControlModule;
@@ -459,6 +460,108 @@ public sealed class ForumModule : ModuleBase, IForumModule
         {
             _posts[post.Id] = post;
         }
+        
+        // Seed some default categories
+        _categories["General"] = new ForumCategory 
+        { 
+            Name = "General", 
+            Description = "General discussion and topics",
+            ThreadCount = 3,
+            CreatedAt = DateTime.UtcNow.AddDays(-30)
+        };
+        _categories["Support"] = new ForumCategory 
+        { 
+            Name = "Support", 
+            Description = "Help and support questions",
+            ThreadCount = 0,
+            CreatedAt = DateTime.UtcNow.AddDays(-30)
+        };
+    }
+    
+    public async Task<List<ForumCategory>> GetCategoriesAsync()
+    {
+        await Task.CompletedTask;
+        
+        // Update thread counts for existing categories
+        foreach (var category in _categories.Values)
+        {
+            category.ThreadCount = _posts.Values.Count(p => p.Category == category.Name && !p.IsDeleted);
+        }
+        
+        // Add any categories that exist in posts but not in _categories
+        var categoriesFromPosts = _posts.Values
+            .Where(p => !string.IsNullOrEmpty(p.Category))
+            .GroupBy(p => p.Category)
+            .Where(g => !_categories.ContainsKey(g.Key!))
+            .Select(g => new ForumCategory
+            {
+                Name = g.Key!,
+                Description = $"{g.Key} forum",
+                ThreadCount = g.Count(p => !p.IsDeleted),
+                CreatedAt = DateTime.UtcNow
+            });
+        
+        foreach (var cat in categoriesFromPosts)
+        {
+            _categories[cat.Name] = cat;
+        }
+        
+        return _categories.Values.OrderBy(c => c.Name).ToList();
+    }
+    
+    public async Task<bool> ManageCategoryAsync(string categoryName, string description)
+    {
+        await Task.CompletedTask;
+        
+        if (string.IsNullOrWhiteSpace(categoryName))
+        {
+            return false;
+        }
+        
+        if (_categories.TryGetValue(categoryName, out var existingCategory))
+        {
+            existingCategory.Description = description;
+            existingCategory.ThreadCount = _posts.Values.Count(p => p.Category == categoryName && !p.IsDeleted);
+        }
+        else
+        {
+            _categories[categoryName] = new ForumCategory
+            {
+                Name = categoryName,
+                Description = description,
+                ThreadCount = _posts.Values.Count(p => p.Category == categoryName && !p.IsDeleted),
+                CreatedAt = DateTime.UtcNow
+            };
+        }
+        
+        Console.WriteLine($"[{Name}] Category '{categoryName}' created/updated");
+        return true;
+    }
+    
+    public async Task<bool> DeleteCategoryAsync(string categoryName)
+    {
+        await Task.CompletedTask;
+        
+        if (string.IsNullOrWhiteSpace(categoryName))
+        {
+            return false;
+        }
+        
+        // Check if any posts use this category
+        var postsInCategory = _posts.Values.Count(p => p.Category == categoryName && !p.IsDeleted);
+        if (postsInCategory > 0)
+        {
+            Console.WriteLine($"[{Name}] Cannot delete category '{categoryName}': {postsInCategory} posts still use it");
+            return false;
+        }
+        
+        var removed = _categories.TryRemove(categoryName, out _);
+        if (removed)
+        {
+            Console.WriteLine($"[{Name}] Category '{categoryName}' deleted");
+        }
+        
+        return removed;
     }
     
     private class BanRecord
