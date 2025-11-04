@@ -1861,6 +1861,492 @@ app.MapPost("/api/control/cms/settings/underconstruction", async (HttpContext co
 });
 
 // ============================================================================
+// Forum Settings API Endpoints
+// ============================================================================
+
+// Get forum settings (Admin+)
+app.MapGet("/api/control/forums/settings", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null || user.Role < UserRole.Admin)
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "Admin role required" });
+    }
+    
+    var settingsModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .FirstOrDefault(m => m.Name == "Settings");
+    
+    if (settingsModule != null)
+    {
+        try
+        {
+            var getMethod = settingsModule.GetType().GetMethod("GetModuleSettings");
+            var settings = getMethod?.Invoke(settingsModule, new object[] { "Forum" }) as Dictionary<string, string>;
+            
+            // Provide defaults if not set
+            var forumSettings = new
+            {
+                enabled = settings?.GetValueOrDefault("enabled", "true") ?? "true",
+                allowGuestViewing = settings?.GetValueOrDefault("allowGuestViewing", "true") ?? "true",
+                requireApproval = settings?.GetValueOrDefault("requireApproval", "false") ?? "false",
+                allowAttachments = settings?.GetValueOrDefault("allowAttachments", "true") ?? "true",
+                maxAttachmentSize = settings?.GetValueOrDefault("maxAttachmentSize", "5242880") ?? "5242880",
+                postsPerPage = settings?.GetValueOrDefault("postsPerPage", "20") ?? "20",
+                autoLockAfterDays = settings?.GetValueOrDefault("autoLockAfterDays", "0") ?? "0",
+                allowUserRatings = settings?.GetValueOrDefault("allowUserRatings", "true") ?? "true"
+            };
+            
+            return Results.Json(new { success = true, settings = forumSettings });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Forum Settings] Error getting settings: {ex.Message}");
+            return Results.Json(new { success = false, error = ex.Message });
+        }
+    }
+    
+    return Results.Json(new { success = true, settings = new { } });
+});
+
+// Update forum settings (Admin+)
+app.MapPost("/api/control/forums/settings", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null || user.Role < UserRole.Admin)
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { success = false, error = "Admin role required" });
+    }
+    
+    var body = await context.Request.ReadFromJsonAsync<Dictionary<string, string>>();
+    if (body == null)
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { success = false, error = "Invalid request body" });
+    }
+    
+    var settingsModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .FirstOrDefault(m => m.Name == "Settings");
+    
+    if (settingsModule != null)
+    {
+        try
+        {
+            var setMethod = settingsModule.GetType().GetMethod("SetModuleSettings");
+            setMethod?.Invoke(settingsModule, new object[] { "Forum", body });
+            
+            Console.WriteLine($"[Forum Settings] Settings updated by {user.Username}");
+            return Results.Json(new { success = true, message = "Forum settings saved successfully" });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Forum Settings] Error saving settings: {ex.Message}");
+            return Results.Json(new { success = false, error = ex.Message });
+        }
+    }
+    
+    return Results.Json(new { success = false, error = "Settings module not available" });
+});
+
+// ============================================================================
+// Blog Settings API Endpoints
+// ============================================================================
+
+// Get blog settings (Admin+)
+app.MapGet("/api/control/blogs/settings", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null || user.Role < UserRole.Admin)
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "Admin role required" });
+    }
+    
+    var settingsModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .FirstOrDefault(m => m.Name == "Settings");
+    
+    if (settingsModule != null)
+    {
+        try
+        {
+            var getMethod = settingsModule.GetType().GetMethod("GetModuleSettings");
+            var settings = getMethod?.Invoke(settingsModule, new object[] { "Blog" }) as Dictionary<string, string>;
+            
+            // Provide defaults if not set
+            var blogSettings = new
+            {
+                enabled = settings?.GetValueOrDefault("enabled", "true") ?? "true",
+                allowComments = settings?.GetValueOrDefault("allowComments", "true") ?? "true",
+                requireCommentApproval = settings?.GetValueOrDefault("requireCommentApproval", "false") ?? "false",
+                allowGuestComments = settings?.GetValueOrDefault("allowGuestComments", "false") ?? "false",
+                postsPerPage = settings?.GetValueOrDefault("postsPerPage", "10") ?? "10",
+                showAuthor = settings?.GetValueOrDefault("showAuthor", "true") ?? "true",
+                allowTags = settings?.GetValueOrDefault("allowTags", "true") ?? "true",
+                requireApproval = settings?.GetValueOrDefault("requireApproval", "false") ?? "false"
+            };
+            
+            return Results.Json(new { success = true, settings = blogSettings });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Blog Settings] Error getting settings: {ex.Message}");
+            return Results.Json(new { success = false, error = ex.Message });
+        }
+    }
+    
+    return Results.Json(new { success = true, settings = new { } });
+});
+
+// Update blog settings (Admin+)
+app.MapPost("/api/control/blogs/settings", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null || user.Role < UserRole.Admin)
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { success = false, error = "Admin role required" });
+    }
+    
+    var body = await context.Request.ReadFromJsonAsync<Dictionary<string, string>>();
+    if (body == null)
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { success = false, error = "Invalid request body" });
+    }
+    
+    var settingsModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .FirstOrDefault(m => m.Name == "Settings");
+    
+    if (settingsModule != null)
+    {
+        try
+        {
+            var setMethod = settingsModule.GetType().GetMethod("SetModuleSettings");
+            setMethod?.Invoke(settingsModule, new object[] { "Blog", body });
+            
+            Console.WriteLine($"[Blog Settings] Settings updated by {user.Username}");
+            return Results.Json(new { success = true, message = "Blog settings saved successfully" });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Blog Settings] Error saving settings: {ex.Message}");
+            return Results.Json(new { success = false, error = ex.Message });
+        }
+    }
+    
+    return Results.Json(new { success = false, error = "Settings module not available" });
+});
+
+// ============================================================================
+// Profile Settings API Endpoints
+// ============================================================================
+
+// Get profile settings (Admin+)
+app.MapGet("/api/control/profiles/settings", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null || user.Role < UserRole.Admin)
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "Admin role required" });
+    }
+    
+    var settingsModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .FirstOrDefault(m => m.Name == "Settings");
+    
+    if (settingsModule != null)
+    {
+        try
+        {
+            var getMethod = settingsModule.GetType().GetMethod("GetModuleSettings");
+            var settings = getMethod?.Invoke(settingsModule, new object[] { "Profile" }) as Dictionary<string, string>;
+            
+            // Provide defaults if not set
+            var profileSettings = new
+            {
+                enabled = settings?.GetValueOrDefault("enabled", "true") ?? "true",
+                allowPublicProfiles = settings?.GetValueOrDefault("allowPublicProfiles", "true") ?? "true",
+                requireApprovalForFriends = settings?.GetValueOrDefault("requireApprovalForFriends", "true") ?? "true",
+                allowPrivateMessages = settings?.GetValueOrDefault("allowPrivateMessages", "true") ?? "true",
+                showOnlineStatus = settings?.GetValueOrDefault("showOnlineStatus", "true") ?? "true",
+                allowProfileCustomization = settings?.GetValueOrDefault("allowProfileCustomization", "true") ?? "true",
+                allowAvatarUpload = settings?.GetValueOrDefault("allowAvatarUpload", "true") ?? "true",
+                maxAvatarSize = settings?.GetValueOrDefault("maxAvatarSize", "1048576") ?? "1048576"
+            };
+            
+            return Results.Json(new { success = true, settings = profileSettings });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Profile Settings] Error getting settings: {ex.Message}");
+            return Results.Json(new { success = false, error = ex.Message });
+        }
+    }
+    
+    return Results.Json(new { success = true, settings = new { } });
+});
+
+// Update profile settings (Admin+)
+app.MapPost("/api/control/profiles/settings", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null || user.Role < UserRole.Admin)
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { success = false, error = "Admin role required" });
+    }
+    
+    var body = await context.Request.ReadFromJsonAsync<Dictionary<string, string>>();
+    if (body == null)
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { success = false, error = "Invalid request body" });
+    }
+    
+    var settingsModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .FirstOrDefault(m => m.Name == "Settings");
+    
+    if (settingsModule != null)
+    {
+        try
+        {
+            var setMethod = settingsModule.GetType().GetMethod("SetModuleSettings");
+            setMethod?.Invoke(settingsModule, new object[] { "Profile", body });
+            
+            Console.WriteLine($"[Profile Settings] Settings updated by {user.Username}");
+            return Results.Json(new { success = true, message = "Profile settings saved successfully" });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Profile Settings] Error saving settings: {ex.Message}");
+            return Results.Json(new { success = false, error = ex.Message });
+        }
+    }
+    
+    return Results.Json(new { success = false, error = "Settings module not available" });
+});
+
+// ============================================================================
+// User Permission Settings API Endpoints
+// ============================================================================
+
+// Get user-specific permissions (Admin+)
+app.MapGet("/api/control/users/{userId}/permissions", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null || user.Role < UserRole.Admin)
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { error = "Admin role required" });
+    }
+    
+    var userId = context.Request.RouteValues["userId"]?.ToString();
+    if (string.IsNullOrEmpty(userId))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { error = "User ID required" });
+    }
+    
+    var settingsModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .FirstOrDefault(m => m.Name == "Settings");
+    
+    if (settingsModule != null)
+    {
+        try
+        {
+            var getMethod = settingsModule.GetType().GetMethod("GetModuleSettings");
+            var settings = getMethod?.Invoke(settingsModule, new object[] { $"UserPermissions:{userId}" }) as Dictionary<string, string>;
+            
+            // Default permissions based on role
+            var permissions = new
+            {
+                canCreateForumPosts = settings?.GetValueOrDefault("canCreateForumPosts", "true") ?? "true",
+                canEditOwnPosts = settings?.GetValueOrDefault("canEditOwnPosts", "true") ?? "true",
+                canDeleteOwnPosts = settings?.GetValueOrDefault("canDeleteOwnPosts", "false") ?? "false",
+                canCreateBlogPosts = settings?.GetValueOrDefault("canCreateBlogPosts", "true") ?? "true",
+                canCommentOnBlogs = settings?.GetValueOrDefault("canCommentOnBlogs", "true") ?? "true",
+                canSendPrivateMessages = settings?.GetValueOrDefault("canSendPrivateMessages", "true") ?? "true",
+                canUploadFiles = settings?.GetValueOrDefault("canUploadFiles", "true") ?? "true",
+                canUseChat = settings?.GetValueOrDefault("canUseChat", "true") ?? "true",
+                maxUploadSize = settings?.GetValueOrDefault("maxUploadSize", "5242880") ?? "5242880"
+            };
+            
+            return Results.Json(new { success = true, permissions });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[User Permissions] Error getting permissions: {ex.Message}");
+            return Results.Json(new { success = false, error = ex.Message });
+        }
+    }
+    
+    return Results.Json(new { success = true, permissions = new { } });
+});
+
+// Update user-specific permissions (Admin+)
+app.MapPost("/api/control/users/{userId}/permissions", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null || user.Role < UserRole.Admin)
+    {
+        context.Response.StatusCode = 403;
+        return Results.Json(new { success = false, error = "Admin role required" });
+    }
+    
+    var userId = context.Request.RouteValues["userId"]?.ToString();
+    if (string.IsNullOrEmpty(userId))
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { success = false, error = "User ID required" });
+    }
+    
+    var body = await context.Request.ReadFromJsonAsync<Dictionary<string, string>>();
+    if (body == null)
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { success = false, error = "Invalid request body" });
+    }
+    
+    var settingsModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .FirstOrDefault(m => m.Name == "Settings");
+    
+    if (settingsModule != null)
+    {
+        try
+        {
+            var setMethod = settingsModule.GetType().GetMethod("SetModuleSettings");
+            setMethod?.Invoke(settingsModule, new object[] { $"UserPermissions:{userId}", body });
+            
+            Console.WriteLine($"[User Permissions] Permissions updated for user {userId} by {user.Username}");
+            return Results.Json(new { success = true, message = "User permissions saved successfully" });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[User Permissions] Error saving permissions: {ex.Message}");
+            return Results.Json(new { success = false, error = ex.Message });
+        }
+    }
+    
+    return Results.Json(new { success = false, error = "Settings module not available" });
+});
+
+// Get account settings for current user
+app.MapGet("/api/control/account/settings", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null)
+    {
+        context.Response.StatusCode = 401;
+        return Results.Json(new { error = "Authentication required" });
+    }
+    
+    var settingsModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .FirstOrDefault(m => m.Name == "Settings");
+    
+    if (settingsModule != null)
+    {
+        try
+        {
+            var getMethod = settingsModule.GetType().GetMethod("GetModuleSettings");
+            var settings = getMethod?.Invoke(settingsModule, new object[] { $"Account:{user.Id}" }) as Dictionary<string, string>;
+            
+            // Account settings
+            var accountSettings = new
+            {
+                emailNotifications = settings?.GetValueOrDefault("emailNotifications", "true") ?? "true",
+                profileVisibility = settings?.GetValueOrDefault("profileVisibility", "public") ?? "public",
+                showOnlineStatus = settings?.GetValueOrDefault("showOnlineStatus", "true") ?? "true",
+                allowFriendRequests = settings?.GetValueOrDefault("allowFriendRequests", "true") ?? "true",
+                allowPrivateMessages = settings?.GetValueOrDefault("allowPrivateMessages", "true") ?? "true",
+                language = settings?.GetValueOrDefault("language", "en-US") ?? "en-US",
+                timezone = settings?.GetValueOrDefault("timezone", "UTC") ?? "UTC",
+                theme = settings?.GetValueOrDefault("theme", "default") ?? "default"
+            };
+            
+            return Results.Json(new { success = true, settings = accountSettings });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Account Settings] Error getting settings: {ex.Message}");
+            return Results.Json(new { success = false, error = ex.Message });
+        }
+    }
+    
+    return Results.Json(new { success = true, settings = new { } });
+});
+
+// Update account settings for current user
+app.MapPost("/api/control/account/settings", async (HttpContext context) =>
+{
+    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    var user = await authModule?.GetUserByTokenAsync(token)!;
+    
+    if (user == null)
+    {
+        context.Response.StatusCode = 401;
+        return Results.Json(new { success = false, error = "Authentication required" });
+    }
+    
+    var body = await context.Request.ReadFromJsonAsync<Dictionary<string, string>>();
+    if (body == null)
+    {
+        context.Response.StatusCode = 400;
+        return Results.Json(new { success = false, error = "Invalid request body" });
+    }
+    
+    var settingsModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .FirstOrDefault(m => m.Name == "Settings");
+    
+    if (settingsModule != null)
+    {
+        try
+        {
+            var setMethod = settingsModule.GetType().GetMethod("SetModuleSettings");
+            setMethod?.Invoke(settingsModule, new object[] { $"Account:{user.Id}", body });
+            
+            Console.WriteLine($"[Account Settings] Settings updated for user {user.Username}");
+            return Results.Json(new { success = true, message = "Account settings saved successfully" });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Account Settings] Error saving settings: {ex.Message}");
+            return Results.Json(new { success = false, error = ex.Message });
+        }
+    }
+    
+    return Results.Json(new { success = false, error = "Settings module not available" });
+});
+
+// ============================================================================
 // Module Settings API Endpoints
 // ============================================================================
 
