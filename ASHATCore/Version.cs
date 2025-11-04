@@ -42,7 +42,7 @@ public static class ASHATVersion
     public const string LastUpdated = "November 4 2025";
     
     /// <summary>
-    /// Gets version as a compaASHATble tuple
+    /// Gets version as a comparable tuple
     /// </summary>
     public static (int major, int minor, int patch) GetVersionTuple() => (Major, Minor, Patch);
     
