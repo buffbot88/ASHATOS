@@ -1410,10 +1410,11 @@ static string GenerateControlPanelUI()
                     if (data.modules.length === 0) {
                         moduleList.innerHTML = '<p style=""color: #d8c8ff;"">No modules loaded</p>';
                     } else {
-                        moduleList.innerHTML = data.modules.map(mod => 
-                            '<div class=""module""><strong>' + mod.name + '</strong> - ' + mod.description + 
-                            ' <span style=""color: #c084fc; margin-left: 10px;"">[' + mod.category + ']</span></div>'
-                        ).join('');
+                        moduleList.innerHTML = data.modules.map(mod => {
+                            const desc = mod.description ? ' - ' + mod.description : '';
+                            return '<div class=""module""><strong>' + mod.name + '</strong>' + desc + 
+                                ' <span style=""color: #c084fc; margin-left: 10px;"">[' + mod.category + ']</span></div>';
+                        }).join('');
                     }
                 }
             } catch (err) {
@@ -2126,7 +2127,7 @@ app.MapGet("/api/control/stats", async (HttpContext context) =>
         {
             totalUsers = totalUsers,
             serverStatus = "Online",
-            uptime = DateTime.UtcNow.ToString("o")
+            timestamp = DateTime.UtcNow.ToString("o")
         };
 
         await context.Response.WriteAsJsonAsync(new { success = true, stats });
@@ -2165,7 +2166,7 @@ app.MapGet("/api/control/modules", async (HttpContext context) =>
         var modules = moduleManager.Modules.Select(m => new
         {
             name = m.Name,
-            description = m.Name, // Use name as description since Description property doesn't exist
+            description = string.Empty, // Module system doesn't have description property
             category = m.Category
         }).ToList();
 
