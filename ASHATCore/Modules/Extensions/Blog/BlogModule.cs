@@ -12,6 +12,7 @@ public sealed class BlogModule : ModuleBase, IBlogModule
     private readonly ConcurrentDictionary<string, BlogPost> _posts = new();
     private readonly ConcurrentDictionary<string, BlogComment> _comments = new();
     private readonly ConcurrentDictionary<string, List<string>> _postComments = new();
+    private readonly ConcurrentDictionary<string, BlogCategory> _categories = new();
     private ModuleManager? _manager;
     private IContentmoderationModule? _moderationModule;
     private IParentalControlModule? _parentalControlModule;
@@ -347,23 +348,85 @@ public sealed class BlogModule : ModuleBase, IBlogModule
         return true;
     }
     
+    public async Task<bool> AdminDeletePostAsync(string postId, string adminUserId)
+    {
+        await Task.CompletedTask;
+        
+        if (!_posts.TryGetValue(postId, out var post))
+        {
+            return false;
+        }
+        
+        _posts.TryRemove(postId, out _);
+        
+        // Delete associated comments
+        if (_postComments.TryRemove(postId, out var commentIds))
+        {
+            foreach (var commentId in commentIds)
+            {
+                _comments.TryRemove(commentId, out _);
+            }
+        }
+        
+        Console.WriteLine($"[{Name}] Admin deleted blog post: {postId} by admin: {adminUserId}");
+        return true;
+    }
+    
+    public async Task<bool> AdminDeleteCommentAsync(string commentId, string adminUserId)
+    {
+        await Task.CompletedTask;
+        
+        if (!_comments.TryGetValue(commentId, out var comment))
+        {
+            return false;
+        }
+        
+        _comments.TryRemove(commentId, out _);
+        
+        // Remove from post's comment list
+        if (_postComments.TryGetValue(comment.PostId, out var commentIds))
+        {
+            commentIds.Remove(commentId);
+            
+            if (_posts.TryGetValue(comment.PostId, out var post))
+            {
+                post.CommentCount--;
+            }
+        }
+        
+        Console.WriteLine($"[{Name}] Admin deleted comment: {commentId} by admin: {adminUserId}");
+        return true;
+    }
+    
     public async Task<List<BlogCategory>> GetCategoriesAsync()
     {
         await Task.CompletedTask;
         
-        var categories = _posts.Values
+        // Update post counts for existing categories
+        foreach (var category in _categories.Values)
+        {
+            category.PostCount = _posts.Values.Count(p => p.Category == category.Name);
+        }
+        
+        // Add any categories that exist in posts but not in _categories
+        var categoriesFromPosts = _posts.Values
             .Where(p => !string.IsNullOrEmpty(p.Category))
             .GroupBy(p => p.Category)
+            .Where(g => !_categories.ContainsKey(g.Key!))
             .Select(g => new BlogCategory
             {
                 Name = g.Key!,
                 Description = $"{g.Key} posts",
-                PostCount = g.Count()
-            })
-            .OrderBy(c => c.Name)
-            .ToList();
+                PostCount = g.Count(),
+                CreatedAt = DateTime.UtcNow
+            });
         
-        return categories;
+        foreach (var cat in categoriesFromPosts)
+        {
+            _categories[cat.Name] = cat;
+        }
+        
+        return _categories.Values.OrderBy(c => c.Name).ToList();
     }
     
     public async Task<List<BlogPost>> GetPostsByUserAsync(string userId)
@@ -412,6 +475,77 @@ public sealed class BlogModule : ModuleBase, IBlogModule
         _posts[post2Id] = post2;
         _postComments[post2Id] = new List<string>();
         
-        Console.WriteLine($"[{Name}] Seeded {_posts.Count} example blog posts");
+        // Seed some default categories
+        _categories["Announcements"] = new BlogCategory 
+        { 
+            Name = "Announcements", 
+            Description = "Official announcements and news",
+            PostCount = 1,
+            CreatedAt = DateTime.UtcNow.AddDays(-30)
+        };
+        _categories["Tutorials"] = new BlogCategory 
+        { 
+            Name = "Tutorials", 
+            Description = "How-to guides and tutorials",
+            PostCount = 1,
+            CreatedAt = DateTime.UtcNow.AddDays(-30)
+        };
+        
+        Console.WriteLine($"[{Name}] Seeded {_posts.Count} example blog posts and {_categories.Count} categories");
+    }
+    
+    public async Task<bool> ManageCategoryAsync(string categoryName, string description)
+    {
+        await Task.CompletedTask;
+        
+        if (string.IsNullOrWhiteSpace(categoryName))
+        {
+            return false;
+        }
+        
+        if (_categories.TryGetValue(categoryName, out var existingCategory))
+        {
+            existingCategory.Description = description;
+            existingCategory.PostCount = _posts.Values.Count(p => p.Category == categoryName);
+        }
+        else
+        {
+            _categories[categoryName] = new BlogCategory
+            {
+                Name = categoryName,
+                Description = description,
+                PostCount = _posts.Values.Count(p => p.Category == categoryName),
+                CreatedAt = DateTime.UtcNow
+            };
+        }
+        
+        Console.WriteLine($"[{Name}] Category '{categoryName}' created/updated");
+        return true;
+    }
+    
+    public async Task<bool> DeleteCategoryAsync(string categoryName)
+    {
+        await Task.CompletedTask;
+        
+        if (string.IsNullOrWhiteSpace(categoryName))
+        {
+            return false;
+        }
+        
+        // Check if any posts use this category
+        var postsInCategory = _posts.Values.Count(p => p.Category == categoryName);
+        if (postsInCategory > 0)
+        {
+            Console.WriteLine($"[{Name}] Cannot delete category '{categoryName}': {postsInCategory} posts still use it");
+            return false;
+        }
+        
+        var removed = _categories.TryRemove(categoryName, out _);
+        if (removed)
+        {
+            Console.WriteLine($"[{Name}] Category '{categoryName}' deleted");
+        }
+        
+        return removed;
     }
 }

@@ -31,6 +31,11 @@ public interface IBlogModule
     Task<bool> DeletePostAsync(string postId, string userId);
     
     /// <summary>
+    /// Delete a blog post (admin override - can delete any post).
+    /// </summary>
+    Task<bool> AdminDeletePostAsync(string postId, string adminUserId);
+    
+    /// <summary>
     /// Get comments for a blog post.
     /// </summary>
     Task<List<BlogComment>> GetCommentsAsync(string postId);
@@ -44,6 +49,21 @@ public interface IBlogModule
     /// Delete a comment.
     /// </summary>
     Task<bool> DeleteCommentAsync(string commentId, string userId);
+    
+    /// <summary>
+    /// Delete a comment (admin override - can delete any comment).
+    /// </summary>
+    Task<bool> AdminDeleteCommentAsync(string commentId, string adminUserId);
+    
+    /// <summary>
+    /// Create or update a blog category.
+    /// </summary>
+    Task<bool> ManageCategoryAsync(string categoryName, string description);
+    
+    /// <summary>
+    /// Delete a blog category.
+    /// </summary>
+    Task<bool> DeleteCategoryAsync(string categoryName);
     
     /// <summary>
     /// Get all categories.
@@ -88,4 +108,5 @@ public class BlogCategory
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public int PostCount { get; set; }
+    public DateTime CreatedAt { get; set; }
 }
