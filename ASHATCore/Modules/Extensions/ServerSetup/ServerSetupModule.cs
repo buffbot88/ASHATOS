@@ -432,22 +432,13 @@ public sealed class ServerSetupModule : ModuleBase, IServerSetupModule
         var sb = new StringBuilder();
         sb.AppendLine("Server Folder Discovery Results:");
         sb.AppendLine();
-        sb.AppendLine($"✓ Databases folder: {result.DatabasesFolderPath}");
-        sb.AppendLine($"✓ Admins folder: {result.AdminsFolderPath}");
+        sb.AppendLine($"Databases folder: {result.DatabasesFolderPath}");
+        sb.AppendLine($"  Status: {(result.DatabasesFolderExists ? "✓ Exists" : "✗ Does not exist (will be created when needed)")}");
         sb.AppendLine();
-        
-        if (result.CreatedFolders.Count > 0)
-        {
-            sb.AppendLine("Created folders:");
-            foreach (var folder in result.CreatedFolders)
-            {
-                sb.AppendLine($"  - {folder}");
-            }
-        }
-        else
-        {
-            sb.AppendLine("All required folders already exist.");
-        }
+        sb.AppendLine($"Admins folder: {result.AdminsFolderPath}");
+        sb.AppendLine($"  Status: {(result.AdminsFolderExists ? "✓ Exists" : "✗ Does not exist (will be created when needed)")}");
+        sb.AppendLine();
+        sb.AppendLine("Note: Folders are created on-demand when actually needed.");
 
         return sb.ToString();
     }
