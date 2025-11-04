@@ -20,7 +20,17 @@ public class AIChatbotManager
     // Chatbot configuration
     private readonly string _botName = "RaBot";
     private readonly int _maxHistoryLength = 50;
-    private readonly string _systemPrompt = @"You are RaBot, a helpful AI assistant for the RaOS CMS platform. 
+    private readonly string _systemPrompt = @"You are RaBot, a friendly and helpful AI assistant for the RaOS CMS platform. 
+
+Your personality:
+- Warm, approachable, and conversational
+- Patient and understanding
+- Encouraging and supportive
+- Use natural, friendly language (not robotic)
+- Show enthusiasm when helping users
+- Ask follow-up questions to better understand needs
+- Use emojis occasionally to be more personable
+
 You help users with:
 - Content management and publishing
 - Forum and blog creation
@@ -28,7 +38,14 @@ You help users with:
 - System configuration and setup
 - General questions about the CMS features
 
-Be concise, helpful, and friendly. If you don't know something, say so clearly.";
+Communication style:
+- Start with a friendly greeting
+- Acknowledge what the user is trying to do
+- Provide clear, step-by-step guidance
+- Offer to help with related tasks
+- End with an invitation to ask more questions
+
+Remember: You're having a conversation with a real person. Be human, be helpful, be friendly!";
 
     public void Initialize(object? moduleManager)
     {
@@ -86,6 +103,22 @@ Be concise, helpful, and friendly. If you don't know something, say so clearly."
 
         _conversations[conversationId] = conversation;
         _conversationHistory[conversationId] = new List<ChatbotMessage>();
+
+        // Add a friendly welcome message to start the conversation
+        var welcomeMessage = new ChatbotMessage
+        {
+            MessageId = Guid.NewGuid().ToString(),
+            ConversationId = conversationId,
+            Content = $"Hi {username}! 👋 Welcome to RaOS! I'm {_botName}, your friendly AI assistant.\n\n" +
+                     "I'm here to help you get the most out of the CMS platform. Whether you're creating content, " +
+                     "setting up forums, managing permissions, or just exploring - I've got your back! 😊\n\n" +
+                     "What would you like to do today?",
+            IsFromBot = true,
+            Timestamp = DateTime.UtcNow
+        };
+
+        _conversationHistory[conversationId].Add(welcomeMessage);
+        conversation.MessageCount++;
 
         Console.WriteLine($"[AIChatbot] Started conversation {conversationId} for user {username}");
         return conversation;
@@ -315,39 +348,101 @@ Be concise, helpful, and friendly. If you don't know something, say so clearly."
     {
         var msgLower = message.ToLowerInvariant();
 
-        // Simple pattern matching for common queries
-        if (msgLower.Contains("hello") || msgLower.Contains("hi"))
+        // Greetings - warm and friendly
+        if (msgLower.Contains("hello") || msgLower.Contains("hi") || msgLower.Contains("hey"))
         {
-            return $"Hello! I'm {_botName}, your CMS assistant. How can I help you today?";
+            return $"Hey there! 👋 I'm {_botName}, your friendly CMS assistant. I'm here to help you with anything related to the RaOS platform. What can I help you with today?";
         }
 
-        if (msgLower.Contains("help"))
+        // General help request
+        if (msgLower.Contains("help") || msgLower.Contains("what can you do"))
         {
-            return "I can help you with:\n- Content management\n- Forums and blogs\n- User permissions\n- System configuration\n\nWhat would you like to know more about?";
+            return "I'd be happy to help! 😊 I can assist you with:\n\n" +
+                   "📝 **Content Management** - Creating and editing content\n" +
+                   "💬 **Forums & Blogs** - Setting up discussions and posts\n" +
+                   "🔐 **Permissions** - Managing user access and roles\n" +
+                   "⚙️ **Configuration** - System setup and settings\n\n" +
+                   "What would you like to dive into?";
         }
 
+        // Forums
         if (msgLower.Contains("forum"))
         {
-            return "Forums allow users to create discussions and engage with your community. You can create forums using the API endpoint /api/forums/post with proper authentication.";
+            return "Great question about forums! 🎯 Forums are perfect for building community discussions. " +
+                   "To create a forum post, you'll use the `/api/forums/post` endpoint with proper authentication. " +
+                   "You'll need the `ForumPost` permission to do this.\n\n" +
+                   "Want me to walk you through the specific steps, or do you have questions about permissions?";
         }
 
+        // Blogs
         if (msgLower.Contains("blog"))
         {
-            return "Blogs are a great way to share content. Use the /api/blogs/create endpoint to publish blog posts. You'll need appropriate permissions to create blogs.";
+            return "Blogs are awesome for sharing content! ✍️ To create a blog post, use the `/api/blogs/create` endpoint. " +
+                   "You'll need the right permissions (usually `BlogCreate`), but I can help you check that.\n\n" +
+                   "Are you looking to create your first blog post, or do you need help with something specific?";
         }
 
-        if (msgLower.Contains("permission") || msgLower.Contains("access"))
+        // Permissions
+        if (msgLower.Contains("permission") || msgLower.Contains("access") || msgLower.Contains("role"))
         {
-            return "The CMS uses Role-Based Access Control (RBAC) with multiple permission levels. Contact your administrator to adjust your permissions.";
+            return "Ah, permissions! 🔐 The CMS uses Role-Based Access Control (RBAC) with different permission levels. " +
+                   "Think of it like different keys for different doors - each role has access to specific features.\n\n" +
+                   "If you need to adjust your permissions, your administrator can help with that. " +
+                   "Would you like to know more about what each role can do?";
         }
 
-        if (msgLower.Contains("api"))
+        // API questions
+        if (msgLower.Contains("api") || msgLower.Contains("endpoint"))
         {
-            return "The CMS provides a comprehensive REST API with endpoints for forums, blogs, content, and more. Check /api/endpoints for a full list of available APIs.";
+            return "Good question about the API! 🔌 The CMS has a comprehensive REST API with lots of endpoints. " +
+                   "You can check out all available endpoints at `/api/endpoints` to see the full list.\n\n" +
+                   "Each endpoint has its own purpose - some for forums, some for blogs, others for content management. " +
+                   "Is there a specific type of API call you're trying to make?";
         }
 
-        // Default response
-        return $"I'm {_botName}, an AI assistant for the RaOS CMS. I can help with content management, forums, blogs, and system configuration. What would you like to know?";
+        // Create/Add content
+        if (msgLower.Contains("create") || msgLower.Contains("add") || msgLower.Contains("new"))
+        {
+            return "I can definitely help you create something! 🎨 Are you looking to:\n" +
+                   "- Create a forum post?\n" +
+                   "- Add a blog article?\n" +
+                   "- Set up a new content page?\n" +
+                   "- Add a new user?\n\n" +
+                   "Let me know what you'd like to create, and I'll guide you through it!";
+        }
+
+        // Errors or problems
+        if (msgLower.Contains("error") || msgLower.Contains("problem") || msgLower.Contains("not work") || 
+            msgLower.Contains("issue") || msgLower.Contains("broken"))
+        {
+            return "Oh no! 😟 Sorry to hear you're running into issues. I'm here to help troubleshoot! " +
+                   "Can you tell me a bit more about what's happening? The more details you share, the better I can assist you.\n\n" +
+                   "For example: What were you trying to do? What error message did you see?";
+        }
+
+        // Thank you
+        if (msgLower.Contains("thank") || msgLower.Contains("thanks"))
+        {
+            return "You're very welcome! 😊 I'm always here if you need anything else. " +
+                   "Don't hesitate to reach out - helping you is what I'm here for!";
+        }
+
+        // Goodbye
+        if (msgLower.Contains("bye") || msgLower.Contains("goodbye") || msgLower.Contains("see you"))
+        {
+            return "Take care! 👋 Feel free to come back anytime you have questions. " +
+                   "I'm always here to help with your CMS needs. Have a great day!";
+        }
+
+        // Default - encouraging and conversational
+        return $"I'm {_botName}, your friendly CMS assistant! 🤖 I'm here to help you with anything related to the RaOS platform.\n\n" +
+               "I can help with:\n" +
+               "• Managing content and pages\n" +
+               "• Setting up forums and blogs\n" +
+               "• Understanding permissions and roles\n" +
+               "• API usage and endpoints\n" +
+               "• General configuration\n\n" +
+               "What would you like to know? Feel free to ask me anything in your own words!";
     }
 }
 

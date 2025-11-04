@@ -65,9 +65,13 @@ public class AIChatbotTests
         if (!conversation.IsActive)
             throw new Exception("Conversation should be active");
 
+        if (conversation.MessageCount != 1)
+            throw new Exception($"Expected MessageCount 1 (welcome message), got {conversation.MessageCount}");
+
         Console.WriteLine($"  ✅ Conversation started: {conversation.ConversationId}");
         Console.WriteLine($"  ✅ User: {conversation.Username}");
         Console.WriteLine($"  ✅ Status: Active");
+        Console.WriteLine($"  ✅ Welcome message sent automatically");
         Console.WriteLine();
     }
 
@@ -116,13 +120,14 @@ public class AIChatbotTests
         historyTask.Wait();
         var history = historyTask.Result;
 
-        if (history.Count != 2) // User message + Bot reply
-            throw new Exception($"Expected 2 messages in history, got {history.Count}");
+        if (history.Count != 3) // Welcome message + User message + Bot reply
+            throw new Exception($"Expected 3 messages in history (welcome + user + bot), got {history.Count}");
 
         Console.WriteLine($"  ✅ Conversation history retrieved");
         Console.WriteLine($"  ✅ Message count: {history.Count}");
-        Console.WriteLine($"  ✅ User message: {history[0].Content.Substring(0, Math.Min(30, history[0].Content.Length))}");
-        Console.WriteLine($"  ✅ Bot reply: {history[1].Content.Substring(0, Math.Min(30, history[1].Content.Length))}");
+        Console.WriteLine($"  ✅ Welcome message: {history[0].Content.Substring(0, Math.Min(30, history[0].Content.Length))}...");
+        Console.WriteLine($"  ✅ User message: {history[1].Content.Substring(0, Math.Min(30, history[1].Content.Length))}");
+        Console.WriteLine($"  ✅ Bot reply: {history[2].Content.Substring(0, Math.Min(30, history[2].Content.Length))}");
         Console.WriteLine();
     }
 
