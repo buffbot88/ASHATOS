@@ -2,7 +2,7 @@
 
 ## Overview
 
-The AI Chatbot feature provides **friendly, natural language conversations** for users of the LegendaryCMS platform. RaBot is your conversational AI assistant that makes working with the CMS feel like chatting with a helpful friend.
+The AI Chatbot feature provides **friendly, natural language conversations** for users of the LegendaryCMS platform. RaBot is your conversational AI assistant and **learning guide** that makes working with the CMS feel like chatting with a helpful friend and knowledgeable teacher.
 
 **✨ Key Features:**
 - 💬 **Natural Conversations** - Chat in your own words, just like talking to a person
@@ -10,6 +10,7 @@ The AI Chatbot feature provides **friendly, natural language conversations** for
 - 😊 **Friendly & Personable** - Warm, encouraging, and easy to talk to
 - 📚 **Context-Aware** - Remembers your conversation and provides relevant help
 - 🎯 **Helpful Guidance** - Step-by-step assistance with clear explanations
+- 🎓 **Learning Assistant** - Guide through courses, explain concepts, recommend learning paths 🆕
 - 🔄 **Always Available** - Fallback responses ensure help is always there
 - 👥 **Multi-user Support** - Independent conversations for each user
 - 📊 **Usage Monitoring** - Track engagement and chatbot statistics
@@ -257,11 +258,60 @@ API Endpoints:
 
 **RaBot:** "Oh no! 😟 Sorry to hear you're running into issues. I'm here to help troubleshoot! Can you tell me a bit more about what's happening? The more details you share, the better I can assist you.\n\nFor example: What were you trying to do? What error message did you see?"
 
+### 6. Learning Support 🎓 🆕
+
+**User:** "I want to learn about content management"
+
+**RaBot:** "I'd love to help with your learning journey! 🎓 The RaOS Learning System offers structured, college-level courses designed to build your skills progressively.\n\nOur courses are organized by difficulty:\n• **Beginner** (User level) - Foundation concepts\n• **Advanced** (Admin level) - In-depth technical skills\n• **Master** (SuperAdmin level) - Expert-level knowledge\n\nEach course includes lessons, hands-on exercises, and assessments. You'll earn RaCoins as you complete courses!\n\nWhat subject area are you interested in learning about? I can recommend specific courses or help you get started!"
+
+### 7. Course Recommendations
+
+**User:** "Which course should I take first?"
+
+**RaBot:** "I'd be happy to recommend courses! 📚 To give you the best suggestions, tell me:\n\n• What's your current skill level? (Beginner, Intermediate, Advanced)\n• What are you trying to achieve or learn?\n• Do you have any specific interests? (e.g., content management, gaming, administration)\n\nBased on your answers, I can recommend a personalized learning path!"
+
+---
+
+## 🎓 Learning Assistant Features 🆕
+
+RaBot isn't just a CMS assistant - it's your **personal learning guide** for the RaOS platform!
+
+### Educational Support
+
+- **Course Recommendations** - Get personalized learning path suggestions based on your goals
+- **Concept Explanation** - Complex topics explained in simple, understandable terms
+- **Study Guidance** - Help with course content, lessons, and assignments
+- **Progress Tracking** - Understand where you are in your learning journey
+- **Motivation** - Encouragement and celebration of your achievements
+
+### Teaching Style
+
+- **Patient & Thorough** - Takes time to ensure you understand
+- **Real-World Examples** - Uses analogies and practical scenarios
+- **Progressive Learning** - Builds on concepts step-by-step
+- **Interactive** - Asks questions to check understanding
+- **Encouraging** - Celebrates progress and milestones
+
+### Integration with Learning Module
+
+When the Learning Module is available, RaBot can:
+- Access course catalog and recommend specific courses
+- Explain course prerequisites and learning paths
+- Help track your progress across multiple courses
+- Provide context on achievements and trophies
+- Clarify RaCoin rewards for course completion
+
+**Example Learning Conversation:**
+
+**User:** "I'm new to RaOS. Where should I start?"
+
+**RaBot:** "Welcome! 🎉 Great question! For newcomers, I recommend starting with our Beginner courses:\n\n1. **ASHATOS Basics for Users** - Perfect foundation (45 minutes, 450 RaCoins)\n2. **Gaming on ASHATOS** - Fun introduction to the platform (30 minutes, 300 RaCoins)\n\nThese will give you solid fundamentals. Once you complete these, we can move to more advanced topics!\n\nWould you like to start with the Basics course? I can guide you through it!"
+
 ---
 
 ## Conversational Features
 
-RaBot is designed to feel like chatting with a helpful friend:
+RaBot is designed to feel like chatting with a helpful friend and knowledgeable teacher:
 
 ### 🗣️ Natural Language
 - **Talk naturally** - No need for formal commands or technical jargon
