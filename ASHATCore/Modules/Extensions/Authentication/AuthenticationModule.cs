@@ -15,8 +15,7 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
 {
     public override string Name => "Authentication";
 
-    private readonly Dictionary<Guid, User> _users = new();
-    private readonly Dictionary<string, Session> _sessions = new();
+    private readonly AuthenticationDatabase _database;
     private readonly List<SecurityEvent> _securityEvents = new();
     private readonly object _lock = new();
     private ILicenseModule? _licenseModule;
@@ -30,6 +29,11 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
 
     private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
 
+    public AuthenticationModule()
+    {
+        _database = new AuthenticationDatabase();
+    }
+
     public override void Initialize(object? manager)
     {
         base.Initialize(manager);
@@ -40,13 +44,17 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
             _licenseModule = moduleManager.GetModuleByName("License") as ILicenseModule;
         }
 
-        LogInfo("Authentication module initialized with secure password hashing (PBKDF2)");
+        LogInfo("Authentication module initialized with secure password hashing (PBKDF2) and SQLite persistence");
 
         // Create default admin user if no users exist
-        if (_users.Count == 0)
+        var users = _database.GetAllUsers();
+        if (users.Count == 0)
         {
             CreateDefaultAdminUser();
         }
+
+        // Cleanup expired sessions on startup
+        _database.CleanupExpiredSessions();
     }
 
     public override string Process(string input)
@@ -70,10 +78,12 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
 
         if (text.Equals("stats", StringComparison.OrdinalIgnoreCase))
         {
+            var allUsers = _database.GetAllUsers();
+            var activeSessions = _database.GetActiveSessions();
             var stats = new
             {
-                TotalUsers = _users.Count,
-                ActiveSessions = _sessions.Count(s => s.Value.IsValid && s.Value.ExpiresAtUtc > DateTime.UtcNow),
+                TotalUsers = allUsers.Count,
+                ActiveSessions = activeSessions.Count,
                 SecurityEvents = _securityEvents.Count,
                 RecentEvents = _securityEvents.TakeLast(10).Select(e => new
                 {
@@ -132,7 +142,8 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
             }
 
             // Check if username already exists
-            if (_users.Values.Any(u => u.Username.Equals(request.Username, StringComparison.OrdinalIgnoreCase)))
+            var existingUser = _database.GetUserByUsername(request.Username);
+            if (existingUser != null)
             {
                 LogSecurityEvent(SecurityEventType.RegistrationFailure, request.Username, null, ipAddress, "Username already exists", false);
                 return new AuthResponse { Success = false, Message = "Username already exists" };
@@ -154,7 +165,7 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
                 IsActive = true
             };
 
-            _users[user.Id] = user;
+            _database.SaveUser(user);
 
             LogSecurityEvent(SecurityEventType.RegistrationSuccess, user.Username, user.Id, ipAddress, "User registered successfully", true);
             LogInfo($"User registered: {user.Username}");
@@ -177,8 +188,7 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
         lock (_lock)
         {
             // Find user
-            user = _users.Values.FirstOrDefault(u =>
-                u.Username.Equals(request.Username, StringComparison.OrdinalIgnoreCase));
+            user = _database.GetUserByUsername(request.Username);
 
             if (user == null || !user.IsActive)
             {
@@ -222,8 +232,9 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
                 IsValid = true
             };
 
-            _sessions[token] = session;
+            _database.SaveSession(session);
             user.LastLoginUtc = DateTime.UtcNow;
+            _database.SaveUser(user);
 
             LogSecurityEvent(SecurityEventType.LoginSuccess, user.Username, user.Id, ipAddress, "Login successful", true);
             if (_licenseModule != null && user.Role != UserRole.SuperAdmin)
@@ -251,10 +262,11 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
 
         lock (_lock)
         {
-            if (_sessions.TryGetValue(token, out var session))
+            var session = _database.GetSessionByToken(token);
+            if (session != null)
             {
-                session.IsValid = false;
-                var user = _users.GetValueOrDefault(session.UserId);
+                _database.InvalidateSession(token);
+                var user = _database.GetUserById(session.UserId);
                 LogSecurityEvent(SecurityEventType.Logout, user?.Username ?? "Unknown", session.UserId, "", "Logout successful", true);
                 LogInfo($"User logged out: {user?.Username ?? "Unknown"}");
                 return true;
@@ -269,7 +281,8 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
 
         lock (_lock)
         {
-            if (_sessions.TryGetValue(token, out var session))
+            var session = _database.GetSessionByToken(token);
+            if (session != null)
             {
                 if (session.IsValid && session.ExpiresAtUtc > DateTime.UtcNow)
                 {
@@ -277,7 +290,7 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
                 }
                 else if (session.ExpiresAtUtc <= DateTime.UtcNow && session.IsValid)
                 {
-                    session.IsValid = false;
+                    _database.InvalidateSession(token);
                     LogSecurityEvent(SecurityEventType.SessionExpired, "", session.UserId, "", "Session expired", false);
                 }
             }
@@ -292,7 +305,7 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
         {
             lock (_lock)
             {
-                return _users.GetValueOrDefault(session.UserId);
+                return _database.GetUserById(session.UserId);
             }
         }
         return null;
@@ -462,7 +475,7 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
             IsActive = true
         };
 
-        _users[admin.Id] = admin;
+        _database.SaveUser(admin);
         LogInfo("Default admin user created (username: admin, password: admin123) - CHANGE THIS PASSWORD!");
     }
 
@@ -502,7 +515,7 @@ Default Admin:
     {
         lock (_lock)
         {
-            return _users.Values.ToList();
+            return _database.GetAllUsers();
         }
     }
 
@@ -513,9 +526,11 @@ Default Admin:
     {
         lock (_lock)
         {
-            if (_users.TryGetValue(userId, out var user))
+            var user = _database.GetUserById(userId);
+            if (user != null)
             {
                 user.Role = newRole;
+                _database.SaveUser(user);
                 LogInfo($"User {user.Username} role updated to {newRole}");
                 return true;
             }
@@ -527,6 +542,7 @@ Default Admin:
 
     public override void Dispose()
     {
+        _database?.Dispose();
         base.Dispose();
     }
 }
