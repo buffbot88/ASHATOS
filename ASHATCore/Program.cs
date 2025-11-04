@@ -2211,8 +2211,6 @@ Console.WriteLine("  POST /api/control/server/mode - Change server mode (SuperAd
 Console.WriteLine("  GET  /api/control/server/modes - List available server modes (Admin+)");
 Console.WriteLine("  POST /api/control/server/underconstruction - Toggle Under Construction mode (Admin+)");
 Console.WriteLine("  GET  /api/control/server/underconstruction - Get Under Construction status (Admin+)");
-Console.WriteLine("  GET  /api/control/stats - Get control panel statistics (Admin+)");
-Console.WriteLine("  GET  /api/control/modules - Get loaded modules list (Admin+)");
 
 
 
