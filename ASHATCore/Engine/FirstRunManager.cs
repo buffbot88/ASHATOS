@@ -61,7 +61,9 @@ public class FirstRunManager
             Mode = ServerMode.Production,
             IsFirstRun = true,
             CmsPath = _cmsPath,
-            UnderConstruction = true  // Default to Under Construction until admin sets up the site
+            UnderConstruction = false,  // Default to accessible, admins can enable if needed
+            ServerActivated = false,  // Requires activation
+            ServerFirstStarted = DateTime.UtcNow  // Track when server first started
         };
     }
     

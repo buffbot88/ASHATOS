@@ -125,7 +125,7 @@ public class ServerConfiguration
     /// <summary>
     /// Indicates if the site is in "Under Construction" mode
     /// When enabled, non-admin users see a friendly Under Construction page
-    /// Defaults to false; set to true during first-run initialization until admin completes initial setup
+    /// Defaults to false (site is accessible by default)
     /// </summary>
     public bool UnderConstruction { get; set; } = false;
     
@@ -164,9 +164,14 @@ public class ServerConfiguration
     
     /// <summary>
     /// Indicates if the server has been activated with a valid license
-    /// Server activation is pre-enabled in enterprise development mode
+    /// Defaults to false - requires activation within 30 days
     /// </summary>
-    public bool ServerActivated { get; set; } = true;
+    public bool ServerActivated { get; set; } = false;
+    
+    /// <summary>
+    /// Timestamp when the server was first started (for 30-day activation tracking)
+    /// </summary>
+    public DateTime? ServerFirstStarted { get; set; }
     
     /// <summary>
     /// Timestamp when the server was activated

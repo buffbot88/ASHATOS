@@ -62,6 +62,23 @@ public static class AuthEndpoints
                 var ipAddress = context.Connection.RemoteIpAddress?.ToString() ?? "";
                 var useASHATgent = context.Request.Headers["User-Agent"].ToString();
                 var response = await authModule.LoginAsync(request, ipAddress, useASHATgent);
+                
+                // Set HTTP-only cookie for session persistence
+                if (response.Success && response.Token != null)
+                {
+                    // Use HTTPS in production, HTTP allowed in development
+                    var isProduction = context.Request.Host.Host != "localhost" && 
+                                      context.Request.Host.Host != "127.0.0.1";
+                    
+                    context.Response.Cookies.Append("authToken", response.Token, new CookieOptions
+                    {
+                        HttpOnly = true,
+                        Secure = isProduction, // HTTPS required in production
+                        SameSite = SameSiteMode.Lax,
+                        Expires = response.TokenExpiresAt
+                    });
+                }
+                
                 await context.Response.WriteAsJsonAsync(response);
             }
             catch (Exception ex)

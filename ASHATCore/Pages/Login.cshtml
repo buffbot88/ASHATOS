@@ -247,16 +247,37 @@
                 const data = await response.json();
 
                 if (data.success && data.token) {
-                    // Store the token in localStorage
-                    localStorage.setItem('authToken', data.token);
+                    // Store the token in localStorage for client-side access
+                    localStorage.setItem('ASHATCore_token', data.token);
+                    localStorage.setItem('authToken', data.token);  // Also store as authToken for compatibility
                     localStorage.setItem('username', data.user.username);
                     localStorage.setItem('userRole', data.user.role);
                     
                     showMessage('Login successful! Redirecting...', 'success');
                     
-                    // Redirect based on user role
-                    setTimeout(() => {
+                    // For Admin/SuperAdmin, check if server is activated
+                    setTimeout(async () => {
                         if (data.user.role === 1 || data.user.role === 2) { // Admin or SuperAdmin
+                            // Check server activation status
+                            try {
+                                const statusResponse = await fetch('/api/control/activation-status', {
+                                    headers: { 'Authorization': 'Bearer ' + data.token }
+                                });
+                                
+                                if (statusResponse.ok) {
+                                    const statusData = await statusResponse.json();
+                                    
+                                    // If not activated, redirect to activation page
+                                    if (!statusData.activated) {
+                                        window.location.href = '/activation';
+                                        return;
+                                    }
+                                }
+                            } catch (err) {
+                                console.log('Could not check activation status:', err);
+                            }
+                            
+                            // If activated or check failed, go to control panel
                             window.location.href = '/control-panel';
                         } else {
                             window.location.href = '/';

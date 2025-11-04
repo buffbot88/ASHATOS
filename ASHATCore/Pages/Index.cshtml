@@ -213,6 +213,61 @@
     </style>
 </head>
 <body>
+    @{
+        // Check if server needs activation warning
+        var showActivationWarning = false;
+        var daysRemaining = 30;
+        
+        try
+        {
+            var serverRoot = Directory.GetCurrentDirectory();
+            var configPath = System.IO.Path.Combine(serverRoot, "server-config.json");
+            if (System.IO.File.Exists(configPath))
+            {
+                var json = System.IO.File.ReadAllText(configPath);
+                using var doc = System.Text.Json.JsonDocument.Parse(json);
+                var root = doc.RootElement;
+                
+                var activated = root.TryGetProperty("ServerActivated", out var activatedProp) && activatedProp.GetBoolean();
+                
+                if (!activated && root.TryGetProperty("ServerFirstStarted", out var firstStartProp))
+                {
+                    var firstStart = firstStartProp.GetDateTime();
+                    var daysSinceStart = (DateTime.UtcNow - firstStart).TotalDays;
+                    daysRemaining = Math.Max(0, 30 - (int)Math.Ceiling(daysSinceStart));
+                    showActivationWarning = true;
+                }
+            }
+        }
+        catch (Exception ex) 
+        { 
+            // Log configuration read failure for debugging
+            System.Diagnostics.Debug.WriteLine($"Failed to read server config for activation banner: {ex.Message}");
+        }
+        
+        if (showActivationWarning)
+        {
+            <div class="activation-warning-banner" style="
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background: white;
+                color: #dc2626;
+                padding: 12px 20px;
+                text-align: center;
+                font-weight: 600;
+                font-size: 14px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+                z-index: 9999;
+                border-bottom: 3px solid #dc2626;
+            ">
+                ⚠️ SERVER NOT ACTIVATED - @daysRemaining days remaining to activate this server. <a href="/activation" style="color: #dc2626; text-decoration: underline; font-weight: 700;">Activate Now</a>
+            </div>
+            <div style="height: 50px;"></div>
+        }
+    }
+    
     <div class="header">
         <h1>🌟 AGP Studios, INC</h1>
         <p class="tagline">Unity meets Software - ASHAT Os v@Model.Version</p>
