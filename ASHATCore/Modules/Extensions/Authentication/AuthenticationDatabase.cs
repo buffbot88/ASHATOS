@@ -224,7 +224,9 @@ VALUES ($id, $userId, $token, $createdAtUtc, $expiresAtUtc, $lastActivityUtc, $i
         conn.Open();
         using var cmd = conn.CreateCommand();
         
-        cmd.CommandText = "SELECT * FROM Sessions WHERE Token = $token;";
+        cmd.CommandText = @"
+SELECT Id, UserId, Token, CreatedAtUtc, ExpiresAtUtc, LastActivityUtc, IpAddress, UserAgent, IsValid 
+FROM Sessions WHERE Token = $token;";
         cmd.Parameters.AddWithValue("$token", token);
         
         using var reader = cmd.ExecuteReader();
@@ -242,7 +244,9 @@ VALUES ($id, $userId, $token, $createdAtUtc, $expiresAtUtc, $lastActivityUtc, $i
         conn.Open();
         using var cmd = conn.CreateCommand();
         
-        cmd.CommandText = "SELECT * FROM Sessions WHERE IsValid = 1 AND ExpiresAtUtc > $now;";
+        cmd.CommandText = @"
+SELECT Id, UserId, Token, CreatedAtUtc, ExpiresAtUtc, LastActivityUtc, IpAddress, UserAgent, IsValid 
+FROM Sessions WHERE IsValid = 1 AND ExpiresAtUtc > $now;";
         cmd.Parameters.AddWithValue("$now", DateTime.UtcNow.ToString("o"));
         
         using var reader = cmd.ExecuteReader();
