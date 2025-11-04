@@ -1432,12 +1432,18 @@ static string GenerateControlPanelUI()
                 
                 // Load modules if not already loaded
                 if (loadedModules.length === 0) {
-                    await loadModules();
+                    try {
+                        await loadModules();
+                    } catch (err) {
+                        console.error('Failed to load modules:', err);
+                        container.innerHTML = '<p style=""color: #ef4444;"">Failed to load modules. Please check your connection and try again.</p>';
+                        return;
+                    }
                 }
                 
                 // Check again after loading
                 if (loadedModules.length === 0) {
-                    container.innerHTML = '<p style=""color: #d8c8ff;"">No modules available.</p>';
+                    container.innerHTML = '<p style=""color: #d8c8ff;"">No modules are currently loaded on this server.</p>';
                     return;
                 }
                 
