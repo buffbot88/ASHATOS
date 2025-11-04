@@ -38,10 +38,10 @@ public sealed class ForumModule : ModuleBase, IForumModule
         Console.WriteLine($"[{Name}] Content moderation: {(_moderationModule != null ? "enabled" : "disabled")}");
         Console.WriteLine($"[{Name}] Parental controls: {(_parentalControlModule != null ? "enabled" : "disabled")}");
         
-        // Seed some example data
+        // Seed default categories
         SeedExampleData();
         
-        Console.WriteLine($"[{Name}] Forum Module initialized with {_posts.Count} posts");
+        Console.WriteLine($"[{Name}] Forum Module initialized with {_categories.Count} default categories");
     }
     
     public override string Process(string input)
@@ -414,59 +414,12 @@ public sealed class ForumModule : ModuleBase, IForumModule
     
     private void SeedExampleData()
     {
-        // Create some example posts - default to Admin user
-        var posts = new[]
-        {
-            new ForumPost
-            {
-                Id = "post_1",
-                ThreadId = "thread_1",
-                UserId = "admin",
-                Username = "Admin",
-                Title = "Welcome to ASHATCore Forums!",
-                Content = "This is the first post on our new forum system. Feel free to introduce yourself and explore the community!",
-                CreatedAt = DateTime.UtcNow.AddDays(-7),
-                ReplyCount = 15,
-                ViewCount = 234
-            },
-            new ForumPost
-            {
-                Id = "post_2",
-                ThreadId = "thread_2",
-                UserId = "admin",
-                Username = "Admin",
-                Title = "How to use AI Content Generation",
-                Content = "Tutorial on using the AI content Generation system. Check out the documentation for more details.",
-                CreatedAt = DateTime.UtcNow.AddDays(-5),
-                ReplyCount = 8,
-                ViewCount = 156
-            },
-            new ForumPost
-            {
-                Id = "post_3",
-                ThreadId = "thread_3",
-                UserId = "admin",
-                Username = "Admin",
-                Title = "Server Maintenance Schedule",
-                Content = "Scheduled maintenance for this weekend. The system will be offline briefly.",
-                CreatedAt = DateTime.UtcNow.AddDays(-2),
-                ReplyCount = 3,
-                ViewCount = 89,
-                IsLocked = true
-            }
-        };
-        
-        foreach (var post in posts)
-        {
-            _posts[post.Id] = post;
-        }
-        
-        // Seed some default categories
+        // Seed default categories (editable by admins)
         _categories["General"] = new ForumCategory 
         { 
             Name = "General", 
             Description = "General discussion and topics",
-            ThreadCount = 3,
+            ThreadCount = 0,
             CreatedAt = DateTime.UtcNow.AddDays(-30)
         };
         _categories["Support"] = new ForumCategory 

@@ -40,7 +40,7 @@ public sealed class BlogModule : ModuleBase, IBlogModule
         
         SeedExampleData();
         
-        Console.WriteLine($"[{Name}] Blog Module initialized with {_posts.Count} posts");
+        Console.WriteLine($"[{Name}] Blog Module initialized with {_categories.Count} default categories");
     }
     
     public override string Process(string input)
@@ -441,57 +441,23 @@ public sealed class BlogModule : ModuleBase, IBlogModule
     
     private void SeedExampleData()
     {
-        var post1Id = Guid.NewGuid().ToString();
-        var post1 = new BlogPost
-        {
-            Id = post1Id,
-            UserId = "admin",
-            Username = "Admin",
-            Title = "Welcome to ASHATCore Blogs",
-            Content = "This is the first blog post on ASHATCore. Share your thoughts, stories, and ideas with the community! This blogging platform is powered by the Legendary CMS Suite and features content moderation, user profiles, and social features.",
-            Category = "Announcements",
-            CreatedAt = DateTime.UtcNow.AddDays(-7),
-            IsPublished = true,
-            ViewCount = 42,
-            CommentCount = 3
-        };
-        _posts[post1Id] = post1;
-        _postComments[post1Id] = new List<string>();
-        
-        var post2Id = Guid.NewGuid().ToString();
-        var post2 = new BlogPost
-        {
-            Id = post2Id,
-            UserId = "admin",
-            Username = "Admin",
-            Title = "Getting Started with ASHATCore",
-            Content = "A comprehensive guide to using ASHATCore's blogging features. Learn how to create posts, manage your profile, and engage with the community.",
-            Category = "Tutorials",
-            CreatedAt = DateTime.UtcNow.AddDays(-3),
-            IsPublished = true,
-            ViewCount = 28,
-            CommentCount = 1
-        };
-        _posts[post2Id] = post2;
-        _postComments[post2Id] = new List<string>();
-        
-        // Seed some default categories
+        // Seed default categories (editable by admins)
         _categories["Announcements"] = new BlogCategory 
         { 
             Name = "Announcements", 
             Description = "Official announcements and news",
-            PostCount = 1,
+            PostCount = 0,
             CreatedAt = DateTime.UtcNow.AddDays(-30)
         };
         _categories["Tutorials"] = new BlogCategory 
         { 
             Name = "Tutorials", 
             Description = "How-to guides and tutorials",
-            PostCount = 1,
+            PostCount = 0,
             CreatedAt = DateTime.UtcNow.AddDays(-30)
         };
         
-        Console.WriteLine($"[{Name}] Seeded {_posts.Count} example blog posts and {_categories.Count} categories");
+        Console.WriteLine($"[{Name}] Seeded {_categories.Count} default blog categories");
     }
     
     public async Task<bool> ManageCategoryAsync(string categoryName, string description)

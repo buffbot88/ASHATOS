@@ -18,7 +18,7 @@ public record ServerModeChangeRequest(string Mode);
 public record UnderConstructionRequest(bool Enabled, string? Message);
 
 // Forum Request Models
-public record ForumPostActionRequest(string PostId, string Action);
+public record ForumPostActionRequest(string PostId, string Action, string? Reason = null);
 public record ForumLockRequest(string ThreadId, bool Locked, string? Reason);
 public record ForumWarningRequest(string UserId, string Reason);
 public record ForumBanRequest(string UserId, string Reason, int durationDays);

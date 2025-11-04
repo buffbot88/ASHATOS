@@ -474,6 +474,43 @@ app.MapDelete("/api/control/forum/posts/{postId}", async (HttpContext context) =
         return Results.Json(new { error = "Insufficient permissions" });
     }
     
+    // Check forum settings for thread deletion permissions
+    var settingsModule = moduleManager.Modules
+        .Select(m => m.Instance)
+        .FirstOrDefault(m => m.Name == "Settings");
+    
+    if (settingsModule != null)
+    {
+        try
+        {
+            var getMethod = settingsModule.GetType().GetMethod("GetModuleSettings");
+            var settings = getMethod?.Invoke(settingsModule, new object[] { "Forum" }) as Dictionary<string, string>;
+            
+            var allowThreadDeletion = settings?.GetValueOrDefault("allowThreadDeletion", "true") ?? "true";
+            if (allowThreadDeletion.ToLower() != "true")
+            {
+                context.Response.StatusCode = 403;
+                return Results.Json(new { error = "Post deletion is disabled in forum settings" });
+            }
+            
+            // Check if moderator deletion is allowed (for non-admin users)
+            if (user.Role < UserRole.Admin)
+            {
+                var allowModeratorThreadDeletion = settings?.GetValueOrDefault("allowModeratorThreadDeletion", "true") ?? "true";
+                if (allowModeratorThreadDeletion.ToLower() != "true")
+                {
+                    context.Response.StatusCode = 403;
+                    return Results.Json(new { error = "Moderators are not allowed to delete posts in forum settings" });
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Forum Deletion] Warning: Could not check settings: {ex.Message}");
+            // Continue with deletion if settings check fails
+        }
+    }
+    
     var postId = context.Request.RouteValues["postId"]?.ToString();
     if (string.IsNullOrEmpty(postId))
     {
@@ -499,7 +536,7 @@ app.MapDelete("/api/control/forum/posts/{postId}", async (HttpContext context) =
         return Results.Json(new { error = "Forum module not available" });
     }
     
-    var success = await forumModule.DeletePostAsync(postId, user.Id.ToString(), "Deleted by Moderator");
+    var success = await forumModule.DeletePostAsync(postId, user.Id.ToString(), body.Reason ?? "Deleted by Moderator");
     return Results.Json(new { success, message = success ? "Post deleted" : "Post not found" });
 });
 
@@ -2245,7 +2282,9 @@ app.MapGet("/api/control/forums/settings", async (HttpContext context) =>
                 maxAttachmentSize = settings?.GetValueOrDefault("maxAttachmentSize", "5242880") ?? "5242880",
                 postsPerPage = settings?.GetValueOrDefault("postsPerPage", "20") ?? "20",
                 autoLockAfterDays = settings?.GetValueOrDefault("autoLockAfterDays", "0") ?? "0",
-                allowUserRatings = settings?.GetValueOrDefault("allowUserRatings", "true") ?? "true"
+                allowUserRatings = settings?.GetValueOrDefault("allowUserRatings", "true") ?? "true",
+                allowThreadDeletion = settings?.GetValueOrDefault("allowThreadDeletion", "true") ?? "true",
+                allowModeratorThreadDeletion = settings?.GetValueOrDefault("allowModeratorThreadDeletion", "true") ?? "true"
             };
             
             return Results.Json(new { success = true, settings = forumSettings });
