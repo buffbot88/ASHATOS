@@ -21,6 +21,7 @@ public sealed class LegendaryCMSModule : ModuleBase, ILegendaryCMSModule
     private PluginManager? _pluginManager;
     private CMSAPIManager? _apiManager;
     private IRBACManager? _rbacManager;
+    private AIChatbotManager? _chatbotManager;
     private IServiceProvider? _serviceProvider;
     private DateTime _startTime;
     private bool _isInitialized;
@@ -62,6 +63,12 @@ public sealed class LegendaryCMSModule : ModuleBase, ILegendaryCMSModule
             _pluginManager = new PluginManager(_serviceProvider, pluginLogger);
             LogInfo("Plugin system initialized");
 
+            // Initialize AI Chatbot Manager
+            _chatbotManager = new AIChatbotManager();
+            _chatbotManager.Initialize(manager);
+            RegisterChatbotEndpoints();
+            LogInfo("AI Chatbot system initialized");
+
             _startTime = DateTime.UtcNow;
             _isInitialized = true;
             _isRunning = true;
@@ -72,6 +79,7 @@ public sealed class LegendaryCMSModule : ModuleBase, ILegendaryCMSModule
             LogInfo($"   API: {_apiManager.GetEndpoints().Count} endpoints registered");
             LogInfo($"   Plugins: Ready for dynamic loading");
             LogInfo($"   Security: RBAC enabled with granular permissions");
+            LogInfo($"   AI Chatbot: Ready for intelligent conversations");
         }
         catch (Exception ex)
         {
@@ -215,6 +223,131 @@ public sealed class LegendaryCMSModule : ModuleBase, ILegendaryCMSModule
         LogInfo($"Registered {_apiManager.GetEndpoints().Count} API endpoints");
     }
 
+    private void RegisterChatbotEndpoints()
+    {
+        if (_apiManager == null || _chatbotManager == null) return;
+
+        // Start conversation endpoint
+        _apiManager.RegisterEndpoint(new CMSAPIEndpoint
+        {
+            Path = "/api/chatbot/start",
+            Method = "POST",
+            Description = "Start a new AI chatbot conversation",
+            RequiresAuthentication = true,
+            Handler = async (request) =>
+            {
+                var userId = request.UserId ?? "anonymous";
+                var username = request.BodyData.GetValueOrDefault("username", userId);
+                var conversation = await _chatbotManager.StartConversationAsync(userId, username);
+                return CMSAPIResponse.Success(conversation);
+            }
+        });
+
+        // Send message endpoint
+        _apiManager.RegisterEndpoint(new CMSAPIEndpoint
+        {
+            Path = "/api/chatbot/message",
+            Method = "POST",
+            Description = "Send a message to the AI chatbot",
+            RequiresAuthentication = true,
+            Handler = async (request) =>
+            {
+                var conversationId = request.BodyData.GetValueOrDefault("conversationId", "");
+                var message = request.BodyData.GetValueOrDefault("message", "");
+                var userId = request.UserId ?? "anonymous";
+
+                if (string.IsNullOrEmpty(conversationId) || string.IsNullOrEmpty(message))
+                {
+                    return CMSAPIResponse.BadRequest("conversationId and message are required");
+                }
+
+                var response = await _chatbotManager.SendMessageAsync(conversationId, userId, message);
+                return response.Success 
+                    ? CMSAPIResponse.Success(response)
+                    : CMSAPIResponse.BadRequest(response.Error ?? "Failed to send message");
+            }
+        });
+
+        // Get conversation history endpoint
+        _apiManager.RegisterEndpoint(new CMSAPIEndpoint
+        {
+            Path = "/api/chatbot/history",
+            Method = "GET",
+            Description = "Get conversation history",
+            RequiresAuthentication = true,
+            Handler = async (request) =>
+            {
+                var conversationId = request.QueryParameters.GetValueOrDefault("conversationId", "");
+                var userId = request.UserId ?? "anonymous";
+                var limitStr = request.QueryParameters.GetValueOrDefault("limit", "50");
+                
+                if (string.IsNullOrEmpty(conversationId))
+                {
+                    return CMSAPIResponse.BadRequest("conversationId is required");
+                }
+
+                var limit = int.TryParse(limitStr, out var l) ? l : 50;
+                var history = await _chatbotManager.GetConversationHistoryAsync(conversationId, userId, limit);
+                return CMSAPIResponse.Success(new { conversationId, messages = history });
+            }
+        });
+
+        // Get user conversations endpoint
+        _apiManager.RegisterEndpoint(new CMSAPIEndpoint
+        {
+            Path = "/api/chatbot/conversations",
+            Method = "GET",
+            Description = "Get all conversations for the current user",
+            RequiresAuthentication = true,
+            Handler = async (request) =>
+            {
+                var userId = request.UserId ?? "anonymous";
+                var conversations = await _chatbotManager.GetUserConversationsAsync(userId);
+                return CMSAPIResponse.Success(new { userId, conversations });
+            }
+        });
+
+        // End conversation endpoint
+        _apiManager.RegisterEndpoint(new CMSAPIEndpoint
+        {
+            Path = "/api/chatbot/end",
+            Method = "POST",
+            Description = "End an AI chatbot conversation",
+            RequiresAuthentication = true,
+            Handler = async (request) =>
+            {
+                var conversationId = request.BodyData.GetValueOrDefault("conversationId", "");
+                var userId = request.UserId ?? "anonymous";
+
+                if (string.IsNullOrEmpty(conversationId))
+                {
+                    return CMSAPIResponse.BadRequest("conversationId is required");
+                }
+
+                var success = await _chatbotManager.EndConversationAsync(conversationId, userId);
+                return success 
+                    ? CMSAPIResponse.Success(new { message = "Conversation ended successfully" })
+                    : CMSAPIResponse.BadRequest("Failed to end conversation");
+            }
+        });
+
+        // Get chatbot stats endpoint
+        _apiManager.RegisterEndpoint(new CMSAPIEndpoint
+        {
+            Path = "/api/chatbot/stats",
+            Method = "GET",
+            Description = "Get AI chatbot statistics",
+            RequiresAuthentication = false,
+            Handler = async (request) =>
+            {
+                var stats = await _chatbotManager.GetStatsAsync();
+                return CMSAPIResponse.Success(stats);
+            }
+        });
+
+        LogInfo("Registered 6 chatbot API endpoints");
+    }
+
     public override string Process(string input)
     {
         var command = (input ?? string.Empty).Trim().ToLowerInvariant();
@@ -241,6 +374,9 @@ public sealed class LegendaryCMSModule : ModuleBase, ILegendaryCMSModule
             case "cms rbac":
                 return GetRBACInfoText();
 
+            case "cms chatbot":
+                return GetChatbotInfoText();
+
             case "cms openapi":
                 return _apiManager?.GenerateOpenAPISpec() ?? "API Manager not initialized";
 
@@ -258,6 +394,7 @@ public sealed class LegendaryCMSModule : ModuleBase, ILegendaryCMSModule
   cms api          - List API endpoints
   cms plugins      - Show loaded plugins
   cms rbac         - Display RBAC information
+  cms chatbot      - Display AI Chatbot information
   cms openapi      - Generate OpenAPI/Swagger spec
 
 Features:
@@ -266,6 +403,7 @@ Features:
   ✓ REST API with Rate limiting
   ✓ Enhanced RBAC with granular permissions
   ✓ Environment-aware Configuration
+  ✓ AI Chatbot support
   ✓ OpenAPI/Swagger documentation
   ✓ Production-ready security";
     }
@@ -368,6 +506,42 @@ Permission Categories:
 granular permissions allow fine-tuned access control for all CMS features.";
     }
 
+    private string GetChatbotInfoText()
+    {
+        if (_chatbotManager == null) return "AI Chatbot Manager not initialized";
+
+        var statsTask = _chatbotManager.GetStatsAsync();
+        statsTask.Wait();
+        var stats = statsTask.Result;
+
+        return $@"AI Chatbot Information:
+
+Status:
+  • AI Module: {(stats.AIModuleAvailable ? "✓ Available" : "✗ Not Available (using fallback responses)")}
+  • Bot Name: {stats.BotName}
+  • Active Conversations: {stats.ActiveConversations}
+  • Total Conversations: {stats.TotalConversations}
+  • Total Messages: {stats.TotalMessages}
+
+API Endpoints:
+  • POST /api/chatbot/start - Start a new conversation
+  • POST /api/chatbot/message - Send a message to the bot
+  • GET /api/chatbot/history - Get conversation history
+  • GET /api/chatbot/conversations - Get all user conversations
+  • POST /api/chatbot/end - End a conversation
+  • GET /api/chatbot/stats - Get chatbot statistics
+
+Features:
+  • Intelligent AI-powered responses
+  • Context-aware conversations
+  • Integration with CMS knowledge base
+  • Fallback responses when AI unavailable
+  • Conversation history tracking
+  • Multi-user conversation support
+
+The AI chatbot helps users with content management, forums, blogs, permissions, and general CMS questions.";
+    }
+
     public CMSStatus GetStatus()
     {
         return new CMSStatus
@@ -381,7 +555,8 @@ granular permissions allow fine-tuned access control for all CMS features.";
                 ["Configuration"] = _Configuration != null,
                 ["API"] = _apiManager != null,
                 ["Plugins"] = _pluginManager != null,
-                ["RBAC"] = _rbacManager != null
+                ["RBAC"] = _rbacManager != null,
+                ["Chatbot"] = _chatbotManager != null
             },
             HealthChecks = new Dictionary<string, string>
             {

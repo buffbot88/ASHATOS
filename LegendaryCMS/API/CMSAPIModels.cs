@@ -35,7 +35,10 @@ public class CMSAPIRequest
     public string Method { get; set; } = "GET";
     public Dictionary<string, string> Headers { get; set; } = new();
     public Dictionary<string, object> Parameters { get; set; } = new();
+    [Obsolete("Use BodyData for structured data")]
     public string? Body { get; set; }
+    public Dictionary<string, string> BodyData { get; set; } = new();
+    public Dictionary<string, string> QueryParameters { get; set; } = new();
     public string? UserId { get; set; }
     public List<string> UserPermissions { get; set; } = new();
 }
@@ -73,6 +76,11 @@ public class CMSAPIResponse
     public static CMSAPIResponse NotFound(string message = "Not Found")
     {
         return new CMSAPIResponse { StatusCode = 404, ErrorMessage = message };
+    }
+
+    public static CMSAPIResponse BadRequest(string message = "Bad Request")
+    {
+        return new CMSAPIResponse { StatusCode = 400, ErrorMessage = message };
     }
 }
 
