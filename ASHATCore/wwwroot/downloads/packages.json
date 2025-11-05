@@ -1,0 +1,68 @@
+[
+  {
+    "Id": "ashat-desktop-windows",
+    "Name": "ASHAT Desktop Assistant (Windows)",
+    "Version": "1.0.0",
+    "Platform": "Windows",
+    "Architecture": "x64",
+    "FileSize": "~15 MB",
+    "FileName": "ASHATDesktopAssistant.exe",
+    "Description": "Standalone ASHAT desktop assistant for Windows. Features voice synthesis, animations, and AI coding assistance.",
+    "Requirements": [
+      ".NET 9.0 Runtime or included in standalone build"
+    ],
+    "Features": [
+      "\u2728 Animated Roman goddess character",
+      "\uD83C\uDFA4 Soft female voice synthesis",
+      "\uD83E\uDD16 AI coding and productivity assistant",
+      "\uD83D\uDC51 Multiple personality modes",
+      "\uD83C\uDFAD Various animations and expressions",
+      "\uD83D\uDCAB Always-on-desktop companion",
+      "\uD83D\uDD0C Optional server connection for advanced features"
+    ]
+  },
+  {
+    "Id": "ashat-desktop-linux",
+    "Name": "ASHAT Desktop Assistant (Linux)",
+    "Version": "1.0.0",
+    "Platform": "Linux",
+    "Architecture": "x64",
+    "FileSize": "~15 MB",
+    "FileName": "ASHATDesktopAssistant",
+    "Description": "Standalone ASHAT desktop assistant for Linux. Features voice synthesis, animations, and AI coding assistance.",
+    "Requirements": [
+      ".NET 9.0 Runtime or included in standalone build"
+    ],
+    "Features": [
+      "\u2728 Animated Roman goddess character",
+      "\uD83C\uDFA4 Soft female voice synthesis",
+      "\uD83E\uDD16 AI coding and productivity assistant",
+      "\uD83D\uDC51 Multiple personality modes",
+      "\uD83C\uDFAD Various animations and expressions",
+      "\uD83D\uDCAB Always-on-desktop companion",
+      "\uD83D\uDD0C Optional server connection for advanced features"
+    ]
+  },
+  {
+    "Id": "ashat-desktop-macos",
+    "Name": "ASHAT Desktop Assistant (macOS)",
+    "Version": "1.0.0",
+    "Platform": "macOS",
+    "Architecture": "x64/arm64",
+    "FileSize": "~15 MB",
+    "FileName": "ASHATDesktopAssistant",
+    "Description": "Standalone ASHAT desktop assistant for macOS. Features voice synthesis, animations, and AI coding assistance.",
+    "Requirements": [
+      ".NET 9.0 Runtime or included in standalone build"
+    ],
+    "Features": [
+      "\u2728 Animated Roman goddess character",
+      "\uD83C\uDFA4 Soft female voice synthesis",
+      "\uD83E\uDD16 AI coding and productivity assistant",
+      "\uD83D\uDC51 Multiple personality modes",
+      "\uD83C\uDFAD Various animations and expressions",
+      "\uD83D\uDCAB Always-on-desktop companion",
+      "\uD83D\uDD0C Optional server connection for advanced features"
+    ]
+  }
+]

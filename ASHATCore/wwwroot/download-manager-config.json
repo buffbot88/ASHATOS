@@ -1,0 +1,7 @@
+{
+  "Version": "1.0.0",
+  "EnableDownloads": true,
+  "TrackDownloads": true,
+  "RequireAuthentication": false,
+  "MaxDownloadsPerDay": 1000
+}
