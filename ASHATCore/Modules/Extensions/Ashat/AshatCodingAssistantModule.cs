@@ -152,6 +152,31 @@ public sealed class AshatCodingAssistantModule : ModuleBase
             return AskAshat(question, "anonymous");
         }
 
+        // Direct file editing commands
+        if (text.StartsWith("edit file ", StringComparison.OrdinalIgnoreCase))
+        {
+            var path = text["edit file ".Length..].Trim();
+            return InitiateFileEdit(path);
+        }
+
+        if (text.StartsWith("fix bug in ", StringComparison.OrdinalIgnoreCase))
+        {
+            var path = text["fix bug in ".Length..].Trim();
+            return InitiateBugFix(path);
+        }
+
+        if (text.StartsWith("refactor ", StringComparison.OrdinalIgnoreCase))
+        {
+            var path = text["refactor ".Length..].Trim();
+            return InitiateRefactor(path);
+        }
+
+        if (text.StartsWith("analyze code ", StringComparison.OrdinalIgnoreCase))
+        {
+            var path = text["analyze code ".Length..].Trim();
+            return AnalyzeCode(path);
+        }
+
         return "Unknown command. Type 'help' or 'ashat help' for available commands.";
     }
 
@@ -801,6 +826,12 @@ I'm here to help you develop, debug, and understand the ASHATOS system.
     ashat reject <userId> <reason>         - Reject and revise the plan
     ashat end session <userId>             - End the current session
 
+  Direct File Operations (NEW):
+    ashat edit file <path>                 - Initiate file editing with guidance
+    ashat fix bug in <path>                - Scan and fix bugs in a file
+    ashat refactor <path>                  - Get refactoring suggestions
+    ashat analyze code <path>              - Comprehensive code analysis
+
   Information & Learning:
     ashat modules                          - List all available modules
     ashat module info <name>               - Get detailed info about a module
@@ -812,25 +843,210 @@ I'm here to help you develop, debug, and understand the ASHATOS system.
 
 💡 Example Usage:
     ashat start session dev001 Create a new inventory module
-    ashat continue dev001 It should tASHATck items and quantities
+    ashat continue dev001 It should track items and quantities
     ashat approve dev001
     ashat end session dev001
 
+    ashat edit file /path/to/Module.cs
+    ashat fix bug in /path/to/BuggyFile.cs
+    ashat analyze code /path/to/ComplexFile.cs
+
 🌟 Features:
   • Interactive coding guidance
+  • Direct file editing with automatic backups
+  • Bug detection and automated fixing
+  • Code analysis and refactoring
   • Module knowledge and reference
   • Approval-based workflow (Form Plan → Request Approval → Execute)
-  • integration with Chat Support system
+  • Integration with Chat Support system
   • Context-aware assistance
   • Learning and adaptation
 
-🔗 integration:
+🔗 Integration:
   • Accessible through Chat Support when logged in
   • Available on Dev Pages for guidance
   • References class modules and documentation
   • Works with existing ASHATOS modules
+  • Direct file operations with safety backups
 
 I'm excited to work with you! Start a session and let's build something great! 🚀";
+    }
+
+    // Direct file editing methods
+    private string InitiateFileEdit(string path)
+    {
+        try
+        {
+            // Get FileOperations module
+            var fileOpsModule = _manager?.Modules
+                .FirstOrDefault(m => m.Instance?.Name == "FileOperations")?.Instance;
+
+            if (fileOpsModule == null)
+            {
+                return "❌ FileOperations module not available. Cannot edit files directly.";
+            }
+
+            // Read the file first
+            var readResult = fileOpsModule.Process($"fileops read {path}");
+            
+            var response = new StringBuilder();
+            response.AppendLine("📝 File Edit Mode");
+            response.AppendLine("=================");
+            response.AppendLine();
+            response.AppendLine(readResult);
+            response.AppendLine();
+            response.AppendLine("💡 Available edit operations:");
+            response.AppendLine("  • Use FileOperations module directly: fileops replace <old> with <new> in <path>");
+            response.AppendLine("  • Or start a session: ashat start session <userId> Edit this file");
+            response.AppendLine();
+            response.AppendLine("⚠️  All file edits create automatic backups for safety.");
+
+            LogInfo($"Initiated file edit for: {path}");
+            return response.ToString();
+        }
+        catch (Exception ex)
+        {
+            LogError($"Error initiating file edit: {ex.Message}");
+            return $"❌ Error: {ex.Message}";
+        }
+    }
+
+    private string InitiateBugFix(string path)
+    {
+        try
+        {
+            var response = new StringBuilder();
+            response.AppendLine("🔍 Bug Fix Mode");
+            response.AppendLine("===============");
+            response.AppendLine();
+
+            // Get BugDetector module
+            var bugDetectorModule = _manager?.Modules
+                .FirstOrDefault(m => m.Instance?.Name == "BugDetector")?.Instance;
+
+            if (bugDetectorModule == null)
+            {
+                response.AppendLine("⚠️  BugDetector module not available.");
+                response.AppendLine("I can still help you fix bugs through a coding session.");
+            }
+            else
+            {
+                // Scan the file for bugs
+                response.AppendLine($"Scanning file for potential issues: {path}");
+                response.AppendLine();
+                var scanResult = bugDetectorModule.Process($"bugdetect scan {path}");
+                response.AppendLine(scanResult);
+                response.AppendLine();
+            }
+
+            response.AppendLine("💡 Next steps:");
+            response.AppendLine("  1. Review the detected issues above");
+            response.AppendLine("  2. Use: bugdetect fix <issueId> - to get fix suggestions");
+            response.AppendLine("  3. Use: fileops replace <old> with <new> in <path> - to apply fixes");
+            response.AppendLine("  4. Or start a session: ashat start session <userId> Fix bugs in this file");
+            response.AppendLine();
+            response.AppendLine("⚠️  I'll create backups before any changes.");
+
+            LogInfo($"Initiated bug fix for: {path}");
+            return response.ToString();
+        }
+        catch (Exception ex)
+        {
+            LogError($"Error initiating bug fix: {ex.Message}");
+            return $"❌ Error: {ex.Message}";
+        }
+    }
+
+    private string InitiateRefactor(string path)
+    {
+        try
+        {
+            var response = new StringBuilder();
+            response.AppendLine("🔧 Refactoring Mode");
+            response.AppendLine("==================");
+            response.AppendLine();
+
+            // Read the file
+            var fileOpsModule = _manager?.Modules
+                .FirstOrDefault(m => m.Instance?.Name == "FileOperations")?.Instance;
+
+            if (fileOpsModule != null)
+            {
+                response.AppendLine($"Analyzing file: {path}");
+                response.AppendLine();
+                var readResult = fileOpsModule.Process($"fileops read {path}");
+                response.AppendLine(readResult);
+                response.AppendLine();
+            }
+
+            response.AppendLine("💡 Refactoring suggestions:");
+            response.AppendLine("  • Rename variables/methods: fileops replace <oldName> with <newName> in <path>");
+            response.AppendLine("  • Extract common code patterns");
+            response.AppendLine("  • Improve code organization");
+            response.AppendLine("  • Apply coding standards");
+            response.AppendLine();
+            response.AppendLine("Or start a guided refactoring session:");
+            response.AppendLine("  ashat start session <userId> Refactor this file");
+            response.AppendLine();
+            response.AppendLine("⚠️  All refactoring operations create backups automatically.");
+
+            LogInfo($"Initiated refactoring for: {path}");
+            return response.ToString();
+        }
+        catch (Exception ex)
+        {
+            LogError($"Error initiating refactor: {ex.Message}");
+            return $"❌ Error: {ex.Message}";
+        }
+    }
+
+    private string AnalyzeCode(string path)
+    {
+        try
+        {
+            var response = new StringBuilder();
+            response.AppendLine("📊 Code Analysis");
+            response.AppendLine("================");
+            response.AppendLine();
+
+            // Get file info
+            var fileOpsModule = _manager?.Modules
+                .FirstOrDefault(m => m.Instance?.Name == "FileOperations")?.Instance;
+
+            if (fileOpsModule != null)
+            {
+                var existsResult = fileOpsModule.Process($"fileops exists {path}");
+                response.AppendLine(existsResult);
+                response.AppendLine();
+            }
+
+            // Run bug detection
+            var bugDetectorModule = _manager?.Modules
+                .FirstOrDefault(m => m.Instance?.Name == "BugDetector")?.Instance;
+
+            if (bugDetectorModule != null)
+            {
+                response.AppendLine("Running bug detection...");
+                var scanResult = bugDetectorModule.Process($"bugdetect scan {path}");
+                response.AppendLine(scanResult);
+                response.AppendLine();
+            }
+
+            // Provide analysis summary
+            response.AppendLine("💡 Available actions:");
+            response.AppendLine("  • Fix detected bugs: ashat fix bug in <path>");
+            response.AppendLine("  • Refactor code: ashat refactor <path>");
+            response.AppendLine("  • Edit directly: ashat edit file <path>");
+            response.AppendLine("  • Start guided session: ashat start session <userId> <goal>");
+
+            LogInfo($"Analyzed code: {path}");
+            return response.ToString();
+        }
+        catch (Exception ex)
+        {
+            LogError($"Error analyzing code: {ex.Message}");
+            return $"❌ Error: {ex.Message}";
+        }
     }
 }
 
