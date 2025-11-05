@@ -1,0 +1,186 @@
+@page
+@model ASHATCore.Pages.Downloads.IndexModel
+@{
+    ViewData["Title"] = "Download ASHAT Desktop Assistant";
+}
+
+<div class="container mt-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4">
+            <i class="fas fa-download"></i> Download ASHAT Desktop Assistant
+        </h1>
+        <p class="lead">Your AI Roman Goddess Companion for Desktop</p>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">✨ ASHAT Desktop Assistant</h3>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <img src="/images/ashat-goddess.png" alt="ASHAT Roman Goddess" class="img-fluid" style="max-height: 300px;" onerror="this.style.display='none'">
+                    </div>
+                    
+                    <h4>Features:</h4>
+                    <ul class="list-unstyled">
+                        <li>✨ <strong>Animated Roman Goddess Character</strong> - Beautiful, animated companion on your desktop</li>
+                        <li>🎤 <strong>Soft Female Voice</strong> - Pleasant text-to-speech for all interactions</li>
+                        <li>🤖 <strong>AI Coding Assistant</strong> - Get help with programming and development</li>
+                        <li>👑 <strong>Multiple Personalities</strong> - Friendly, Professional, Playful, Calm, or Wise</li>
+                        <li>🎭 <strong>Rich Animations</strong> - Wave, bow, think, celebrate, and more</li>
+                        <li>💫 <strong>Always Available</strong> - Sits on your desktop ready to help</li>
+                        <li>🔌 <strong>Standalone or Connected</strong> - Works offline or connects to ASHAT server</li>
+                    </ul>
+
+                    <hr class="my-4">
+
+                    <h4>System Requirements:</h4>
+                    <ul>
+                        <li>.NET 9.0 Runtime (or use standalone build)</li>
+                        <li>Windows 10+, Linux (Ubuntu 20.04+), or macOS 11+</li>
+                        <li>~50 MB disk space</li>
+                        <li>Internet connection (optional, for server features)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-md-4">
+            <div class="card h-100 shadow">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0"><i class="fab fa-windows"></i> Windows</h4>
+                </div>
+                <div class="card-body">
+                    <h5>ASHAT Desktop Assistant</h5>
+                    <p class="text-muted">Version 1.0.0</p>
+                    <p>Windows 10 or later<br>x64 Architecture<br>~15 MB</p>
+                    <a href="/api/download/ashat-desktop-windows" class="btn btn-primary btn-block">
+                        <i class="fas fa-download"></i> Download for Windows
+                    </a>
+                </div>
+                <div class="card-footer">
+                    <small class="text-muted">Self-contained executable</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="fab fa-linux"></i> Linux</h4>
+                </div>
+                <div class="card-body">
+                    <h5>ASHAT Desktop Assistant</h5>
+                    <p class="text-muted">Version 1.0.0</p>
+                    <p>Ubuntu 20.04+ or compatible<br>x64 Architecture<br>~15 MB</p>
+                    <a href="/api/download/ashat-desktop-linux" class="btn btn-warning btn-block">
+                        <i class="fas fa-download"></i> Download for Linux
+                    </a>
+                </div>
+                <div class="card-footer">
+                    <small class="text-muted">Self-contained binary</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 shadow">
+                <div class="card-header bg-secondary text-white">
+                    <h4 class="mb-0"><i class="fab fa-apple"></i> macOS</h4>
+                </div>
+                <div class="card-body">
+                    <h5>ASHAT Desktop Assistant</h5>
+                    <p class="text-muted">Version 1.0.0</p>
+                    <p>macOS 11+ (Big Sur or later)<br>Universal (x64/ARM64)<br>~15 MB</p>
+                    <a href="/api/download/ashat-desktop-macos" class="btn btn-secondary btn-block">
+                        <i class="fas fa-download"></i> Download for macOS
+                    </a>
+                </div>
+                <div class="card-footer">
+                    <small class="text-muted">Self-contained binary</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Quick Start Guide</h4>
+                </div>
+                <div class="card-body">
+                    <h5>Windows:</h5>
+                    <ol>
+                        <li>Download <code>ASHATDesktopAssistant.exe</code></li>
+                        <li>Double-click to run (no installation needed)</li>
+                        <li>ASHAT will appear on your desktop!</li>
+                    </ol>
+
+                    <h5>Linux:</h5>
+                    <ol>
+                        <li>Download <code>ASHATDesktopAssistant</code></li>
+                        <li>Make executable: <code>chmod +x ASHATDesktopAssistant</code></li>
+                        <li>Run: <code>./ASHATDesktopAssistant</code></li>
+                    </ol>
+
+                    <h5>macOS:</h5>
+                    <ol>
+                        <li>Download <code>ASHATDesktopAssistant</code></li>
+                        <li>Make executable: <code>chmod +x ASHATDesktopAssistant</code></li>
+                        <li>Run: <code>./ASHATDesktopAssistant</code></li>
+                        <li>Allow in Security & Privacy settings if prompted</li>
+                    </ol>
+
+                    <hr>
+
+                    <h5>Basic Commands:</h5>
+                    <ul>
+                        <li><code>help</code> - Show all available commands</li>
+                        <li><code>speak &lt;text&gt;</code> - Make ASHAT speak</li>
+                        <li><code>animate wave</code> - Wave animation</li>
+                        <li><code>personality friendly</code> - Change personality</li>
+                        <li><code>code &lt;question&gt;</code> - Ask coding questions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-md-8 mx-auto">
+            <div class="alert alert-info">
+                <h5><i class="fas fa-info-circle"></i> Need Help?</h5>
+                <p>
+                    Visit our <a href="/support">Support Page</a> for troubleshooting and FAQ.<br>
+                    Join our community forum for tips and tricks.<br>
+                    Contact us at support@agpstudios.online for assistance.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border-radius: 10px;
+        transition: transform 0.3s;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .btn-block {
+        display: block;
+        width: 100%;
+    }
+    
+    .display-4 {
+        color: #6f42c1;
+    }
+</style>

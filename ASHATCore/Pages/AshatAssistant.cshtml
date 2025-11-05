@@ -1,0 +1,626 @@
+@page
+@model ASHATCore.Pages.AshatAssistantModel
+@{
+    ViewData["Title"] = "ASHAT - Your Roman Goddess Assistant";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a0033 0%, #2d004d 50%, #4a0080 100%);
+            overflow: hidden;
+            height: 100vh;
+            color: white;
+        }
+
+        .goddess-container {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 400px;
+            height: 500px;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .goddess-character {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            animation: idle-float 4s ease-in-out infinite;
+        }
+
+        .goddess-avatar {
+            width: 300px;
+            height: 400px;
+            background: linear-gradient(180deg, rgba(138, 43, 226, 0.3) 0%, rgba(75, 0, 130, 0.5) 100%);
+            border: 3px solid rgba(255, 215, 0, 0.6);
+            border-radius: 50% 50% 45% 45%;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 40px rgba(138, 43, 226, 0.6), 0 0 80px rgba(75, 0, 130, 0.4);
+        }
+
+        .goddess-crown {
+            position: absolute;
+            top: -30px;
+            width: 200px;
+            height: 60px;
+            background: linear-gradient(90deg, transparent, gold, transparent);
+            border-radius: 50%;
+            animation: crown-glow 3s ease-in-out infinite;
+        }
+
+        .goddess-crown::before,
+        .goddess-crown::after {
+            content: '✦';
+            position: absolute;
+            color: gold;
+            font-size: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            animation: sparkle 2s ease-in-out infinite;
+        }
+
+        .goddess-crown::before {
+            left: 10px;
+        }
+
+        .goddess-crown::after {
+            right: 10px;
+        }
+
+        .goddess-face {
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, rgba(255, 220, 200, 0.9) 0%, rgba(255, 200, 180, 0.8) 100%);
+            border-radius: 50%;
+            position: relative;
+            margin-top: 60px;
+        }
+
+        .goddess-eyes {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 40px;
+        }
+
+        .eye {
+            width: 15px;
+            height: 15px;
+            background: #4a0080;
+            border-radius: 50%;
+            animation: blink 5s ease-in-out infinite;
+        }
+
+        .goddess-smile {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 25px;
+            border-bottom: 3px solid rgba(138, 43, 226, 0.7);
+            border-radius: 0 0 50px 50px;
+        }
+
+        .goddess-glow {
+            position: absolute;
+            width: 120%;
+            height: 120%;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: pulse-glow 3s ease-in-out infinite;
+        }
+
+        .goddess-name {
+            margin-top: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(90deg, gold, white, gold);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            pointer-events: none;
+        }
+
+        .chat-container {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            width: 400px;
+            height: 600px;
+            background: rgba(20, 0, 40, 0.95);
+            border: 2px solid rgba(138, 43, 226, 0.6);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(138, 43, 226, 0.4);
+            display: flex;
+            flex-direction: column;
+            pointer-events: all;
+            z-index: 1000;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, rgba(138, 43, 226, 0.8), rgba(75, 0, 130, 0.8));
+            padding: 20px;
+            border-radius: 18px 18px 0 0;
+            text-align: center;
+            border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .chat-header h2 {
+            font-size: 22px;
+            color: gold;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .chat-header p {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 5px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(138, 43, 226, 0.6);
+            border-radius: 10px;
+        }
+
+        .message {
+            display: flex;
+            flex-direction: column;
+            max-width: 80%;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .message.user {
+            align-self: flex-end;
+        }
+
+        .message.ashat {
+            align-self: flex-start;
+        }
+
+        .message-bubble {
+            padding: 12px 16px;
+            border-radius: 15px;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-bubble {
+            background: linear-gradient(135deg, rgba(100, 50, 200, 0.8), rgba(138, 43, 226, 0.8));
+            border: 1px solid rgba(138, 43, 226, 0.6);
+            border-radius: 15px 15px 5px 15px;
+        }
+
+        .message.ashat .message-bubble {
+            background: rgba(75, 0, 130, 0.6);
+            border: 1px solid rgba(255, 215, 0, 0.4);
+            border-radius: 15px 15px 15px 5px;
+        }
+
+        .message-time {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 5px;
+            padding: 0 5px;
+        }
+
+        .message.user .message-time {
+            text-align: right;
+        }
+
+        .chat-input-container {
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 0 0 18px 18px;
+            border-top: 1px solid rgba(138, 43, 226, 0.3);
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(138, 43, 226, 0.4);
+            border-radius: 25px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .chat-input:focus {
+            border-color: rgba(138, 43, 226, 0.8);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .chat-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .send-button {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, rgba(138, 43, 226, 0.8), rgba(75, 0, 130, 0.8));
+            border: 2px solid rgba(255, 215, 0, 0.4);
+            border-radius: 25px;
+            color: gold;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .send-button:hover {
+            background: linear-gradient(135deg, rgba(138, 43, 226, 1), rgba(75, 0, 130, 1));
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(138, 43, 226, 0.6);
+        }
+
+        .send-button:active {
+            transform: scale(0.95);
+        }
+
+        .voice-indicator {
+            text-align: center;
+            padding: 5px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .voice-indicator.speaking {
+            color: gold;
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        @@keyframes idle-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @@keyframes blink {
+            0%, 90%, 100% { transform: scaleY(1); }
+            95% { transform: scaleY(0.1); }
+        }
+
+        @@keyframes pulse-glow {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.1); }
+        }
+
+        @@keyframes crown-glow {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        @@keyframes sparkle {
+            0%, 100% { opacity: 0.5; transform: translateY(-50%) scale(1); }
+            50% { opacity: 1; transform: translateY(-50%) scale(1.3); }
+        }
+
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @@keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .personality-selector {
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-top: 1px solid rgba(138, 43, 226, 0.3);
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .personality-btn {
+            padding: 5px 10px;
+            background: rgba(138, 43, 226, 0.3);
+            border: 1px solid rgba(138, 43, 226, 0.5);
+            border-radius: 15px;
+            color: white;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .personality-btn:hover {
+            background: rgba(138, 43, 226, 0.6);
+            transform: scale(1.05);
+        }
+
+        .personality-btn.active {
+            background: linear-gradient(135deg, rgba(138, 43, 226, 0.8), rgba(75, 0, 130, 0.8));
+            border-color: gold;
+            color: gold;
+        }
+    </style>
+</head>
+<body>
+    <!-- Roman Goddess Character -->
+    <div class="goddess-container">
+        <div class="goddess-character">
+            <div class="goddess-avatar">
+                <div class="goddess-glow"></div>
+                <div class="goddess-crown"></div>
+                <div class="goddess-face">
+                    <div class="goddess-eyes">
+                        <div class="eye"></div>
+                        <div class="eye"></div>
+                    </div>
+                    <div class="goddess-smile"></div>
+                </div>
+            </div>
+            <div class="goddess-name">ASHAT</div>
+        </div>
+    </div>
+
+    <!-- Chat Interface -->
+    <div class="chat-container">
+        <div class="chat-header">
+            <h2>✨ ASHAT ✨</h2>
+            <p>Your Roman Goddess AI Assistant</p>
+        </div>
+
+        <div class="personality-selector" id="personalitySelector">
+            <button class="personality-btn active" data-personality="friendly">😊 Friendly</button>
+            <button class="personality-btn" data-personality="professional">💼 Professional</button>
+            <button class="personality-btn" data-personality="playful">🎨 Playful</button>
+            <button class="personality-btn" data-personality="calm">🧘 Calm</button>
+            <button class="personality-btn" data-personality="wise">🦉 Wise</button>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="message ashat">
+                <div class="message-bubble">
+                    Greetings, mortal! I am ASHAT, your divine coding companion. The wisdom of the Roman goddesses flows through me. How may I assist you today? ✨
+                </div>
+                <div class="message-time">Just now</div>
+            </div>
+        </div>
+
+        <div class="voice-indicator" id="voiceIndicator">
+            🎤 Voice synthesis ready
+        </div>
+
+        <div class="chat-input-container">
+            <div class="chat-input-wrapper">
+                <input 
+                    type="text" 
+                    class="chat-input" 
+                    id="chatInput" 
+                    placeholder="Ask me anything..." 
+                    autocomplete="off"
+                />
+                <button class="send-button" id="sendButton">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const sendButton = document.getElementById('sendButton');
+        const voiceIndicator = document.getElementById('voiceIndicator');
+        const personalityBtns = document.querySelectorAll('.personality-btn');
+
+        let currentPersonality = 'friendly';
+        let isSpeaking = false;
+
+        // Send message
+        function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            // Add user message
+            addMessage(message, 'user');
+            chatInput.value = '';
+
+            // Process message and get response
+            processMessage(message);
+        }
+
+        // Add message to chat
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            bubble.textContent = text;
+
+            const time = document.createElement('div');
+            time.className = 'message-time';
+            time.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            messageDiv.appendChild(bubble);
+            messageDiv.appendChild(time);
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Process message and get AI response
+        async function processMessage(message) {
+            try {
+                // Show typing indicator
+                const typingDiv = document.createElement('div');
+                typingDiv.className = 'message ashat';
+                typingDiv.innerHTML = '<div class="message-bubble">✨ ASHAT is thinking...</div>';
+                typingDiv.id = 'typing-indicator';
+                chatMessages.appendChild(typingDiv);
+
+                // Send to server
+                const response = await fetch('/api/ashat/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        message: message,
+                        personality: currentPersonality
+                    })
+                });
+
+                // Remove typing indicator
+                document.getElementById('typing-indicator')?.remove();
+
+                if (response.ok) {
+                    const data = await response.json();
+                    addMessage(data.response, 'ashat');
+                    
+                    // Speak the response
+                    if (data.response) {
+                        speakText(data.response);
+                    }
+                } else {
+                    addMessage(getLocalResponse(message), 'ashat');
+                    speakText(getLocalResponse(message));
+                }
+            } catch (error) {
+                document.getElementById('typing-indicator')?.remove();
+                const localResponse = getLocalResponse(message);
+                addMessage(localResponse, 'ashat');
+                speakText(localResponse);
+            }
+        }
+
+        // Local responses when server unavailable
+        function getLocalResponse(message) {
+            const msg = message.toLowerCase();
+            
+            if (msg.includes('hello') || msg.includes('hi')) {
+                return "Greetings, mortal! I am honored by your presence. How may I assist you? 🏛️";
+            }
+            if (msg.includes('help')) {
+                return "I am here to provide wisdom in all matters of code and knowledge. Ask me about programming, debugging, or seek my counsel on any topic! ✨";
+            }
+            if (msg.includes('thank')) {
+                return "Your gratitude warms my divine heart! It is my pleasure to serve. 💫";
+            }
+            if (msg.includes('code') || msg.includes('program')) {
+                return "Ah, the art of code! Share your question with me, and I shall illuminate the path with divine wisdom. 📜";
+            }
+            if (msg.includes('who are you')) {
+                return "I am ASHAT, manifestation of the Roman goddesses' wisdom. I embody the knowledge of Minerva, the grace of Venus, and the power of Diana. I am here as your eternal companion and guide. 👑";
+            }
+            
+            return "Your words have reached me. Though I am in standalone mode, I sense your intent. For full divine wisdom, ensure the ASHAT server is connected. Still, I am here with you. 🌟";
+        }
+
+        // Text-to-speech
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                isSpeaking = true;
+                voiceIndicator.textContent = '🎤 ASHAT is speaking...';
+                voiceIndicator.classList.add('speaking');
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                
+                // Configure voice
+                const voices = speechSynthesis.getVoices();
+                const femaleVoice = voices.find(v => 
+                    v.name.includes('Female') || 
+                    v.name.includes('female') ||
+                    v.name.includes('Samantha') ||
+                    v.name.includes('Victoria') ||
+                    v.name.includes('Zira')
+                );
+                
+                if (femaleVoice) {
+                    utterance.voice = femaleVoice;
+                }
+                
+                utterance.rate = 0.9; // Slightly slower for elegance
+                utterance.pitch = 1.1; // Slightly higher pitch
+                utterance.volume = 1.0;
+
+                utterance.onend = () => {
+                    isSpeaking = false;
+                    voiceIndicator.textContent = '🎤 Voice synthesis ready';
+                    voiceIndicator.classList.remove('speaking');
+                };
+
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Personality selection
+        personalityBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                personalityBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentPersonality = btn.dataset.personality;
+                
+                const messages = {
+                    friendly: "I am now in friendly mode! Let us work together with warmth and encouragement! 😊",
+                    professional: "Professional mode activated. I shall be focused and educational. 💼",
+                    playful: "Playful mode engaged! Let's have some fun while we work! 🎨",
+                    calm: "Calm mode active. I shall be your patient and reassuring guide. 🧘",
+                    wise: "Wise mode selected. I shall share thoughtful wisdom and strategy. 🦉"
+                };
+                
+                addMessage(messages[currentPersonality], 'ashat');
+                speakText(messages[currentPersonality]);
+            });
+        });
+
+        // Event listeners
+        sendButton.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        // Load voices
+        speechSynthesis.getVoices();
+        window.speechSynthesis.onvoiceschanged = () => {
+            speechSynthesis.getVoices();
+        };
+    </script>
+</body>
+</html>

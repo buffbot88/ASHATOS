@@ -249,6 +249,12 @@ IGameServerModule? gameServerModule = moduleManager.Modules
 
 app.MapGameServerEndpoints(gameServerModule, authModule);
 
+// Download API endpoints for ASHAT Desktop Assistant
+app.MapDownloadEndpoints();
+
+// ASHAT Chat API endpoints for goddess client
+app.MapAshatChatEndpoints();
+
 // Note: Homepage is served via Razor Pages at /Index
 // Login UI is served via Razor Pages at /Login
 // All CMS functionality is integrated through Razor Pages, not inline HTML generation
