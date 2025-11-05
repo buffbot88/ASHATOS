@@ -169,11 +169,9 @@ public sealed class RefactoringModule : ModuleBase
             var formatted = content;
 
             // Fix indentation (basic - proper indentation would need parsing)
-            formatted = Regex.Replace(formatted, @"^\s+", match => 
-            {
-                var spaces = match.Value.Replace("\t", "    ");
-                return spaces;
-            }, RegexOptions.Multiline);
+            formatted = Regex.Replace(formatted, @"^\s+", 
+                match => match.Value.Replace("\t", "    "), 
+                RegexOptions.Multiline);
 
             // Remove trailing whitespace
             formatted = Regex.Replace(formatted, @"[ \t]+$", "", RegexOptions.Multiline);

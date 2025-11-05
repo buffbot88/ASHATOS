@@ -170,15 +170,15 @@ public sealed class BugDetectorModule : ModuleBase
             FixSuggestion = "Use configuration files or environment variables"
         });
 
-        // Division by zero
+        // Division by zero (only in assignments and returns, not URLs or paths)
         _patterns.Add(new BugPattern
         {
             Id = "MATH_001",
             Name = "Potential Division by Zero",
             Severity = BugSeverity.High,
-            Pattern = new Regex(@"/\s*\w+\s*(?!==|!=)", RegexOptions.Compiled),
-            Description = "Division operation without zero check",
-            FixSuggestion = "Add check for zero before division"
+            Pattern = new Regex(@"(=|return)\s+\w+\s*/\s*\w+\s*[;\)]", RegexOptions.Compiled),
+            Description = "Division operation in assignment or return without zero check",
+            FixSuggestion = "Add check for zero before division (e.g., if (divisor != 0))"
         });
     }
 

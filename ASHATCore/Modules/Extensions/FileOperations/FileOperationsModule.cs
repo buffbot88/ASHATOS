@@ -180,7 +180,12 @@ public sealed class FileOperationsModule : ModuleBase
                 // Backup existing file if it exists
                 if (File.Exists(path))
                 {
-                    BackupFile(path);
+                    var backupResult = BackupFile(path);
+                    if (backupResult.StartsWith("❌"))
+                    {
+                        // Backup failed, don't proceed with write
+                        return $"⚠️ Backup failed, write operation cancelled: {backupResult}";
+                    }
                 }
 
                 File.WriteAllText(path, content);
@@ -210,7 +215,11 @@ public sealed class FileOperationsModule : ModuleBase
                 // Backup existing file if it exists
                 if (File.Exists(path))
                 {
-                    BackupFile(path);
+                    var backupResult = BackupFile(path);
+                    if (backupResult.StartsWith("❌"))
+                    {
+                        return $"⚠️ Backup failed, append operation cancelled: {backupResult}";
+                    }
                 }
 
                 File.AppendAllText(path, content);
@@ -242,7 +251,11 @@ public sealed class FileOperationsModule : ModuleBase
             lock (_lockObj)
             {
                 // Backup before modification
-                BackupFile(path);
+                var backupResult = BackupFile(path);
+                if (backupResult.StartsWith("❌"))
+                {
+                    return $"⚠️ Backup failed, replace operation cancelled: {backupResult}";
+                }
 
                 var content = File.ReadAllText(path);
                 var occurrences = Regex.Matches(content, Regex.Escape(oldText)).Count;

@@ -270,16 +270,26 @@ public sealed class DependencyManagerModule : ModuleBase
             foreach (var package in packages)
             {
                 // Remove and re-add to get latest version
-                ExecuteDotNetCommand($"remove \"{projectPath}\" package {package}");
-                var result = ExecuteDotNetCommand($"add \"{projectPath}\" package {package}");
+                var removeResult = ExecuteDotNetCommand($"remove \"{projectPath}\" package {package}");
                 
-                if (result.Success)
+                if (removeResult.Success)
                 {
-                    sb.AppendLine($"✅ Updated {package}");
+                    var addResult = ExecuteDotNetCommand($"add \"{projectPath}\" package {package}");
+                    
+                    if (addResult.Success)
+                    {
+                        sb.AppendLine($"✅ Updated {package}");
+                    }
+                    else
+                    {
+                        sb.AppendLine($"⚠️ Failed to update {package} - re-adding old version");
+                        // Try to restore the old package to prevent broken state
+                        ExecuteDotNetCommand($"add \"{projectPath}\" package {package}");
+                    }
                 }
                 else
                 {
-                    sb.AppendLine($"⚠️ Failed to update {package}");
+                    sb.AppendLine($"⚠️ Failed to remove {package} - skipping update");
                 }
             }
 
