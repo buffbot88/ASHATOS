@@ -1,17 +1,41 @@
-# Ashat AI Coding Assistant - Quick Start Guide
+# Ashat AI Coding Bot - Quick Start Guide
 
-> **Ashat** (pronounced AH-SH-AHT) - The Face of RaOS, your intelligent AI coding companion
+> **Ashat** (pronounced AH-SH-AHT) - The Face of RaOS, your intelligent AI coding bot
 
 ## 🎯 What is Ashat?
 
-Ashat is an AI-powered coding assistant integrated into RaOS that helps developers:
-- Create new modules with guided workflows
-- Debug and fix issues with intelligent analysis
-- Learn about the RaOS architecture and modules
-- Get contextual coding assistance
-- Work through an approval-based workflow
+Ashat is now a **fully compatible AI coding bot** that can directly:
+- **Edit source files** with automatic backups
+- **Fix bugs** with automated detection and suggestions
+- **Refactor code** for better quality and maintainability
+- **Manage dependencies** (NuGet packages)
+- **Create new modules** with guided workflows
+- **Debug and analyze** code with intelligent analysis
+- **Learn and assist** with RaOS architecture
 
-**Key Principle:** Ashat works **WITH** you, not **FOR** you. She forms action plans and requests your approval before making any changes.
+**Key Principle:** Ashat works **WITH** you, not **FOR** you. She can now directly edit files but maintains approval-based workflow for safety.
+
+## 🌟 NEW: Direct File Editing
+
+Ashat can now directly edit files on the server - **no GitHub required!**
+
+### Quick Examples
+
+```bash
+# Edit a file with guidance
+ashat edit file /path/to/Module.cs
+
+# Fix bugs automatically
+ashat fix bug in /path/to/BuggyFile.cs
+
+# Refactor code
+ashat refactor /path/to/OldCode.cs
+
+# Comprehensive analysis
+ashat analyze code /path/to/file.cs
+```
+
+**👉 See [ASHAT_CODING_BOT_GUIDE.md](ASHAT_CODING_BOT_GUIDE.md) for complete documentation**
 
 ## ⚡ Getting Started
 
@@ -92,6 +116,66 @@ ashat end session yourname
 1. Session summary is shown
 2. Statistics are provided
 3. Session is closed
+
+## 🚀 NEW: Direct Coding Operations
+
+### Fix Bugs Directly
+
+```bash
+# Scan for bugs
+ashat fix bug in /path/to/file.cs
+
+# View detected issues
+bugdetect list
+
+# Get fix suggestion
+bugdetect fix <issueId>
+
+# Apply fix
+fileops replace "buggy code" with "fixed code" in /path/to/file.cs
+```
+
+### Edit Files Directly
+
+```bash
+# Read a file
+fileops read /path/to/file.cs
+
+# Replace text
+fileops replace "OldClass" with "NewClass" in /path/to/file.cs
+
+# Append content
+fileops append /path/to/file.cs >> // New comment
+
+# Restore from backup if needed
+fileops restore /path/to/file.cs
+```
+
+### Refactor Code
+
+```bash
+# Rename symbols
+refactor rename OldName to NewName in /path/to/file.cs
+
+# Format code
+refactor format /path/to/file.cs
+
+# Organize code
+refactor organize /path/to/file.cs
+```
+
+### Manage Dependencies
+
+```bash
+# List dependencies
+deps list /path/to/project.csproj
+
+# Add package
+deps add Newtonsoft.Json to /path/to/project.csproj
+
+# Update packages
+deps update /path/to/project.csproj
+```
 
 ## 📋 Common Use Cases
 
