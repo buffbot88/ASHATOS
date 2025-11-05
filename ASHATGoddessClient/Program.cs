@@ -5,7 +5,10 @@ using Avalonia.Controls.Shapes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using System;
+using System.Diagnostics;
+using System.IO;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -399,12 +402,111 @@ public class AshatBrain
             return "Greetings, mortal! I am ASHAT, your divine companion. How may I assist you? 🏛️";
         
         if (msg.Contains("help"))
-            return "I am here to provide wisdom in coding, debugging, and knowledge. Ask me anything! ✨";
+            return "I am here to provide wisdom in coding, debugging, and knowledge. I can also help you launch RaStudios! Try saying 'open rastudios' or 'launch studio'. ✨";
         
         if (msg.Contains("thank"))
             return "Your gratitude warms my divine heart! It is my pleasure to serve. 💫";
         
+        // RaStudios commands
+        if (msg.Contains("rastudios") || msg.Contains("ra studios") || msg.Contains("studio"))
+        {
+            if (msg.Contains("open") || msg.Contains("launch") || msg.Contains("start") || msg.Contains("run"))
+            {
+                LaunchRaStudios();
+                return "Opening RaStudios for you! The studio shall manifest shortly. 🎮✨";
+            }
+            if (msg.Contains("what") || msg.Contains("about") || msg.Contains("tell"))
+            {
+                return "RaStudios is a powerful IDE and game development platform. It allows you to build games, edit assets, and manage your RaOS projects. Would you like me to open it for you? 🎨";
+            }
+        }
+        
         return "I hear your words, mortal. To access my full divine wisdom, ensure the server connection is established. 🌟";
+    }
+
+    private void LaunchRaStudios()
+    {
+        try
+        {
+            string raStudiosPath = "";
+            
+            // Determine the path to RaStudios executable based on platform
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                // Look for RaStudios in common locations
+                var possiblePaths = new[]
+                {
+                    System.IO.Path.Combine(AppContext.BaseDirectory, "RaStudios", "RaStudios.exe"),
+                    System.IO.Path.Combine(AppContext.BaseDirectory, "..", "RaStudios", "RaStudios.exe"),
+                    System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RaStudios", "RaStudios.exe"),
+                    System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "RaStudios", "RaStudios.exe")
+                };
+
+                foreach (var path in possiblePaths)
+                {
+                    if (File.Exists(path))
+                    {
+                        raStudiosPath = path;
+                        break;
+                    }
+                }
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                var possiblePaths = new[]
+                {
+                    System.IO.Path.Combine(AppContext.BaseDirectory, "RaStudios", "RaStudios"),
+                    System.IO.Path.Combine(AppContext.BaseDirectory, "..", "RaStudios", "RaStudios"),
+                    "/usr/local/bin/RaStudios",
+                    "/opt/RaStudios/RaStudios"
+                };
+
+                foreach (var path in possiblePaths)
+                {
+                    if (File.Exists(path))
+                    {
+                        raStudiosPath = path;
+                        break;
+                    }
+                }
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                var possiblePaths = new[]
+                {
+                    System.IO.Path.Combine(AppContext.BaseDirectory, "RaStudios", "RaStudios.app", "Contents", "MacOS", "RaStudios"),
+                    "/Applications/RaStudios.app/Contents/MacOS/RaStudios"
+                };
+
+                foreach (var path in possiblePaths)
+                {
+                    if (File.Exists(path))
+                    {
+                        raStudiosPath = path;
+                        break;
+                    }
+                }
+            }
+
+            if (!string.IsNullOrEmpty(raStudiosPath) && File.Exists(raStudiosPath))
+            {
+                var processStartInfo = new ProcessStartInfo
+                {
+                    FileName = raStudiosPath,
+                    UseShellExecute = true
+                };
+                Process.Start(processStartInfo);
+                Console.WriteLine($"[ASHAT] Launched RaStudios from: {raStudiosPath}");
+            }
+            else
+            {
+                Console.WriteLine("[ASHAT] RaStudios executable not found. Please ensure RaStudios is installed in the expected location.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ASHAT] Error launching RaStudios: {ex.Message}");
+        }
     }
 }
 

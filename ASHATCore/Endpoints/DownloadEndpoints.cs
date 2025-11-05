@@ -38,8 +38,8 @@ public static class DownloadEndpoints
     {
         var info = new
         {
-            title = "ASHAT Desktop Assistant",
-            description = "Your AI Roman Goddess Companion for Desktop",
+            title = "ASHAT Desktop Assistant + RaStudios",
+            description = "Your AI Roman Goddess Companion with RaStudios Development Platform",
             version = "1.0.0",
             features = new[]
             {
@@ -49,20 +49,49 @@ public static class DownloadEndpoints
                 "👑 Multiple personality modes",
                 "🎭 Various animations and expressions",
                 "💫 Always-on-desktop companion",
-                "🔌 Optional server connection for advanced features"
+                "🔌 Optional server connection for advanced features",
+                "🎮 RaStudios IDE integrated - ASHAT can launch and control RaStudios",
+                "🛠️ Complete game development platform included"
             },
             systemRequirements = new
             {
                 runtime = ".NET 9.0 or included in standalone build",
                 os = "Windows 10+, Linux (Ubuntu 20.04+), or macOS 11+",
-                disk = "~50 MB",
+                disk = "~500 MB (includes RaStudios)",
                 internet = "Optional, for server features"
             },
-            platforms = new[]
+            packages = new[]
             {
-                new { id = "ashat-desktop-windows", name = "Windows x64", size = "~15 MB" },
-                new { id = "ashat-desktop-linux", name = "Linux x64", size = "~15 MB" },
-                new { id = "ashat-desktop-macos", name = "macOS Universal", size = "~15 MB" }
+                new { 
+                    id = "ashat-goddess-suite-windows", 
+                    name = "ASHAT + RaStudios Suite (Windows x64)", 
+                    size = "~100 MB",
+                    description = "Complete package with ASHAT Goddess and RaStudios IDE"
+                },
+                new { 
+                    id = "ashat-goddess-suite-linux", 
+                    name = "ASHAT + RaStudios Suite (Linux x64)", 
+                    size = "~100 MB",
+                    description = "Complete package with ASHAT Goddess and RaStudios (Python version)"
+                },
+                new { 
+                    id = "ashat-desktop-windows", 
+                    name = "ASHAT Only (Windows x64)", 
+                    size = "~15 MB",
+                    description = "ASHAT Goddess only (without RaStudios)"
+                },
+                new { 
+                    id = "ashat-desktop-linux", 
+                    name = "ASHAT Only (Linux x64)", 
+                    size = "~15 MB",
+                    description = "ASHAT Goddess only (without RaStudios)"
+                },
+                new { 
+                    id = "ashat-desktop-macos", 
+                    name = "ASHAT Only (macOS Universal)", 
+                    size = "~15 MB",
+                    description = "ASHAT Goddess only (without RaStudios)"
+                }
             }
         };
 
@@ -80,6 +109,30 @@ public static class DownloadEndpoints
             {
                 new
                 {
+                    id = "ashat-goddess-suite-windows",
+                    name = "ASHAT + RaStudios Suite (Windows)",
+                    version = "1.0.0",
+                    platform = "Windows",
+                    architecture = "x64",
+                    fileSize = "~100 MB",
+                    fileName = "ASHAT-RaStudios-Suite-Windows-x64.zip",
+                    description = "Complete ASHAT Goddess with RaStudios IDE for Windows",
+                    recommended = true
+                },
+                new
+                {
+                    id = "ashat-goddess-suite-linux",
+                    name = "ASHAT + RaStudios Suite (Linux)",
+                    version = "1.0.0",
+                    platform = "Linux",
+                    architecture = "x64",
+                    fileSize = "~100 MB",
+                    fileName = "ASHAT-RaStudios-Suite-Linux-x64.tar.gz",
+                    description = "Complete ASHAT Goddess with RaStudios (Python version) for Linux",
+                    recommended = true
+                },
+                new
+                {
                     id = "ashat-desktop-windows",
                     name = "ASHAT Desktop Assistant (Windows)",
                     version = "1.0.0",
@@ -87,7 +140,8 @@ public static class DownloadEndpoints
                     architecture = "x64",
                     fileSize = "~15 MB",
                     fileName = "ASHATDesktopAssistant.exe",
-                    description = "Standalone ASHAT desktop assistant for Windows"
+                    description = "Standalone ASHAT desktop assistant for Windows (without RaStudios)",
+                    recommended = false
                 },
                 new
                 {
@@ -98,7 +152,8 @@ public static class DownloadEndpoints
                     architecture = "x64",
                     fileSize = "~15 MB",
                     fileName = "ASHATDesktopAssistant",
-                    description = "Standalone ASHAT desktop assistant for Linux"
+                    description = "Standalone ASHAT desktop assistant for Linux (without RaStudios)",
+                    recommended = false
                 },
                 new
                 {
@@ -109,7 +164,8 @@ public static class DownloadEndpoints
                     architecture = "x64/arm64",
                     fileSize = "~15 MB",
                     fileName = "ASHATDesktopAssistant",
-                    description = "Standalone ASHAT desktop assistant for macOS"
+                    description = "Standalone ASHAT desktop assistant for macOS (without RaStudios)",
+                    recommended = false
                 }
             };
 
@@ -133,6 +189,8 @@ public static class DownloadEndpoints
         // Map package IDs to file paths
         var packageFiles = new Dictionary<string, (string fileName, string contentType)>
         {
+            ["ashat-goddess-suite-windows"] = ("ASHAT-RaStudios-Suite-Windows-x64.zip", "application/zip"),
+            ["ashat-goddess-suite-linux"] = ("ASHAT-RaStudios-Suite-Linux-x64.tar.gz", "application/gzip"),
             ["ashat-desktop-windows"] = ("ASHATDesktopAssistant.exe", "application/octet-stream"),
             ["ashat-desktop-linux"] = ("ASHATDesktopAssistant", "application/octet-stream"),
             ["ashat-desktop-macos"] = ("ASHATDesktopAssistant", "application/octet-stream")
