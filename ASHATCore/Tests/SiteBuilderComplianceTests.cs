@@ -243,24 +243,24 @@ public class WindowOfASHATComplianceTests
                 // This is acceptable as long as no HTML is served statically
             }
             
-            // Verify dynamic UI Generation methods exist
+            // Verify dynamic UI generation methods exist
             Assert(ProgramCs.Contains("GenerateOnboardingUI()") || 
                    ProgramCs.Contains("GenerateControlPanelUI()"), 
-                "Should have dynamic UI Generation methods");
-            Assert(ProgramCs.Contains("GenerateLoginUI()") || 
-                   ProgramCs.Contains("GenerateControlPanelUI()"), 
-                "Should have GenerateLoginUI or GenerateControlPanelUI method");
+                "Should have dynamic UI generation methods");
+            Assert(ProgramCs.Contains("GenerateActivationUI()") || 
+                   ProgramCs.Contains("GenerateAdminUI()"), 
+                "Should have GenerateActivationUI or GenerateAdminUI method");
             Assert(ProgramCs.Contains("GenerateControlPanelUI()"), 
                 "Should have GenerateControlPanelUI method");
             Assert(ProgramCs.Contains("GenerateAdminUI()"), 
                 "Should have GenerateAdminUI method");
             
-            // Verify routes use dynamic Generation
+            // Verify routes use dynamic generation
             Assert(ProgramCs.Contains("GenerateControlPanelUI()") && 
                    ProgramCs.Contains("app.MapGet(\"/control-panel\""), 
-                "Control panel route should use dynamic Generation");
+                "Control panel route should use dynamic generation");
             
-            Console.WriteLine("  ✓ Program.cs uses dynamic Generation for all HTML UI routes");
+            Console.WriteLine("  ✓ Program.cs uses dynamic generation for all HTML UI routes");
         }
         else
         {
