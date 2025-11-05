@@ -14,6 +14,7 @@ ASHAT is not just a program - **she IS a living goddess** on your desktop. An an
 - 🎤 **Soft Female Voice**: Speaks with elegance and grace
 - 🧠 **Server-Connected Brain**: Processes through ASHAT AI server for divine wisdom
 - ✨ **Always Present**: She sits on your desktop, ready to assist
+- 🎮 **RaStudios Integration**: ASHAT can launch and control RaStudios IDE for game development
 
 ## 🚀 Quick Start
 
@@ -22,6 +23,7 @@ ASHAT is not just a program - **she IS a living goddess** on your desktop. An an
 - .NET 9.0 SDK or Runtime
 - Windows, Linux, or macOS
 - ASHAT Server running (optional, works standalone too)
+- RaStudios (optional, included in the Suite package)
 
 ### Running ASHAT
 
@@ -43,6 +45,15 @@ Or run the compiled executable:
 ./ASHAT
 ```
 
+### Download the Complete Suite
+
+For the best experience, download the **ASHAT + RaStudios Suite** which includes:
+- ASHAT Goddess Desktop Assistant
+- RaStudios IDE and Game Development Platform
+- Integrated launch scripts and documentation
+
+Available from your ASHAT server: `/api/download/info`
+
 ## 🎭 Features
 
 ### Visual Goddess
@@ -63,6 +74,7 @@ Integrated chat interface where you can:
 - 🎤 Hear her speak responses
 - 👑 Choose her personality mode
 - ✨ Get AI-powered assistance
+- 🎮 Control RaStudios with voice commands
 
 ### Personality Modes
 
@@ -83,6 +95,31 @@ ASHAT speaks with a soft, feminine voice using:
 - Adjustable rate and pitch for elegance
 - Automatic speech for all responses
 
+### 🎮 RaStudios Integration (NEW!)
+
+ASHAT can help you with RaStudios development:
+
+- **Launch RaStudios**: Say "open RaStudios" or "launch studio"
+- **Get Information**: Ask "what is RaStudios" or "tell me about the studio"
+- **Seamless Control**: ASHAT finds and launches RaStudios automatically
+- **Platform Support**: Works on Windows (WinForms) and Linux (Python version)
+
+#### RaStudios Commands
+
+Try these commands with ASHAT:
+- "Open RaStudios"
+- "Launch the studio"
+- "Start RaStudios"
+- "What is RaStudios?"
+- "Tell me about RaStudios"
+
+ASHAT will automatically locate and launch RaStudios from:
+- Same directory as ASHAT
+- Parent directory
+- Standard installation paths
+- Program Files (Windows)
+- /usr/local/bin or /opt (Linux)
+
 ## 🔌 Server Connection
 
 ### Connected Mode (Full Power)
@@ -94,6 +131,7 @@ When connected to ASHAT server:
 - 📚 Knowledge base access
 - 🎭 Enhanced personality system
 - 💾 Session persistence
+- 🎮 RaStudios integration commands
 
 ### Standalone Mode
 
