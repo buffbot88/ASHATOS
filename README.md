@@ -25,6 +25,7 @@
 - 🎮 **Game Engine Suite** - Scene management, entities, AI generation, in-game chat
 - 💬 **Dual Chat Systems** - CMS website chat + in-game scene-specific chat
 - 🤖 **AI Chatbot** - Intelligent support assistant for CMS users 🆕
+- 👑 **ASHAT Desktop Assistant** - Downloadable AI companion with Roman goddess theme 🆕
 - 🧩 **Plugin System** - Event-driven extensions with dependency injection
 - 🌐 **REST API** - 20+ endpoints with rate limiting and OpenAPI docs
 - 🔒 **Enhanced RBAC** - 25+ permissions across 5 roles
@@ -172,6 +173,38 @@ engine scene create  # Create a scene
 engine scene list    # List all scenes
 help                 # Show command help
 ```
+
+---
+
+## 👑 ASHAT Desktop Assistant
+
+**🆕 Download your personal AI companion!**
+
+ASHAT Desktop Assistant brings the power of ASHAT AI directly to your desktop as a downloadable application. Inspired by classic desktop companions like BonziBuddy, ASHAT features a beautiful animated Roman goddess character with a soft feminine voice.
+
+### ✨ Features
+
+- **🏛️ Roman Goddess Aesthetic** - Animated character with multiple themes (Roman Goddess, Athena, Diana, Minerva)
+- **🎤 Soft Female Voice** - Natural text-to-speech with multiple voice profiles
+- **🤖 AI Coding Assistant** - Get help with programming, debugging, and development
+- **👑 Multiple Personalities** - Friendly, Professional, Playful, Calm, or Wise modes
+- **🎭 Rich Animations** - Wave, bow, think, celebrate, and more
+- **💫 Always Available** - Sits on your desktop ready to help anytime
+- **🔌 Flexible Connectivity** - Works standalone or connects to ASHAT server
+
+### 📥 Download
+
+Visit [/downloads](/downloads) on your ASHAT server or download directly:
+
+- **Windows x64**: [Download](http://localhost:80/api/download/ashat-desktop-windows)
+- **Linux x64**: [Download](http://localhost:80/api/download/ashat-desktop-linux)
+- **macOS Universal**: [Download](http://localhost:80/api/download/ashat-desktop-macos)
+
+### 📚 Documentation
+
+- **[ASHAT Desktop Assistant Guide](ASHAT_DESKTOP_ASSISTANT.md)** - Complete documentation
+- **[Quick Start](ASHAT_DESKTOP_ASSISTANT.md#quick-start)** - Get started in minutes
+- **[Commands](ASHAT_DESKTOP_ASSISTANT.md#basic-commands)** - Available commands and features
 
 ---
 
