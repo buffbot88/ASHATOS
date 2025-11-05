@@ -145,6 +145,10 @@ builder.Services.AddRazorPages();
 builder.WebHost.UseUrls(urls);
 
 var app = builder.Build();
+
+// Enable static files (for JavaScript, CSS, etc.)
+app.UseStaticFiles();
+
 app.UseCors(); // Enable CORS
 app.UseWebSockets();
 
