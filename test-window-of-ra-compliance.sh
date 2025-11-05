@@ -10,32 +10,43 @@ echo ""
 PASSED=0
 FAILED=0
 
-# Test 1: No static HTML files in wwwroot
+# Test 1: No static HTML files in wwwroot (JS/CSS assets are allowed)
 echo "Test 1: Checking for static HTML files in wwwroot..."
-HTML_COUNT=$(find . -path "./wwwroot/*.html" 2>/dev/null | wc -l)
+HTML_COUNT=$(find ASHATCore/wwwroot -name "*.html" 2>/dev/null | wc -l)
 if [ "$HTML_COUNT" -eq 0 ]; then
-    echo "  ✓ PASS: No HTML files in wwwroot"
+    echo "  ✓ PASS: No HTML files in wwwroot (JS/CSS assets allowed)"
+    # Check if JS files exist
+    JS_COUNT=$(find ASHATCore/wwwroot -name "*.js" 2>/dev/null | wc -l)
+    if [ "$JS_COUNT" -gt 0 ]; then
+        echo "    ℹ Found $JS_COUNT JavaScript files (this is expected for client-side functionality)"
+    fi
     ((PASSED++))
 else
     echo "  ✗ FAIL: Found $HTML_COUNT HTML files in wwwroot"
     ((FAILED++))
 fi
 
-# Test 2: No static file middleware in Program.cs
-echo "Test 2: Checking for static file middleware..."
-if ! grep -q "UseStaticFiles()" RaCore/Program.cs; then
-    echo "  ✓ PASS: No UseStaticFiles() in Program.cs"
-    ((PASSED++))
+# Test 2: Static files middleware only for assets (JS, CSS, images), not HTML
+echo "Test 2: Checking for proper static file middleware configuration..."
+if grep -q "UseStaticFiles" ASHATCore/Program.cs; then
+    # Static files middleware is present - verify it's for assets only
+    if [ ! -f "ASHATCore/wwwroot/index.html" ] && [ ! -f "ASHATCore/wwwroot/login.html" ]; then
+        echo "  ✓ PASS: UseStaticFiles() present for assets only (no static HTML files)"
+        ((PASSED++))
+    else
+        echo "  ✗ FAIL: Found static HTML files being served"
+        ((FAILED++))
+    fi
 else
-    echo "  ✗ FAIL: Found UseStaticFiles() in Program.cs"
-    ((FAILED++))
+    echo "  ℹ INFO: No UseStaticFiles() found (assets will need to be served some other way)"
+    ((PASSED++))
 fi
 
 # Test 3: Dynamic UI generation methods exist
 echo "Test 3: Checking for dynamic UI generation methods..."
-if grep -q "GenerateDynamicHomepage()" RaCore/Program.cs && \
-   grep -q "GenerateLoginUI()" RaCore/Program.cs && \
-   grep -q "GenerateControlPanelUI()" RaCore/Program.cs; then
+if grep -q "GenerateOnboardingUI()\|GenerateDynamicHomepage()" ASHATCore/Program.cs && \
+   grep -q "GenerateActivationUI()\|GenerateLoginUI()" ASHATCore/Program.cs && \
+   grep -q "GenerateControlPanelUI()" ASHATCore/Program.cs; then
     echo "  ✓ PASS: Dynamic UI generation methods found"
     ((PASSED++))
 else
@@ -45,7 +56,7 @@ fi
 
 # Test 4: UnderConstruction Handler exists and generates HTML
 echo "Test 4: Checking UnderConstruction Handler..."
-if grep -q "GenerateUnderConstructionPage" RaCore/Engine/UnderConstructionHandler.cs; then
+if grep -q "GenerateUnderConstructionPage" ASHATCore/Engine/UnderConstructionHandler.cs; then
     echo "  ✓ PASS: UnderConstruction Handler generates dynamic HTML"
     ((PASSED++))
 else
@@ -55,7 +66,7 @@ fi
 
 # Test 5: BotDetector generates dynamic HTML
 echo "Test 5: Checking BotDetector..."
-if grep -q "GetAccessDeniedMessage" RaCore/Engine/BotDetector.cs; then
+if grep -q "GetAccessDeniedMessage" ASHATCore/Engine/BotDetector.cs; then
     echo "  ✓ PASS: BotDetector generates dynamic HTML"
     ((PASSED++))
 else
@@ -65,7 +76,7 @@ fi
 
 # Test 6: WwwrootGenerator doesn't generate HTML
 echo "Test 6: Checking WwwrootGenerator..."
-if grep -q "NO HTML generation" RaCore/Modules/Extensions/SiteBuilder/WwwrootGenerator.cs; then
+if grep -q "NO HTML generation" ASHATCore/Modules/Extensions/SiteBuilder/WwwrootGenerator.cs; then
     echo "  ✓ PASS: WwwrootGenerator confirmed to not generate HTML"
     ((PASSED++))
 else
@@ -108,7 +119,7 @@ fi
 
 # Test 10: All routes in Program.cs are dynamic
 echo "Test 10: Checking routes in Program.cs..."
-STATIC_ROUTES=$(grep -c "\.html" RaCore/Program.cs 2>/dev/null || echo "0")
+STATIC_ROUTES=$(grep -c "\.html" ASHATCore/Program.cs 2>/dev/null || echo "0")
 # The only .html references should be in comments or strings showing the old pattern
 if [ "$STATIC_ROUTES" -lt 5 ]; then
     echo "  ✓ PASS: Routes appear to be dynamic (minimal .html references)"
