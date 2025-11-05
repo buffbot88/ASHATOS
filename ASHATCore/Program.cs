@@ -16,6 +16,10 @@ if (!Directory.Exists(wwwrootPath))
     Directory.CreateDirectory(wwwrootPath);
     Console.WriteLine($"[ASHATCore] Created wwwroot directory: {wwwrootPath}");
 }
+else
+{
+    Console.WriteLine($"[ASHATCore] Using existing wwwroot directory: {wwwrootPath}");
+}
 
 // 1. Instantiate MemoryModule FIRST
 var memoryModule = new MemoryModule();
@@ -147,7 +151,48 @@ builder.WebHost.UseUrls(urls);
 var app = builder.Build();
 
 // Enable static files (for JavaScript, CSS, etc.)
-app.UseStaticFiles();
+// Explicitly configure the static files middleware to serve from the correct wwwroot directory
+var contentRoot = app.Environment.ContentRootPath;
+var webRoot = app.Environment.WebRootPath; // This should be ContentRoot/wwwroot by default
+var staticFilesPath = Path.Combine(contentRoot, "wwwroot");
+
+Console.WriteLine($"[ASHATCore] Content Root: {contentRoot}");
+Console.WriteLine($"[ASHATCore] Web Root (from Environment): {webRoot ?? "NULL"}");
+Console.WriteLine($"[ASHATCore] Static files path (computed): {staticFilesPath}");
+
+// Verify the wwwroot directory exists and log its contents
+if (Directory.Exists(staticFilesPath))
+{
+    Console.WriteLine($"[ASHATCore] ✓ wwwroot directory exists at: {staticFilesPath}");
+    var jsPath = Path.Combine(staticFilesPath, "js");
+    if (Directory.Exists(jsPath))
+    {
+        var jsFiles = Directory.GetFiles(jsPath);
+        Console.WriteLine($"[ASHATCore] ✓ Found {jsFiles.Length} JavaScript files:");
+        foreach (var file in jsFiles)
+        {
+            Console.WriteLine($"  - {Path.GetFileName(file)}");
+        }
+    }
+    else
+    {
+        Console.WriteLine($"[ASHATCore] ⚠ WARNING: js directory not found at: {jsPath}");
+    }
+}
+else
+{
+    Console.WriteLine($"[ASHATCore] ⚠ WARNING: wwwroot directory not found at: {staticFilesPath}");
+}
+
+// Use static files with explicit path configuration to ensure correct resolution
+var staticFileOptions = new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(staticFilesPath),
+    RequestPath = ""
+};
+
+app.UseStaticFiles(staticFileOptions);
+Console.WriteLine($"[ASHATCore] Static files middleware configured");
 
 app.UseCors(); // Enable CORS
 app.UseWebSockets();
