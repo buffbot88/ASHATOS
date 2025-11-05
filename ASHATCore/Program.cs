@@ -1229,6 +1229,12 @@ static string GenerateControlPanelUI()
     <div class=""header"">
         <h1>🎛️ AGP Studios, INC - Control Panel</h1>
         <p>SiteBuilder - Internal Module Interface</p>
+        <div class=""nav"" style=""display: flex; gap: 15px; justify-content: center; margin-top: 15px; flex-wrap: wrap;"">
+            <a href=""/"" style=""color: #c084fc; text-decoration: none; padding: 8px 16px; background: rgba(138, 43, 226, 0.2); border: 1px solid rgba(138, 43, 226, 0.4); border-radius: 8px;"">🏠 Home</a>
+            <a href=""/cms/blogs"" style=""color: #c084fc; text-decoration: none; padding: 8px 16px; background: rgba(138, 43, 226, 0.2); border: 1px solid rgba(138, 43, 226, 0.4); border-radius: 8px;"">📝 Blogs</a>
+            <a href=""/cms/forums"" style=""color: #c084fc; text-decoration: none; padding: 8px 16px; background: rgba(138, 43, 226, 0.2); border: 1px solid rgba(138, 43, 226, 0.4); border-radius: 8px;"">💬 Forums</a>
+            <a href=""/cms/profiles"" style=""color: #c084fc; text-decoration: none; padding: 8px 16px; background: rgba(138, 43, 226, 0.2); border: 1px solid rgba(138, 43, 226, 0.4); border-radius: 8px;"">👤 Profiles</a>
+        </div>
         <a href=""#"" class=""logout"" onclick=""logout()"">Logout</a>
     </div>
     
