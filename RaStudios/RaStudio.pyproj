@@ -1,0 +1,126 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>55744414-bd30-4e11-b9a0-c4efada13960</ProjectGuid>
+    <ProjectHome>.</ProjectHome>
+    <StartupFile>main.py</StartupFile>
+    <SearchPath>
+    </SearchPath>
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <Name>RaStudio</Name>
+    <RootNamespace>RaStudio</RootNamespace>
+    <TestFramework>Pytest</TestFramework>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="assets\README.md" />
+    <Content Include="assets\themes\blue.json" />
+    <Content Include="assets\themes\dark.json" />
+    <Content Include="assets\themes\light.json" />
+    <Content Include="assets\themes\skyblue.json" />
+    <Content Include="converters\README.md" />
+    <Content Include="models\README.md" />
+    <Content Include="core\module_manager.py" />
+    <Content Include="viewmodels\README.md" />
+    <Content Include="pages\README.md" />
+    <Content Include="panels\pluginpanels\README.md" />
+    <Content Include="panels\README.md" />
+    <Content Include="PHASES.md" />
+    <Content Include="services\README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="main.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="assets\" />
+    <Folder Include="assets\themes\" />
+    <Folder Include="converters\" />
+    <Folder Include="models\" />
+    <Folder Include="core\" />
+    <Folder Include="viewmodels\" />
+    <Folder Include="pages\" />
+    <Folder Include="panels\" />
+    <Folder Include="panels\pluginpanels\" />
+    <Folder Include="plugins\" />
+    <Folder Include="services\" />
+    <Folder Include="ui\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="assets\themes\__init__.py" />
+    <Compile Include="assets\__init__.py" />
+    <Compile Include="converters\commands_visbility_converter.py" />
+    <Compile Include="converters\logs_visbility_converter.py" />
+    <Compile Include="converters\message_type_to_brush.py" />
+    <Compile Include="converters\metrics_visibility_converter.py" />
+    <Compile Include="converters\status_visibility_converter.py" />
+    <Compile Include="converters\visibility_converter.py" />
+    <Compile Include="converters\__init__.py" />
+    <Compile Include="models\diagnostics_entry.py" />
+    <Compile Include="models\panel_manifest.py" />
+    <Compile Include="models\plugin_manifest.py" />
+    <Compile Include="models\__init__.py" />
+    <Compile Include="pages\dashboard_page.py" />
+    <Compile Include="services\rapi_client.py" />
+    <Compile Include="ui\main_window.py" />
+    <Compile Include="viewmodels\commands_panel_viewmodel.py" />
+    <Compile Include="viewmodels\dashboard_panel_viewmodel.py" />
+    <Compile Include="viewmodels\diagnostics_paneL_viewmodel.py" />
+    <Compile Include="viewmodels\features_explorer_panel_viewmodel.py" />
+    <Compile Include="viewmodels\logs_panel_viewmodel.py" />
+    <Compile Include="viewmodels\main_window_viewmodel.py" />
+    <Compile Include="viewmodels\metrics_panel_viewmodel.py" />
+    <Compile Include="viewmodels\modules_page_viewmodel.py" />
+    <Compile Include="viewmodels\module_panel_viewmodel.py" />
+    <Compile Include="viewmodels\monitor_category_viewmodel.py" />
+    <Compile Include="viewmodels\monitor_page_viewmodel.py" />
+    <Compile Include="viewmodels\monitor_tab_viewmodel.py" />
+    <Compile Include="viewmodels\observable_object.py" />
+    <Compile Include="viewmodels\relay_command.py" />
+    <Compile Include="viewmodels\settings_panel_viewmodel.py" />
+    <Compile Include="viewmodels\status_panel_viewmodel.py" />
+    <Compile Include="viewmodels\test_runner_panel_viewmodel.py" />
+    <Compile Include="viewmodels\__init__.py" />
+    <Compile Include="pages\modules_page.py" />
+    <Compile Include="pages\monitor_page.py" />
+    <Compile Include="pages\__init__.py" />
+    <Compile Include="panels\dashboard_panel.py" />
+    <Compile Include="panels\diagnostics_panel.py" />
+    <Compile Include="panels\logs_panel.py" />
+    <Compile Include="panels\modules_panel.py" />
+    <Compile Include="panels\monitor_panel.py" />
+    <Compile Include="panels\panel_loader.py" />
+    <Compile Include="panels\pluginpanels\hello_world_plugin.py" />
+    <Compile Include="panels\pluginpanels\iplugin_panel.py" />
+    <Compile Include="panels\pluginpanels\plugin_registry.py" />
+    <Compile Include="panels\pluginpanels\__init__.py" />
+    <Compile Include="panels\settings_panel.py" />
+    <Compile Include="panels\__init__.py" />
+    <Compile Include="plugins\__init__.py" />
+    <Compile Include="services\module_bus.py" />
+    <Compile Include="services\ra_attributes.py" />
+    <Compile Include="services\settings_manager.py" />
+    <Compile Include="services\speech_pipeline_service.py" />
+    <Compile Include="services\theme_manager.py" />
+    <Compile Include="services\__init__.py" />
+    <Compile Include="ui\__init__.py" />
+    <Compile Include="__init__.py" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+  <!-- Uncomment the CoreCompile target to enable the Build command in
+       Visual Studio and specify your pre- and post-build commands in
+       the BeforeBuild and AfterBuild targets below. -->
+  <!--<Target Name="CoreCompile" />-->
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+</Project>

@@ -1,0 +1,16 @@
+# RaStudios Dependencies
+
+# Core UI Framework
+PyQt6>=6.4.0
+
+# Web Browser Support (optional but recommended)
+PyQt6-WebEngine>=6.4.0
+
+# WebSocket Communication
+websocket-client>=1.5.0
+
+# Additional utilities
+# For future enhancements, these may be added:
+# requests>=2.31.0  # For REST API fallback
+# Pillow>=10.0.0    # For image processing
+# numpy>=1.24.0     # For data analysis

@@ -1,0 +1,42 @@
+{
+  "Server": {
+    "Url": "ws://localhost:7077/ws",
+    "Port": 7077,
+    "Protocol": "WebSocket",
+    "HandshakeType": "JSON",
+    "TimeoutSeconds": 30,
+    "UseAuthentication": true,
+    "EnableRateLimiting": true,
+    "MaxMessagesPerSecond": 10
+  },
+  "AiService": {
+    "Endpoint": "http://localhost:8080/api/ai/generate",
+    "ApiKey": "",
+    "MaxRequestsPerMinute": 10,
+    "RequireApproval": true,
+    "EnablePolicyFilter": true,
+    "BlockedPatterns": [
+      "rm -rf",
+      "del /f",
+      "format c:",
+      "drop database",
+      "delete from",
+      "__import__('os').system",
+      "eval(",
+      "exec(",
+      "Process.Start"
+    ]
+  },
+  "Security": {
+    "RequireHumanApproval": true,
+    "EnableAuditLogging": true,
+    "AllowAutoExecution": false,
+    "AllowSelfReplication": false
+  },
+  "Updates": {
+    "Strategy": "Manual",
+    "CheckForUpdates": true,
+    "AutoDownload": false,
+    "RequireSignedPackages": true
+  }
+}
