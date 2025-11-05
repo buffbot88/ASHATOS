@@ -24,6 +24,23 @@ public sealed class DependencyManagerModule : ModuleBase
         LogInfo("Dependency Manager module initialized");
     }
 
+    // Security: Sanitize inputs to prevent command injection
+    private static string SanitizeInput(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return string.Empty;
+
+        // Remove dangerous characters that could be used for injection
+        var dangerous = new[] { ';', '|', '&', '$', '`', '\n', '\r', '<', '>' };
+        var sanitized = input;
+        foreach (var ch in dangerous)
+        {
+            sanitized = sanitized.Replace(ch.ToString(), "");
+        }
+        
+        return sanitized.Trim();
+    }
+
     public override string Process(string input)
     {
         var text = (input ?? string.Empty).Trim();
@@ -159,8 +176,17 @@ public sealed class DependencyManagerModule : ModuleBase
                 return $"❌ Project file not found: {projectPath}";
             }
 
+            // Sanitize inputs to prevent command injection
+            var sanitizedPackage = SanitizeInput(packageName);
+            var sanitizedPath = SanitizeInput(projectPath);
+            
+            if (string.IsNullOrEmpty(sanitizedPackage))
+            {
+                return "❌ Invalid package name";
+            }
+
             // Use dotnet CLI to add package
-            var result = ExecuteDotNetCommand($"add \"{projectPath}\" package {packageName}");
+            var result = ExecuteDotNetCommand($"add \"{sanitizedPath}\" package {sanitizedPackage}");
 
             if (result.Success)
             {
@@ -209,7 +235,16 @@ public sealed class DependencyManagerModule : ModuleBase
                 return $"❌ Project file not found: {projectPath}";
             }
 
-            var result = ExecuteDotNetCommand($"remove \"{projectPath}\" package {packageName}");
+            // Sanitize inputs to prevent command injection
+            var sanitizedPackage = SanitizeInput(packageName);
+            var sanitizedPath = SanitizeInput(projectPath);
+            
+            if (string.IsNullOrEmpty(sanitizedPackage))
+            {
+                return "❌ Invalid package name";
+            }
+
+            var result = ExecuteDotNetCommand($"remove \"{sanitizedPath}\" package {sanitizedPackage}");
 
             if (result.Success)
             {

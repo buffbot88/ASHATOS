@@ -29,6 +29,23 @@ public sealed class GitOperationsModule : ModuleBase
         LogInfo($"Working directory: {_workingDirectory}");
     }
 
+    // Security: Sanitize git arguments to prevent command injection
+    private static string SanitizeGitArguments(string arguments)
+    {
+        if (string.IsNullOrWhiteSpace(arguments))
+            return string.Empty;
+
+        // Remove dangerous characters that could be used for injection
+        var dangerous = new[] { ';', '|', '&', '$', '`', '\n', '\r' };
+        var sanitized = arguments;
+        foreach (var ch in dangerous)
+        {
+            sanitized = sanitized.Replace(ch.ToString(), "");
+        }
+        
+        return sanitized.Trim();
+    }
+
     public override string Process(string input)
     {
         var text = (input ?? string.Empty).Trim();
@@ -146,10 +163,13 @@ public sealed class GitOperationsModule : ModuleBase
     {
         try
         {
+            // Sanitize arguments to prevent command injection
+            var sanitizedArgs = SanitizeGitArguments(arguments);
+            
             var startInfo = new ProcessStartInfo
             {
                 FileName = "git",
-                Arguments = arguments,
+                Arguments = sanitizedArgs,
                 WorkingDirectory = _workingDirectory,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -317,10 +337,13 @@ public sealed class GitOperationsModule : ModuleBase
     {
         try
         {
+            // Sanitize arguments to prevent command injection
+            var sanitizedArgs = SanitizeGitArguments(arguments);
+            
             var startInfo = new ProcessStartInfo
             {
                 FileName = "git",
-                Arguments = arguments,
+                Arguments = sanitizedArgs,
                 WorkingDirectory = _workingDirectory,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
