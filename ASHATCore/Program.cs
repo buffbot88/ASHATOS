@@ -722,6 +722,9 @@ static string GenerateOnboardingUI()
         // Initialize
         loadCourses();
     </script>
+    
+    <!-- ASHAT Os Session Manager -->
+    <script src=""/js/session-manager.js""></script>
 </body>
 </html>";
 }
@@ -1032,6 +1035,9 @@ static string GenerateActivationUI()
         
         checkAuth();
     </script>
+    
+    <!-- ASHAT Os Session Manager -->
+    <script src=""/js/session-manager.js""></script>
 </body>
 </html>";
 }
@@ -1677,6 +1683,9 @@ static string GenerateControlPanelUI()
         checkAuth();
         loadStats();
     </script>
+    
+    <!-- ASHAT Os Session Manager -->
+    <script src=""/js/session-manager.js""></script>
 </body>
 </html>";
 }
@@ -1732,6 +1741,9 @@ static string GenerateAdminUI()
             <p>Load, unload, and configure modules.</p>
         </div>
     </div>
+    
+    <!-- ASHAT Os Session Manager -->
+    <script src=""/js/session-manager.js""></script>
 </body>
 </html>";
 }
@@ -1782,6 +1794,9 @@ static string GenerateGameEngineDashboardUI()
             <p>Monitor active game sessions and players.</p>
         </div>
     </div>
+    
+    <!-- ASHAT Os Session Manager -->
+    <script src=""/js/session-manager.js""></script>
 </body>
 </html>";
 }
@@ -1832,6 +1847,9 @@ static string GenerateClientBuilderDashboardUI()
             <p>Monitor client build progress and downloads.</p>
         </div>
     </div>
+    
+    <!-- ASHAT Os Session Manager -->
+    <script src=""/js/session-manager.js""></script>
 </body>
 </html>";
 }
