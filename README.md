@@ -182,6 +182,8 @@ help                 # Show command help
 
 ASHAT Desktop Assistant brings the power of ASHAT AI directly to your desktop as a downloadable application. Inspired by classic desktop companions like BonziBuddy, ASHAT features a beautiful animated Roman goddess character with a soft feminine voice.
 
+**🎮 NEW: RaStudios Integration!** ASHAT can now launch and control RaStudios IDE with voice commands!
+
 ### ✨ Features
 
 - **🏛️ Roman Goddess Aesthetic** - Animated character with multiple themes (Roman Goddess, Athena, Diana, Minerva)
@@ -191,11 +193,17 @@ ASHAT Desktop Assistant brings the power of ASHAT AI directly to your desktop as
 - **🎭 Rich Animations** - Wave, bow, think, celebrate, and more
 - **💫 Always Available** - Sits on your desktop ready to help anytime
 - **🔌 Flexible Connectivity** - Works standalone or connects to ASHAT server
+- **🎮 RaStudios Integration** - Launch RaStudios with voice commands like "open RaStudios"
 
 ### 📥 Download
 
 Visit [/downloads](/downloads) on your ASHAT server or download directly:
 
+**Complete Suite (Recommended):**
+- **Windows x64**: [ASHAT + RaStudios Suite](http://localhost:80/api/download/ashat-goddess-suite-windows)
+- **Linux x64**: [ASHAT + RaStudios Suite](http://localhost:80/api/download/ashat-goddess-suite-linux)
+
+**ASHAT Only:**
 - **Windows x64**: [Download](http://localhost:80/api/download/ashat-desktop-windows)
 - **Linux x64**: [Download](http://localhost:80/api/download/ashat-desktop-linux)
 - **macOS Universal**: [Download](http://localhost:80/api/download/ashat-desktop-macos)
@@ -203,6 +211,7 @@ Visit [/downloads](/downloads) on your ASHAT server or download directly:
 ### 📚 Documentation
 
 - **[ASHAT Desktop Assistant Guide](ASHAT_DESKTOP_ASSISTANT.md)** - Complete documentation
+- **[ASHAT + RaStudios Integration Guide](ASHAT_RASTUDIOS_INTEGRATION.md)** - Integration details
 - **[Quick Start](ASHAT_DESKTOP_ASSISTANT.md#quick-start)** - Get started in minutes
 - **[Commands](ASHAT_DESKTOP_ASSISTANT.md#basic-commands)** - Available commands and features
 
