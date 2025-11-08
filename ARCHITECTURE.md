@@ -97,19 +97,15 @@
 │  │              External Legendary Modules (DLLs)           │  │
 │  │  ┌──────────────┐  ┌──────────────┐  ┌───────────────┐ │  │
 │  │  │LegendaryCMS  │  │LegendaryGame │  │LegendaryClient│ │  │
-│  │  │    Suite     │  │Engine Suite  │  │   Builder     │ │  │
+│  │  │    Suite     │  │    System    │  │   Builder     │ │  │
 │  │  │   (76 KB)    │  │  (120 KB)    │  │   (90 KB)     │ │  │
 │  │  └──────────────┘  └──────────────┘  └───────────────┘ │  │
 │  │                                                          │  │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌───────────────┐ │  │
-│  │  │LegendaryChat │  │LegendaryLrng │  │LegendaryGame  │ │  │
-│  │  │  (24 KB)     │  │  (68 KB)     │  │Server (69 KB) │ │  │
-│  │  └──────────────┘  └──────────────┘  └───────────────┘ │  │
+│  │  ┌──────────────┐  ┌──────────────┐                    │  │
+│  │  │LegendaryChat │  │LegendaryLrng │                    │  │
+│  │  │  (24 KB)     │  │  (68 KB)     │                    │  │
+│  │  └──────────────┘  └──────────────┘                    │  │
 │  │                                                          │  │
-│  │  ┌──────────────┐                                       │  │
-│  │  │LegendaryGame │                                       │  │
-│  │  │Client (36 KB)│                                       │  │
-│  │  └──────────────┘                                       │  │
 │  └──────────────────────────────────────────────────────────┘  │
 │                                                                   │
 │  ┌──────────────────────────────────────────────────────────┐  │
@@ -184,7 +180,7 @@ The central hub that coordinates all system operations.
 2. Initialize logging system
 3. Initialize ModuleManager and discover modules
 4. Load built-in modules from `/RaCore/Modules/`
-5. Load external DLL modules (LegendaryCMS, LegendaryGameEngine, etc.)
+5. Load external DLL modules (LegendaryCMS, LegendaryGameSystem, etc.)
 6. Start HTTP server (default port 80)
 7. Start WebSocket listener
 8. Display boot sequence (Kawaii-style ASCII art)
@@ -308,12 +304,10 @@ Independent class libraries loaded at runtime. Can be updated without rebuilding
 
 **Modules**:
 1. **LegendaryCMS** (Phase 8) - Content management system
-2. **LegendaryGameEngine** (Phase 9) - Game engine with in-game chat
+2. **LegendaryGameSystem** (Phase 9) - Unified game system (client, server, engine) with in-game chat
 3. **LegendaryClientBuilder** (Phase 9.1) - Multi-platform game client generator
 4. **LegendaryChat** - Real-time chat system with moderation
 5. **LegendaryLearning** (LULModule) - Interactive learning and training system
-6. **LegendaryGameServer** - AI-driven game creation and deployment
-7. **LegendaryGameClient** - Multi-platform game client generator
 
 #### Dynamically Spawned Modules
 **Location**: `/Modules/`
@@ -403,14 +397,16 @@ POST /api/cms/plugin/install
 ### LegendaryGameEngine (Phase 9)
 
 **Size**: 120 KB DLL  
-**Purpose**: Advanced game engine with in-game chat
+**Purpose**: Unified game system with client, server, and engine capabilities
 
 #### Architecture
 ```
-LegendaryGameEngine/
+LegendaryGameSystem/
 ├── Core/
-│   ├── LegendaryGameEngineModule.cs   # Main module
-│   └── ILegendaryGameEngineModule.cs  # Interface
+│   ├── LegendaryGameEngineModule.cs   # Main engine module
+│   └── ILegendaryGameEngineModule.cs  # Engine interface
+├── GameServerModule.cs                # AI-driven game server
+├── GameClientModule.cs                # Multi-platform client generator
 ├── Database/
 │   └── GameEngineDatabase.cs          # SQLite persistence
 ├── Networking/
@@ -428,10 +424,12 @@ LegendaryGameEngine/
 - **WebSocket Broadcasting**: Real-time event updates
 - **SQLite Persistence**: Scenes and entities persist across restarts
 - **AI Generation**: Natural language world creation
+- **Game Server**: AI-driven game creation and deployment
+- **Game Client**: Multi-platform client generation (WebGL, Desktop)
 
 #### Chat System
 ```
-CMS Chat (LegendaryCMS)      vs      In-Game Chat (LegendaryGameEngine)
+CMS Chat (LegendaryCMS)      vs      In-Game Chat (LegendaryGameSystem)
 ─────────────────────────────────────────────────────────────────────────
 • Website forums                     • Game scene communication
 • Support tickets                    • Party/guild/zone chat

@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LegendaryGameEngine\LegendaryGameEngine.csproj" />
+    <ProjectReference Include="..\LegendaryGameSystem\LegendaryGameSystem.csproj" />
     <ProjectReference Include="..\Abstractions\Abstractions.csproj" />
   </ItemGroup>
 

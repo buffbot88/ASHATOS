@@ -21,7 +21,7 @@
 
 - 🔌 **Modular Architecture** - External DLLs with zero coupling
   - LegendaryCMS.dll (76 KB) - Content Management System
-  - LegendaryGameEngine.dll (120 KB) - Game Engine Suite
+  - LegendaryGameSystem.dll (120 KB) - Unified Game System (Client/Server/Engine)
 - 🎮 **Game Engine Suite** - Scene management, entities, AI generation, in-game chat
 - 💬 **Dual Chat Systems** - CMS website chat + in-game scene-specific chat
 - 🤖 **AI Chatbot** - Intelligent support assistant for CMS users 🆕
@@ -123,14 +123,16 @@ The Legendary CMS Suite represents the culmination of Phase 8 development, deliv
 
 ### What's New (October 2025)
 
-The Legendary Game Engine Suite extracts the game engine into an independent DLL, following Phase 8's successful modularization pattern.
+The Legendary Game System extracts the complete game infrastructure (client, server, and engine) into an independent DLL, following Phase 8's successful modularization pattern.
 
-#### Core Module: LegendaryGameEngine.dll
+#### Core Module: LegendaryGameSystem.dll
 
 **Size:** 120 KB | **Init Time:** <150ms | **Features:** Unreal Engine-inspired
 
 **Components:**
 - `LegendaryGameEngineModule` (698+ lines) - Main engine with AI generation
+- `GameServerModule` - AI-driven game creation and deployment
+- `GameClientModule` - Multi-platform game client generator
 - `GameEngineDatabase` (337 lines) - SQLite persistence layer
 - `GameEngineWebSocketBroadcaster` (136 lines) - Real-time event broadcasting
 - `InGameChatManager` (200 lines) - Scene-specific chat system
@@ -159,7 +161,7 @@ The Legendary Game Engine Suite extracts the game engine into an independent DLL
 
 | Feature | CMS Website Chat | In-Game Chat |
 |---------|------------------|--------------|
-| **Module** | LegendaryCMS | LegendaryGameEngine |
+| **Module** | LegendaryCMS | LegendaryGameSystem |
 | **Purpose** | Website forums, support | Party/guild/zone chat |
 | **Scope** | Global, persistent | Scene-specific |
 | **Storage** | Long-term database | Short-term (200 msgs) |
@@ -243,7 +245,7 @@ Visit [/downloads](/downloads) on your ASHAT server or download directly:
 ### Module Documentation
 
 - **[Legendary CMS README](LegendaryCMS/README.md)** - Complete CMS documentation (10,000+ words)
-- **[Legendary Game Engine README](LegendaryGameEngine/README.md)** - Game Engine guide
+- **[Legendary Game System README](LegendaryGameSystem/README.md)** - Unified Game System guide
 - **[Game Engine API](GAMEENGINE_API.md)** - API reference (Phase 4+)
 
 ### Platform Guides
