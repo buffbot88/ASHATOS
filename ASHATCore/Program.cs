@@ -76,9 +76,9 @@ await bootSequence.ExecuteBootSequenceAsync();
 // Assume 'config' is loaded from server-config.json
 
 // 1. Try environment variable
-string port = Environment.GetEnvironmentVariable("ASHATCore_DETECTED_PORT");
+string? port = Environment.GetEnvironmentVariable("ASHATCore_DETECTED_PORT");
 
-// 2. If not set, try config file
+// 2. If not set, try config file  
 if (string.IsNullOrEmpty(port))
 {
     var serverRoot = Directory.GetCurrentDirectory();
@@ -146,7 +146,7 @@ builder.Services.AddCors(options =>
 // Add Razor Pages support for CMS homepage
 // Also adds LegendaryCMS module with its Razor Pages
 builder.Services.AddRazorPages()
-    .AddApplicationPart(typeof(LegendaryCMS.Core.LegendaryCMSModule).Assembly);
+    .AddApplicationPart(typeof(LegendaryCMSModule).Assembly);
 
 // Configure URLs with dynamic port
 builder.WebHost.UseUrls(urls);

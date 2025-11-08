@@ -26,10 +26,9 @@
 	  <Folder Include="Engine\Memory\" />
 	</ItemGroup>
 	<ItemGroup>
+	  <ProjectReference Include="..\..\LegendaryCMS\LegendaryCMS.csproj" />
 	  <ProjectReference Include="..\Abstractions\Abstractions.csproj" />
 	  <ProjectReference Include="..\LegendaryChat\LegendaryChat.csproj" />
-	  <ProjectReference Include="..\LegendaryClientBuilder\LegendaryClientBuilder.csproj" />
-	  <ProjectReference Include="..\LegendaryCMS\LegendaryCMS.csproj" />
 	  <ProjectReference Include="..\LegendaryGameClient\LegendaryGameClient.csproj" />
 	  <ProjectReference Include="..\LegendaryGameEngine\LegendaryGameEngine.csproj" />
 	  <ProjectReference Include="..\LegendaryGameServer\LegendaryGameServer.csproj" />

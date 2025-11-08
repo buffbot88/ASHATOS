@@ -185,7 +185,7 @@ VALUES ($id, $username, $email, $passwordHash, $passwordSalt, $role, $createdAtU
         {
             Id = Guid.Parse(reader.GetString(0)),
             Username = reader.GetString(1),
-            Email = reader.IsDBNull(2) ? null : reader.GetString(2),
+            Email = !reader.IsDBNull(2) ? reader.GetString(2) : string.Empty, // Fix CS8601: assign empty string instead of null
             PasswordHash = reader.GetString(3),
             PasswordSalt = reader.GetString(4),
             Role = (UserRole)reader.GetInt32(5),
@@ -312,8 +312,8 @@ FROM Sessions WHERE IsValid = 1 AND ExpiresAtUtc > $now;";
             CreatedAtUtc = DateTime.Parse(reader.GetString(3)),
             ExpiresAtUtc = DateTime.Parse(reader.GetString(4)),
             LastActivityUtc = GetLastActivityUtc(),
-            IpAddress = reader.IsDBNull(6) ? null : reader.GetString(6),
-            UserAgent = reader.IsDBNull(7) ? null : reader.GetString(7),
+            IpAddress = reader.IsDBNull(6) ? string.Empty : reader.GetString(6), // Fix CS8601: assign empty string instead of null
+            UserAgent = reader.IsDBNull(7) ? string.Empty : reader.GetString(7), // Fix CS8601: assign empty string instead of null
             IsValid = reader.GetInt32(8) == 1
         };
     }

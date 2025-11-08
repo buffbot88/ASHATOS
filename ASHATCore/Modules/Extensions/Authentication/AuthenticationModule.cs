@@ -59,7 +59,9 @@ public sealed class AuthenticationModule : ModuleBase, IAuthenticationModule
 
     public override string Process(string input)
     {
-        return ProcessAsync(input).GetAwaiter().GetResult().Text;
+        // Ensure that .Text is never null to avoid CS8603
+        var response = ProcessAsync(input).GetAwaiter().GetResult();
+        return response.Text ?? string.Empty;
     }
 
     public async Task<ModuleResponse> ProcessAsync(string input)

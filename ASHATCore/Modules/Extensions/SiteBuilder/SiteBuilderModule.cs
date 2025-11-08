@@ -9,8 +9,8 @@ namespace ASHATCore.Modules.Extensions.SiteBuilder;
 /// Module - Unified website building system.
 /// Integrates with LegendaryCMS for CMS functionality, generates static HTML sites.
 /// </summary>
-[RaModule(Category = "extensions")]
-public class SiteBuilderModule : ModuleBase
+[LegendaryCMS.Core.RaModule(Category = "extensions")]
+public class SiteBuilderModule : LegendaryCMS.Core.ModuleBase
 {
     public override string Name => "SiteBuilder";
 

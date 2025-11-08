@@ -25,7 +25,8 @@ public sealed class SystemOpenSkillModule : ModuleBase, ISkill
 
     public override string Process(string input)
     {
-        return ProcessAsync(input).GetAwaiter().GetResult().Text;
+        // Ensure .Text is not null by using null-coalescing operator
+        return ProcessAsync(input).GetAwaiter().GetResult().Text ?? string.Empty;
     }
 
     public async Task<ModuleResponse> ProcessAsync(string input)
@@ -87,7 +88,7 @@ public sealed class SystemOpenSkillModule : ModuleBase, ISkill
             if (_thoughtProcessor != null)
             {
                 var resp = await _thoughtProcessor.ProcessThoughtAsync($"Opened: {target}", null, null, new System.Collections.Concurrent.ConcurrentQueue<Thought>(), Mood.Happy);
-                return new SkillResult { Success = true, Output = resp.Text };
+                return new SkillResult { Success = true, Output = resp.Text ?? string.Empty };
             }
             return new SkillResult { Success = true, Output = $"Opened: {target}" };
         }

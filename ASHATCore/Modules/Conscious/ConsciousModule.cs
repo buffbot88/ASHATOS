@@ -51,7 +51,8 @@ public partial class ConsciousModule : ModuleBase
 
     public override string Process(string input)
     {
-        return ProcessAsync(input).GetAwaiter().GetResult().Text;
+        // Ensure that .Text is never null by using null-coalescing operator
+        return ProcessAsync(input).GetAwaiter().GetResult().Text ?? string.Empty;
     }
 
     public Task<ModuleResponse> ProcessAsync(string input)

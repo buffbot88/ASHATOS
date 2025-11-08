@@ -32,7 +32,7 @@ public class SubconsciousProxy : ISubconscious
             if (_aiLang != null)
             {
                 var resp = await _aiLang.GenerateAsync("subconscious.probe", Raw, "en", null);
-                return resp.Text;
+                return resp.Text ?? string.Empty;
             }
             return Raw;
         }
@@ -52,7 +52,7 @@ public class SubconsciousProxy : ISubconscious
         if (_aiLang != null)
         {
             var resp = _aiLang.GenerateAsync("subconscious.response", Raw, "en", null).GetAwaiter().GetResult();
-            return resp.Text;
+            return resp.Text ?? string.Empty;
         }
         return Raw;
     }

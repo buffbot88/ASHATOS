@@ -440,7 +440,12 @@ app.MapGet("/api/control/game/stats", async (HttpContext context) =>
 app.MapGet("/api/control/forum/posts", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token);
+    if (authModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Authentication not available" });
+    }
+    var user = await authModule.GetUserByTokenAsync(token);
     
     if (user == null || !authModule!.HasPermission(user, "Forum", UserRole.ForumModerator))
     {
@@ -466,7 +471,12 @@ app.MapGet("/api/control/forum/posts", async (HttpContext context) =>
 app.MapDelete("/api/control/forum/posts/{postId}", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token);
+    if (authModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Authentication not available" });
+    }
+    var user = await authModule.GetUserByTokenAsync(token);
     
     if (user == null || !authModule!.HasPermission(user, "Forum", UserRole.ForumModerator))
     {
@@ -543,7 +553,12 @@ app.MapDelete("/api/control/forum/posts/{postId}", async (HttpContext context) =
 app.MapPut("/api/control/forum/posts/{postId}/lock", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token);
+    if (authModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Authentication not available" });
+    }
+    var user = await authModule.GetUserByTokenAsync(token);
     
     if (user == null || !authModule!.HasPermission(user, "Forum", UserRole.ForumModerator))
     {
@@ -583,7 +598,12 @@ app.MapPut("/api/control/forum/posts/{postId}/lock", async (HttpContext context)
 app.MapGet("/api/control/forum/users/{userId}/warnings", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token);
+    if (authModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Authentication not available" });
+    }
+    var user = await authModule.GetUserByTokenAsync(token);
     
     if (user == null || !authModule!.HasPermission(user, "Forum", UserRole.ForumModerator))
     {
@@ -616,7 +636,12 @@ app.MapGet("/api/control/forum/users/{userId}/warnings", async (HttpContext cont
 app.MapPost("/api/control/forum/users/{userId}/warnings", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token);
+    if (authModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Authentication not available" });
+    }
+    var user = await authModule.GetUserByTokenAsync(token);
     
     if (user == null || !authModule!.HasPermission(user, "Forum", UserRole.ForumModerator))
     {
@@ -656,7 +681,12 @@ app.MapPost("/api/control/forum/users/{userId}/warnings", async (HttpContext con
 app.MapPut("/api/control/forum/users/{userId}/ban", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token);
+    if (authModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Authentication not available" });
+    }
+    var user = await authModule.GetUserByTokenAsync(token);
     
     if (user == null || !authModule!.HasPermission(user, "Forum", UserRole.ForumModerator))
     {
@@ -696,7 +726,12 @@ app.MapPut("/api/control/forum/users/{userId}/ban", async (HttpContext context) 
 app.MapGet("/api/control/forum/stats", async (HttpContext context) =>
 {
     var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-    var user = await authModule?.GetUserByTokenAsync(token);
+    if (authModule == null)
+    {
+        context.Response.StatusCode = 503;
+        return Results.Json(new { error = "Authentication not available" });
+    }
+    var user = await authModule.GetUserByTokenAsync(token);
     
     if (user == null || !authModule!.HasPermission(user, "Forum", UserRole.Admin))
     {

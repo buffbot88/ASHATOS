@@ -45,8 +45,8 @@ public class SubconsciousModule : ModuleBase, ISubconscious, IDisposable
             new System.Collections.Concurrent.ConcurrentQueue<Thought>(),
             Mood.Thinking
         );
-        SubconsciousDiagnostics.RaiseProbe(query, resp.Text);
-        return resp.Text;
+        SubconsciousDiagnostics.RaiseProbe(query, resp.Text ?? string.Empty);
+        return resp.Text ?? string.Empty;
     }
 
     public void ReceiveMessage(string message)
@@ -60,8 +60,8 @@ public class SubconsciousModule : ModuleBase, ISubconscious, IDisposable
                 new System.Collections.Concurrent.ConcurrentQueue<Thought>(),
                 Mood.Speaking
             ).GetAwaiter().GetResult();
-            LogInfo(resp.Text);
-            SubconsciousDiagnostics.RaiseReceiveMessage(message, resp.Text);
+            LogInfo(resp.Text ?? string.Empty);
+            SubconsciousDiagnostics.RaiseReceiveMessage(message, resp.Text ?? string.Empty);
         }
         else
         {
@@ -80,8 +80,8 @@ public class SubconsciousModule : ModuleBase, ISubconscious, IDisposable
                 new System.Collections.Concurrent.ConcurrentQueue<Thought>(),
                 Mood.Neutral
             ).GetAwaiter().GetResult();
-            SubconsciousDiagnostics.RaiseGetResponse(resp.Text);
-            return resp.Text;
+            SubconsciousDiagnostics.RaiseGetResponse(resp.Text ?? string.Empty);
+            return resp.Text ?? string.Empty;
         }
         return "Subconscious response Generated.";
     }

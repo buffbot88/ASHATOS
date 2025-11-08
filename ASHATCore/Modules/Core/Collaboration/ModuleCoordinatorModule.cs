@@ -110,7 +110,7 @@ public sealed class ModuleCoordinatorModule : ModuleBase
 
         var task = SendMessageAsync(message);
         task.Wait();
-        return task.Result.Text;
+        return task.Result.Text ?? string.Empty;
     }
 
     private string BroadcastMessage(string content)

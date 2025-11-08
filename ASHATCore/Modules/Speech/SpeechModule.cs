@@ -113,8 +113,11 @@ public partial class SpeechModule : ModuleBase, IDisposable
             return "(ThoughtProcessor unavailable)";
 
         if (string.IsNullOrWhiteSpace(input))
-            return (await _thoughtProcessor.ProcessStatusAsync(
-                Mood.Neutral, new System.Collections.Concurrent.ConcurrentQueue<Thought>(), _memoryInst, _sub, _awakeFlag, _awakeAtUtc)).Text;
+        {
+            var status = await _thoughtProcessor.ProcessStatusAsync(
+                Mood.Neutral, new System.Collections.Concurrent.ConcurrentQueue<Thought>(), _memoryInst, _sub, _awakeFlag, _awakeAtUtc);
+            return status?.Text ?? string.Empty;
+        }
 
         var text = input.Trim();
 
@@ -131,16 +134,22 @@ public partial class SpeechModule : ModuleBase, IDisposable
         {
             var r = CallModule("TestRunner", text);
             if (!string.IsNullOrWhiteSpace(r))
-                return (await _thoughtProcessor.ProcessStatusAsync(
-                    Mood.Neutral, new System.Collections.Concurrent.ConcurrentQueue<Thought>(), _memoryInst, _sub, _awakeFlag, _awakeAtUtc)).Text;
+            {
+                var status = await _thoughtProcessor.ProcessStatusAsync(
+                    Mood.Neutral, new System.Collections.Concurrent.ConcurrentQueue<Thought>(), _memoryInst, _sub, _awakeFlag, _awakeAtUtc);
+                return status?.Text ?? string.Empty;
+            }
         }
 
         if (RxFeatures().IsMatch(text))
         {
             var r = CallModule("FeatureExplorer", text);
             if (!string.IsNullOrWhiteSpace(r))
-                return (await _thoughtProcessor.ProcessStatusAsync(
-                    Mood.Neutral, new System.Collections.Concurrent.ConcurrentQueue<Thought>(), _memoryInst, _sub, _awakeFlag, _awakeAtUtc)).Text;
+            {
+                var status = await _thoughtProcessor.ProcessStatusAsync(
+                    Mood.Neutral, new System.Collections.Concurrent.ConcurrentQueue<Thought>(), _memoryInst, _sub, _awakeFlag, _awakeAtUtc);
+                return status?.Text ?? string.Empty;
+            }
         }
 
         var mDo = RxDo().Match(text);
@@ -195,21 +204,28 @@ public partial class SpeechModule : ModuleBase, IDisposable
         {
             var r = CallModule("Skills", text);
             if (!string.IsNullOrWhiteSpace(r))
-                return (await _thoughtProcessor.ProcessStatusAsync(
-                    Mood.Neutral, new System.Collections.Concurrent.ConcurrentQueue<Thought>(), _memoryInst, _sub, _awakeFlag, _awakeAtUtc)).Text;
+            {
+                var status = await _thoughtProcessor.ProcessStatusAsync(
+                    Mood.Neutral, new System.Collections.Concurrent.ConcurrentQueue<Thought>(), _memoryInst, _sub, _awakeFlag, _awakeAtUtc);
+                return status?.Text ?? string.Empty;
+            }
         }
         if (text.StartsWith("consent", StringComparison.OrdinalIgnoreCase))
         {
             var r = CallModule("Consent", text);
             if (!string.IsNullOrWhiteSpace(r))
-                return (await _thoughtProcessor.ProcessStatusAsync(
-                    Mood.Neutral, new System.Collections.Concurrent.ConcurrentQueue<Thought>(), _memoryInst, _sub, _awakeFlag, _awakeAtUtc)).Text;
+            {
+                var status = await _thoughtProcessor.ProcessStatusAsync(
+                    Mood.Neutral, new System.Collections.Concurrent.ConcurrentQueue<Thought>(), _memoryInst, _sub, _awakeFlag, _awakeAtUtc);
+                return status?.Text ?? string.Empty;
+            }
         }
 
         if (RxStatusOrHelp().IsMatch(text))
         {
-            return (await _thoughtProcessor.ProcessStatusAsync(
-                Mood.Neutral, new System.Collections.Concurrent.ConcurrentQueue<Thought>(), _memoryInst, _sub, _awakeFlag, _awakeAtUtc)).Text;
+            var status = await _thoughtProcessor.ProcessStatusAsync(
+                Mood.Neutral, new System.Collections.Concurrent.ConcurrentQueue<Thought>(), _memoryInst, _sub, _awakeFlag, _awakeAtUtc);
+            return status?.Text ?? string.Empty;
         }
 
         // Route natural utteASHATnces through AILanguageModule with chat template
@@ -241,7 +257,7 @@ public partial class SpeechModule : ModuleBase, IDisposable
         if (_thoughtProcessor == null)
             return "(ThoughtProcessor unavailable)";
         var resp = await _thoughtProcessor.ProcessThoughtAsync(content, _memoryInst, _sub, new System.Collections.Concurrent.ConcurrentQueue<Thought>(), Mood.Neutral);
-        return resp.Text;
+        return resp.Text ?? string.Empty;
     }
 
     private async Task<string> ProbeSubconsciousAsync(string content, CancellationToken _)
@@ -249,31 +265,7 @@ public partial class SpeechModule : ModuleBase, IDisposable
         if (_thoughtProcessor == null)
             return "(ThoughtProcessor unavailable)";
         var resp = await _thoughtProcessor.ProcessThoughtAsync(content, _memoryInst, _sub, new System.Collections.Concurrent.ConcurrentQueue<Thought>(), Mood.Neutral);
-        return resp.Text;
-    }
-
-    private async Task<string?> RecallCompatAsync(string key)
-    {
-        if (_memoryInst == null)
-            return null;
-        if (_memoryInst is IMemory mem)
-        {
-            var result = await mem.RecallAsync(key);
-            return result.Text;
-        }
-        return null;
-    }
-
-    private async Task<string> RememberCompatAsync(string key, string value)
-    {
-        if (_memoryInst == null)
-            return "(Memory unavailable)";
-        if (_memoryInst is IMemory mem)
-        {
-            var result = await mem.RememberAsync(key, value);
-            return result.Text;
-        }
-        return "(Memory unavailable)";
+        return resp.Text ?? string.Empty;
     }
 
     private async Task<string> HandleAgenticCommandAsync(string utteASHATnce, CancellationToken _)
@@ -281,7 +273,7 @@ public partial class SpeechModule : ModuleBase, IDisposable
         if (_thoughtProcessor == null)
             return "(ThoughtProcessor unavailable)";
         var resp = await _thoughtProcessor.ProcessThoughtAsync(utteASHATnce, _memoryInst, _sub, new System.Collections.Concurrent.ConcurrentQueue<Thought>(), Mood.Neutral);
-        return resp.Text;
+        return resp.Text ?? string.Empty;
     }
 
     private async Task<string> HandleConfirmationAsync(bool approve, CancellationToken _)
@@ -290,7 +282,7 @@ public partial class SpeechModule : ModuleBase, IDisposable
             return "(ThoughtProcessor unavailable)";
         string msg = approve ? "User approved action." : "User denied action.";
         var resp = await _thoughtProcessor.ProcessThoughtAsync(msg, _memoryInst, _sub, new System.Collections.Concurrent.ConcurrentQueue<Thought>(), Mood.Neutral);
-        return resp.Text;
+        return resp.Text ?? string.Empty;
     }
 
     // ---- Events ----
@@ -358,4 +350,27 @@ public partial class SpeechModule : ModuleBase, IDisposable
         return $"[INST] <<SYS>>\nYou are ASHAT, a helpful and conversational AI assistant. Respond naturally to the user's message in a friendly, coherent manner. Keep responses concise but complete.\n<</SYS>>\n{userInput} [/INST]";
     }
 
+    // Add this method to SpeechModule to fix CS0103 for RecallCompatAsync
+
+    private async Task<string?> RecallCompatAsync(string key)
+    {
+        if (_memoryInst == null)
+            return null;
+
+        // Try to recall the value from memory
+        var response = await _memoryInst.RecallAsync(key);
+        return response?.Text;
+    }
+
+    // Add this method to SpeechModule to fix CS0103 for RememberCompatAsync
+
+    private async Task<string> RememberCompatAsync(string key, string value)
+    {
+        if (_memoryInst == null)
+            return "(Memory unavailable)";
+
+        // Try to remember the value in memory
+        var response = await _memoryInst.RememberAsync(key, value);
+        return response?.Text ?? $"Failed to remember value for key: {key}";
+    }
 }

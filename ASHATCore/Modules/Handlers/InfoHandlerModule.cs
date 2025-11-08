@@ -24,13 +24,13 @@ public class InfoHandlerModule : IHandlerModule, IDisposable
             return new ModuleResponse { Text = input, Type = "info", Status = "ok" };
 
         var resp = await _aiLang.GenerateAsync("info", input, "en", null);
-        HandlerDiagnostics.RaiseInfoHandled(input, resp.Text);
+        HandlerDiagnostics.RaiseInfoHandled(input, resp.Text ?? string.Empty);
         return resp;
     }
 
     public string Process(string input)
     {
-        return ProcessAsync(input).GetAwaiter().GetResult().Text;
+        return ProcessAsync(input).GetAwaiter().GetResult().Text ?? string.Empty;
     }
 
     public void Dispose()

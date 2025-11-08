@@ -12,7 +12,7 @@ public class CreateThreadModel : PageModel
     public string Title { get; set; } = string.Empty;
     
     [BindProperty]
-    public string Content { get; set; } = string.Empty;
+    public new string? Content { get; set; } = string.Empty;
     
     [BindProperty]
     public int ForumId { get; set; }

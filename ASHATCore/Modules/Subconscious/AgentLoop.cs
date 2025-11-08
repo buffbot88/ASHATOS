@@ -90,7 +90,7 @@ public sealed class AgentLoop
     {
         if (_aiLang == null) return text;
         var resp = await _aiLang.GenerateAsync(intent, text, "en", null);
-        return resp.Text;
+        return resp.Text ?? text;
     }
 
     private static string SuggestNextFocus(string? lastResult)

@@ -342,7 +342,7 @@ WHERE Id IN (
                     if (args.Length == 3)
                     {
                         var result = RememberAsync(args[1], args[2]).Result;
-                        return result.Text;
+                        return result.Text ?? string.Empty;
                     }
                     return "Usage: store <key> <value>";
 
@@ -350,7 +350,7 @@ WHERE Id IN (
                     if (args.Length == 2)
                     {
                         var result = RecallAsync(args[1]).Result;
-                        return result.Text;
+                        return result.Text ?? string.Empty;
                     }
                     return "Usage: recall <key>";
 

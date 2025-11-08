@@ -9,7 +9,7 @@ namespace ASHATCore.Pages.CMS.Forums;
 public class ReplyModel : PageModel
 {
     [BindProperty]
-    public string Content { get; set; } = string.Empty;
+    public new string? Content { get; set; } = string.Empty;
     
     [BindProperty]
     public int ThreadId { get; set; }

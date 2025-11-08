@@ -32,7 +32,8 @@ public sealed class EthicsGuardModule : ModuleBase
     // Output is always routed through ThoughtProcessor
     public override string Process(string input)
     {
-        return ProcessAsync(input).GetAwaiter().GetResult().Text;
+        // Ensure .Text is never null by using null-coalescing operator
+        return ProcessAsync(input).GetAwaiter().GetResult().Text ?? string.Empty;
     }
 
     public async Task<ModuleResponse> ProcessAsync(string input)

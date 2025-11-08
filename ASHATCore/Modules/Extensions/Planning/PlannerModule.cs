@@ -25,7 +25,8 @@ public sealed class PlannerModule : ModuleBase
 
     public override string Process(string input)
     {
-        return ProcessAsync(input).GetAwaiter().GetResult().Text;
+        // Ensure .Text is not null by using null-coalescing operator
+        return ProcessAsync(input).GetAwaiter().GetResult().Text ?? string.Empty;
     }
 
     public async Task<ModuleResponse> ProcessAsync(string input)
