@@ -5,6 +5,7 @@ using ASHATCore.Engine.Manager;
 using ASHATCore.Engine.Memory;
 using ASHATCore.Models;
 using ASHATCore.Modules.Extensions.UserProfiles;
+using LegendaryCMS.Core;
 using SQLitePCL;
 using System.Text.Json;
 
@@ -143,7 +144,9 @@ builder.Services.AddCors(options =>
 });
 
 // Add Razor Pages support for CMS homepage
-builder.Services.AddRazorPages();
+// Also adds LegendaryCMS module with its Razor Pages
+builder.Services.AddRazorPages()
+    .AddApplicationPart(typeof(LegendaryCMS.Core.LegendaryCMSModule).Assembly);
 
 // Configure URLs with dynamic port
 builder.WebHost.UseUrls(urls);
@@ -2327,10 +2330,11 @@ app.MapGameClientEndpoints(gameClientModule, authModule);
 // Razor Pages for CMS
 // ============================================================================
 app.MapRazorPages();
-Console.WriteLine("[ASHATCore] Razor Pages CMS enabled:");
+Console.WriteLine("[ASHATCore] Razor Pages CMS enabled (via LegendaryCMS module):");
 Console.WriteLine("  GET  /Index - CMS Homepage (full content management system)");
-Console.WriteLine("  GET  /cms/blogs - Blog system");
-Console.WriteLine("  GET  /cms/forums - Forum platform");
-Console.WriteLine("  GET  /cms/profiles - User profiles");
+Console.WriteLine("  GET  /cms/blogs - Blog system (LegendaryCMS)");
+Console.WriteLine("  GET  /cms/forums - Forum platform (LegendaryCMS)");
+Console.WriteLine("  GET  /cms/learning - Learning module (LegendaryCMS)");
+Console.WriteLine("  GET  /cms/profiles - User profiles (LegendaryCMS)");
 
 app.Run();

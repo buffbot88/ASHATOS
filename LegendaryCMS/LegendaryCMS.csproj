@@ -5,8 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <OutputType>Library</OutputType>
-    <Description>Legendary CMS Suite - Production-ready modular CMS system for ASHATOS</Description>
-    <Version>8.0.0</Version>
+    <Description>Legendary CMS Suite - Production-ready modular CMS system for ASHATOS with complete UI isolation</Description>
+    <Version>8.1.0</Version>
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
   </PropertyGroup>
 
