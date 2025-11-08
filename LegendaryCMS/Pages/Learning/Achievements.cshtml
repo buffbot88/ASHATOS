@@ -1,0 +1,92 @@
+@page
+@model LegendaryCMS.Pages.Learning.AchievementsModel
+@{
+    ViewData["Title"] = "Learning Module - Achievements";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0033 50%, #2d004d 100%);
+            min-height: 100vh;
+            color: #e0d0ff;
+        }
+        .header {
+            background: rgba(20, 0, 40, 0.9);
+            border-bottom: 2px solid rgba(138, 43, 226, 0.3);
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            background: linear-gradient(to right, #ffffff, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 3em;
+        }
+        .nav {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .nav a {
+            color: #c084fc;
+            text-decoration: none;
+            padding: 10px 20px;
+            background: rgba(138, 43, 226, 0.2);
+            border: 1px solid rgba(138, 43, 226, 0.4);
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        .achievements-card {
+            background: rgba(20, 0, 40, 0.9);
+            border: 2px solid rgba(138, 43, 226, 0.3);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        .achievements-card h2 {
+            color: #c084fc;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏆 Achievements</h1>
+        <div class="nav">
+            <a href="/">🏠 Home</a>
+            <a href="/cms/learning">📖 Courses</a>
+            <a href="/cms/learning/progress">📊 My Progress</a>
+            <a href="/cms/learning/achievements">🏆 Achievements</a>
+            <a href="/control-panel">⚙️ Control Panel</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="achievements-card">
+            <h2>Your Achievements</h2>
+            <p>View your trophies and achievements here. Feature coming soon!</p>
+        </div>
+    </div>
+    <!-- ASHAT Os Session Manager -->
+    <script src="/js/session-manager.js"></script>
+</body>
+</html>
