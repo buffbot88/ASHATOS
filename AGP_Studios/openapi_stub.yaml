@@ -1,0 +1,38 @@
+openapi: 3.0.3
+info:
+  title: AGP CMS API (stub)
+  version: "0.1.0"
+paths:
+  /users:
+    post:
+      summary: Create user
+      requestBody:
+        required: true
+      responses:
+        '201':
+          description: Created
+  /catalog:
+    get:
+      summary: List catalog items
+      responses:
+        '200':
+          description: OK
+  /catalog/{slug}:
+    get:
+      summary: Get catalog item
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /assets/upload:
+    post:
+      summary: Upload asset (authenticated)
+      responses:
+        '200':
+          description: Upload accepted
+components: {}

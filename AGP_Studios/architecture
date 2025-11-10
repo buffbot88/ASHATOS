@@ -1,0 +1,41 @@
+# AGP Studios — Architecture Overview
+
+Components
+- Launcher (AGP_Studios)
+  - Desktop app: library, downloads, installs, updates, launcher, AI chat UI.
+  - Updater: self-update and package delta updates.
+  - Local sandbox runner for generated servers.
+
+- CMS (AGP_CMS)
+  - REST APIs for users, catalog, builds, assets.
+  - Authentication (OAuth2) and publisher accounts.
+  - Asset storage (S3-compatible).
+
+- Game Server Templates (AGP_GameServer)
+  - Versioned server templates and runtime libraries.
+  - Health, admin, match/session APIs.
+
+- AGP_AI (Ashat)
+  - Agent service for scaffolding, code generation, and patch application.
+  - Action endpoints for generating diffs/PRs.
+
+Data model (brief)
+- User { id, username, email, password_hash, created_at }
+- LibraryItem { id, slug, name, description, versions[] }
+- Version { id, version, artifact_url, manifest }
+- GameServerTemplate { id, name, description, repo_url, sample_builds }
+- Session { id, host_user_id, players[], server_instance_id, state }
+
+Realtime
+- SignalR (presence, chat, matchmaking)
+- WebSocket fallback for non-.NET clients
+
+Security
+- OAuth2 / JWT for authentication
+- API scopes for publishing and server management
+- Agent sandboxing + user approval for applied patches
+
+Deployment
+- Containerized services (Docker)
+- Postgres + Redis + S3-compatible storage
+- CI: GitHub Actions for builds and publishing artifacts

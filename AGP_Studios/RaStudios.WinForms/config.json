@@ -1,0 +1,77 @@
+{
+  "AshatOS": {
+    "Host": "localhost",
+    "Port": 7077,
+    "Protocol": "WebSocket",
+    "WebSocketUrl": "ws://localhost:7077/ws",
+    "ApiBaseUrl": "http://localhost:7077/api",
+    "TimeoutSeconds": 30,
+    "UseAuthentication": true,
+    "RetryAttempts": 3,
+    "RetryDelaySeconds": 5
+  },
+  "FTP": {
+    "Host": "localhost",
+    "Port": 21,
+    "Username": "",
+    "Password": "",
+    "UseSSL": true,
+    "UploadPath": "/uploads/dlls",
+    "TimeoutSeconds": 60,
+    "PassiveMode": true
+  },
+  "Build": {
+    "DotNetPath": "dotnet",
+    "BuildConfiguration": "Release",
+    "OutputPath": "./bin/Release",
+    "TargetFramework": "net9.0",
+    "EnableNuGetRestore": true
+  },
+  "Server": {
+    "Url": "ws://localhost:7077/ws",
+    "Port": 7077,
+    "Protocol": "WebSocket",
+    "HandshakeType": "JSON",
+    "TimeoutSeconds": 30,
+    "UseAuthentication": true,
+    "EnableRateLimiting": true,
+    "MaxMessagesPerSecond": 10
+  },
+  "CMS": {
+    "Host": "localhost",
+    "Port": 80,
+    "Protocol": "HTTP",
+    "ApiBaseUrl": "http://localhost:80/api",
+    "TimeoutSeconds": 30
+  },
+  "AiService": {
+    "Endpoint": "http://localhost:8088/api/ai/generate",
+    "ApiKey": "",
+    "MaxRequestsPerMinute": 10,
+    "RequireApproval": true,
+    "EnablePolicyFilter": true,
+    "BlockedPatterns": [
+      "rm -rf",
+      "del /f",
+      "format c:",
+      "drop database",
+      "delete from",
+      "__import__('os').system",
+      "eval(",
+      "exec(",
+      "Process.Start"
+    ]
+  },
+  "Security": {
+    "RequireHumanApproval": true,
+    "EnableAuditLogging": true,
+    "AllowAutoExecution": false,
+    "AllowSelfReplication": false
+  },
+  "Updates": {
+    "Strategy": "Manual",
+    "CheckForUpdates": true,
+    "AutoDownload": false,
+    "RequireSignedPackages": true
+  }
+}
