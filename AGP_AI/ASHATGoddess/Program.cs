@@ -417,6 +417,7 @@ namespace ASHATGoddessClient
             {
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                 var progress = (double)i / steps;
                 var eased = progress < 0.5
                     ? 2 * progress * progress
@@ -1213,11 +1214,16 @@ public class AshatBrain
 =======
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
                 // Restore
                 Height = _savedHeight;
                 _isMinimized = false;
                 _ = _brain.SpeakAsync("Chat restored!");
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
