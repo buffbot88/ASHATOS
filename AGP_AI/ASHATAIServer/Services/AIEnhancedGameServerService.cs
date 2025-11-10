@@ -24,11 +24,23 @@ namespace ASHATAIServer.Services
         }
 
         /// <summary>
+        /// Sanitize input for logging to prevent log forging attacks
+        /// </summary>
+        private static string SanitizeForLog(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return string.Empty;
+            
+            // Remove newlines and carriage returns to prevent log forging
+            return input.Replace("\r", "").Replace("\n", " ").Trim();
+        }
+
+        /// <summary>
         /// Create a game with AI-enhanced description parsing
         /// </summary>
         public async Task<GameCreationResponse> CreateGameWithAIAsync(string description, Guid userId = default, string licenseKey = "DEMO")
         {
-            _logger.LogInformation("Creating game with AI-enhanced parsing: {Description}", description);
+            _logger.LogInformation("Creating game with AI-enhanced parsing: {Description}", SanitizeForLog(description));
 
             try
             {
@@ -140,7 +152,7 @@ Be concise and only use the categories provided.";
             }
 
             _logger.LogInformation("AI parsed game as: Type={GameType}, Theme={Theme}, Features={FeatureCount}", 
-                request.GameType, request.Theme, request.Features.Count);
+                request.GameType, SanitizeForLog(request.Theme), request.Features.Count);
 
             return request;
         }

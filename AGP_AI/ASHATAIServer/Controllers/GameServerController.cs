@@ -27,6 +27,18 @@ namespace ASHATAIServer.Controllers
         }
 
         /// <summary>
+        /// Sanitize input for logging to prevent log forging attacks
+        /// </summary>
+        private static string SanitizeForLog(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return string.Empty;
+            
+            // Remove newlines and carriage returns to prevent log forging
+            return input.Replace("\r", "").Replace("\n", " ").Trim();
+        }
+
+        /// <summary>
         /// Get game server status
         /// </summary>
         [HttpGet("status")]
@@ -70,7 +82,7 @@ namespace ASHATAIServer.Controllers
                 return BadRequest(new { error = "Game description cannot be empty" });
             }
 
-            _logger.LogInformation("Creating game from description: {Description}", request.Description);
+            _logger.LogInformation("Creating game from description: {Description}", SanitizeForLog(request.Description));
             var response = await _gameServerModule.CreateGameFromDescriptionAsync(request);
 
             if (!response.Success)
@@ -87,7 +99,7 @@ namespace ASHATAIServer.Controllers
         [HttpGet("preview/{gameId}")]
         public async Task<IActionResult> GetPreview(string gameId)
         {
-            _logger.LogInformation("Getting preview for game: {GameId}", gameId);
+            _logger.LogInformation("Getting preview for game: {GameId}", SanitizeForLog(gameId));
             var preview = await _gameServerModule.GetGamePreviewAsync(gameId);
             
             if (preview.Name == "Not Found")
@@ -104,7 +116,7 @@ namespace ASHATAIServer.Controllers
         [HttpPost("deploy/{gameId}")]
         public async Task<IActionResult> DeployGame(string gameId, [FromBody] DeploymentOptions? options = null)
         {
-            _logger.LogInformation("Deploying game server: {GameId}", gameId);
+            _logger.LogInformation("Deploying game server: {GameId}", SanitizeForLog(gameId));
             
             var deploymentOptions = options ?? new DeploymentOptions();
             var response = await _gameServerModule.DeployGameServerAsync(gameId, deploymentOptions);
@@ -128,7 +140,7 @@ namespace ASHATAIServer.Controllers
                 return BadRequest(new { error = "Update description cannot be empty" });
             }
 
-            _logger.LogInformation("Updating game: {GameId}", gameId);
+            _logger.LogInformation("Updating game: {GameId}", SanitizeForLog(gameId));
             var response = await _gameServerModule.UpdateGameAsync(gameId, request.UpdateDescription);
 
             if (!response.Success)
@@ -145,7 +157,7 @@ namespace ASHATAIServer.Controllers
         [HttpDelete("{gameId}")]
         public async Task<IActionResult> DeleteGame(string gameId)
         {
-            _logger.LogInformation("Deleting game project: {GameId}", gameId);
+            _logger.LogInformation("Deleting game project: {GameId}", SanitizeForLog(gameId));
             var response = await _gameServerModule.DeleteGameProjectAsync(gameId);
 
             if (!response.Success)
@@ -164,7 +176,7 @@ namespace ASHATAIServer.Controllers
         {
             var format = request?.Format ?? ExportFormat.Complete;
             
-            _logger.LogInformation("Exporting game: {GameId} in format: {Format}", gameId, format);
+            _logger.LogInformation("Exporting game: {GameId} in format: {Format}", SanitizeForLog(gameId), format);
             var response = await _gameServerModule.ExportGameProjectAsync(gameId, format);
 
             if (!response.Success)
@@ -181,7 +193,7 @@ namespace ASHATAIServer.Controllers
         [HttpGet("project/{gameId}")]
         public async Task<IActionResult> GetProject(string gameId)
         {
-            _logger.LogInformation("Getting game project: {GameId}", gameId);
+            _logger.LogInformation("Getting game project: {GameId}", SanitizeForLog(gameId));
             var project = await _gameServerModule.GetGameProjectAsync(gameId);
 
             if (project == null)
@@ -214,7 +226,7 @@ namespace ASHATAIServer.Controllers
                 return BadRequest(new { error = "Game description cannot be empty" });
             }
 
-            _logger.LogInformation("Creating game with AI enhancement: {Description}", request.Description);
+            _logger.LogInformation("Creating game with AI enhancement: {Description}", SanitizeForLog(request.Description));
             var response = await _aiEnhancedService.CreateGameWithAIAsync(
                 request.Description, 
                 request.UserId, 
@@ -234,7 +246,7 @@ namespace ASHATAIServer.Controllers
         [HttpGet("suggestions/{gameId}")]
         public async Task<IActionResult> GetGameSuggestions(string gameId)
         {
-            _logger.LogInformation("Getting AI suggestions for game: {GameId}", gameId);
+            _logger.LogInformation("Getting AI suggestions for game: {GameId}", SanitizeForLog(gameId));
             var suggestions = await _aiEnhancedService.GetGameImprovementSuggestionsAsync(gameId);
             return Ok(new { gameId, suggestions });
         }
