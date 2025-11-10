@@ -1,4 +1,5 @@
 using Abstractions;
+using ASHATAIServer.Services;
 using LegendaryGameSystem;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,11 +13,16 @@ namespace ASHATAIServer.Controllers
     public class GameServerController : ControllerBase
     {
         private readonly GameServerModule _gameServerModule;
+        private readonly AIEnhancedGameServerService _aiEnhancedService;
         private readonly ILogger<GameServerController> _logger;
 
-        public GameServerController(GameServerModule gameServerModule, ILogger<GameServerController> logger)
+        public GameServerController(
+            GameServerModule gameServerModule,
+            AIEnhancedGameServerService aiEnhancedService,
+            ILogger<GameServerController> logger)
         {
             _gameServerModule = gameServerModule;
+            _aiEnhancedService = aiEnhancedService;
             _logger = logger;
         }
 
@@ -196,6 +202,52 @@ namespace ASHATAIServer.Controllers
             var games = await _gameServerModule.ListUserGamesAsync(userId);
             return Ok(games);
         }
+
+        /// <summary>
+        /// Create a game with AI-enhanced description parsing
+        /// </summary>
+        [HttpPost("create-ai-enhanced")]
+        public async Task<IActionResult> CreateGameWithAI([FromBody] AIGameCreationRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Description))
+            {
+                return BadRequest(new { error = "Game description cannot be empty" });
+            }
+
+            _logger.LogInformation("Creating game with AI enhancement: {Description}", request.Description);
+            var response = await _aiEnhancedService.CreateGameWithAIAsync(
+                request.Description, 
+                request.UserId, 
+                request.LicenseKey ?? "DEMO");
+
+            if (!response.Success)
+            {
+                return BadRequest(new { error = response.Message });
+            }
+
+            return Ok(response);
+        }
+
+        /// <summary>
+        /// Get AI-generated suggestions for game improvements
+        /// </summary>
+        [HttpGet("suggestions/{gameId}")]
+        public async Task<IActionResult> GetGameSuggestions(string gameId)
+        {
+            _logger.LogInformation("Getting AI suggestions for game: {GameId}", gameId);
+            var suggestions = await _aiEnhancedService.GetGameImprovementSuggestionsAsync(gameId);
+            return Ok(new { gameId, suggestions });
+        }
+    }
+
+    /// <summary>
+    /// Request model for AI-enhanced game creation
+    /// </summary>
+    public class AIGameCreationRequest
+    {
+        public string Description { get; set; } = string.Empty;
+        public Guid UserId { get; set; }
+        public string? LicenseKey { get; set; }
     }
 
     /// <summary>

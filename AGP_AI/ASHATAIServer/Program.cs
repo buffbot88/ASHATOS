@@ -38,6 +38,9 @@ builder.Services.AddSingleton<GameServerModule>(sp =>
     return module;
 });
 
+// Register AI-enhanced game server service
+builder.Services.AddSingleton<AIEnhancedGameServerService>();
+
 var app = builder.Build();
 
 // Initialize Language Model Service
@@ -59,11 +62,13 @@ Console.WriteLine("    POST /api/ai/models/scan - Scan for models");
 Console.WriteLine("    GET  /api/ai/health      - Health check");
 Console.WriteLine();
 Console.WriteLine("  Game Server:");
-Console.WriteLine("    GET  /api/gameserver/status       - Game server status");
-Console.WriteLine("    GET  /api/gameserver/capabilities - Server capabilities");
-Console.WriteLine("    POST /api/gameserver/create       - Create new game");
-Console.WriteLine("    GET  /api/gameserver/projects     - List all projects");
-Console.WriteLine("    POST /api/gameserver/deploy/{id}  - Deploy game");
+Console.WriteLine("    GET  /api/gameserver/status              - Game server status");
+Console.WriteLine("    GET  /api/gameserver/capabilities        - Server capabilities");
+Console.WriteLine("    POST /api/gameserver/create              - Create new game");
+Console.WriteLine("    POST /api/gameserver/create-ai-enhanced  - Create game with AI");
+Console.WriteLine("    GET  /api/gameserver/projects            - List all projects");
+Console.WriteLine("    POST /api/gameserver/deploy/{id}         - Deploy game");
+Console.WriteLine("    GET  /api/gameserver/suggestions/{id}    - Get AI suggestions");
 Console.WriteLine();
 
 // Configure the HTTP request pipeline
