@@ -416,6 +416,7 @@ namespace ASHATGoddessClient
             if (_isMinimized)
             {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                 var progress = (double)i / steps;
                 var eased = progress < 0.5
                     ? 2 * progress * progress
@@ -1210,10 +1211,15 @@ public class AshatBrain
             {
                 Console.WriteLine($"[ASHAT] Connected to external server ({_serverUrl}) successfully!");
 =======
+=======
+>>>>>>> Stashed changes
                 // Restore
                 Height = _savedHeight;
                 _isMinimized = false;
                 _ = _brain.SpeakAsync("Chat restored!");
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
             }
             else
