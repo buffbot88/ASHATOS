@@ -665,6 +665,7 @@ public class AshatMainWindow : Window
 public class AshatRenderer
 {
     private readonly Random _random = new Random();
+    private readonly GameServerVisualProcessor _visualProcessor;
     private Canvas? _canvas;
     private Border? _glow;
     private Ellipse? _leftEye;
@@ -673,6 +674,7 @@ public class AshatRenderer
     private System.Threading.Timer? _animationTimer;
     private AnimationState _currentState = AnimationState.Idle;
     private int _animationFrame = 0;
+    private bool _gameServerInitialized = false;
 
     public enum AnimationState
     {
@@ -681,6 +683,41 @@ public class AshatRenderer
         Listening,
         Thinking,
         Greeting
+    }
+
+    public AshatRenderer()
+    {
+        _visualProcessor = new GameServerVisualProcessor();
+        // Initialize GameServer visual processor asynchronously
+        _ = InitializeGameServerAsync();
+    }
+
+    private async Task InitializeGameServerAsync()
+    {
+        try
+        {
+            Console.WriteLine("[AshatRenderer] Initializing GameServer visual processor...");
+            _gameServerInitialized = await _visualProcessor.InitializeAsync();
+            
+            if (_gameServerInitialized)
+            {
+                Console.WriteLine("[AshatRenderer] ✓ GameServer visual processor initialized successfully");
+                var stats = await _visualProcessor.GetEngineStatsAsync();
+                if (stats != null)
+                {
+                    Console.WriteLine($"[AshatRenderer] GameEngine Stats - Scenes: {stats.TotalScenes}, Entities: {stats.TotalEntities}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("[AshatRenderer] ⚠ GameServer visual processor initialization failed - using fallback rendering");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[AshatRenderer] Error initializing GameServer: {ex.Message}");
+            _gameServerInitialized = false;
+        }
     }
 
     public Control GetGoddessVisual()
@@ -981,6 +1018,59 @@ public class AshatRenderer
 
         StartAnimation(state);
         Console.WriteLine($"[ASHAT] Playing animation: {animationType}");
+        
+        // Update GameServer visual processor with animation state
+        if (_gameServerInitialized)
+        {
+            _ = UpdateGameServerVisualAsync(animationType);
+        }
+    }
+
+    private async Task UpdateGameServerVisualAsync(string animationType)
+    {
+        try
+        {
+            var properties = new Dictionary<string, object>
+            {
+                ["last_animation"] = animationType,
+                ["animation_timestamp"] = DateTime.UtcNow
+            };
+
+            // Add animation-specific properties
+            switch (animationType.ToLowerInvariant())
+            {
+                case "speaking":
+                    properties["glow_intensity"] = 0.95;
+                    properties["eye_sparkle"] = true;
+                    break;
+                case "thinking":
+                    properties["crown_sparkle"] = true;
+                    properties["glow_intensity"] = 0.80;
+                    break;
+                case "greeting":
+                    properties["glow_intensity"] = 1.0;
+                    properties["crown_sparkle"] = true;
+                    properties["eye_sparkle"] = true;
+                    break;
+                case "listening":
+                    properties["glow_intensity"] = 0.85;
+                    properties["focused"] = true;
+                    break;
+                default:
+                    properties["glow_intensity"] = 0.75;
+                    break;
+            }
+
+            var success = await _visualProcessor.UpdateVisualStateAsync(animationType, properties);
+            if (success)
+            {
+                Console.WriteLine($"[AshatRenderer] Updated GameServer visual state to: {animationType}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[AshatRenderer] Error updating GameServer visual: {ex.Message}");
+        }
     }
 
     private void StartAnimation(AnimationState state)
@@ -1151,6 +1241,17 @@ public class AshatRenderer
     {
         _animationTimer?.Dispose();
         _animationTimer = null;
+        
+        // Cleanup GameServer visual processor
+        try
+        {
+            _visualProcessor?.Dispose();
+            Console.WriteLine("[AshatRenderer] GameServer visual processor disposed");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[AshatRenderer] Error disposing GameServer visual processor: {ex.Message}");
+        }
     }
 }
 
