@@ -1,6 +1,6 @@
 using System;
-using System.Windows.Forms;
 using System.IO;
+using System.Windows.Forms;
 
 namespace RaStudios.WinForms
 {
@@ -60,7 +60,7 @@ namespace RaStudios.WinForms
                              "• Your graphics drivers are up to date\n" +
                              "• You have the required .NET runtime installed";
 
-                MessageBox.Show(message, $"RaStudios - {title}", 
+                MessageBox.Show(message, $"RaStudios - {title}",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch
@@ -68,7 +68,7 @@ namespace RaStudios.WinForms
                 // If we can't even show a message box, write to a fallback error file
                 try
                 {
-                    File.WriteAllText("RaStudios_Critical_Error.txt", 
+                    File.WriteAllText("RaStudios_Critical_Error.txt",
                         $"Critical error at {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss UTC}:\n{ex}");
                 }
                 catch
@@ -96,7 +96,7 @@ namespace RaStudios.WinForms
                              "• Run the application as Administrator\n" +
                              "• Check if antivirus software is blocking the application";
 
-                MessageBox.Show(message, "RaStudios - Startup Failed", 
+                MessageBox.Show(message, "RaStudios - Startup Failed",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch
@@ -104,7 +104,7 @@ namespace RaStudios.WinForms
                 // If we can't even show a message box, create a basic error file
                 try
                 {
-                    File.WriteAllText("RaStudios_Critical_Error.txt", 
+                    File.WriteAllText("RaStudios_Critical_Error.txt",
                         $"Fatal error occurred at {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss UTC}:\n{ex}");
                 }
                 catch

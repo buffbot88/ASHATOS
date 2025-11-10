@@ -210,9 +210,9 @@ namespace RaStudios.WinForms.Forms
                     Username = username;
                     statusLabel.Text = "Authentication successful!";
                     statusLabel.ForeColor = Color.Green;
-                    
+
                     LogService.Instance.LogInfo("LoginForm", $"User {username} authenticated successfully");
-                    
+
                     await Task.Delay(500); // Brief pause to show success message
                     this.DialogResult = DialogResult.OK;
                     this.Close();
@@ -223,7 +223,7 @@ namespace RaStudios.WinForms.Forms
                     statusLabel.ForeColor = Color.Red;
                     passwordTextBox.Clear();
                     passwordTextBox.Focus();
-                    
+
                     LogService.Instance.LogWarning("LoginForm", $"Authentication failed for user {username}");
                 }
             }

@@ -1,243 +1,244 @@
 using System;
 using System.Collections.Generic;
 
-namespace ASHATGoddessClient.AI;
-
-/// <summary>
-/// State machine for AI behavior management
-/// </summary>
-public class StateMachine<TState> where TState : notnull
+namespace ASHATGoddessClient.AI
 {
-    private readonly Dictionary<TState, State<TState>> _states = new();
-    private State<TState>? _currentState;
-    private TState? _currentStateId;
-
     /// <summary>
-    /// Add a state to the state machine
+    /// State machine for AI behavior management
     /// </summary>
-    public void AddState(TState stateId, State<TState> state)
+    public class StateMachine<TState> where TState : notnull
     {
-        _states[stateId] = state;
-        state.StateMachine = this;
-        state.StateId = stateId;
-    }
+        private readonly Dictionary<TState, State<TState>> _states = new();
+        private State<TState>? _currentState;
+        private TState? _currentStateId;
 
-    /// <summary>
-    /// Set the initial state
-    /// </summary>
-    public void SetInitialState(TState stateId)
-    {
-        if (_states.TryGetValue(stateId, out var state))
+        /// <summary>
+        /// Add a state to the state machine
+        /// </summary>
+        public void AddState(TState stateId, State<TState> state)
         {
-            _currentState = state;
-            _currentStateId = stateId;
-            _currentState.OnEnter();
+            _states[stateId] = state;
+            state.StateMachine = this;
+            state.StateId = stateId;
+        }
+
+        /// <summary>
+        /// Set the initial state
+        /// </summary>
+        public void SetInitialState(TState stateId)
+        {
+            if (_states.TryGetValue(stateId, out var state))
+            {
+                _currentState = state;
+                _currentStateId = stateId;
+                _currentState.OnEnter();
+            }
+        }
+
+        /// <summary>
+        /// Transition to a new state
+        /// </summary>
+        public void TransitionTo(TState newStateId)
+        {
+            if (_states.TryGetValue(newStateId, out var newState))
+            {
+                _currentState?.OnExit();
+                _currentState = newState;
+                _currentStateId = newStateId;
+                _currentState.OnEnter();
+            }
+        }
+
+        /// <summary>
+        /// Update the current state
+        /// </summary>
+        public void Update(float deltaTime)
+        {
+            _currentState?.OnUpdate(deltaTime);
+        }
+
+        /// <summary>
+        /// Get the current state ID
+        /// </summary>
+        public TState? GetCurrentState()
+        {
+            return _currentStateId;
         }
     }
 
     /// <summary>
-    /// Transition to a new state
+    /// Base class for states
     /// </summary>
-    public void TransitionTo(TState newStateId)
+    public abstract class State<TState> where TState : notnull
     {
-        if (_states.TryGetValue(newStateId, out var newState))
+        public StateMachine<TState>? StateMachine { get; set; }
+        public TState? StateId { get; set; }
+
+        /// <summary>
+        /// Called when entering this state
+        /// </summary>
+        public virtual void OnEnter() { }
+
+        /// <summary>
+        /// Called every frame while in this state
+        /// </summary>
+        public virtual void OnUpdate(float deltaTime) { }
+
+        /// <summary>
+        /// Called when exiting this state
+        /// </summary>
+        public virtual void OnExit() { }
+
+        /// <summary>
+        /// Transition to another state
+        /// </summary>
+        protected void TransitionTo(TState newState)
         {
-            _currentState?.OnExit();
-            _currentState = newState;
-            _currentStateId = newStateId;
-            _currentState.OnEnter();
+            StateMachine?.TransitionTo(newState);
         }
     }
 
     /// <summary>
-    /// Update the current state
+    /// Example AI states for common behaviors
     /// </summary>
-    public void Update(float deltaTime)
+    public enum AIState
     {
-        _currentState?.OnUpdate(deltaTime);
+        Idle,
+        Patrol,
+        Chase,
+        Attack,
+        Flee,
+        Investigate
     }
 
     /// <summary>
-    /// Get the current state ID
+    /// Example idle state implementation
     /// </summary>
-    public TState? GetCurrentState()
+    public class IdleState : State<AIState>
     {
-        return _currentStateId;
-    }
-}
+        private readonly Func<bool> _shouldPatrol;
+        private readonly Func<bool> _detectEnemy;
+        private float _idleTime;
+        private readonly float _maxIdleTime;
 
-/// <summary>
-/// Base class for states
-/// </summary>
-public abstract class State<TState> where TState : notnull
-{
-    public StateMachine<TState>? StateMachine { get; set; }
-    public TState? StateId { get; set; }
-
-    /// <summary>
-    /// Called when entering this state
-    /// </summary>
-    public virtual void OnEnter() { }
-
-    /// <summary>
-    /// Called every frame while in this state
-    /// </summary>
-    public virtual void OnUpdate(float deltaTime) { }
-
-    /// <summary>
-    /// Called when exiting this state
-    /// </summary>
-    public virtual void OnExit() { }
-
-    /// <summary>
-    /// Transition to another state
-    /// </summary>
-    protected void TransitionTo(TState newState)
-    {
-        StateMachine?.TransitionTo(newState);
-    }
-}
-
-/// <summary>
-/// Example AI states for common behaviors
-/// </summary>
-public enum AIState
-{
-    Idle,
-    Patrol,
-    Chase,
-    Attack,
-    Flee,
-    Investigate
-}
-
-/// <summary>
-/// Example idle state implementation
-/// </summary>
-public class IdleState : State<AIState>
-{
-    private readonly Func<bool> _shouldPatrol;
-    private readonly Func<bool> _detectEnemy;
-    private float _idleTime;
-    private readonly float _maxIdleTime;
-
-    public IdleState(Func<bool> shouldPatrol, Func<bool> detectEnemy, float maxIdleTime = 3.0f)
-    {
-        _shouldPatrol = shouldPatrol;
-        _detectEnemy = detectEnemy;
-        _maxIdleTime = maxIdleTime;
-    }
-
-    public override void OnEnter()
-    {
-        _idleTime = 0;
-        Console.WriteLine("[AI] Entering Idle State");
-    }
-
-    public override void OnUpdate(float deltaTime)
-    {
-        _idleTime += deltaTime;
-
-        if (_detectEnemy())
+        public IdleState(Func<bool> shouldPatrol, Func<bool> detectEnemy, float maxIdleTime = 3.0f)
         {
-            TransitionTo(AIState.Chase);
-            return;
+            _shouldPatrol = shouldPatrol;
+            _detectEnemy = detectEnemy;
+            _maxIdleTime = maxIdleTime;
         }
 
-        if (_idleTime >= _maxIdleTime && _shouldPatrol())
+        public override void OnEnter()
         {
-            TransitionTo(AIState.Patrol);
+            _idleTime = 0;
+            Console.WriteLine("[AI] Entering Idle State");
+        }
+
+        public override void OnUpdate(float deltaTime)
+        {
+            _idleTime += deltaTime;
+
+            if (_detectEnemy())
+            {
+                TransitionTo(AIState.Chase);
+                return;
+            }
+
+            if (_idleTime >= _maxIdleTime && _shouldPatrol())
+            {
+                TransitionTo(AIState.Patrol);
+            }
+        }
+
+        public override void OnExit()
+        {
+            Console.WriteLine("[AI] Exiting Idle State");
         }
     }
 
-    public override void OnExit()
+    /// <summary>
+    /// Example patrol state implementation
+    /// </summary>
+    public class PatrolState : State<AIState>
     {
-        Console.WriteLine("[AI] Exiting Idle State");
-    }
-}
+        private readonly Func<bool> _detectEnemy;
+        private readonly Func<bool> _reachedWaypoint;
+        private readonly Action _moveToNextWaypoint;
 
-/// <summary>
-/// Example patrol state implementation
-/// </summary>
-public class PatrolState : State<AIState>
-{
-    private readonly Func<bool> _detectEnemy;
-    private readonly Func<bool> _reachedWaypoint;
-    private readonly Action _moveToNextWaypoint;
-
-    public PatrolState(Func<bool> detectEnemy, Func<bool> reachedWaypoint, Action moveToNextWaypoint)
-    {
-        _detectEnemy = detectEnemy;
-        _reachedWaypoint = reachedWaypoint;
-        _moveToNextWaypoint = moveToNextWaypoint;
-    }
-
-    public override void OnEnter()
-    {
-        Console.WriteLine("[AI] Entering Patrol State");
-        _moveToNextWaypoint();
-    }
-
-    public override void OnUpdate(float deltaTime)
-    {
-        if (_detectEnemy())
+        public PatrolState(Func<bool> detectEnemy, Func<bool> reachedWaypoint, Action moveToNextWaypoint)
         {
-            TransitionTo(AIState.Chase);
-            return;
+            _detectEnemy = detectEnemy;
+            _reachedWaypoint = reachedWaypoint;
+            _moveToNextWaypoint = moveToNextWaypoint;
         }
 
-        if (_reachedWaypoint())
+        public override void OnEnter()
         {
+            Console.WriteLine("[AI] Entering Patrol State");
             _moveToNextWaypoint();
         }
-    }
 
-    public override void OnExit()
-    {
-        Console.WriteLine("[AI] Exiting Patrol State");
-    }
-}
-
-/// <summary>
-/// Example chase state implementation
-/// </summary>
-public class ChaseState : State<AIState>
-{
-    private readonly Func<bool> _isEnemyInRange;
-    private readonly Func<bool> _lostEnemy;
-    private readonly Action _chaseEnemy;
-
-    public ChaseState(Func<bool> isEnemyInRange, Func<bool> lostEnemy, Action chaseEnemy)
-    {
-        _isEnemyInRange = isEnemyInRange;
-        _lostEnemy = lostEnemy;
-        _chaseEnemy = chaseEnemy;
-    }
-
-    public override void OnEnter()
-    {
-        Console.WriteLine("[AI] Entering Chase State");
-    }
-
-    public override void OnUpdate(float deltaTime)
-    {
-        if (_isEnemyInRange())
+        public override void OnUpdate(float deltaTime)
         {
-            TransitionTo(AIState.Attack);
-            return;
+            if (_detectEnemy())
+            {
+                TransitionTo(AIState.Chase);
+                return;
+            }
+
+            if (_reachedWaypoint())
+            {
+                _moveToNextWaypoint();
+            }
         }
 
-        if (_lostEnemy())
+        public override void OnExit()
         {
-            TransitionTo(AIState.Idle);
-            return;
+            Console.WriteLine("[AI] Exiting Patrol State");
         }
-
-        _chaseEnemy();
     }
 
-    public override void OnExit()
+    /// <summary>
+    /// Example chase state implementation
+    /// </summary>
+    public class ChaseState : State<AIState>
     {
-        Console.WriteLine("[AI] Exiting Chase State");
+        private readonly Func<bool> _isEnemyInRange;
+        private readonly Func<bool> _lostEnemy;
+        private readonly Action _chaseEnemy;
+
+        public ChaseState(Func<bool> isEnemyInRange, Func<bool> lostEnemy, Action chaseEnemy)
+        {
+            _isEnemyInRange = isEnemyInRange;
+            _lostEnemy = lostEnemy;
+            _chaseEnemy = chaseEnemy;
+        }
+
+        public override void OnEnter()
+        {
+            Console.WriteLine("[AI] Entering Chase State");
+        }
+
+        public override void OnUpdate(float deltaTime)
+        {
+            if (_isEnemyInRange())
+            {
+                TransitionTo(AIState.Attack);
+                return;
+            }
+
+            if (_lostEnemy())
+            {
+                TransitionTo(AIState.Idle);
+                return;
+            }
+
+            _chaseEnemy();
+        }
+
+        public override void OnExit()
+        {
+            Console.WriteLine("[AI] Exiting Chase State");
+        }
     }
 }

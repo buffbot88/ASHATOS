@@ -1,8 +1,8 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
-using RaStudios.WinForms.Modules;
 using RaStudios.WinForms.Models;
+using RaStudios.WinForms.Modules;
 
 namespace RaStudios.WinForms.Forms
 {

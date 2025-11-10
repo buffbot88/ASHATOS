@@ -1,70 +1,71 @@
-using Microsoft.AspNetCore.Mvc;
 using ASHATAIServer.Services;
+using Microsoft.AspNetCore.Mvc;
 
-namespace ASHATAIServer.Controllers;
-
-[ApiController]
-[Route("api/[controller]")]
-public class AIController : ControllerBase
+namespace ASHATAIServer.Controllers
 {
-    private readonly LanguageModelService _modelService;
-    private readonly ILogger<AIController> _logger;
-
-    public AIController(LanguageModelService modelService, ILogger<AIController> logger)
+    [ApiController]
+    [Route("api/[controller]")]
+    public class AIController : ControllerBase
     {
-        _modelService = modelService;
-        _logger = logger;
-    }
+        private readonly LanguageModelService _modelService;
+        private readonly ILogger<AIController> _logger;
 
-    [HttpPost("process")]
-    public async Task<IActionResult> ProcessPrompt([FromBody] PromptRequest request)
-    {
-        if (string.IsNullOrWhiteSpace(request.Prompt))
+        public AIController(LanguageModelService modelService, ILogger<AIController> logger)
         {
-            return BadRequest(new { error = "Prompt cannot be empty" });
+            _modelService = modelService;
+            _logger = logger;
         }
 
-        _logger.LogInformation("Received prompt request from client");
-        var result = await _modelService.ProcessPromptAsync(request.Prompt, request.ModelName);
-        
-        if (!result.Success)
+        [HttpPost("process")]
+        public async Task<IActionResult> ProcessPrompt([FromBody] PromptRequest request)
         {
-            return BadRequest(new { error = result.Error });
+            if (string.IsNullOrWhiteSpace(request.Prompt))
+            {
+                return BadRequest(new { error = "Prompt cannot be empty" });
+            }
+
+            _logger.LogInformation("Received prompt request from client");
+            var result = await _modelService.ProcessPromptAsync(request.Prompt, request.ModelName);
+
+            if (!result.Success)
+            {
+                return BadRequest(new { error = result.Error });
+            }
+
+            return Ok(result);
         }
 
-        return Ok(result);
-    }
-
-    [HttpGet("status")]
-    public IActionResult GetStatus()
-    {
-        var status = _modelService.GetStatus();
-        return Ok(status);
-    }
-
-    [HttpPost("models/scan")]
-    public async Task<IActionResult> ScanModels()
-    {
-        _logger.LogInformation("Manual model scan requested");
-        await _modelService.ScanAndLoadModelsAsync();
-        var status = _modelService.GetStatus();
-        return Ok(status);
-    }
-
-    [HttpGet("health")]
-    public IActionResult Health()
-    {
-        return Ok(new
+        [HttpGet("status")]
+        public IActionResult GetStatus()
         {
-            status = "healthy",
-            server = "ASHATAIServer",
-            timestamp = DateTime.UtcNow
-        });
-    }
-}
+            var status = _modelService.GetStatus();
+            return Ok(status);
+        }
 
-public class PromptRequest
-{
-    public string Prompt { get; set; } = string.Empty;
-    public string? ModelName { get; set; }
+        [HttpPost("models/scan")]
+        public async Task<IActionResult> ScanModels()
+        {
+            _logger.LogInformation("Manual model scan requested");
+            await _modelService.ScanAndLoadModelsAsync();
+            var status = _modelService.GetStatus();
+            return Ok(status);
+        }
+
+        [HttpGet("health")]
+        public IActionResult Health()
+        {
+            return Ok(new
+            {
+                status = "healthy",
+                server = "ASHATAIServer",
+                timestamp = DateTime.UtcNow
+            });
+        }
+    }
+
+    public class PromptRequest
+    {
+        public string Prompt { get; set; } = string.Empty;
+        public string? ModelName { get; set; }
+    }
 }

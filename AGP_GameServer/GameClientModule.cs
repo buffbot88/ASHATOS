@@ -2,182 +2,182 @@ using System.Text;
 using System.Text.Json;
 using Abstractions;
 
-namespace LegendaryGameSystem;
-
-/// <summary>
-/// GameClient Module - Generates multi-platform game client screens for each game server.
-/// Creates HTML5/WebGL clients that connect to ASHATCore game servers.
-/// </summary>
-[RaModule(Category = "extensions")]
-public sealed class GameClientModule : ModuleBase, IGameClientModule
+namespace LegendaryGameSystem
 {
-    public override string Name => "GameClient";
-
-    private readonly Dictionary<Guid, GameClientPackage> _clients = new();
-    private readonly Dictionary<Guid, List<Guid>> _userClients = new();
-    private readonly object _lock = new();
-    private readonly string _clientsPath;
-    
-    private ILicenseModule? _licenseModule;
-    private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
-
-    public GameClientModule()
+    /// <summary>
+    /// GameClient Module - Generates multi-platform game client screens for each game server.
+    /// Creates HTML5/WebGL clients that connect to ASHATCore game servers.
+    /// </summary>
+    [RaModule(Category = "extensions")]
+    public sealed class GameClientModule : ModuleBase, IGameClientModule
     {
-        _clientsPath = Path.Combine(Directory.GetCurrentDirectory(), "GameClients");
-        Directory.CreateDirectory(_clientsPath);
-    }
+        public override string Name => "GameClient";
 
-    public override void Initialize(object? manager)
-    {
-        base.Initialize(manager);
-        
-        // Get reference to license module through reflection to avoid tight coupling
-        if (manager != null)
+        private readonly Dictionary<Guid, GameClientPackage> _clients = new();
+        private readonly Dictionary<Guid, List<Guid>> _userClients = new();
+        private readonly object _lock = new();
+        private readonly string _clientsPath;
+
+        private ILicenseModule? _licenseModule;
+        private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
+
+        public GameClientModule()
         {
-            var getModuleMethod = manager.GetType().GetMethod("GetModuleByName");
-            if (getModuleMethod != null)
+            _clientsPath = Path.Combine(Directory.GetCurrentDirectory(), "GameClients");
+            Directory.CreateDirectory(_clientsPath);
+        }
+
+        public override void Initialize(object? manager)
+        {
+            base.Initialize(manager);
+
+            // Get reference to license module through reflection to avoid tight coupling
+            if (manager != null)
             {
-                _licenseModule = getModuleMethod.Invoke(manager, new object[] { "License" }) as ILicenseModule;
+                var getModuleMethod = manager.GetType().GetMethod("GetModuleByName");
+                if (getModuleMethod != null)
+                {
+                    _licenseModule = getModuleMethod.Invoke(manager, new object[] { "License" }) as ILicenseModule;
+                }
             }
-        }
-        
-        LogInfo("GameClient module initialized");
-    }
 
-    public override string Process(string input)
-    {
-        var text = (input ?? string.Empty).Trim();
-
-        if (string.IsNullOrEmpty(text) || text.Equals("help", StringComparison.OrdinalIgnoreCase))
-        {
-            return GetHelp();
+            LogInfo("GameClient module initialized");
         }
 
-        if (text.Equals("gameclient stats", StringComparison.OrdinalIgnoreCase))
+        public override string Process(string input)
         {
-            return GetStats();
-        }
+            var text = (input ?? string.Empty).Trim();
 
-        if (text.StartsWith("gameclient list", StringComparison.OrdinalIgnoreCase))
-        {
-            var parts = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length < 3)
+            if (string.IsNullOrEmpty(text) || text.Equals("help", StringComparison.OrdinalIgnoreCase))
             {
-                return "Usage: gameclient list <user-id>";
+                return GetHelp();
             }
-            if (Guid.TryParse(parts[2], out var userId))
+
+            if (text.Equals("gameclient stats", StringComparison.OrdinalIgnoreCase))
             {
-                return JsonSerializer.Serialize(GetUserClientPackages(userId), _jsonOptions);
+                return GetStats();
             }
-            return "Invalid user ID format";
+
+            if (text.StartsWith("gameclient list", StringComparison.OrdinalIgnoreCase))
+            {
+                var parts = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 3)
+                {
+                    return "Usage: gameclient list <user-id>";
+                }
+                if (Guid.TryParse(parts[2], out var userId))
+                {
+                    return JsonSerializer.Serialize(GetUserClientPackages(userId), _jsonOptions);
+                }
+                return "Invalid user ID format";
+            }
+
+            return "Unknown gameclient command. Type 'help' for available commands.";
         }
 
-        return "Unknown gameclient command. Type 'help' for available commands.";
-    }
-
-    private string GetHelp()
-    {
-        return string.Join(Environment.NewLine,
-            "GameClient Management commands:",
-            "  gameclient stats                - Show client Generation statistics",
-            "  gameclient list <user-id>       - List clients for a user",
-            "",
-            "The GameClient module Generates multi-platform game clients."
-        );
-    }
-
-    private string GetStats()
-    {
-        lock (_lock)
+        private string GetHelp()
         {
-            return JsonSerializer.Serialize(new
-            {
-                TotalClients = _clients.Count,
-                WebGLClients = _clients.Values.Count(c => c.Platform == ClientPlatform.WebGL),
-                WindowsClients = _clients.Values.Count(c => c.Platform == ClientPlatform.Windows),
-                LinuxClients = _clients.Values.Count(c => c.Platform == ClientPlatform.Linux),
-                MacOSClients = _clients.Values.Count(c => c.Platform == ClientPlatform.MacOS),
-                TotalUsers = _userClients.Count
-            }, _jsonOptions);
+            return string.Join(Environment.NewLine,
+                "GameClient Management commands:",
+                "  gameclient stats                - Show client Generation statistics",
+                "  gameclient list <user-id>       - List clients for a user",
+                "",
+                "The GameClient module Generates multi-platform game clients."
+            );
         }
-    }
 
-    public async Task<GameClientPackage> GenerateClientAsync(Guid userId, string licenseKey, ClientPlatform platform, ClientConfiguration config)
-    {
-        // Verify license is valid
-        if (_licenseModule != null)
+        private string GetStats()
         {
-            var license = _licenseModule.GetAllLicenses()
-                .FirstOrDefault(l => l.LicenseKey.Equals(licenseKey, StringComparison.OrdinalIgnoreCase));
-            
-            if (license == null || license.Status != LicenseStatus.Active)
+            lock (_lock)
             {
-                throw new InvalidOperationException("Invalid or inactive license - client Generation requires active license");
+                return JsonSerializer.Serialize(new
+                {
+                    TotalClients = _clients.Count,
+                    WebGLClients = _clients.Values.Count(c => c.Platform == ClientPlatform.WebGL),
+                    WindowsClients = _clients.Values.Count(c => c.Platform == ClientPlatform.Windows),
+                    LinuxClients = _clients.Values.Count(c => c.Platform == ClientPlatform.Linux),
+                    MacOSClients = _clients.Values.Count(c => c.Platform == ClientPlatform.MacOS),
+                    TotalUsers = _userClients.Count
+                }, _jsonOptions);
             }
         }
 
-        var package = new GameClientPackage
+        public async Task<GameClientPackage> GenerateClientAsync(Guid userId, string licenseKey, ClientPlatform platform, ClientConfiguration config)
         {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            LicenseKey = licenseKey,
-            Platform = platform,
-            Configuration = config,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        // Generate client based on platform
-        var clientPath = await GenerateClientFilesAsync(package);
-        
-        package.PackagePath = clientPath;
-        package.ClientUrl = $"/clients/{package.Id}/index.html";
-        package.SizeBytes = GetDirectorySize(clientPath);
-
-        lock (_lock)
-        {
-            _clients[package.Id] = package;
-            
-            if (!_userClients.ContainsKey(userId))
+            // Verify license is valid
+            if (_licenseModule != null)
             {
-                _userClients[userId] = new List<Guid>();
+                var license = _licenseModule.GetAllLicenses()
+                    .FirstOrDefault(l => l.LicenseKey.Equals(licenseKey, StringComparison.OrdinalIgnoreCase));
+
+                if (license == null || license.Status != LicenseStatus.Active)
+                {
+                    throw new InvalidOperationException("Invalid or inactive license - client Generation requires active license");
+                }
             }
-            _userClients[userId].Add(package.Id);
+
+            var package = new GameClientPackage
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                LicenseKey = licenseKey,
+                Platform = platform,
+                Configuration = config,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            // Generate client based on platform
+            var clientPath = await GenerateClientFilesAsync(package);
+
+            package.PackagePath = clientPath;
+            package.ClientUrl = $"/clients/{package.Id}/index.html";
+            package.SizeBytes = GetDirectorySize(clientPath);
+
+            lock (_lock)
+            {
+                _clients[package.Id] = package;
+
+                if (!_userClients.ContainsKey(userId))
+                {
+                    _userClients[userId] = new List<Guid>();
+                }
+                _userClients[userId].Add(package.Id);
+            }
+
+            LogInfo($"Generated {platform} client for user {userId}, license {licenseKey}");
+            return package;
         }
 
-        LogInfo($"Generated {platform} client for user {userId}, license {licenseKey}");
-        return package;
-    }
-
-    private async Task<string> GenerateClientFilesAsync(GameClientPackage package)
-    {
-        var clientDir = Path.Combine(_clientsPath, package.Id.ToString());
-        Directory.CreateDirectory(clientDir);
-
-        // Generate based on platform
-        switch (package.Platform)
+        private async Task<string> GenerateClientFilesAsync(GameClientPackage package)
         {
-            case ClientPlatform.WebGL:
-                await GenerateWebGLClientAsync(clientDir, package);
-                break;
-            case ClientPlatform.Windows:
-            case ClientPlatform.Linux:
-            case ClientPlatform.MacOS:
-                await GeneratedesktopClientAsync(clientDir, package);
-                break;
-            default:
-                await GenerateWebGLClientAsync(clientDir, package);
-                break;
+            var clientDir = Path.Combine(_clientsPath, package.Id.ToString());
+            Directory.CreateDirectory(clientDir);
+
+            // Generate based on platform
+            switch (package.Platform)
+            {
+                case ClientPlatform.WebGL:
+                    await GenerateWebGLClientAsync(clientDir, package);
+                    break;
+                case ClientPlatform.Windows:
+                case ClientPlatform.Linux:
+                case ClientPlatform.MacOS:
+                    await GeneratedesktopClientAsync(clientDir, package);
+                    break;
+                default:
+                    await GenerateWebGLClientAsync(clientDir, package);
+                    break;
+            }
+
+            return clientDir;
         }
 
-        return clientDir;
-    }
+        private async Task GenerateWebGLClientAsync(string clientDir, GameClientPackage package)
+        {
+            var config = package.Configuration;
 
-    private async Task GenerateWebGLClientAsync(string clientDir, GameClientPackage package)
-    {
-        var config = package.Configuration;
-        
-        // Generate HTML5 index.html
-        var indexHtml = $@"<!DOCTYPE html>
+            // Generate HTML5 index.html
+            var indexHtml = $@"<!DOCTYPE html>
 <html lang=""en"">
 <head>
     <meta charset=""UTF-8"">
@@ -267,8 +267,8 @@ public sealed class GameClientModule : ModuleBase, IGameClientModule
 </body>
 </html>";
 
-        // Generate JavaScript game.js
-        var gameJs = $@"// ASHATCore Game Client - WebGL
+            // Generate JavaScript game.js
+            var gameJs = $@"// ASHATCore Game Client - WebGL
 const config = {{
     serverUrl: '{config.ServerUrl}',
     serverPort: {config.ServerPort},
@@ -396,13 +396,13 @@ document.addEventListener('keydown', function(e) {{
         }}));
     }}
 }});
-";
+    ";
 
-        await File.WriteAllTextAsync(Path.Combine(clientDir, "index.html"), indexHtml);
-        await File.WriteAllTextAsync(Path.Combine(clientDir, "game.js"), gameJs);
+            await File.WriteAllTextAsync(Path.Combine(clientDir, "index.html"), indexHtml);
+            await File.WriteAllTextAsync(Path.Combine(clientDir, "game.js"), gameJs);
 
-        // Generate README
-        var readme = $@"# {config.GameTitle} - Game Client
+            // Generate README
+            var readme = $@"# {config.GameTitle} - Game Client
 
 Generated for License: {package.LicenseKey}
 Platform: WebGL (HTML5)
@@ -423,84 +423,85 @@ Created: {package.CreatedAt:yyyy-MM-dd HH:mm:ss} UTC
 
 ---
 ASHATCore Game Client - Locally Hosted
-";
-        await File.WriteAllTextAsync(Path.Combine(clientDir, "README.md"), readme);
-    }
+    ";
+            await File.WriteAllTextAsync(Path.Combine(clientDir, "README.md"), readme);
+        }
 
-    private async Task GeneratedesktopClientAsync(string clientDir, GameClientPackage package)
-    {
-        // For desktop platforms, Generate a launcher script that opens the WebGL client
-        var config = package.Configuration;
-        
-        var launcherScript = package.Platform switch
+        private async Task GeneratedesktopClientAsync(string clientDir, GameClientPackage package)
         {
-            ClientPlatform.Windows => $@"@echo off
+            // For desktop platforms, Generate a launcher script that opens the WebGL client
+            var config = package.Configuration;
+
+            var launcherScript = package.Platform switch
+            {
+                ClientPlatform.Windows => $@"@echo off
 echo Starting {config.GameTitle}...
 start http://localhost:{config.ServerPort}/clients/{package.Id}/index.html
-",
-            _ => $@"#!/bin/bash
+    ",
+                _ => $@"#!/bin/bash
 echo ""Starting {config.GameTitle}...""
 xdg-open http://localhost:{config.ServerPort}/clients/{package.Id}/index.html
-"
-        };
+    "
+            };
 
-        var scriptName = package.Platform == ClientPlatform.Windows ? "launch.bat" : "launch.sh";
-        await File.WriteAllTextAsync(Path.Combine(clientDir, scriptName), launcherScript);
+            var scriptName = package.Platform == ClientPlatform.Windows ? "launch.bat" : "launch.sh";
+            await File.WriteAllTextAsync(Path.Combine(clientDir, scriptName), launcherScript);
 
-        // Also Generate the WebGL client files
-        await GenerateWebGLClientAsync(clientDir, package);
-    }
-
-    public GameClientPackage? GetClientPackage(Guid packageId)
-    {
-        lock (_lock)
-        {
-            return _clients.TryGetValue(packageId, out var package) ? package : null;
+            // Also Generate the WebGL client files
+            await GenerateWebGLClientAsync(clientDir, package);
         }
-    }
 
-    public IEnumerable<GameClientPackage> GetUserClientPackages(Guid userId)
-    {
-        lock (_lock)
+        public GameClientPackage? GetClientPackage(Guid packageId)
         {
-            if (_userClients.TryGetValue(userId, out var clientIds))
+            lock (_lock)
             {
-                return clientIds
-                    .Select(id => _clients.TryGetValue(id, out var package) ? package : null)
-                    .Where(p => p != null)
-                    .Cast<GameClientPackage>()
-                    .ToList();
+                return _clients.TryGetValue(packageId, out var package) ? package : null;
             }
         }
-        
-        return Enumerable.Empty<GameClientPackage>();
-    }
 
-    public async Task<bool> UpdateClientConfigAsync(Guid packageId, ClientConfiguration config)
-    {
-        await Task.CompletedTask;
-        lock (_lock)
+        public IEnumerable<GameClientPackage> GetUserClientPackages(Guid userId)
         {
-            if (_clients.TryGetValue(packageId, out var package))
+            lock (_lock)
             {
-                package.Configuration = config;
-                LogInfo($"Updated Configuration for client {packageId}");
-                return true;
+                if (_userClients.TryGetValue(userId, out var clientIds))
+                {
+                    return clientIds
+                        .Select(id => _clients.TryGetValue(id, out var package) ? package : null)
+                        .Where(p => p != null)
+                        .Cast<GameClientPackage>()
+                        .ToList();
+                }
             }
+
+            return Enumerable.Empty<GameClientPackage>();
         }
-        
-        return false;
-    }
 
-    private long GetDirectorySize(string path)
-    {
-        var dirInfo = new DirectoryInfo(path);
-        return dirInfo.GetFiles("*", SearchOption.AllDirectories).Sum(file => file.Length);
-    }
+        public async Task<bool> UpdateClientConfigAsync(Guid packageId, ClientConfiguration config)
+        {
+            await Task.CompletedTask;
+            lock (_lock)
+            {
+                if (_clients.TryGetValue(packageId, out var package))
+                {
+                    package.Configuration = config;
+                    LogInfo($"Updated Configuration for client {packageId}");
+                    return true;
+                }
+            }
 
-    public override void Dispose()
-    {
-        // Cleanup if needed
-        base.Dispose();
+            return false;
+        }
+
+        private long GetDirectorySize(string path)
+        {
+            var dirInfo = new DirectoryInfo(path);
+            return dirInfo.GetFiles("*", SearchOption.AllDirectories).Sum(file => file.Length);
+        }
+
+        public override void Dispose()
+        {
+            // Cleanup if needed
+            base.Dispose();
+        }
     }
 }

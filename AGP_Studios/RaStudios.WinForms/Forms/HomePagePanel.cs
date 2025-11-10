@@ -23,7 +23,7 @@ namespace RaStudios.WinForms.Forms
         private Label connectionStatusLabel;
         private Label userLabel;
         private Button refreshButton;
-        
+
         private bool isAuthenticated = false;
         private string currentUsername = "";
         private const string DEFAULT_HOMEPAGE = "https://github.com/buffbot88/RaStudios";
@@ -388,13 +388,13 @@ namespace RaStudios.WinForms.Forms
             Task.Run(async () =>
             {
                 await Task.Delay(2000); // Simulate network delay
-                
+
                 Invoke(new Action(() =>
                 {
                     downloadProgressBar.Style = ProgressBarStyle.Continuous;
                     downloadProgressBar.Visible = false;
                     statusLabel.Text = "You are running the latest version!";
-                    
+
                     MessageBox.Show(
                         "Your RaStudios client is up to date!\n\n" +
                         "Version: 1.0.0\n" +
@@ -402,7 +402,7 @@ namespace RaStudios.WinForms.Forms
                         "Update Check",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Information);
-                        
+
                     LogService.Instance.LogInfo("HomePage", "Update check completed - client is up to date");
                 }));
             });
@@ -418,7 +418,7 @@ namespace RaStudios.WinForms.Forms
 
             connectionStatusLabel.Text = $"ASHATOS: {e.Status}";
             connectionStatusLabel.ForeColor = e.Status.Contains("Connected") ? Color.Green : Color.Red;
-            
+
             LogService.Instance.LogInfo("HomePage", $"Connection status changed: {e.Status} - {e.Message}");
         }
 
@@ -440,7 +440,7 @@ namespace RaStudios.WinForms.Forms
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error navigating to URL: {ex.Message}", "Navigation Error", 
+                MessageBox.Show($"Error navigating to URL: {ex.Message}", "Navigation Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 LogService.Instance.LogError("HomePage", $"Navigation error: {ex.Message}");
             }

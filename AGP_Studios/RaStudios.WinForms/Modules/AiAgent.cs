@@ -267,7 +267,7 @@ namespace RaStudios.WinForms.Modules
                 };
 
                 await serverConnector.SendMessageAsync(JsonConvert.SerializeObject(deploymentMessage));
-                
+
                 RaiseStatusUpdate("Code deployed successfully.");
                 return true;
             }

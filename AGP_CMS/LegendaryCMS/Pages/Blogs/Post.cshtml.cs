@@ -1,45 +1,45 @@
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using LegendaryCMS.Services;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace LegendaryCMS.Pages.Blogs;
-
-/// <summary>
-/// Razor Page Model for Blog Post Detail - WordPress-like blog post display
-/// </summary>
-public class PostModel : PageModel
+namespace LegendaryCMS.Pages.Blogs
 {
-    private readonly DatabaseService _db;
-
-    public BlogPost? Post { get; set; }
-    public List<BlogPost> RecentPosts { get; set; } = new();
-
-    public PostModel(DatabaseService db)
+    /// <summary>
+    /// Razor Page Model for Blog Post Detail - WordPress-like blog post display
+    /// </summary>
+    public class PostModel : PageModel
     {
-        _db = db;
-    }
+        private readonly DatabaseService _db;
 
-    public void OnGet(int id)
-    {
-        // Load the specific blog post by ID
-        Post = LoadBlogPost(id);
-        
-        // Load recent posts for sidebar
-        RecentPosts = LoadRecentBlogPosts();
+        public BlogPost? Post { get; set; }
+        public List<BlogPost> RecentPosts { get; set; } = new();
 
-        // Increment view count
-        if (Post != null)
+        public PostModel(DatabaseService db)
         {
-            IncrementViewCount(id);
+            _db = db;
         }
-    }
 
-    private BlogPost? LoadBlogPost(int id)
-    {
-        try
+        public void OnGet(int id)
         {
-            using var connection = _db.GetConnection();
-            var command = connection.CreateCommand();
-            command.CommandText = @"
+            // Load the specific blog post by ID
+            Post = LoadBlogPost(id);
+
+            // Load recent posts for sidebar
+            RecentPosts = LoadRecentBlogPosts();
+
+            // Increment view count
+            if (Post != null)
+            {
+                IncrementViewCount(id);
+            }
+        }
+
+        private BlogPost? LoadBlogPost(int id)
+        {
+            try
+            {
+                using var connection = _db.GetConnection();
+                var command = connection.CreateCommand();
+                command.CommandText = @"
                 SELECT b.Id, b.Title, b.Excerpt, b.Content, b.CreatedAt, b.ViewCount, 
                        u.Username,
                        (SELECT COUNT(*) FROM BlogComments WHERE PostId = b.Id) as CommentCount
@@ -47,46 +47,46 @@ public class PostModel : PageModel
                 JOIN Users u ON b.AuthorId = u.Id
                 WHERE b.Id = @id AND b.Published = 1
             ";
-            command.Parameters.AddWithValue("@id", id);
+                command.Parameters.AddWithValue("@id", id);
 
-            using var reader = command.ExecuteReader();
-            if (reader.Read())
-            {
-                var content = reader.GetString(3);
-                var excerpt = reader.IsDBNull(2) 
-                    ? (content.Length > 200 ? content.Substring(0, 200) + "..." : content)
-                    : reader.GetString(2);
-
-                return new BlogPost
+                using var reader = command.ExecuteReader();
+                if (reader.Read())
                 {
-                    Id = reader.GetInt32(0),
-                    Title = reader.GetString(1),
-                    Excerpt = excerpt,
-                    Content = content,
-                    PublishedDate = DateTime.Parse(reader.GetString(4)),
-                    ViewCount = reader.GetInt32(5),
-                    Author = reader.GetString(6),
-                    CommentCount = reader.GetInt32(7)
-                };
+                    var content = reader.GetString(3);
+                    var excerpt = reader.IsDBNull(2)
+                        ? (content.Length > 200 ? content.Substring(0, 200) + "..." : content)
+                        : reader.GetString(2);
+
+                    return new BlogPost
+                    {
+                        Id = reader.GetInt32(0),
+                        Title = reader.GetString(1),
+                        Excerpt = excerpt,
+                        Content = content,
+                        PublishedDate = DateTime.Parse(reader.GetString(4)),
+                        ViewCount = reader.GetInt32(5),
+                        Author = reader.GetString(6),
+                        CommentCount = reader.GetInt32(7)
+                    };
+                }
             }
+            catch
+            {
+                // Return null if error
+            }
+
+            return null;
         }
-        catch
+
+        private List<BlogPost> LoadRecentBlogPosts()
         {
-            // Return null if error
-        }
+            var posts = new List<BlogPost>();
 
-        return null;
-    }
-
-    private List<BlogPost> LoadRecentBlogPosts()
-    {
-        var posts = new List<BlogPost>();
-
-        try
-        {
-            using var connection = _db.GetConnection();
-            var command = connection.CreateCommand();
-            command.CommandText = @"
+            try
+            {
+                using var connection = _db.GetConnection();
+                var command = connection.CreateCommand();
+                command.CommandText = @"
                 SELECT b.Id, b.Title, b.Excerpt, b.Content, b.CreatedAt, u.Username
                 FROM BlogPosts b
                 JOIN Users u ON b.AuthorId = u.Id
@@ -95,45 +95,46 @@ public class PostModel : PageModel
                 LIMIT 5
             ";
 
-            using var reader = command.ExecuteReader();
-            while (reader.Read())
-            {
-                var content = reader.GetString(3);
-                var excerpt = reader.IsDBNull(2) 
-                    ? (content.Length > 100 ? content.Substring(0, 100) + "..." : content)
-                    : reader.GetString(2);
-
-                posts.Add(new BlogPost
+                using var reader = command.ExecuteReader();
+                while (reader.Read())
                 {
-                    Id = reader.GetInt32(0),
-                    Title = reader.GetString(1),
-                    Excerpt = excerpt,
-                    PublishedDate = DateTime.Parse(reader.GetString(4)),
-                    Author = reader.GetString(5)
-                });
+                    var content = reader.GetString(3);
+                    var excerpt = reader.IsDBNull(2)
+                        ? (content.Length > 100 ? content.Substring(0, 100) + "..." : content)
+                        : reader.GetString(2);
+
+                    posts.Add(new BlogPost
+                    {
+                        Id = reader.GetInt32(0),
+                        Title = reader.GetString(1),
+                        Excerpt = excerpt,
+                        PublishedDate = DateTime.Parse(reader.GetString(4)),
+                        Author = reader.GetString(5)
+                    });
+                }
             }
-        }
-        catch
-        {
-            // Return empty list if error
+            catch
+            {
+                // Return empty list if error
+            }
+
+            return posts;
         }
 
-        return posts;
-    }
-
-    private void IncrementViewCount(int id)
-    {
-        try
+        private void IncrementViewCount(int id)
         {
-            using var connection = _db.GetConnection();
-            var command = connection.CreateCommand();
-            command.CommandText = "UPDATE BlogPosts SET ViewCount = ViewCount + 1 WHERE Id = @id";
-            command.Parameters.AddWithValue("@id", id);
-            command.ExecuteNonQuery();
-        }
-        catch
-        {
-            // Ignore errors
+            try
+            {
+                using var connection = _db.GetConnection();
+                var command = connection.CreateCommand();
+                command.CommandText = "UPDATE BlogPosts SET ViewCount = ViewCount + 1 WHERE Id = @id";
+                command.Parameters.AddWithValue("@id", id);
+                command.ExecuteNonQuery();
+            }
+            catch
+            {
+                // Ignore errors
+            }
         }
     }
 }

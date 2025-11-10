@@ -1,8 +1,8 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
-using RaStudios.WinForms.Modules;
 using RaStudios.WinForms.Models;
+using RaStudios.WinForms.Modules;
 
 namespace RaStudios.WinForms.Forms
 {
@@ -250,11 +250,11 @@ namespace RaStudios.WinForms.Forms
             try
             {
                 var approved = aiAgent.ApproveCode(currentResult, approverName);
-                
+
                 if (approved)
                 {
                     var deployed = await aiAgent.DeployCodeAsync(currentResult, confirmedByHuman: true);
-                    
+
                     if (deployed)
                     {
                         MessageBox.Show("Code approved and deployed successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);

@@ -1,32 +1,33 @@
+using LegendaryCMS.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using LegendaryCMS.Services;
 
-namespace LegendaryCMS.Pages.Learning;
-
-public class IndexModel : PageModel
+namespace LegendaryCMS.Pages.Learning
 {
-    private readonly DatabaseService _db;
-
-    public UserInfo? CurrentUser { get; set; }
-    public bool IsAuthenticated { get; set; }
-
-    public IndexModel(DatabaseService db)
+    public class IndexModel : PageModel
     {
-        _db = db;
-    }
+        private readonly DatabaseService _db;
 
-    public IActionResult OnGet()
-    {
-        // Check if user is authenticated
-        var userId = _db.GetAuthenticatedUserId(HttpContext);
-        IsAuthenticated = userId.HasValue;
+        public UserInfo? CurrentUser { get; set; }
+        public bool IsAuthenticated { get; set; }
 
-        if (userId.HasValue)
+        public IndexModel(DatabaseService db)
         {
-            CurrentUser = _db.GetUserById(userId.Value);
+            _db = db;
         }
 
-        return Page();
+        public IActionResult OnGet()
+        {
+            // Check if user is authenticated
+            var userId = _db.GetAuthenticatedUserId(HttpContext);
+            IsAuthenticated = userId.HasValue;
+
+            if (userId.HasValue)
+            {
+                CurrentUser = _db.GetUserById(userId.Value);
+            }
+
+            return Page();
+        }
     }
 }

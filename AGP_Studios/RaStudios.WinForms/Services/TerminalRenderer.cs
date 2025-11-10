@@ -18,7 +18,7 @@ namespace RaStudios.WinForms.Services
         {
             device = d3dDevice ?? throw new ArgumentNullException(nameof(d3dDevice));
             context = d3dContext ?? throw new ArgumentNullException(nameof(d3dContext));
-            
+
             Initialize();
         }
 
@@ -31,7 +31,7 @@ namespace RaStudios.WinForms.Services
             // - Font texture atlas
             // - Vertex/Index buffers for glyphs
             // - Constant buffers for transformations
-            
+
             // Verify device and context are valid
             if (device == null || context == null)
             {
@@ -55,7 +55,7 @@ namespace RaStudios.WinForms.Services
             // 3. Apply text shader
             // 4. Draw text using GPU
             // 5. Handle colors, cursor, selection, etc.
-            
+
             // For now, ensure the device context is valid and ready for rendering
             // This allows the DirectX 11 subsystem to be initialized without errors
         }
@@ -67,18 +67,18 @@ namespace RaStudios.WinForms.Services
         {
             if (isDisposed || device == null || context == null)
                 return;
-                
+
             // Implementation for rendering graphics primitives
             // Would be used for drawing boxes, lines, charts in the terminal
             // vertices: array of vertex positions (x, y, z)
             // color: RGBA color values (r, g, b, a)
-            
+
             // Validate input parameters
             if (vertices == null || vertices.Length == 0)
                 return;
             if (color == null || color.Length != 4)
                 return;
-                
+
             // Basic primitive rendering would require:
             // 1. Create vertex buffer with positions
             // 2. Set up primitive shader

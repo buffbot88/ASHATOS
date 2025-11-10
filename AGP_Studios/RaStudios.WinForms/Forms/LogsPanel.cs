@@ -113,7 +113,7 @@ namespace RaStudios.WinForms.Forms
 
             var logColor = GetLogColor(log.Level);
             var logText = $"[{log.Timestamp:HH:mm:ss}] [{log.Level}] {log.Source}: {log.Message}";
-            
+
             if (!string.IsNullOrEmpty(log.Exception))
             {
                 logText += $"\n    Exception: {log.Exception}";

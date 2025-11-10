@@ -62,7 +62,7 @@ namespace RaStudios.WinForms.Modules
                 // 4. Implement server-side password hashing with bcrypt or Argon2
                 // 5. Use HTTPS for all API calls
                 // See: https://owasp.org/www-project-web-security-testing-guide/
-                
+
                 var authMessage = new
                 {
                     type = "auth",
@@ -76,11 +76,11 @@ namespace RaStudios.WinForms.Modules
                 }
 
                 await SendMessageAsync(JsonConvert.SerializeObject(authMessage));
-                
+
                 // Wait for auth response
                 // In production, implement proper response handling with timeout
                 authToken = $"token_{username}_{DateTime.UtcNow.Ticks}";
-                
+
                 RaiseConnectionStatus("Authenticated", $"User {username} authenticated successfully");
                 return true;
             }
@@ -110,7 +110,7 @@ namespace RaStudios.WinForms.Modules
                 RaiseConnectionStatus("Connecting", $"Connecting to {serverUrl}...");
 
                 await webSocket.ConnectAsync(new Uri(serverUrl), cancellationTokenSource.Token);
-                
+
                 isConnected = true;
                 RaiseConnectionStatus("Connected", "Successfully connected to game server");
 
@@ -153,13 +153,13 @@ namespace RaStudios.WinForms.Modules
         private async Task ReceiveMessagesAsync()
         {
             var buffer = new byte[8192];
-            
+
             try
             {
                 while (IsConnected && !cancellationTokenSource!.Token.IsCancellationRequested)
                 {
                     var result = await webSocket!.ReceiveAsync(
-                        new ArraySegment<byte>(buffer), 
+                        new ArraySegment<byte>(buffer),
                         cancellationTokenSource.Token);
 
                     if (result.MessageType == WebSocketMessageType.Close)

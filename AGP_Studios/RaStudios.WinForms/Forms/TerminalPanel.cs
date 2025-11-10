@@ -1,15 +1,15 @@
 using System;
 using System.Drawing;
-using System.Windows.Forms;
 using System.IO;
+using System.Windows.Forms;
+using RaStudios.WinForms.Models;
+using RaStudios.WinForms.Services;
 using SharpDX;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
-using RaStudios.WinForms.Services;
-using RaStudios.WinForms.Models;
-using Device = SharpDX.Direct3D11.Device;
 using Buffer = SharpDX.Direct3D11.Buffer;
+using Device = SharpDX.Direct3D11.Device;
 using Viewport = SharpDX.Mathematics.Interop.RawViewportF;
 
 namespace RaStudios.WinForms.Forms
@@ -26,14 +26,14 @@ namespace RaStudios.WinForms.Forms
         private RenderTargetView? renderTargetView;
         private Texture2D? backBuffer;
         private DeviceContext? context;
-        
+
         private Panel renderPanel;
         private TextBox inputTextBox;
         private RichTextBox outputTextBox;
         private Button sendButton;
         private Button clearButton;
         private CheckBox enableDx11CheckBox;
-        
+
         // Test screen components
         private TabControl testTabControl;
         private RichTextBox codePreviewTextBox;
@@ -43,7 +43,7 @@ namespace RaStudios.WinForms.Forms
         private Button uploadButton;
         private TextBox projectNameTextBox;
         private CheckBox autoUploadCheckBox;
-        
+
         private bool isDx11Enabled = false;
         private TerminalRenderer? terminalRenderer;
         private BuildService? buildService;
@@ -67,7 +67,7 @@ namespace RaStudios.WinForms.Forms
 
                 buildService.OnStatusUpdate += (s, msg) => AppendOutput($"[Build] {msg}\n");
                 buildService.OnError += (s, msg) => AppendOutput($"[Build Error] {msg}\n");
-                
+
                 ftpService.OnStatusUpdate += (s, msg) => AppendOutput($"[FTP] {msg}\n");
                 ftpService.OnError += (s, msg) => AppendOutput($"[FTP Error] {msg}\n");
             }
@@ -320,15 +320,15 @@ namespace RaStudios.WinForms.Forms
                 // Set viewport with validation
                 var width = Math.Max(1, renderPanel.ClientSize.Width);
                 var height = Math.Max(1, renderPanel.ClientSize.Height);
-                
-                var viewport = new Viewport 
-                { 
-                    X = 0, 
-                    Y = 0, 
-                    Width = width, 
-                    Height = height, 
-                    MinDepth = 0.0f, 
-                    MaxDepth = 1.0f 
+
+                var viewport = new Viewport
+                {
+                    X = 0,
+                    Y = 0,
+                    Width = width,
+                    Height = height,
+                    MinDepth = 0.0f,
+                    MaxDepth = 1.0f
                 };
                 context.Rasterizer.SetViewport(viewport);
 
@@ -347,7 +347,7 @@ namespace RaStudios.WinForms.Forms
         private void OnDx11CheckedChanged(object? sender, EventArgs e)
         {
             isDx11Enabled = enableDx11CheckBox.Checked;
-            
+
             if (isDx11Enabled)
             {
                 renderPanel.Visible = true;
@@ -392,7 +392,7 @@ namespace RaStudios.WinForms.Forms
             AppendOutput(command + "\n");
             ProcessCommand(command);
             AppendOutput("> ");
-            
+
             inputTextBox.Clear();
         }
 
@@ -544,12 +544,12 @@ namespace RaStudios.WinForms.Forms
                 {
                     AppendBuildOutput("Build completed successfully!\n");
                     AppendBuildOutput($"Output: {result.Output}\n");
-                    
+
                     if (result.BuiltFiles.Length > 0)
                     {
                         AppendBuildOutput($"Built DLL: {result.BuiltFiles[0]}\n");
                         uploadButton.Enabled = true;
-                        
+
                         // Auto-upload if enabled
                         if (autoUploadCheckBox.Checked)
                         {
@@ -621,9 +621,9 @@ namespace RaStudios.WinForms.Forms
                 return;
 
             AppendBuildOutput("Uploading files to FTP server...\n");
-            
+
             var uploadResult = await ftpService.UploadFilesAsync(files);
-            
+
             if (uploadResult.Success)
             {
                 AppendBuildOutput($"Upload completed successfully!\n");
@@ -742,14 +742,14 @@ namespace RaStudios.WinForms.Forms
                     backBuffer = swapChain.GetBackBuffer<Texture2D>(0);
                     renderTargetView = new RenderTargetView(d3dDevice, backBuffer);
 
-                    var viewport = new Viewport 
-                    { 
-                        X = 0, 
-                        Y = 0, 
-                        Width = width, 
-                        Height = height, 
-                        MinDepth = 0.0f, 
-                        MaxDepth = 1.0f 
+                    var viewport = new Viewport
+                    {
+                        X = 0,
+                        Y = 0,
+                        Width = width,
+                        Height = height,
+                        MinDepth = 0.0f,
+                        MaxDepth = 1.0f
                     };
                     context?.Rasterizer.SetViewport(viewport);
                 }

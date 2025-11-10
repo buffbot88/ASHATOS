@@ -1,7 +1,7 @@
 using System;
 using System.Windows.Forms;
-using RaStudios.WinForms.Modules;
 using RaStudios.WinForms.Forms;
+using RaStudios.WinForms.Modules;
 using RaStudios.WinForms.Services;
 
 namespace RaStudios.WinForms
@@ -36,22 +36,22 @@ namespace RaStudios.WinForms
 
             // Create menu strip
             menuStrip = new MenuStrip();
-            
+
             var fileMenu = new ToolStripMenuItem("&File");
             fileMenu.DropDownItems.Add("&Settings", null, OnSettingsClick);
             fileMenu.DropDownItems.Add(new ToolStripSeparator());
             fileMenu.DropDownItems.Add("E&xit", null, (s, e) => Application.Exit());
-            
+
             var toolsMenu = new ToolStripMenuItem("&Tools");
             toolsMenu.DropDownItems.Add("&Refresh Connection", null, OnRefreshConnection);
             toolsMenu.DropDownItems.Add("&Clear Logs", null, OnClearLogs);
-            
+
             var helpMenu = new ToolStripMenuItem("&Help");
             helpMenu.DropDownItems.Add("&About", null, OnAboutClick);
             helpMenu.DropDownItems.Add("&Documentation", null, OnDocumentationClick);
-            
+
             menuStrip.Items.AddRange(new ToolStripItem[] { fileMenu, toolsMenu, helpMenu });
-            
+
             // Create status strip
             statusStrip = new StatusStrip();
             statusLabel = new ToolStripStatusLabel("Ready");
@@ -83,7 +83,7 @@ namespace RaStudios.WinForms
         {
             // Load configuration
             var config = Services.ConfigurationService.Instance.GetConfiguration();
-            
+
             // Initialize server connector with security controls
             serverConnector = new ServerConnector();
             serverConnector.ServerUrl = config.Server.Url;
@@ -111,7 +111,7 @@ namespace RaStudios.WinForms
             gameClientPanel.Dock = DockStyle.Fill;
             tabPage.Controls.Add(gameClientPanel);
             mainTabControl.TabPages.Add(tabPage);
-            
+
             // Make tab visible based on user role
             tabPage.Tag = "player"; // Requires 'player' role or higher
         }
@@ -132,7 +132,7 @@ namespace RaStudios.WinForms
             aiPanel.Dock = DockStyle.Fill;
             tabPage.Controls.Add(aiPanel);
             mainTabControl.TabPages.Add(tabPage);
-            
+
             // Make tab visible based on user role
             tabPage.Tag = "developer"; // Requires 'developer' role or higher
         }
@@ -195,7 +195,7 @@ namespace RaStudios.WinForms
         private void UpdateTabVisibilityByRole(string role)
         {
             currentUserRole = role;
-            
+
             // Define role hierarchy: guest < player < developer < admin
             var roleHierarchy = new Dictionary<string, int>
             {
@@ -213,7 +213,7 @@ namespace RaStudios.WinForms
                 if (tab.Tag is string requiredRole)
                 {
                     int requiredLevel = roleHierarchy.ContainsKey(requiredRole) ? roleHierarchy[requiredRole] : 0;
-                    
+
                     // Show tab if user level meets or exceeds required level
                     if (userLevel < requiredLevel)
                     {
@@ -272,7 +272,7 @@ namespace RaStudios.WinForms
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             base.OnFormClosing(e);
-            
+
             // Cleanup
             serverConnector?.Disconnect();
             aiAgent?.Dispose();

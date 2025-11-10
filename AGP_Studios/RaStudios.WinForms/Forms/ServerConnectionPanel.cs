@@ -73,9 +73,9 @@ namespace RaStudios.WinForms.Forms
             };
             disconnectButton.Click += OnDisconnectClick;
 
-            connectionGroupBox.Controls.AddRange(new Control[] 
-            { 
-                urlLabel, serverUrlTextBox, connectButton, disconnectButton 
+            connectionGroupBox.Controls.AddRange(new Control[]
+            {
+                urlLabel, serverUrlTextBox, connectButton, disconnectButton
             });
 
             // Authentication group box
@@ -152,7 +152,7 @@ namespace RaStudios.WinForms.Forms
             });
 
             this.ResumeLayout(false);
-            
+
             AppendStatus("Ready to connect to game server.");
         }
 
@@ -192,7 +192,7 @@ namespace RaStudios.WinForms.Forms
             }
 
             var success = await serverConnector.AuthenticateAsync(username, password);
-            
+
             if (success)
             {
                 MessageBox.Show("Authentication successful!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
