@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace LegendaryCMS.Services
 {
-    public class DatabaseService
+    public partial class DatabaseService
     {
         private readonly string _connectionString;
 
@@ -2145,4 +2145,170 @@ namespace LegendaryCMS.Services
         public DateTime DeletedAt { get; set; }
     }
 
+}
+
+// Authentication helper extension methods for DatabaseService
+namespace LegendaryCMS.Services
+{
+    using System.Security.Cryptography;
+    using System.Text;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.Data.Sqlite;
+
+    public partial class DatabaseService
+    {
+        public UserInfo? AuthenticateUser(string usernameOrEmail, string password)
+        {
+            using var connection = GetConnection();
+            var command = connection.CreateCommand();
+            command.CommandText = @"
+                SELECT Id, Username, Email, PasswordHash, Role 
+                FROM Users 
+                WHERE (Username = @username OR Email = @username) AND IsActive = 1
+            ";
+            command.Parameters.AddWithValue("@username", usernameOrEmail);
+
+            using var reader = command.ExecuteReader();
+            if (reader.Read())
+            {
+                var storedHash = reader.GetString(3);
+                var passwordHash = HashPassword(password);
+
+                if (storedHash == passwordHash)
+                {
+                    return new UserInfo
+                    {
+                        Id = reader.GetInt32(0),
+                        Username = reader.GetString(1),
+                        Email = reader.GetString(2),
+                        Role = reader.GetString(4)
+                    };
+                }
+            }
+
+            return null;
+        }
+
+        public bool UserExists(string username, string email)
+        {
+            using var connection = GetConnection();
+            var command = connection.CreateCommand();
+            command.CommandText = "SELECT COUNT(*) FROM Users WHERE Username = @username OR Email = @email";
+            command.Parameters.AddWithValue("@username", username);
+            command.Parameters.AddWithValue("@email", email);
+
+            var count = Convert.ToInt32(command.ExecuteScalar());
+            return count > 0;
+        }
+
+        public int CreateUser(string username, string email, string password)
+        {
+            using var connection = GetConnection();
+            
+            // Check if this is the first user
+            var checkCmd = connection.CreateCommand();
+            checkCmd.CommandText = "SELECT COUNT(*) FROM Users WHERE Role = 'Admin'";
+            var adminCount = Convert.ToInt32(checkCmd.ExecuteScalar());
+            var role = adminCount == 0 ? "Admin" : "User";
+
+            var command = connection.CreateCommand();
+            command.CommandText = @"
+                INSERT INTO Users (Username, Email, PasswordHash, Role, CreatedAt, UpdatedAt, IsActive)
+                VALUES (@username, @email, @passwordHash, @role, @createdAt, @updatedAt, 1);
+                SELECT last_insert_rowid();
+            ";
+            command.Parameters.AddWithValue("@username", username);
+            command.Parameters.AddWithValue("@email", email);
+            command.Parameters.AddWithValue("@passwordHash", HashPassword(password));
+            command.Parameters.AddWithValue("@role", role);
+            command.Parameters.AddWithValue("@createdAt", DateTime.UtcNow.ToString("o"));
+            command.Parameters.AddWithValue("@updatedAt", DateTime.UtcNow.ToString("o"));
+
+            var userId = Convert.ToInt32(command.ExecuteScalar());
+
+            // Create user profile
+            var profileCmd = connection.CreateCommand();
+            profileCmd.CommandText = @"
+                INSERT INTO UserProfiles (UserId, PostCount, LikesReceived)
+                VALUES (@userId, 0, 0)
+            ";
+            profileCmd.Parameters.AddWithValue("@userId", userId);
+            profileCmd.ExecuteNonQuery();
+
+            return userId;
+        }
+
+        public string CreateSession(int userId, string username, HttpContext httpContext)
+        {
+            var sessionId = Guid.NewGuid().ToString();
+            var expiresAt = DateTime.UtcNow.AddHours(24);
+
+            using var connection = GetConnection();
+            var command = connection.CreateCommand();
+            command.CommandText = @"
+                INSERT INTO Sessions (Id, UserId, CreatedAt, ExpiresAt, IpAddress, UserAgent)
+                VALUES (@id, @userId, @createdAt, @expiresAt, @ip, @userAgent)
+            ";
+            command.Parameters.AddWithValue("@id", sessionId);
+            command.Parameters.AddWithValue("@userId", userId);
+            command.Parameters.AddWithValue("@createdAt", DateTime.UtcNow.ToString("o"));
+            command.Parameters.AddWithValue("@expiresAt", expiresAt.ToString("o"));
+            command.Parameters.AddWithValue("@ip", httpContext.Connection.RemoteIpAddress?.ToString() ?? "");
+            command.Parameters.AddWithValue("@userAgent", httpContext.Request.Headers["User-Agent"].ToString());
+            command.ExecuteNonQuery();
+
+            // Update last login
+            var updateCommand = connection.CreateCommand();
+            updateCommand.CommandText = "UPDATE Users SET LastLoginAt = @lastLogin WHERE Id = @userId";
+            updateCommand.Parameters.AddWithValue("@lastLogin", DateTime.UtcNow.ToString("o"));
+            updateCommand.Parameters.AddWithValue("@userId", userId);
+            updateCommand.ExecuteNonQuery();
+
+            // Set cookies
+            httpContext.Response.Cookies.Append("AGPCMS_SESSION", sessionId, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = false, // Set to true in production with HTTPS
+                SameSite = SameSiteMode.Lax,
+                Expires = expiresAt
+            });
+
+            httpContext.Response.Cookies.Append("AGPCMS_USER", username, new CookieOptions
+            {
+                HttpOnly = false,
+                Secure = false,
+                SameSite = SameSiteMode.Lax,
+                Expires = expiresAt
+            });
+
+            return sessionId;
+        }
+
+        public int? GetUserIdBySession(string sessionId)
+        {
+            using var connection = GetConnection();
+            var command = connection.CreateCommand();
+            command.CommandText = @"
+                SELECT UserId 
+                FROM Sessions 
+                WHERE Id = @sessionId AND datetime(ExpiresAt) > datetime('now')
+            ";
+            command.Parameters.AddWithValue("@sessionId", sessionId);
+
+            using var reader = command.ExecuteReader();
+            if (reader.Read())
+            {
+                return reader.GetInt32(0);
+            }
+
+            return null;
+        }
+
+        private string HashPassword(string password)
+        {
+            using var sha256 = SHA256.Create();
+            var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password + "AGP_CMS_SALT"));
+            return Convert.ToBase64String(hashBytes);
+        }
+    }
 }
