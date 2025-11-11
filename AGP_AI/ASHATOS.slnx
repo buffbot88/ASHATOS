@@ -1,5 +1,5 @@
 <Solution>
-  <Project Path="AGP_AI/ASHATAIServer/ASHATAIServer.csproj">
+  <Project Path="ASHATAIServer/ASHATAIServer.csproj">
     <BuildDependency Project="AGP_GameServer/Abstractions/Abstractions.csproj" />
     <BuildDependency Project="AGP_GameServer/LegendaryGameSystem.csproj" />
   </Project>
