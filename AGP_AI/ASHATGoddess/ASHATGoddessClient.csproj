@@ -30,10 +30,6 @@
   </ItemGroup>
 
   <ItemGroup>
-<<<<<<< Updated upstream
-=======
-    <ProjectReference Include="..\AGP_GameServer\Abstractions\Abstractions.csproj" />
->>>>>>> Stashed changes
     <ProjectReference Include="..\AGP_GameServer\LegendaryGameSystem.csproj" />
   </ItemGroup>
 
