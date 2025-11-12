@@ -4,25 +4,25 @@ using System.Text.Json;
 namespace ASHATGoddessClient.Services
 {
     /// <summary>
-    /// Authentication service for ASHAT Goddess client that communicates with AGP_CMS.
-    /// Handles user login, registration, and session management.
+    /// Authentication service for ASHAT Goddess client that communicates with phpBB3.
+    /// Handles user login, registration, and session management via the ASHATOS Authentication Bridge extension.
     /// </summary>
     public class AuthenticationService
     {
         private readonly HttpClient _httpClient;
-        private readonly string _cmsBaseUrl;
+        private readonly string _phpbbBaseUrl;
         private string? _currentSessionId;
         private UserInfo? _currentUser;
 
         public bool IsAuthenticated => _currentSessionId != null && _currentUser != null;
         public UserInfo? CurrentUser => _currentUser;
 
-        public AuthenticationService(string cmsBaseUrl = "http://localhost:5000")
+        public AuthenticationService(string phpbbBaseUrl = "http://localhost/phpbb")
         {
-            _cmsBaseUrl = cmsBaseUrl;
+            _phpbbBaseUrl = phpbbBaseUrl;
             _httpClient = new HttpClient
             {
-                BaseAddress = new Uri(_cmsBaseUrl)
+                BaseAddress = new Uri(_phpbbBaseUrl)
             };
         }
 
