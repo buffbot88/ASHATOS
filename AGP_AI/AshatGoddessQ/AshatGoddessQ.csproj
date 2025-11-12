@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>ashat-goddessq</AssemblyName>
+    <Version>1.0.0</Version>
+    <Authors>AGP Studios</Authors>
+    <Company>AGP Studios, INC</Company>
+    <Product>ASHAT GoddessQ - Standalone CLI</Product>
+    <Description>ASHAT GoddessQ - Standalone command-line interface for ASHAT Goddess AI</Description>
+    <Copyright>Copyright © 2025 AGP Studios, INC</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="9.0.0" />
+  </ItemGroup>
+
+</Project>
