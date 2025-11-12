@@ -663,6 +663,8 @@ public class AshatRenderer
 {
     private readonly Random _random = new Random();
     private readonly GameServerVisualProcessor _visualProcessor;
+    private readonly RomanGoddessEngine _engine;
+    private GoddessAvatar? _goddessAvatar;
     private Canvas? _canvas;
     private Border? _glow;
     private Ellipse? _leftEye;
@@ -672,6 +674,7 @@ public class AshatRenderer
     private AnimationState _currentState = AnimationState.Idle;
     private int _animationFrame = 0;
     private bool _gameServerInitialized = false;
+    private bool _engineInitialized = false;
 
     public enum AnimationState
     {
@@ -682,10 +685,14 @@ public class AshatRenderer
         Greeting
     }
 
+    public GoddessAvatar? GoddessAvatar => _goddessAvatar;
+
     public AshatRenderer()
     {
         _visualProcessor = new GameServerVisualProcessor();
-        // Initialize GameServer visual processor asynchronously
+        _engine = new RomanGoddessEngine();
+        
+        // Initialize GameServer visual processor and engine asynchronously
         _ = InitializeGameServerAsync();
     }
 
@@ -709,12 +716,86 @@ public class AshatRenderer
             {
                 Console.WriteLine("[AshatRenderer] ⚠ GameServer visual processor initialization failed - using fallback rendering");
             }
+
+            // Initialize RomanGoddessEngine
+            Console.WriteLine("[AshatRenderer] Initializing RomanGoddessEngine...");
+            _engineInitialized = await _engine.InitializeAsync("ASHAT Goddess Mascot Scene");
+
+            if (_engineInitialized)
+            {
+                Console.WriteLine("[AshatRenderer] ✓ RomanGoddessEngine initialized successfully");
+
+                // Create GoddessAvatar entity
+                _goddessAvatar = new GoddessAvatar(_engine);
+                var avatarInitialized = await _goddessAvatar.InitializeAsync();
+
+                if (avatarInitialized)
+                {
+                    Console.WriteLine("[AshatRenderer] ✓ GoddessAvatar entity created successfully");
+
+                    // Hook up engine events
+                    _engine.OnUpdate += OnEngineUpdate;
+                    _engine.OnRender += OnEngineRender;
+
+                    // Hook up avatar events
+                    _goddessAvatar.OnAnimationStateChanged += OnAvatarAnimationStateChanged;
+
+                    // Start the engine
+                    _engine.Start();
+                    Console.WriteLine("[AshatRenderer] ✓ RomanGoddessEngine update/render loops started");
+                }
+                else
+                {
+                    Console.WriteLine("[AshatRenderer] ⚠ Failed to create GoddessAvatar entity");
+                }
+            }
+            else
+            {
+                Console.WriteLine("[AshatRenderer] ⚠ RomanGoddessEngine initialization failed");
+            }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"[AshatRenderer] Error initializing GameServer: {ex.Message}");
             _gameServerInitialized = false;
+            _engineInitialized = false;
         }
+    }
+
+    private void OnEngineUpdate(object? sender, UpdateEventArgs e)
+    {
+        // Update the goddess avatar each frame
+        _goddessAvatar?.Update(e.DeltaTime);
+    }
+
+    private void OnEngineRender(object? sender, RenderEventArgs e)
+    {
+        // Log FPS occasionally for debugging
+        if (_animationFrame % 300 == 0) // Every 5 seconds at 60 FPS
+        {
+            Console.WriteLine($"[AshatRenderer] Engine rendering at {e.FPS:F1} FPS");
+        }
+    }
+
+    private void OnAvatarAnimationStateChanged(object? sender, AnimationStateChangedEventArgs e)
+    {
+        // Sync Avalonia UI animation with entity state
+        Console.WriteLine($"[AshatRenderer] Avatar animation state changed: {e.OldState} → {e.NewState}");
+
+        var uiState = e.NewState switch
+        {
+            GoddessAvatar.AnimationState.Talk => AnimationState.Speaking,
+            GoddessAvatar.AnimationState.Listening => AnimationState.Listening,
+            GoddessAvatar.AnimationState.Thinking => AnimationState.Thinking,
+            GoddessAvatar.AnimationState.Greeting => AnimationState.Greeting,
+            _ => AnimationState.Idle
+        };
+
+        // Update UI on the UI thread
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            StartAnimation(uiState);
+        });
     }
 
     public Control GetGoddessVisual()
@@ -1021,6 +1102,21 @@ public class AshatRenderer
         {
             _ = UpdateGameServerVisualAsync(animationType);
         }
+
+        // Transition GoddessAvatar entity state
+        if (_engineInitialized && _goddessAvatar != null)
+        {
+            var avatarState = animationType.ToLowerInvariant() switch
+            {
+                "speaking" => GoddessAvatar.AnimationState.Talk,
+                "listening" => GoddessAvatar.AnimationState.Listening,
+                "thinking" => GoddessAvatar.AnimationState.Thinking,
+                "greeting" => GoddessAvatar.AnimationState.Greeting,
+                _ => GoddessAvatar.AnimationState.Idle
+            };
+
+            _ = _goddessAvatar.TransitionToAsync(avatarState);
+        }
     }
 
     private async Task UpdateGameServerVisualAsync(string animationType)
@@ -1239,6 +1335,13 @@ public class AshatRenderer
         _animationTimer?.Dispose();
         _animationTimer = null;
         
+        // Stop the RomanGoddessEngine
+        if (_engineInitialized)
+        {
+            _engine?.Stop();
+            Console.WriteLine("[AshatRenderer] RomanGoddessEngine stopped");
+        }
+        
         // Cleanup GameServer visual processor
         try
         {
@@ -1248,6 +1351,17 @@ public class AshatRenderer
         catch (Exception ex)
         {
             Console.WriteLine($"[AshatRenderer] Error disposing GameServer visual processor: {ex.Message}");
+        }
+
+        // Cleanup RomanGoddessEngine
+        try
+        {
+            _engine?.Dispose();
+            Console.WriteLine("[AshatRenderer] RomanGoddessEngine disposed");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[AshatRenderer] Error disposing RomanGoddessEngine: {ex.Message}");
         }
     }
 }
@@ -1326,6 +1440,9 @@ public class AshatBrain
 
         public async Task<string> ProcessMessageAsync(string message)
         {
+            // Log AI message received
+            Console.WriteLine($"[AshatBrain] AI Message Received: \"{message}\"");
+
             // Trigger thinking animation
             _renderer?.PlayAnimation("thinking");
 
@@ -1354,6 +1471,9 @@ public class AshatBrain
                             {
                                 var responseText = result.GetProperty("response").GetString() ?? "...";
 
+                                // Log AI response
+                                Console.WriteLine($"[AshatBrain] AI Response Generated: \"{responseText}\"");
+
                                 // Speak the response
                                 await SpeakAsync(responseText);
 
@@ -1378,6 +1498,9 @@ public class AshatBrain
                             var result = JsonSerializer.Deserialize<JsonElement>(jsonResponse);
                             var responseText = result.GetProperty("response").GetString() ?? "...";
 
+                            // Log AI response
+                            Console.WriteLine($"[AshatBrain] AI Response Generated: \"{responseText}\"");
+
                             // Speak the response
                             await SpeakAsync(responseText);
 
@@ -1392,13 +1515,22 @@ public class AshatBrain
             }
 
             // Fallback to local processing
-            return GetLocalResponse(message);
+            var localResponse = GetLocalResponse(message);
+            Console.WriteLine($"[AshatBrain] Local Response: \"{localResponse}\"");
+            await SpeakAsync(localResponse);
+            return localResponse;
         }
 
         public async Task SpeakAsync(string text)
         {
-            // Trigger speaking animation
+            // Trigger speaking animation on renderer
             _renderer?.PlayAnimation("speaking");
+
+            // Trigger GoddessAvatar Say method to update entity state
+            if (_renderer?.GoddessAvatar != null)
+            {
+                await _renderer.GoddessAvatar.SayAsync(text);
+            }
 
             await Task.Run(async () =>
             {
