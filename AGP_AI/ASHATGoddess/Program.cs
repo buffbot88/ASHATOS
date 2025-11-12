@@ -555,6 +555,105 @@ namespace ASHATGoddessClient
         await _brain.ConnectToServerAsync();
         await _brain.SpeakAsync("Greetings, mortal! I am ASHAT, your divine companion. The wisdom of the goddesses flows through me.");
     }
+
+    private void StartIdleBehavior()
+    {
+        // Start idle behavior animations with random delays
+        var random = new Random();
+        var initialDelay = random.Next(15000, 30000); // 15-30 seconds
+        
+        _idleBehaviorTimer = new System.Threading.Timer(
+            async _ => await PerformIdleBehavior(),
+            null,
+            initialDelay,
+            Timeout.Infinite);
+    }
+
+    private async Task PerformIdleBehavior()
+    {
+        try
+        {
+            var random = new Random();
+            var behavior = random.Next(5);
+            
+            switch (behavior)
+            {
+                case 0:
+                    // Random greeting
+                    _renderer?.PlayAnimation("greeting");
+                    break;
+                case 1:
+                    // Think animation
+                    _renderer?.PlayAnimation("thinking");
+                    break;
+                case 2:
+                    // Playful wink or sparkle
+                    _renderer?.PlayAnimation("greeting");
+                    var playfulMessages = new[]
+                    {
+                        "Still here, watching over you!",
+                        "Just checking in!",
+                        "Staying vigilant!"
+                    };
+                    if (random.Next(3) == 0)
+                    {
+                        await _brain.SpeakAsync(playfulMessages[random.Next(playfulMessages.Length)]);
+                    }
+                    break;
+                case 3:
+                    // Gentle pulse
+                    _renderer?.PlayAnimation("idle");
+                    break;
+                case 4:
+                    // Speaking animation with optional message
+                    if (random.Next(4) == 0)
+                    {
+                        var idleMessages = new[]
+                        {
+                            "Remember to take breaks!",
+                            "How goes your work, mortal?",
+                            "I sense productivity!"
+                        };
+                        await _brain.SpeakAsync(idleMessages[random.Next(idleMessages.Length)]);
+                    }
+                    break;
+            }
+            
+            // Schedule next idle behavior
+            var nextDelay = random.Next(15000, 30000);
+            _idleBehaviorTimer?.Change(nextDelay, Timeout.Infinite);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ASHAT] Error during idle behavior: {ex.Message}");
+        }
+    }
+
+    private void CenterOnScreen()
+    {
+        try
+        {
+            var screens = Screens.All;
+            if (screens.Count == 0) return;
+            
+            // Get primary screen or first available
+            var screen = screens.FirstOrDefault(s => s.IsPrimary) ?? screens[0];
+            var workingArea = screen.WorkingArea;
+            
+            // Calculate center position
+            var centerX = workingArea.X + (workingArea.Width - (int)Width) / 2;
+            var centerY = workingArea.Y + (workingArea.Height - (int)Height) / 2;
+            
+            // Apply position
+            Position = new Avalonia.PixelPoint(centerX, centerY);
+            
+            Console.WriteLine($"[ASHAT] Centered on screen at ({centerX}, {centerY})");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ASHAT] Error centering on screen: {ex.Message}");
+        }
+    }
 }
 
 /// <summary>
