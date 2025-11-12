@@ -30,7 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\AGP_GameServer\LegendaryGameSystem.csproj" />
+    <ProjectReference Include="..\AGP_GameServer\LegendaryGameSystem.csproj" />
   </ItemGroup>
 
 </Project>
