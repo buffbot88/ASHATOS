@@ -5,4 +5,5 @@
   </Project>
   <Project Path="AGP_GameServer/Abstractions/Abstractions.csproj" />
   <Project Path="AGP_GameServer/LegendaryGameSystem.csproj" />
+  <Project Path="AshatGoddessQ/AshatGoddessQ.csproj" />
 </Solution>
