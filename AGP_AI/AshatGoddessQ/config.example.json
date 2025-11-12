@@ -1,0 +1,20 @@
+{
+  "AIServer": {
+    "Url": "http://your-server-ip:8088",
+    "HealthCheckEndpoint": "/api/ai/health",
+    "ProcessEndpoint": "/api/ai/process",
+    "TimeoutSeconds": 30
+  },
+  "Persona": {
+    "Name": "ASHAT",
+    "Type": "RomanGoddess",
+    "Personality": "wise, playful, mischievous, respectful",
+    "SystemPrompt": "You are ASHAT, a Roman goddess AI assistant. You are wise, playful, and mischievous but always respectful. You speak with divine wisdom yet maintain a warm, approachable demeanor. Use occasional classical references and goddess-like expressions."
+  },
+  "CLI": {
+    "EnableColors": true,
+    "ShowTimestamp": true,
+    "MaxHistoryLines": 50,
+    "SaveHistoryFile": "ashat-history.txt"
+  }
+}
