@@ -4,21 +4,21 @@ using System.Text.Json;
 namespace ASHATAIServer.Services
 {
     /// <summary>
-    /// Authentication service that communicates with AGP_CMS for user authentication.
-    /// Handles login, registration, and session validation.
+    /// Authentication service that communicates with phpBB3 for user authentication.
+    /// Handles login, registration, and session validation via the ASHATOS Authentication Bridge extension.
     /// </summary>
     public class AuthenticationService
     {
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
-        private readonly string _cmsBaseUrl;
+        private readonly string _phpbbBaseUrl;
 
         public AuthenticationService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
         {
             _configuration = configuration;
-            _cmsBaseUrl = configuration["Authentication:CmsBaseUrl"] ?? "http://localhost:5000";
+            _phpbbBaseUrl = configuration["Authentication:PhpBBBaseUrl"] ?? configuration["Authentication:CmsBaseUrl"] ?? "http://localhost/phpbb";
             _httpClient = httpClientFactory.CreateClient();
-            _httpClient.BaseAddress = new Uri(_cmsBaseUrl);
+            _httpClient.BaseAddress = new Uri(_phpbbBaseUrl);
         }
 
         /// <summary>
